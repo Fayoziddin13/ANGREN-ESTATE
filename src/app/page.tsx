@@ -7,6 +7,7 @@ import { FloatingSearchPanel } from "@/components/map/FloatingSearchPanel";
 import { PropertyPreviewCard } from "@/components/map/PropertyPreviewCard";
 import { PropertyDetailModal } from "@/components/property/PropertyDetailModal";
 import { MobileBottomSheet } from "@/components/map/MobileBottomSheet";
+import { MobileFilterSheet } from "@/components/map/MobileFilterSheet";
 import { CollapsiblePropertyList } from "@/components/map/CollapsiblePropertyList";
 import { PopularSection } from "@/components/property/PopularSection";
 import { TrustSection } from "@/components/home/TrustSection";
@@ -18,7 +19,7 @@ import { trackEvent } from "@/lib/analytics";
 import { TransactionType, PropertyType, Property } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
 import { AdvancedFilterState, defaultAdvancedFilters } from "@/components/map/AdvancedFiltersModal";
-import { List, ChevronDown, Map, Layers } from "lucide-react";
+import { List, ChevronDown, Map, Layers, Search, SlidersHorizontal } from "lucide-react";
 
 // Dynamic import for WebGL map to disable SSR
 const AngrenMap = dynamic(
@@ -35,7 +36,7 @@ const AngrenMap = dynamic(
 );
 
 export default function HomePage() {
-  const { t } = useLanguage();
+  const { locale, t } = useLanguage();
   const { publishedProperties } = useProperties();
 
   // Map Mode: Standard (Sxema) vs Satellite
@@ -202,6 +203,57 @@ export default function HomePage() {
     });
   }, [activePropertiesPool, searchQuery, transactionType, selectedDistrict, selectedType, priceFilter, advancedFilters]);
 
+  // Count of currently active filters
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (searchQuery.trim()) count++;
+    if (transactionType !== "all") count++;
+    if (selectedDistrict !== "all") count++;
+    if (selectedType !== "all") count++;
+    if (priceFilter !== "all") count++;
+    if (advancedFilters.rooms !== "all") count++;
+    if (advancedFilters.minArea !== "" || advancedFilters.maxArea !== "") count++;
+    if (advancedFilters.minFloor !== "" || advancedFilters.maxFloor !== "") count++;
+    if (advancedFilters.renovation !== "all") count++;
+    if (advancedFilters.furniture !== "all") count++;
+    if (Object.values(advancedFilters.utilities || {}).some(Boolean)) count++;
+    if (Object.values(advancedFilters.amenities || {}).some(Boolean)) count++;
+    return count;
+  }, [searchQuery, transactionType, selectedDistrict, selectedType, priceFilter, advancedFilters]);
+
+  // Summary of active filters for compact mobile button
+  const activeFilterSummary = useMemo(() => {
+    const parts: string[] = [];
+    if (transactionType !== "all") {
+      parts.push(transactionType === "sale" ? t.popular.saleBadge : t.popular.rentBadge);
+    }
+    if (selectedDistrict !== "all") {
+      parts.push(selectedDistrict);
+    }
+    if (selectedType !== "all") {
+      const typeMap: Record<string, string> = {
+        apartment: t.searchBar.apartment,
+        house_yard: t.searchBar.house,
+        new_build: t.searchBar.newBuild,
+        commercial: t.searchBar.commercial,
+        land: t.searchBar.land,
+      };
+      if (typeMap[selectedType]) parts.push(typeMap[selectedType]);
+    }
+    if (priceFilter !== "all") {
+      const priceMap: Record<string, string> = {
+        under300m: "< 300 млн",
+        "300to600m": "300 - 600 млн",
+        over600m: "> 600 млн",
+      };
+      if (priceMap[priceFilter]) parts.push(priceMap[priceFilter]);
+    }
+    if (parts.length > 0) {
+      return parts.join(" • ");
+    }
+    return "";
+  }, [transactionType, selectedDistrict, selectedType, priceFilter, t]);
+
   const handleResetFilters = () => {
     setSearchQuery("");
     setTransactionType("all");
@@ -244,8 +296,8 @@ export default function HomePage() {
           focusDistrict={selectedDistrict}
         />
 
-        {/* Floating Search & Filter Panel (Top) */}
-        <div className="absolute top-3 sm:top-4 left-3 right-3 sm:left-6 sm:right-auto z-20 max-w-4xl pointer-events-none">
+        {/* Desktop-Only Floating Search & Filter Panel (Top Left) */}
+        <div data-testid="desktop-search-panel" className="hidden sm:block absolute sm:top-4 sm:left-6 sm:right-auto z-20 max-w-4xl pointer-events-none">
           <FloatingSearchPanel
             searchQuery={searchQuery}
             onSearchQueryChange={setSearchQuery}
@@ -282,11 +334,56 @@ export default function HomePage() {
           />
         </div>
 
+        {/* Mobile-Only Compact Floating Search/Filter Control */}
+        <div className="sm:hidden absolute top-3 left-3 right-3 z-20 pointer-events-auto">
+          <button
+            type="button"
+            data-testid="compact-search-trigger"
+            onClick={() => setIsMobileSearchOpen(true)}
+            aria-label={locale === "uz" ? "Qidiruv va filtrlarni ochish" : "Открыть поиск и фильтры"}
+            className="w-full flex items-center justify-between rounded-2xl bg-white/95 backdrop-blur-xl px-3.5 py-2.5 shadow-elevated border border-white/90 active:scale-[0.98] transition-all text-left"
+          >
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+              <div className="h-8 w-8 rounded-xl bg-emerald-50 text-[#16543C] flex items-center justify-center shrink-0 shadow-xs">
+                <Search className="h-4 w-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-extrabold text-slate-900 truncate">
+                  {searchQuery
+                    ? searchQuery
+                    : locale === "uz"
+                    ? "Angrendan mulk izlash..."
+                    : "Поиск недвижимости в Ангрене..."}
+                </p>
+                <p className="text-[10px] font-medium text-slate-500 truncate">
+                  {activeFilterSummary
+                    ? activeFilterSummary
+                    : locale === "uz"
+                    ? "Barcha turlar • Narx • Hudud"
+                    : "Все типы • Цена • Район"}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0 pl-2">
+              {activeFiltersCount > 0 && (
+                <span className="flex h-5 px-1.5 items-center justify-center rounded-full bg-[#16543C] text-[10px] text-white font-extrabold shadow-sm">
+                  {activeFiltersCount}
+                </span>
+              )}
+              <div className="h-8 w-8 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center">
+                <SlidersHorizontal className="h-4 w-4" />
+              </div>
+            </div>
+          </button>
+        </div>
+
         {/* Floating Action Controls (Top Right: Map Style Switcher & List View Toggle) */}
-        <div className="flex items-center gap-2 sm:gap-3 absolute top-[290px] right-3 sm:top-4 sm:right-6 z-20 pointer-events-auto">
+        <div className="flex items-center gap-2 sm:gap-3 absolute top-[62px] right-3 sm:top-4 sm:right-6 z-20 pointer-events-auto">
           {/* Segmented Map Switcher: [ Sxema | Satellite ] */}
-          <div className="flex items-center p-1 rounded-2xl bg-white/90 backdrop-blur-xl shadow-elevated border border-white/80 transition-all">
+          <div data-testid="map-mode-switcher" className="flex items-center p-1 rounded-2xl bg-white/90 backdrop-blur-xl shadow-elevated border border-white/80 transition-all">
             <button
+              data-testid="map-mode-standard"
               onClick={() => setMapMode("standard")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 mapMode === "standard"
@@ -298,6 +395,7 @@ export default function HomePage() {
               <span>{t.mapSection.standard}</span>
             </button>
             <button
+              data-testid="map-mode-satellite"
               onClick={() => setMapMode("satellite")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 mapMode === "satellite"
@@ -356,7 +454,7 @@ export default function HomePage() {
           onViewDetails={handleOpenDetails}
         />
 
-        {/* Mobile iOS-style Bottom Sheet */}
+        {/* Mobile iOS-style Property Bottom Sheet */}
         <MobileBottomSheet
           property={selectedProperty}
           totalCount={filteredProperties.length}
@@ -364,6 +462,42 @@ export default function HomePage() {
           onViewDetails={handleOpenDetails}
           properties={filteredProperties}
           onSelectProperty={setSelectedProperty}
+        />
+
+        {/* Mobile-Only Search & Filter Bottom Sheet */}
+        <MobileFilterSheet
+          isOpen={isMobileSearchOpen}
+          onClose={() => setIsMobileSearchOpen(false)}
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
+          transactionType={transactionType}
+          onTransactionChange={(t) => {
+            setTransactionType(t);
+            trackEvent("filter_used", { metadata: { transaction_type: t } });
+          }}
+          selectedDistrict={selectedDistrict}
+          onDistrictChange={(d) => {
+            setSelectedDistrict(d);
+            trackEvent("filter_used", { metadata: { district: d } });
+          }}
+          selectedType={selectedType}
+          onTypeChange={(tp) => {
+            setSelectedType(tp);
+            trackEvent("filter_used", { metadata: { property_type: tp } });
+          }}
+          priceFilter={priceFilter}
+          onPriceFilterChange={(pf) => {
+            setPriceFilter(pf);
+            trackEvent("filter_used", { metadata: { price: pf } });
+          }}
+          onReset={handleResetFilters}
+          totalCount={filteredProperties.length}
+          advancedFilters={advancedFilters}
+          onAdvancedFiltersChange={(af) => {
+            setAdvancedFilters(af);
+            trackEvent("filter_used", { metadata: { advanced_filters: true } });
+          }}
+          onResetAdvanced={() => setAdvancedFilters(defaultAdvancedFilters)}
         />
 
         {/* Subtle Scroll Cue to Secondary Content */}
