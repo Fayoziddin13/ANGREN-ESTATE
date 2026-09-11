@@ -1,0 +1,922 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  AlertCircle,
+  Building2,
+  MapPin,
+  Camera,
+  Flame,
+  Droplet,
+  Zap,
+  CheckCircle2,
+  Layers,
+  Sparkles,
+  DollarSign,
+  FileText,
+  Phone,
+  Send,
+  Trash2,
+  Plus,
+} from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
+import { useProperties } from "@/lib/propertyStore";
+import { useRealtors } from "@/lib/realtorStore";
+import { PropertyImageUploader } from "@/components/admin/PropertyImageUploader";
+import dynamic from "next/dynamic";
+import {
+  PropertyType,
+  TransactionType,
+  RenovationType,
+  PropertyStatus,
+} from "@/lib/types";
+
+const AdminLocationPicker = dynamic(
+  () => import("@/components/admin/AdminLocationPicker").then((mod) => mod.AdminLocationPicker),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-80 rounded-2xl bg-slate-100 flex flex-col items-center justify-center gap-2 text-xs font-semibold text-slate-400">
+        <div className="h-7 w-7 rounded-full border-2 border-[#16543C] border-t-transparent animate-spin" />
+        <span>Angren interaktiv xaritasi yuklanmoqda...</span>
+      </div>
+    ),
+  }
+);
+
+export default function AddPropertyPage() {
+  const router = useRouter();
+  const { locale } = useLanguage();
+  const { addProperty } = useProperties();
+  const { realtors } = useRealtors();
+
+  const [activeStep, setActiveStep] = useState(1);
+  const totalSteps = 6; // Grouped logically into 6 comprehensive stages
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const s = Number(urlParams.get("step"));
+      if (s >= 1 && s <= 6) {
+        setActiveStep(s);
+      }
+    }
+  }, []);
+
+  // Form State
+  const [transactionType, setTransactionType] = useState<TransactionType>("sale");
+  const [propertyType, setPropertyType] = useState<PropertyType>("apartment");
+  const [titleUz, setTitleUz] = useState("");
+  const [titleRu, setTitleRu] = useState("");
+  const [descUz, setDescUz] = useState("");
+  const [descRu, setDescRu] = useState("");
+  const [priceUzs, setPriceUzs] = useState(450000000);
+  const [priceUsd, setPriceUsd] = useState(35000);
+  const [currency, setCurrency] = useState<"UZS" | "USD">("USD");
+
+  // Location
+  const [district, setDistrict] = useState("Markaz");
+  const [addressUz, setAddressUz] = useState("");
+  const [addressRu, setAddressRu] = useState("");
+  const [lat, setLat] = useState(41.0167);
+  const [lng, setLng] = useState(70.1436);
+  const [polygonCoords, setPolygonCoords] = useState<string>("");
+  const [polygonPoints, setPolygonPoints] = useState<[number, number][]>([]);
+
+  // Specs
+  const [areaSqm, setAreaSqm] = useState(65);
+  const [livingAreaSqm, setLivingAreaSqm] = useState(48);
+  const [areaSotikh, setAreaSotikh] = useState(0);
+  const [rooms, setRooms] = useState(3);
+  const [floor, setFloor] = useState(4);
+  const [totalFloors, setTotalFloors] = useState(9);
+  const [renovation, setRenovation] = useState<RenovationType>("euro");
+
+  // Amenities & Utilities
+  const [utilities, setUtilities] = useState({
+    gas: true,
+    water: true,
+    electricity: true,
+    sewerage: true,
+    heating: true,
+  });
+  const [amenities, setAmenities] = useState({
+    furniture: false,
+    parking: true,
+    elevator: true,
+    ac: true,
+    balcony: true,
+    internet: true,
+  });
+
+  // Media
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [mainImage, setMainImage] = useState<string>("");
+  const [videoUrl, setVideoUrl] = useState("");
+
+  // Contact
+  const [selectedRealtorId, setSelectedRealtorId] = useState("");
+  const [contactPhone, setContactPhone] = useState("+998 90 123 45 67");
+  const [contactTelegram, setContactTelegram] = useState("@angrenestate_admin");
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const DRAFT_KEY = "angren_new_property_draft_v2";
+  const [draftAvailable, setDraftAvailable] = useState(false);
+
+  const isDirty = Boolean(
+    titleUz ||
+    titleRu ||
+    descUz ||
+    descRu ||
+    addressUz ||
+    addressRu ||
+    videoUrl ||
+    selectedRealtorId
+  );
+
+  // Check for unsaved draft on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = sessionStorage.getItem(DRAFT_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && (parsed.titleUz || parsed.addressUz || parsed.priceUzs)) {
+            setDraftAvailable(true);
+          }
+        }
+      } catch (e) {}
+    }
+  }, []);
+
+  // Auto-save draft to sessionStorage
+  useEffect(() => {
+    if (typeof window === "undefined" || !isDirty || isSubmitting) return;
+    const timer = setTimeout(() => {
+      try {
+        sessionStorage.setItem(
+          DRAFT_KEY,
+          JSON.stringify({
+            transactionType,
+            propertyType,
+            titleUz,
+            titleRu,
+            descUz,
+            descRu,
+            priceUzs,
+            priceUsd,
+            currency,
+            district,
+            addressUz,
+            addressRu,
+            lat,
+            lng,
+            areaSqm,
+            livingAreaSqm,
+            areaSotikh,
+            rooms,
+            floor,
+            totalFloors,
+            renovation,
+            utilities,
+            amenities,
+            imageUrls,
+            mainImage,
+            videoUrl,
+            selectedRealtorId,
+            contactPhone,
+            contactTelegram,
+          })
+        );
+      } catch (e) {}
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [
+    isDirty,
+    isSubmitting,
+    transactionType,
+    propertyType,
+    titleUz,
+    titleRu,
+    descUz,
+    descRu,
+    priceUzs,
+    priceUsd,
+    currency,
+    district,
+    addressUz,
+    addressRu,
+    lat,
+    lng,
+    areaSqm,
+    livingAreaSqm,
+    areaSotikh,
+    rooms,
+    floor,
+    totalFloors,
+    renovation,
+    utilities,
+    amenities,
+    imageUrls,
+    mainImage,
+    videoUrl,
+    selectedRealtorId,
+    contactPhone,
+    contactTelegram,
+  ]);
+
+  // Warn user on page exit if form has unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty && !isSubmitting) {
+        e.preventDefault();
+        e.returnValue = "";
+        return "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty, isSubmitting]);
+
+  const restoreDraft = () => {
+    try {
+      const saved = sessionStorage.getItem(DRAFT_KEY);
+      if (!saved) return;
+      const d = JSON.parse(saved);
+      if (d.transactionType) setTransactionType(d.transactionType);
+      if (d.propertyType) setPropertyType(d.propertyType);
+      if (d.titleUz) setTitleUz(d.titleUz);
+      if (d.titleRu) setTitleRu(d.titleRu);
+      if (d.descUz) setDescUz(d.descUz);
+      if (d.descRu) setDescRu(d.descRu);
+      if (d.priceUzs) setPriceUzs(d.priceUzs);
+      if (d.priceUsd) setPriceUsd(d.priceUsd);
+      if (d.district) setDistrict(d.district);
+      if (d.addressUz) setAddressUz(d.addressUz);
+      if (d.addressRu) setAddressRu(d.addressRu);
+      if (d.lat) setLat(d.lat);
+      if (d.lng) setLng(d.lng);
+      if (d.areaSqm) setAreaSqm(d.areaSqm);
+      if (d.livingAreaSqm) setLivingAreaSqm(d.livingAreaSqm);
+      if (d.rooms) setRooms(d.rooms);
+      if (d.floor) setFloor(d.floor);
+      if (d.totalFloors) setTotalFloors(d.totalFloors);
+      if (d.renovation) setRenovation(d.renovation);
+      if (d.utilities) setUtilities(d.utilities);
+      if (d.amenities) setAmenities(d.amenities);
+      if (Array.isArray(d.imageUrls) && d.imageUrls.length > 0) setImageUrls(d.imageUrls);
+      if (d.mainImage) setMainImage(d.mainImage);
+      if (d.videoUrl) setVideoUrl(d.videoUrl);
+      if (d.selectedRealtorId) setSelectedRealtorId(d.selectedRealtorId);
+      if (d.contactPhone) setContactPhone(d.contactPhone);
+      if (d.contactTelegram) setContactTelegram(d.contactTelegram);
+      setDraftAvailable(false);
+    } catch (e) {}
+  };
+
+  const discardDraft = () => {
+    try {
+      sessionStorage.removeItem(DRAFT_KEY);
+    } catch (e) {}
+    setDraftAvailable(false);
+  };
+
+  const handleSave = async (status: PropertyStatus) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    // Parse polygon if provided
+    let parsedPolygon: [number, number][] | undefined = undefined;
+    if (polygonCoords.trim()) {
+      try {
+        parsedPolygon = JSON.parse(polygonCoords);
+      } catch {
+        // Simple fallback box
+        parsedPolygon = [
+          [lat + 0.0005, lng - 0.0005],
+          [lat + 0.0005, lng + 0.0005],
+          [lat - 0.0005, lng + 0.0005],
+          [lat - 0.0005, lng - 0.0005],
+        ];
+      }
+    }
+
+    try {
+      await addProperty({
+        slug: `angren-${propertyType}-${Date.now().toString().slice(-6)}`,
+        title_uz: titleUz || "Angren ko‘chmas mulk obyekti",
+        title_ru: titleRu || "Объект недвижимости в Ангрене",
+        description_uz: descUz || "Angren shahrida joylashgan qulay ko‘chmas mulk.",
+        description_ru: descRu || "Удобный объект недвижимости в городе Ангрен.",
+        address_uz: addressUz || "Angren sh., Markaz",
+        address_ru: addressRu || "г. Ангрен, Центр",
+        district_name_uz: district,
+        district_name_ru: district,
+        transaction_type: transactionType,
+        property_type: propertyType,
+        status,
+        price_uzs: priceUzs,
+        price_usd: priceUsd,
+        area_sqm: areaSqm,
+        living_area_sqm: livingAreaSqm,
+        area_sotikh: areaSotikh > 0 ? areaSotikh : undefined,
+        rooms,
+        floor,
+        total_floors: totalFloors,
+        renovation,
+        images: imageUrls,
+        photos: imageUrls,
+        main_image: mainImage || imageUrls[0] || undefined,
+        video_url: videoUrl || undefined,
+        coordinates: { lat, lng },
+        polygon: parsedPolygon,
+        utilities,
+        amenities,
+        contact_phone: contactPhone,
+        contact_telegram: contactTelegram,
+        realtor_id: selectedRealtorId || undefined,
+      });
+
+      // Clear session draft on successful save
+      try {
+        sessionStorage.removeItem(DRAFT_KEY);
+      } catch (e) {}
+
+      router.push("/admin/properties");
+    } catch (e) {
+      console.error("Error creating property:", e);
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="p-4 sm:p-8 max-w-5xl mx-auto w-full space-y-6">
+      {/* Top Header */}
+      <div className="flex items-center justify-between pb-4 border-b border-slate-200">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/admin/properties"
+            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900">
+              {locale === "uz" ? "Yangi obyekt yaratish" : "Создание нового объекта"}
+            </h1>
+            <p className="text-xs text-slate-500">
+              {locale === "uz" ? `${activeStep}-bosqich (${totalSteps} dan)` : `Этап ${activeStep} из ${totalSteps}`}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => handleSave("draft")}
+            className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 font-bold text-xs transition-colors"
+          >
+            {locale === "uz" ? "Qoralama sifatida saqlash" : "В черновики"}
+          </button>
+          <button
+            onClick={() => handleSave("published")}
+            className="px-5 py-2 rounded-xl bg-[#16543C] text-white hover:bg-[#0E3324] font-bold text-xs transition-colors shadow-sm"
+          >
+            {locale === "uz" ? "Nashr qilish" : "Опубликовать"}
+          </button>
+        </div>
+      </div>
+
+      {/* Unsaved Draft Recovery Banner */}
+      {draftAvailable && (
+        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-900 shadow-xs animate-in fade-in">
+          <div className="flex items-center gap-2.5">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+            <div className="text-xs">
+              <span className="font-bold">
+                {locale === "uz" ? "Saqlanmagan qoralama mavjud!" : "Обнаружен несохраненный черновик!"}
+              </span>{" "}
+              {locale === "uz"
+                ? "Oldingi to‘ldirilgan ma’lumotlarni formaga qaytarishni xohlaysizmi?"
+                : "Хотите восстановить ранее введенные данные?"}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={restoreDraft}
+              className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors shadow-xs"
+            >
+              {locale === "uz" ? "Tiklash" : "Восстановить"}
+            </button>
+            <button
+              type="button"
+              onClick={discardDraft}
+              className="px-3 py-1.5 rounded-xl border border-amber-300 text-amber-800 hover:bg-amber-100 text-xs font-semibold transition-colors"
+            >
+              {locale === "uz" ? "Bekor qilish" : "Отклонить"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Steps Progress Tabs */}
+      <div className="grid grid-cols-6 gap-2 text-xs font-bold select-none">
+        {[
+          { step: 1, label: "Turi & Narxi" },
+          { step: 2, label: "Sarlavha & Matn" },
+          { step: 3, label: "Manzil & Xarita" },
+          { step: 4, label: "Parametrlar" },
+          { step: 5, label: "Rasmlar & Aloqa" },
+          { step: 6, label: "Ko‘rib chiqish" },
+        ].map((item) => (
+          <button
+            key={item.step}
+            onClick={() => setActiveStep(item.step)}
+            className={`py-2.5 px-2 rounded-xl text-center border transition-all truncate ${
+              activeStep === item.step
+                ? "bg-[#16543C] text-white border-emerald-800 shadow-xs"
+                : activeStep > item.step
+                ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                : "bg-white text-slate-400 border-slate-200"
+            }`}
+          >
+            <span className="mr-1">{item.step}.</span>
+            <span>{item.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Step Forms Container */}
+      <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
+        {/* STEP 1: Bitim turi, Obyekt turi & Narx */}
+        {activeStep === 1 && (
+          <div className="space-y-6">
+            <h2 className="text-base font-extrabold text-slate-900 border-b pb-2">
+              1. Bitim va Ko‘chmas mulk turi
+            </h2>
+
+            {/* Transaction Type */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-700">Bitim turi</label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setTransactionType("sale")}
+                  className={`p-4 rounded-2xl border text-center font-bold text-sm transition-all ${
+                    transactionType === "sale"
+                      ? "border-[#16543C] bg-emerald-50 text-[#16543C] ring-2 ring-[#16543C]"
+                      : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  Sotuv (Ko‘chmas mulkni sotish)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTransactionType("rent")}
+                  className={`p-4 rounded-2xl border text-center font-bold text-sm transition-all ${
+                    transactionType === "rent"
+                      ? "border-[#16543C] bg-emerald-50 text-[#16543C] ring-2 ring-[#16543C]"
+                      : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  Ijara (Oylik ijara)
+                </button>
+              </div>
+            </div>
+
+            {/* Property Type */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-700">Ko‘chmas mulk turi</label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {[
+                  { key: "apartment", label: "Kvartira" },
+                  { key: "house_yard", label: "Hovli / Kottej" },
+                  { key: "new_build", label: "Yangi bino (Novostroyka)" },
+                  { key: "land", label: "Yer maydoni" },
+                  { key: "commercial", label: "Tijorat binosi" },
+                  { key: "other", label: "Boshqa" },
+                ].map((t) => (
+                  <button
+                    key={t.key}
+                    type="button"
+                    onClick={() => setPropertyType(t.key as PropertyType)}
+                    className={`p-3.5 rounded-2xl border text-center font-bold text-xs transition-all ${
+                      propertyType === t.key
+                        ? "border-[#16543C] bg-emerald-50 text-[#16543C] ring-2 ring-[#16543C]"
+                        : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Pricing */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Narx (USD $)</label>
+                <input
+                  type="number"
+                  value={priceUsd}
+                  onChange={(e) => {
+                    const usd = Number(e.target.value);
+                    setPriceUsd(usd);
+                    setPriceUzs(usd * 12850);
+                  }}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#16543C] outline-none text-sm font-bold"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Narx (UZS so‘mda)</label>
+                <input
+                  type="number"
+                  value={priceUzs}
+                  onChange={(e) => {
+                    const uzs = Number(e.target.value);
+                    setPriceUzs(uzs);
+                    setPriceUsd(Math.round(uzs / 12850));
+                  }}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#16543C] outline-none text-sm font-bold"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 2: Sarlavha & Tavsiflar (Bilingual UZ / RU) */}
+        {activeStep === 2 && (
+          <div className="space-y-5">
+            <h2 className="text-base font-extrabold text-slate-900 border-b pb-2">
+              2. Sarlavha va Tavsif (UZ & RU)
+            </h2>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700">Sarlavha (O‘zbekcha - Lotin)</label>
+              <input
+                type="text"
+                value={titleUz}
+                onChange={(e) => setTitleUz(e.target.value)}
+                placeholder="Masalan: Angren markazida 3 xonali ta’mirlangan kvartira"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#16543C] outline-none text-xs font-medium"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700">Sarlavha (Русский)</label>
+              <input
+                type="text"
+                value={titleRu}
+                onChange={(e) => setTitleRu(e.target.value)}
+                placeholder="Например: 3-комнатная квартира с ремонтом в центре Ангрена"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#16543C] outline-none text-xs font-medium"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Batafsil tavsif (UZ)</label>
+                <textarea
+                  rows={4}
+                  value={descUz}
+                  onChange={(e) => setDescUz(e.target.value)}
+                  placeholder="Kvartira qavatida, atrofida bog‘cha, maktab, bozor joylashgan..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#16543C] outline-none text-xs"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Описание объекта (RU)</label>
+                <textarea
+                  rows={4}
+                  value={descRu}
+                  onChange={(e) => setDescRu(e.target.value)}
+                  placeholder="Квартира на удобном этаже, рядом детский сад, школа, рынок..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#16543C] outline-none text-xs"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 3: Manzil & Xarita koordinatalari / Polygon */}
+        {activeStep === 3 && (
+          <div className="space-y-5">
+            <h2 className="text-base font-extrabold text-slate-900 border-b pb-2">
+              3. Joylashuv va Xarita (Koordinatalar & Polygon)
+            </h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Tuman / Daha (Angren)</label>
+                <select
+                  value={district}
+                  onChange={(e) => setDistrict(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold"
+                >
+                  <option value="Markaz">Markaz (Центр)</option>
+                  <option value="1/1 dahasi">1/1 dahasi</option>
+                  <option value="2/3 dahasi">2/3 dahasi</option>
+                  <option value="5/1 dahasi">5/1 dahasi</option>
+                  <option value="5/2 dahasi">5/2 dahasi</option>
+                  <option value="Dukent">Dukent</option>
+                  <option value="Yangiobod">Yangiobod</option>
+                  <option value="Geolog">Geolog</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Aniq manzil (Ko‘cha va uy)</label>
+                <input
+                  type="text"
+                  value={addressUz}
+                  onChange={(e) => setAddressUz(e.target.value)}
+                  placeholder="Mustaqillik shoh ko‘chasi, 12-uy"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium"
+                />
+              </div>
+            </div>
+
+            {/* Interactive Location & Polygon Picker Map */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <MapPin className="h-4 w-4 text-[#16543C]" />
+                  <span>Xaritada nuqtani belgilash (Draggable pin & Polygon)</span>
+                </label>
+                <span className="text-[11px] text-slate-500 font-medium">
+                  Xaritadagi belgini suring yoki kerakli joyni bosing
+                </span>
+              </div>
+
+              <AdminLocationPicker
+                lat={lat}
+                lng={lng}
+                onChangeCoordinates={(coords) => {
+                  setLat(coords.lat);
+                  setLng(coords.lng);
+                }}
+                polygonCoords={polygonPoints}
+                onChangePolygon={(pts) => {
+                  setPolygonPoints(pts);
+                  setPolygonCoords(pts.length > 0 ? JSON.stringify(pts) : "");
+                }}
+                isLandOrYard={propertyType === "house_yard" || propertyType === "land"}
+              />
+            </div>
+
+            {/* Polygon Boundary Drawer JSON fallback for Houses and Lands */}
+            {(propertyType === "house_yard" || propertyType === "land") && (
+              <div className="p-3.5 rounded-2xl bg-emerald-50/50 border border-emerald-200 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 font-bold text-xs text-[#16543C]">
+                    <Layers className="h-3.5 w-3.5" />
+                    <span>Yer / Hovli ko‘p burchakli chegarasi (GeoJSON / Koord Array)</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-emerald-700 font-bold">
+                    {polygonPoints.length > 0 ? `${polygonPoints.length} ta nuqta belgilandi` : "Nuqtalar yo‘q"}
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  value={polygonCoords}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setPolygonCoords(val);
+                    try {
+                      const parsed = JSON.parse(val);
+                      if (Array.isArray(parsed)) setPolygonPoints(parsed);
+                    } catch {}
+                  }}
+                  placeholder="Xaritada 'Polygon chizish' tugmasini bosing yoki JSON kiriting"
+                  className="w-full px-3 py-2 rounded-xl border border-emerald-200 bg-white text-xs font-mono"
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* STEP 4: Texnik xususiyatlar, Kommunikatsiya & Qulayliklar */}
+        {activeStep === 4 && (
+          <div className="space-y-6">
+            <h2 className="text-base font-extrabold text-slate-900 border-b pb-2">
+              4. Texnik parametrlar va Qulayliklar
+            </h2>
+
+            {/* Area & Rooms */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700">Umumiy maydon (m²)</label>
+                <input
+                  type="number"
+                  value={areaSqm}
+                  onChange={(e) => setAreaSqm(Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700">Yashash maydoni (m²)</label>
+                <input
+                  type="number"
+                  value={livingAreaSqm}
+                  onChange={(e) => setLivingAreaSqm(Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700">Xonalar soni</label>
+                <input
+                  type="number"
+                  value={rooms}
+                  onChange={(e) => setRooms(Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700">Qavat / Jami qavatlar</label>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    value={floor}
+                    onChange={(e) => setFloor(Number(e.target.value))}
+                    className="w-1/2 px-3 py-2 rounded-xl border border-slate-200"
+                  />
+                  <span>/</span>
+                  <input
+                    type="number"
+                    value={totalFloors}
+                    onChange={(e) => setTotalFloors(Number(e.target.value))}
+                    className="w-1/2 px-3 py-2 rounded-xl border border-slate-200"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Utilities Checkboxes */}
+            <div className="space-y-2 pt-2">
+              <label className="text-xs font-bold text-slate-700">Kommunikatsiyalar</label>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
+                {(["gas", "water", "electricity", "sewerage", "heating"] as const).map((u) => (
+                  <label key={u} className="flex items-center gap-2 p-2.5 rounded-xl border bg-slate-50 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={utilities[u]}
+                      onChange={(e) => setUtilities({ ...utilities, [u]: e.target.checked })}
+                      className="rounded text-[#16543C]"
+                    />
+                    <span className="capitalize">{u}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Amenities Checkboxes */}
+            <div className="space-y-2 pt-2">
+              <label className="text-xs font-bold text-slate-700">Qo‘shimcha qulayliklar</label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                {(["furniture", "parking", "elevator", "ac", "balcony", "internet"] as const).map((a) => (
+                  <label key={a} className="flex items-center gap-2 p-2.5 rounded-xl border bg-slate-50 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={amenities[a]}
+                      onChange={(e) => setAmenities({ ...amenities, [a]: e.target.checked })}
+                      className="rounded text-[#16543C]"
+                    />
+                    <span className="capitalize">{a}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 5: Media & Mas'ul Rieltor */}
+        {activeStep === 5 && (
+          <div className="space-y-6">
+            <h2 className="text-base font-extrabold text-slate-900 border-b pb-2">
+              5. Suratlar va Mas'ul Rieltor
+            </h2>
+
+            {/* Images */}
+            <div className="space-y-3">
+              <label className="text-xs font-bold text-slate-700">Obyekt suratlari</label>
+              <PropertyImageUploader
+                images={imageUrls}
+                mainImage={mainImage}
+                onChangeImages={setImageUrls}
+                onChangeMainImage={setMainImage}
+                propertyId="new"
+              />
+            </div>
+
+            {/* Assigned Realtor */}
+            <div className="space-y-2 pt-4 border-t border-slate-100">
+              <label className="text-xs font-bold text-slate-700">Biriktirilgan Rieltor</label>
+              <select
+                value={selectedRealtorId}
+                onChange={(e) => setSelectedRealtorId(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold"
+              >
+                <option value="">Rieltorsiz (To‘g‘ridan-to‘g‘ri ma'muriyat)</option>
+                {realtors.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name} ({r.phone})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 6: Yakuniy ko‘rib chiqish (Preview) */}
+        {activeStep === 6 && (
+          <div className="space-y-6">
+            <h2 className="text-base font-extrabold text-slate-900 border-b pb-2">
+              6. Yakuniy ko‘rib chiqish
+            </h2>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="text-[10px] font-black uppercase text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full">
+                    {transactionType === "sale" ? "Sotuv" : "Ijara"} • {propertyType}
+                  </span>
+                  <h3 className="text-lg font-black text-slate-900 mt-2">
+                    {titleUz || "Sarlavha kiritilmagan"}
+                  </h3>
+                  <p className="text-xs text-slate-500">{district}, {addressUz}</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-xl font-black text-[#16543C]">${priceUsd.toLocaleString()}</div>
+                  <div className="text-xs text-slate-400">{(priceUzs / 1000000).toFixed(0)} mln UZS</div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-4 gap-2 text-center text-xs pt-2 border-t border-slate-200">
+                <div className="p-2 bg-white rounded-xl">
+                  <span className="text-slate-400 text-[10px]">Maydon</span>
+                  <div className="font-bold">{areaSqm} m²</div>
+                </div>
+                <div className="p-2 bg-white rounded-xl">
+                  <span className="text-slate-400 text-[10px]">Xonalar</span>
+                  <div className="font-bold">{rooms}</div>
+                </div>
+                <div className="p-2 bg-white rounded-xl">
+                  <span className="text-slate-400 text-[10px]">Qavat</span>
+                  <div className="font-bold">{floor}/{totalFloors}</div>
+                </div>
+                <div className="p-2 bg-white rounded-xl">
+                  <span className="text-slate-400 text-[10px]">Ta'mir</span>
+                  <div className="font-bold capitalize">{renovation}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => handleSave("draft")}
+                className="px-5 py-2.5 rounded-xl border border-slate-200 font-bold text-xs text-slate-700 hover:bg-slate-100"
+              >
+                Qoralama sifatida saqlash
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSave("published")}
+                className="px-6 py-2.5 rounded-xl bg-[#16543C] hover:bg-[#0E3324] text-white font-black text-xs shadow-md"
+              >
+                ✓ Saytda darhol nashr qilish
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step Navigation Bottom Bar */}
+        <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+          <button
+            type="button"
+            disabled={activeStep === 1}
+            onClick={() => setActiveStep((prev) => Math.max(1, prev - 1))}
+            className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            ← Orqaga
+          </button>
+
+          {activeStep < totalSteps && (
+            <button
+              type="button"
+              onClick={() => setActiveStep((prev) => Math.min(totalSteps, prev + 1))}
+              className="px-5 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800"
+            >
+              Keyingisi →
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

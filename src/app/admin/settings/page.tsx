@@ -1,0 +1,577 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import {
+  Settings,
+  Save,
+  CheckCircle2,
+  Phone,
+  Send,
+  Mail,
+  Instagram,
+  ShieldCheck,
+  RotateCcw,
+  Sparkles,
+  MapPin,
+  Lock,
+  KeyRound,
+  Eye,
+  EyeOff,
+  AlertTriangle,
+  Globe,
+  Sliders,
+  DollarSign,
+  Layers,
+  ShieldAlert,
+  Clock,
+  Laptop,
+} from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
+import { useSiteSettings, defaultSiteSettings } from "@/lib/siteSettingsStore";
+import { SiteSettingsData } from "@/lib/types";
+
+export default function AdminSettingsPage() {
+  const { locale } = useLanguage();
+  const { settings, updateSettings, isLoaded } = useSiteSettings();
+
+  const [formData, setFormData] = useState<SiteSettingsData>(defaultSiteSettings);
+  const [activeTab, setActiveTab] = useState<"general" | "map" | "contacts" | "security">("general");
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Password change state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isLoaded) {
+      setFormData(settings);
+    }
+  }, [settings, isLoaded]);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ settings: formData }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        updateSettings(formData);
+        showToast(
+          locale === "uz"
+            ? "Sozlamalar muvaffaqiyatli saqlandi"
+            : "Настройки успешно сохранены"
+        );
+      } else {
+        showToast(data.message || (locale === "uz" ? "Xatolik yuz berdi" : "Ошибка сохранения"));
+      }
+    } catch {
+      showToast(locale === "uz" ? "Server bilan aloqa uzildi" : "Сбой связи с сервером");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError(null);
+    setPasswordSuccess(null);
+    setPasswordLoading(true);
+
+    try {
+      const res = await fetch("/api/admin/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setPasswordError(data.error || "Xatolik yuz berdi");
+      } else {
+        setPasswordSuccess(data.message || "Parol muvaffaqiyatli yangilandi");
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        showToast(locale === "uz" ? "Parol yangilandi" : "Пароль обновлен");
+      }
+    } catch {
+      setPasswordError("Server bilan ulanishda xatolik yuz berdi");
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6 pb-16">
+      {/* Toast */}
+      {toastMessage && (
+        <div className="fixed top-6 right-6 z-50 bg-emerald-900 border border-emerald-500/50 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-2 backdrop-blur-md animate-in fade-in slide-in-from-top-4">
+          <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+          <span className="text-sm font-medium">{toastMessage}</span>
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+            <Settings className="w-7 h-7 text-emerald-400" />
+            {locale === "uz" ? "Platforma Sozlamalari" : "Настройки Платформы"}
+          </h1>
+          <p className="text-slate-400 text-sm mt-1">
+            {locale === "uz"
+              ? "Xarita parametrlari, kontaktlar, valyuta va admin xavfsizlik sozlamalari"
+              : "Параметры карты, контакты, валюта и безопасность администратора"}
+          </p>
+        </div>
+
+        {activeTab !== "security" && (
+          <button
+            type="button"
+            onClick={handleSaveSettings}
+            className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm shadow-xl shadow-emerald-900/40 transition-colors"
+          >
+            <Save className="w-4 h-4" />
+            {locale === "uz" ? "Sozlamalarni saqlash" : "Сохранить настройки"}
+          </button>
+        )}
+      </div>
+
+      {/* Settings Navigation Tabs */}
+      <div className="border-b border-slate-800 flex items-center gap-6 overflow-x-auto text-sm font-semibold">
+        <button
+          onClick={() => setActiveTab("general")}
+          className={`pb-3 px-1 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${
+            activeTab === "general"
+              ? "border-emerald-500 text-emerald-400"
+              : "border-transparent text-slate-400 hover:text-white"
+          }`}
+        >
+          <Sliders className="w-4 h-4" />
+          {locale === "uz" ? "Asosiy Sozlamalar" : "Основные настройки"}
+        </button>
+
+        <button
+          onClick={() => setActiveTab("map")}
+          className={`pb-3 px-1 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${
+            activeTab === "map"
+              ? "border-emerald-500 text-emerald-400"
+              : "border-transparent text-slate-400 hover:text-white"
+          }`}
+        >
+          <MapPin className="w-4 h-4" />
+          {locale === "uz" ? "Xarita Konfiguratsiyasi" : "Конфигурация карты"}
+        </button>
+
+        <button
+          onClick={() => setActiveTab("contacts")}
+          className={`pb-3 px-1 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${
+            activeTab === "contacts"
+              ? "border-emerald-500 text-emerald-400"
+              : "border-transparent text-slate-400 hover:text-white"
+          }`}
+        >
+          <Phone className="w-4 h-4" />
+          {locale === "uz" ? "Aloqa & Ijtimoiy Tarmoqlar" : "Контакты и соцсети"}
+        </button>
+
+        <button
+          onClick={() => setActiveTab("security")}
+          className={`pb-3 px-1 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${
+            activeTab === "security"
+              ? "border-emerald-500 text-emerald-400"
+              : "border-transparent text-slate-400 hover:text-white"
+          }`}
+        >
+          <ShieldCheck className="w-4 h-4" />
+          {locale === "uz" ? "Xavfsizlik & Parol" : "Безопасность и пароль"}
+        </button>
+      </div>
+
+      {/* TAB 1: GENERAL SETTINGS */}
+      {activeTab === "general" && (
+        <form onSubmit={handleSaveSettings} className="space-y-6">
+          <div className="bg-slate-900/60 backdrop-blur-md p-6 rounded-3xl border border-slate-800 space-y-6">
+            <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <Sliders className="w-5 h-5 text-emerald-400" />
+              {locale === "uz" ? "Umumiy Platforma Parametrlari" : "Общие параметры платформы"}
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  Sayt Nomi
+                </label>
+                <input
+                  type="text"
+                  value={formData.site_name}
+                  onChange={(e) => setFormData({ ...formData, site_name: e.target.value })}
+                  className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  Asosiy Shahar
+                </label>
+                <input
+                  type="text"
+                  value={formData.default_city}
+                  onChange={(e) => setFormData({ ...formData, default_city: e.target.value })}
+                  className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  Boshlang‘ich Valyuta
+                </label>
+                <select
+                  value={formData.default_currency}
+                  onChange={(e) => setFormData({ ...formData, default_currency: e.target.value as any })}
+                  className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="UZS">UZS — O‘zbekiston so‘mi</option>
+                  <option value="USD">USD — AQSH dollari</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  Boshlang‘ich Til
+                </label>
+                <select
+                  value={formData.default_language}
+                  onChange={(e) => setFormData({ ...formData, default_language: e.target.value as any })}
+                  className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="uz">O‘zbekcha (Lotin)</option>
+                  <option value="ru">Русский</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </form>
+      )}
+
+      {/* TAB 2: MAP DEFAULTS */}
+      {activeTab === "map" && (
+        <form onSubmit={handleSaveSettings} className="space-y-6">
+          <div className="bg-slate-900/60 backdrop-blur-md p-6 rounded-3xl border border-slate-800 space-y-6">
+            <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-emerald-400" />
+              {locale === "uz" ? "Xarita Boshlang‘ich Holati" : "Начальное состояние карты"}
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  Markaz Latitude (Kenglik)
+                </label>
+                <input
+                  type="number"
+                  step="0.0001"
+                  value={formData.map_center_lat}
+                  onChange={(e) => setFormData({ ...formData, map_center_lat: parseFloat(e.target.value) || 41.0167 })}
+                  className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  Markaz Longitude (Uzunlik)
+                </label>
+                <input
+                  type="number"
+                  step="0.0001"
+                  value={formData.map_center_lng}
+                  onChange={(e) => setFormData({ ...formData, map_center_lng: parseFloat(e.target.value) || 70.1436 })}
+                  className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  Boshlang‘ich Zoom (Kattalashtirish)
+                </label>
+                <input
+                  type="number"
+                  min={10}
+                  max={18}
+                  value={formData.map_default_zoom}
+                  onChange={(e) => setFormData({ ...formData, map_default_zoom: parseInt(e.target.value) || 13 })}
+                  className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500 font-mono"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                Boshlang‘ich Xarita Qatlami (Layer)
+              </label>
+              <div className="grid grid-cols-2 gap-4 max-w-md">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, map_default_style: "standard" })}
+                  className={`p-4 rounded-2xl border text-left transition-all ${
+                    formData.map_default_style === "standard"
+                      ? "bg-emerald-950/40 border-emerald-500 text-white shadow-lg shadow-emerald-950/40"
+                      : "bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700"
+                  }`}
+                >
+                  <div className="font-bold text-sm">Sxema (Standard)</div>
+                  <div className="text-xs text-slate-400 mt-1">Toza, ko‘chalar va binolar aniq chizilgan</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, map_default_style: "satellite" })}
+                  className={`p-4 rounded-2xl border text-left transition-all ${
+                    formData.map_default_style === "satellite"
+                      ? "bg-emerald-950/40 border-emerald-500 text-white shadow-lg shadow-emerald-950/40"
+                      : "bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700"
+                  }`}
+                >
+                  <div className="font-bold text-sm">Sun’iy yo‘ldosh (Satellite)</div>
+                  <div className="text-xs text-slate-400 mt-1">Real aerofotosurat va kosmik tasvirlar</div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </form>
+      )}
+
+      {/* TAB 3: CONTACTS */}
+      {activeTab === "contacts" && (
+        <form onSubmit={handleSaveSettings} className="space-y-6">
+          <div className="bg-slate-900/60 backdrop-blur-md p-6 rounded-3xl border border-slate-800 space-y-6">
+            <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <Phone className="w-5 h-5 text-emerald-400" />
+              {locale === "uz" ? "Aloqa Ma’lumotlari va Tarmoqlar" : "Контактные данные и соцсети"}
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  Aloqa Telefoni
+                </label>
+                <input
+                  type="text"
+                  value={formData.admin_phone}
+                  onChange={(e) => setFormData({ ...formData, admin_phone: e.target.value })}
+                  className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  Telegram Akkaunt / Bot
+                </label>
+                <input
+                  type="text"
+                  value={formData.admin_telegram}
+                  onChange={(e) => setFormData({ ...formData, admin_telegram: e.target.value })}
+                  className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  Elektron Pochta (Email)
+                </label>
+                <input
+                  type="email"
+                  value={formData.admin_email}
+                  onChange={(e) => setFormData({ ...formData, admin_email: e.target.value })}
+                  className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  Instagram
+                </label>
+                <input
+                  type="text"
+                  value={formData.instagram}
+                  onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
+                  className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+            </div>
+          </div>
+        </form>
+      )}
+
+      {/* TAB 4: SECURITY & ADMIN PASSWORD */}
+      {activeTab === "security" && (
+        <div className="space-y-6">
+          {/* Security Status Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-slate-900/60 backdrop-blur-md p-5 rounded-2xl border border-emerald-500/20">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs text-slate-400 font-medium">Sessiya Turi</div>
+                  <div className="text-sm font-bold text-white mt-0.5">HttpOnly + SHA-256</div>
+                </div>
+              </div>
+              <div className="text-xs text-emerald-400/90 mt-3 flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>XSS va script o‘g‘irlashdan himoyalangan</span>
+              </div>
+            </div>
+
+            <div className="bg-slate-900/60 backdrop-blur-md p-5 rounded-2xl border border-blue-500/20">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
+                  <ShieldAlert className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs text-slate-400 font-medium">Brute-Force Himoyasi</div>
+                  <div className="text-sm font-bold text-white mt-0.5">5 urinish / 15 daqiqa</div>
+                </div>
+              </div>
+              <div className="text-xs text-blue-400/90 mt-3 flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Rate limiting avtomatik bloklash faol</span>
+              </div>
+            </div>
+
+            <div className="bg-slate-900/60 backdrop-blur-md p-5 rounded-2xl border border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-300">
+                  <Clock className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs text-slate-400 font-medium">Sessiya Muddati</div>
+                  <div className="text-sm font-bold text-white mt-0.5">8 soat (30 kun 'Eslab qol')</div>
+                </div>
+              </div>
+              <div className="text-xs text-slate-400 mt-3">
+                Avtomatik muddati tugaydi
+              </div>
+            </div>
+          </div>
+
+          {/* Change Admin Password Card */}
+          <div className="bg-slate-900/60 backdrop-blur-md p-6 rounded-3xl border border-slate-800 space-y-6">
+            <div>
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <KeyRound className="w-5 h-5 text-emerald-400" />
+                {locale === "uz" ? "Admin Parolini O‘zgartirish" : "Смена пароля администратора"}
+              </h2>
+              <p className="text-xs text-slate-400 mt-1">
+                {locale === "uz"
+                  ? "Admin login hisobi: admin@angrenestate.uz"
+                  : "Учетная запись администратора: admin@angrenestate.uz"}
+              </p>
+            </div>
+
+            {passwordError && (
+              <div className="p-4 bg-red-950/40 border border-red-500/40 rounded-2xl text-xs text-red-300 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 flex-shrink-0 text-red-400" />
+                <span>{passwordError}</span>
+              </div>
+            )}
+
+            {passwordSuccess && (
+              <div className="p-4 bg-emerald-950/40 border border-emerald-500/40 rounded-2xl text-xs text-emerald-300 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-emerald-400" />
+                <span>{passwordSuccess}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleChangePassword} className="space-y-4 max-w-lg">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  {locale === "uz" ? "Joriy Parol" : "Текущий пароль"}
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    required
+                    placeholder="••••••••••••"
+                    className="w-full bg-slate-950/70 border border-slate-800 rounded-xl pl-4 pr-11 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  {locale === "uz" ? "Yangi Parol" : "Новый пароль"}
+                </label>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  placeholder="••••••••••••"
+                  className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  {locale === "uz" ? "Yangi Parolni Qayta Kiriting" : "Повторите новый пароль"}
+                </label>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  placeholder="••••••••••••"
+                  className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={passwordLoading}
+                  className="w-full py-3 px-5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm font-bold rounded-xl shadow-lg shadow-emerald-950/50 transition-all flex items-center justify-center gap-2"
+                >
+                  <Lock className="w-4 h-4" />
+                  {passwordLoading
+                    ? locale === "uz"
+                      ? "Tekshirilmoqda..."
+                      : "Проверка..."
+                    : locale === "uz"
+                    ? "Parolni Yangilash"
+                    : "Обновить пароль"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
