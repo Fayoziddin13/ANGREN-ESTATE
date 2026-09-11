@@ -8,6 +8,7 @@ import { PropertyPreviewCard } from "@/components/map/PropertyPreviewCard";
 import { PropertyDetailModal } from "@/components/property/PropertyDetailModal";
 import { MobileBottomSheet } from "@/components/map/MobileBottomSheet";
 import { MobileFilterSheet } from "@/components/map/MobileFilterSheet";
+import { MobileMapStyleSwitcher } from "@/components/map/MobileMapStyleSwitcher";
 import { CollapsiblePropertyList } from "@/components/map/CollapsiblePropertyList";
 import { PopularSection } from "@/components/property/PopularSection";
 import { TrustSection } from "@/components/home/TrustSection";
@@ -378,8 +379,8 @@ export default function HomePage() {
           </button>
         </div>
 
-        {/* Floating Action Controls (Top Right: Map Style Switcher & List View Toggle) */}
-        <div className="flex items-center gap-2 sm:gap-3 absolute top-[62px] right-3 sm:top-4 sm:right-6 z-20 pointer-events-auto">
+        {/* Desktop-Only Floating Action Controls (Top Right: Map Style Switcher & List View Toggle) */}
+        <div className="hidden sm:flex items-center gap-3 absolute sm:top-4 sm:right-6 z-20 pointer-events-auto">
           {/* Segmented Map Switcher: [ Sxema | Satellite ] */}
           <div data-testid="map-mode-switcher" className="flex items-center p-1 rounded-2xl bg-white/90 backdrop-blur-xl shadow-elevated border border-white/80 transition-all">
             <button
@@ -411,7 +412,7 @@ export default function HomePage() {
           {/* List View Toggle (MAP > LIST) with Liquid Glass Styling */}
           <button
             onClick={() => setIsListOpen(!isListOpen)}
-            className={`hidden sm:flex items-center gap-2 rounded-2xl bg-white/90 backdrop-blur-xl px-4 py-2 text-xs font-bold shadow-elevated border border-white/80 transition-all active:scale-95 ${
+            className={`flex items-center gap-2 rounded-2xl bg-white/90 backdrop-blur-xl px-4 py-2 text-xs font-bold shadow-elevated border border-white/80 transition-all active:scale-95 ${
               isListOpen
                 ? "bg-[#16543C] text-white border-[#16543C]"
                 : "text-brand-dark hover:bg-white"
@@ -430,6 +431,13 @@ export default function HomePage() {
             </span>
           </button>
         </div>
+
+        {/* Mobile-Only Compact Floating Map Style Switcher (Lower-Right Area) */}
+        <MobileMapStyleSwitcher
+          mapMode={mapMode}
+          onMapModeChange={setMapMode}
+          className={`bottom-[140px] right-4 ${selectedProperty ? "hidden" : ""}`}
+        />
 
         {/* Desktop Floating Property Preview Card (Bottom Left) */}
         {selectedProperty && (
