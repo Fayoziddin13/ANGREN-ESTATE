@@ -13,12 +13,13 @@ export function Footer() {
         
         {/* Brand Logo & Name */}
         <div className="flex items-center gap-3">
-          <div className="relative h-8 w-8 overflow-hidden rounded-xl bg-brand-dark p-0.5 shadow-sm">
+          <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-xl bg-brand-dark p-0.5 shadow-sm shrink-0">
             <Image
               src="/logo.png"
               alt="ANGREN ESTATE Logo"
-              fill
-              className="object-contain"
+              width={32}
+              height={32}
+              className="h-full w-full object-contain"
             />
           </div>
           <span className="font-extrabold tracking-tight text-sm text-brand-dark">

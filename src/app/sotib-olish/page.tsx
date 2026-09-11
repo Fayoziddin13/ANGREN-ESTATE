@@ -369,7 +369,17 @@ export default function BuyPage() {
 
       {/* 4. SECONDARY DISCOVERY CONTENT */}
       <div id="sale-offers-section">
-        <PopularSection properties={filteredProperties} />
+        <PopularSection
+          properties={filteredProperties}
+          title={locale === "uz" ? "Sotuvdagi barcha takliflar" : "Все предложения на продажу"}
+          subtitle={
+            locale === "uz"
+              ? `${filteredProperties.length} ta saralangan ko‘chmas mulk obyekti`
+              : `${filteredProperties.length} проверенных объектов недвижимости`
+          }
+          id="sale-catalog"
+          viewAllHref=""
+        />
         <TrustSection />
         <Footer />
       </div>

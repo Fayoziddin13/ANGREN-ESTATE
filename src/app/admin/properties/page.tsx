@@ -216,7 +216,7 @@ export default function AdminPropertiesPage() {
             <tbody className="divide-y divide-slate-100">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                  <td colSpan={8} className="py-12 text-center text-slate-500 font-medium">
                     {locale === "uz" ? "Hech qanday obyekt topilmadi" : "Объекты не найдены"}
                   </td>
                 </tr>
@@ -242,8 +242,8 @@ export default function AdminPropertiesPage() {
                           <h4 className="font-bold text-slate-900 truncate">
                             {locale === "uz" ? prop.title_uz : prop.title_ru}
                           </h4>
-                          <p className="text-[11px] text-slate-400 truncate flex items-center gap-1 mt-0.5">
-                            <MapPin className="h-3 w-3" />
+                          <p className="text-[11px] text-slate-500 font-medium truncate flex items-center gap-1 mt-0.5">
+                            <MapPin className="h-3 w-3 text-slate-400" />
                             <span>{prop.district_name_uz}, {prop.address_uz}</span>
                           </p>
                         </div>
@@ -256,11 +256,11 @@ export default function AdminPropertiesPage() {
                         <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">
                           {prop.property_type}
                         </span>
-                        <div className="text-[11px] font-bold text-slate-500">
+                        <div className="text-[11px] font-bold text-slate-600">
                           {prop.transaction_type === "sale" ? (
-                            <span className="text-emerald-700">Sotuv</span>
+                            <span className="text-emerald-800">Sotuv</span>
                           ) : (
-                            <span className="text-blue-700">Ijara</span>
+                            <span className="text-blue-800">Ijara</span>
                           )}
                         </div>
                       </div>
@@ -271,7 +271,7 @@ export default function AdminPropertiesPage() {
                       {prop.price_usd ? (
                         <>
                           <div>${prop.price_usd.toLocaleString()}</div>
-                          <div className="text-[10px] text-slate-400 font-normal">
+                          <div className="text-[10px] text-slate-500 font-medium">
                             {(prop.price_uzs / 1000000).toFixed(0)} mln UZS
                           </div>
                         </>
@@ -372,7 +372,7 @@ export default function AdminPropertiesPage() {
                     </td>
 
                     {/* Date */}
-                    <td className="py-3.5 px-4 text-[11px] text-slate-400 whitespace-nowrap">
+                    <td className="py-3.5 px-4 text-[11px] text-slate-600 font-medium whitespace-nowrap">
                       {new Date(prop.created_at).toLocaleDateString()}
                     </td>
 
@@ -382,21 +382,21 @@ export default function AdminPropertiesPage() {
                         <button
                           onClick={() => setPreviewProperty(prop)}
                           title={locale === "uz" ? "Ko‘rish" : "Просмотр"}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
                         >
                           <Eye className="h-4 w-4" />
                         </button>
                         <Link
                           href={`/admin/properties/${prop.id}`}
                           title={locale === "uz" ? "Tahrirlash" : "Редактировать"}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
                         >
                           <Edit className="h-4 w-4" />
                         </Link>
                         <button
                           onClick={() => handleDuplicate(prop.id)}
                           title={locale === "uz" ? "Nusxa ko‘chirish (Dublikat)" : "Дублировать"}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
                         >
                           <Copy className="h-4 w-4" />
                         </button>
@@ -404,7 +404,7 @@ export default function AdminPropertiesPage() {
                           onClick={() =>
                             setActionMenuOpenId(actionMenuOpenId === prop.id ? null : prop.id)
                           }
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
                         >
                           <MoreVertical className="h-4 w-4" />
                         </button>
@@ -420,7 +420,7 @@ export default function AdminPropertiesPage() {
                             <Edit className="h-3.5 w-3.5" />
                             <span>{locale === "uz" ? "Tahrirlash" : "Редактировать"}</span>
                           </Link>
-                          <div className="px-3 py-1 text-[10px] font-bold uppercase text-slate-400">
+                          <div className="px-3 py-1 text-[10px] font-bold uppercase text-slate-500">
                             Statusni o‘zgartirish
                           </div>
                           {prop.status !== "published" && (
@@ -503,13 +503,13 @@ export default function AdminPropertiesPage() {
 
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="p-3 bg-slate-50 rounded-xl">
-                <span className="text-slate-400">Narx:</span>
+                <span className="text-slate-600 font-bold">Narx:</span>
                 <div className="font-black text-slate-900 text-sm">
                   ${previewProperty.price_usd?.toLocaleString()}
                 </div>
               </div>
               <div className="p-3 bg-slate-50 rounded-xl">
-                <span className="text-slate-400">Maydon:</span>
+                <span className="text-slate-600 font-bold">Maydon:</span>
                 <div className="font-black text-slate-900 text-sm">
                   {previewProperty.area_sqm} m² ({previewProperty.rooms || 3} xona)
                 </div>

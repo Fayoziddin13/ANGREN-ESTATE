@@ -7,6 +7,7 @@ import { Property } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { LocateFixed, Plus, Minus } from "lucide-react";
+import { MapCloudOverlay } from "./MapCloudOverlay";
 
 interface AngrenMapProps {
   properties: Property[];
@@ -35,7 +36,29 @@ export function AngrenMap({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<{ [id: string]: maplibregl.Marker }>({});
+  const cloudOverlayRef = useRef<HTMLDivElement>(null);
   const [currentZoom, setCurrentZoom] = useState<number>(DEFAULT_ZOOM);
+
+  // Dynamic zoom-dependent cloud opacity mapping:
+  // - Zoom out (zoom <= 10.0): opacity = 0.70 (prominent mountain clouds)
+  // - Smooth linear interpolation between 10.0 and 14.5:
+  //   * Zoom = 12.0 -> opacity ~0.39
+  //   * Zoom = 13.3 (default Angren zoom) -> opacity ~0.26
+  //   * Zoom = 14.0 -> opacity ~0.10
+  // - Close zoom (zoom >= 14.5): opacity = 0 (completely disappears)
+  const updateCloudOpacity = (zoom: number) => {
+    if (!cloudOverlayRef.current) return;
+    let opacity = 0;
+    if (zoom <= 10.0) {
+      opacity = 0.70;
+    } else if (zoom < 14.0) {
+      const t = (14.0 - zoom) / (14.0 - 10.0);
+      opacity = t * 0.70;
+    } else {
+      opacity = 0;
+    }
+    cloudOverlayRef.current.style.opacity = opacity.toFixed(3);
+  };
 
   const { locale, t } = useLanguage();
   const { currency } = useCurrency();
@@ -136,9 +159,14 @@ export function AngrenMap({
 
     map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
 
-    // Track zoom level for clustering
+    // Track zoom level for clustering and atmospheric cloud opacity
+    map.on("zoom", () => {
+      updateCloudOpacity(map.getZoom());
+    });
+
     map.on("zoomend", () => {
       setCurrentZoom(map.getZoom());
+      updateCloudOpacity(map.getZoom());
     });
 
     // Clicking map background clears selection
@@ -151,6 +179,7 @@ export function AngrenMap({
 
     // Setup Polygon source and layer when style loaded
     map.on("load", () => {
+      updateCloudOpacity(map.getZoom());
       // Sync initial visibility state
       const isStandard = mapMode === "standard";
       if (map.getLayer("standard-layer")) {
@@ -459,6 +488,9 @@ export function AngrenMap({
   return (
     <div className={`relative w-full h-full overflow-hidden ${className}`}>
       <div ref={mapContainerRef} className="w-full h-full" />
+
+      {/* Atmospheric Cloud Layer (Subtle, realistic SVG clouds, GPU-accelerated, zoom-dependent) */}
+      <MapCloudOverlay ref={cloudOverlayRef} initialOpacity={0.28} />
 
       {/* Floating Glass Navigation Controls: [ Reset Center ], [ + ], [ - ] */}
       <div className="hidden sm:flex flex-col items-center gap-1.5 absolute bottom-6 right-6 z-20 pointer-events-auto">

@@ -220,7 +220,7 @@ export default function AdminLayout({
 
         {/* Navigation Items (10 sections) */}
         <div className="flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scrollbar">
-          <div className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300/60">
+          <div className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-200">
             {locale === "uz" ? "Boshqaruv bo‘limlari" : "Разделы управления"}
           </div>
           {navItems.map((item) => {
@@ -232,12 +232,12 @@ export default function AdminLayout({
                 className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
                   item.active
                     ? "bg-[#16543C] text-white shadow-sm border border-emerald-600/50 translate-x-1"
-                    : "text-emerald-100/80 hover:bg-white/10 hover:text-white"
+                    : "text-emerald-100 hover:bg-white/10 hover:text-white"
                 }`}
               >
                 <Icon
                   className={`h-4 w-4 shrink-0 ${
-                    item.active ? "text-emerald-300" : "text-emerald-300/70"
+                    item.active ? "text-emerald-300" : "text-emerald-300"
                   }`}
                 />
                 <span className="truncate">{item.label}</span>
@@ -250,7 +250,7 @@ export default function AdminLayout({
         <div className="p-3 border-t border-white/10 space-y-2 bg-[#0A261A]/80">
           {/* Language Switch */}
           <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs">
-            <span className="text-[11px] text-emerald-200/80 font-medium flex items-center gap-1.5">
+            <span className="text-[11px] text-emerald-100 font-medium flex items-center gap-1.5">
               <Globe className="h-3 w-3" />
               Til / Язык
             </span>
@@ -258,7 +258,7 @@ export default function AdminLayout({
               <button
                 onClick={() => setLocale("uz")}
                 className={`px-2 py-0.5 rounded text-[11px] font-bold transition-colors ${
-                  locale === "uz" ? "bg-white/20 text-white" : "text-emerald-200/60 hover:text-white"
+                  locale === "uz" ? "bg-white/20 text-white" : "text-emerald-200 hover:text-white"
                 }`}
               >
                 UZ
@@ -267,7 +267,7 @@ export default function AdminLayout({
               <button
                 onClick={() => setLocale("ru")}
                 className={`px-2 py-0.5 rounded text-[11px] font-bold transition-colors ${
-                  locale === "ru" ? "bg-white/20 text-white" : "text-emerald-200/60 hover:text-white"
+                  locale === "ru" ? "bg-white/20 text-white" : "text-emerald-200 hover:text-white"
                 }`}
               >
                 RU
@@ -283,7 +283,7 @@ export default function AdminLayout({
               </div>
               <div className="overflow-hidden">
                 <div className="text-xs font-bold text-white truncate">Administrator</div>
-                <div className="text-[10px] text-emerald-200/60 truncate">admin@angrenestate.uz</div>
+                <div className="text-[10px] text-emerald-200 truncate">admin@angrenestate.uz</div>
               </div>
             </div>
 
@@ -291,7 +291,7 @@ export default function AdminLayout({
               onClick={handleLogout}
               disabled={isLoggingOut}
               title={locale === "uz" ? "Tizimdan chiqish" : "Выйти из системы"}
-              className="p-1.5 rounded-lg text-emerald-300/80 hover:text-red-400 hover:bg-white/10 transition-colors shrink-0"
+              className="p-1.5 rounded-lg text-emerald-200 hover:text-red-400 hover:bg-white/10 transition-colors shrink-0"
             >
               <LogOut className="h-4 w-4" />
             </button>
@@ -303,10 +303,10 @@ export default function AdminLayout({
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         {/* Desktop Top Header Bar */}
         <div className="hidden md:flex items-center justify-between px-8 py-3.5 bg-white border-b border-slate-200 sticky top-0 z-20 shadow-xs">
-          <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+          <div className="flex items-center gap-2 text-xs text-slate-600 font-medium">
             <span>Admin</span>
             <ChevronRight className="h-3 w-3 text-slate-400" />
-            <span className="font-bold text-slate-800">{activeNav.label}</span>
+            <span className="font-bold text-slate-900">{activeNav.label}</span>
           </div>
 
           <div className="flex items-center gap-3">

@@ -1,5 +1,74 @@
 [
   {
+    "id": "qa-audit-test-1789155798069",
+    "slug": "qa-audit-test-kvartira-5-mavze-798074",
+    "title_uz": "QA Audit Yangilangan Kvartira - 5-mavze",
+    "title_ru": "Тестовая Квартира QA - 5-й микрорайон",
+    "description_uz": "Sinov uchun to‘liq maydon va spetsifikatsiya.",
+    "description_ru": "Полная спецификация для сквозного аудита.",
+    "address_uz": "Angren, 5-mavze, 45-uy",
+    "address_ru": "Ангрен, 5-й микрорайон, д. 45",
+    "district_name_uz": "5-mavze",
+    "district_name_ru": "5-й микрорайон",
+    "district": "5-mavze",
+    "neighborhood": "Markaz",
+    "transaction_type": "sale",
+    "deal_type": "sale",
+    "property_type": "apartment",
+    "status": "published",
+    "price": 410000000,
+    "price_uzs": 495000000,
+    "price_usd": 31900,
+    "currency": "UZS",
+    "price_negotiable": false,
+    "area_sqm": 64,
+    "area": 64,
+    "rooms": 2,
+    "bathrooms": 1,
+    "floor": 2,
+    "floor_number": 2,
+    "total_floors": 5,
+    "floors": 5,
+    "renovation": "euro",
+    "furniture": true,
+    "parking": true,
+    "images": [
+      "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800"
+    ],
+    "photos": [
+      "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800"
+    ],
+    "main_image": "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800",
+    "coordinates": {
+      "lat": 41.0125,
+      "lng": 70.138
+    },
+    "latitude": 41.0125,
+    "longitude": 70.138,
+    "utilities": {
+      "gas": true,
+      "water": true,
+      "heating": true,
+      "sewerage": true,
+      "electricity": true
+    },
+    "amenities": {
+      "ac": true,
+      "balcony": true,
+      "parking": true,
+      "elevator": false,
+      "internet": true,
+      "furniture": true
+    },
+    "contact_phone": "+998 90 555 66 77",
+    "views_count": 0,
+    "favorites_count": 0,
+    "contacts_count": 0,
+    "created_at": "2026-09-11T19:43:18.074+00:00",
+    "updated_at": "2026-09-11T19:43:26.696186+00:00",
+    "published_at": "2026-09-11T19:43:26.696186+00:00"
+  },
+  {
     "id": "qa-audit-test-1789137361017",
     "slug": "qa-audit-test-kvartira-5-mavze-361032",
     "title_uz": "QA Audit Yangilangan Kvartira - 5-mavze",

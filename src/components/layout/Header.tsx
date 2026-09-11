@@ -123,12 +123,13 @@ export function Header() {
       <div className="mx-auto flex h-16 sm:h-20 w-full max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8">
         {/* Left: Official Brand Logo & Name */}
         <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group shrink-0">
-          <div className="relative h-9 w-9 sm:h-11 sm:w-11 rounded-xl overflow-hidden shadow-sm transition-transform duration-200 group-hover:scale-105 shrink-0">
+          <div className="flex h-9 w-9 sm:h-11 sm:w-11 rounded-xl overflow-hidden shadow-sm transition-transform duration-200 group-hover:scale-105 shrink-0 bg-brand-dark/20 items-center justify-center">
             <Image
               src="/logo.png"
               alt="ANGREN ESTATE"
-              fill
-              className="object-cover"
+              width={44}
+              height={44}
+              className="h-full w-full object-contain rounded-xl"
               priority
             />
           </div>

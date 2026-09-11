@@ -14,11 +14,35 @@ async function verifyAuth(request: NextRequest) {
     const token = authHeader.slice(7).trim();
     const verified = verifyAdminSessionToken(token);
     if (verified.valid && verified.session) {
-      return verified.session;
+    return verified.session;
     }
   }
 
   return null;
+}
+
+function sanitizeInstagramUrl(url: any): string | null {
+  if (!url || typeof url !== "string") return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  let fullUrl = trimmed;
+  if (fullUrl.startsWith("@")) {
+    fullUrl = `https://instagram.com/${fullUrl.slice(1)}`;
+  } else if (!fullUrl.startsWith("http://") && !fullUrl.startsWith("https://")) {
+    fullUrl = `https://instagram.com/${fullUrl}`;
+  }
+  if (!fullUrl.startsWith("https://")) {
+    throw new Error("Instagram havolasi xavfsiz HTTPS protokoli bilan bo'lishi shart (masalan: https://instagram.com/username)");
+  }
+  try {
+    const parsed = new URL(fullUrl);
+    if (!parsed.hostname.includes("instagram.com")) {
+      throw new Error("Faqat haqiqiy Instagram havolasi (instagram.com) qabul qilinadi");
+    }
+  } catch (err: any) {
+    throw new Error(err.message || "Noto'g'ri Instagram havolasi");
+  }
+  return fullUrl;
 }
 
 export async function GET(request: NextRequest) {
@@ -81,9 +105,37 @@ export async function GET(request: NextRequest) {
       // Non-blocking if leads table is pending
     }
 
+function sanitizeInstagramUrl(url: any): string | null {
+  if (!url || typeof url !== "string") return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  let fullUrl = trimmed;
+  if (fullUrl.startsWith("@")) {
+    fullUrl = `https://instagram.com/${fullUrl.slice(1)}`;
+  } else if (!fullUrl.startsWith("http://") && !fullUrl.startsWith("https://")) {
+    fullUrl = `https://instagram.com/${fullUrl}`;
+  }
+  if (!fullUrl.startsWith("https://")) {
+    throw new Error("Instagram havolasi xavfsiz HTTPS protokoli bilan bo'lishi shart (masalan: https://instagram.com/username)");
+  }
+  try {
+    const parsed = new URL(fullUrl);
+    if (!parsed.hostname.includes("instagram.com")) {
+      throw new Error("Faqat haqiqiy Instagram havolasi (instagram.com) qabul qilinadi");
+    }
+  } catch (err: any) {
+    throw new Error(err.message || "Noto'g'ri Instagram havolasi");
+  }
+  return fullUrl;
+}
+
     // 4. Attach aggregated counts
     const enrichedRealtors = realtorList.map((r) => ({
       ...r,
+      photo_url: r.photo_url || r.avatar_url || null,
+      avatar_url: r.avatar_url || r.photo_url || null,
+      instagram_url: r.instagram_url || r.instagram || null,
+      instagram: r.instagram_url || r.instagram || null,
       properties_count: propertiesMap[r.id] || 0,
       assigned_properties_count: propertiesMap[r.id] || 0,
       leads_count: leadsMap[r.id] || 0,
@@ -126,6 +178,9 @@ export async function POST(request: NextRequest) {
       phone,
       telegram = "",
       avatar_url = null,
+      photo_url = null,
+      instagram_url = null,
+      instagram = null,
       experience_years = 1,
       position_uz = "Yetakchi rieltor",
       position_ru = "Ведущий риелтор",
@@ -152,11 +207,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const newRealtorRow = {
+    let validatedInstagram: string | null = null;
+    try {
+      validatedInstagram = sanitizeInstagramUrl(instagram_url || instagram);
+    } catch (valErr: any) {
+      return NextResponse.json({ success: false, error: valErr.message }, { status: 400 });
+    }
+
+    const resolvedPhoto = photo_url || avatar_url ? String(photo_url || avatar_url).trim() : null;
+
+    const newRealtorRow: Record<string, any> = {
       name: name.trim().slice(0, 150),
       phone: phone.trim().slice(0, 50),
       telegram: telegram ? telegram.trim().slice(0, 100) : null,
-      avatar_url: avatar_url ? String(avatar_url).trim() : null,
+      avatar_url: resolvedPhoto,
+      photo_url: resolvedPhoto,
+      instagram_url: validatedInstagram,
       experience_years: Math.max(Number(experience_years) || 1, 0),
       position_uz: position_uz ? position_uz.trim().slice(0, 100) : "Yetakchi rieltor",
       position_ru: position_ru ? position_ru.trim().slice(0, 100) : "Ведущий риелтор",
@@ -171,11 +237,25 @@ export async function POST(request: NextRequest) {
       updated_at: new Date().toISOString(),
     };
 
-    const { data: createdRealtor, error } = await supabaseAdmin
+    let { data: createdRealtor, error } = await supabaseAdmin
       .from("realtors")
       .insert([newRealtorRow])
       .select("*")
       .single();
+
+    if (error && (error.message.includes("photo_url") || error.message.includes("instagram_url"))) {
+      // Graceful fallback if new columns not yet in remote table schema
+      const fallbackRow = { ...newRealtorRow };
+      delete fallbackRow.photo_url;
+      delete fallbackRow.instagram_url;
+      const retry = await supabaseAdmin
+        .from("realtors")
+        .insert([fallbackRow])
+        .select("*")
+        .single();
+      createdRealtor = retry.data;
+      error = retry.error;
+    }
 
     if (error) {
       console.error("[Admin Realtors POST] Insert error:", error.message);
@@ -187,6 +267,10 @@ export async function POST(request: NextRequest) {
         success: true,
         realtor: {
           ...createdRealtor,
+          photo_url: resolvedPhoto,
+          avatar_url: resolvedPhoto,
+          instagram_url: validatedInstagram,
+          instagram: validatedInstagram,
           assigned_properties_count: 0,
           leads_count: 0,
         },

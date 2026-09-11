@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Heart, MapPin, Maximize2, Bed, Bath, ArrowRight } from "lucide-react";
 import { Property } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
@@ -12,9 +14,11 @@ import { formatPrice } from "@/lib/currency";
 
 interface PropertyCardProps {
   property: Property;
+  onViewDetails?: (property: Property) => void;
 }
 
-export function PropertyCard({ property }: PropertyCardProps) {
+export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
+  const router = useRouter();
   const { locale, t } = useLanguage();
   const { currency } = useCurrency();
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -36,13 +40,25 @@ export function PropertyCard({ property }: PropertyCardProps) {
       ? `${property.price_uzs.toLocaleString("ru-RU")} UZS / ${t.common.month}`
       : `$${Math.round(property.price_uzs / 12800).toLocaleString("ru-RU")} / ${t.common.month}`;
 
+  const handleCardClick = () => {
+    if (onViewDetails) {
+      onViewDetails(property);
+    } else {
+      router.push(`/properties/${property.id}`);
+    }
+  };
+
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     toggleFavorite(property.id);
   };
 
   return (
-    <div className="group relative flex flex-col overflow-hidden rounded-3xl bg-white border border-gray-100 shadow-card hover:shadow-elevated transition-all duration-300">
+    <div
+      onClick={handleCardClick}
+      className="group relative flex flex-col overflow-hidden rounded-3xl bg-white border border-gray-100 shadow-card hover:shadow-elevated transition-all duration-300 cursor-pointer"
+    >
       
       {/* Property Image Container */}
       <div className="relative aspect-[16/10] w-full overflow-hidden bg-gray-100">
@@ -85,9 +101,20 @@ export function PropertyCard({ property }: PropertyCardProps) {
           </div>
 
           {/* Title */}
-          <h3 className="text-xs sm:text-base font-bold text-gray-900 line-clamp-1 group-hover:text-brand-primary transition-colors">
-            {title}
-          </h3>
+          <Link
+            href={`/properties/${property.id}`}
+            onClick={(e) => {
+              if (onViewDetails) {
+                e.preventDefault();
+                onViewDetails(property);
+              }
+            }}
+            className="block focus:outline-none"
+          >
+            <h3 className="text-xs sm:text-base font-bold text-gray-900 line-clamp-1 group-hover:text-brand-primary transition-colors">
+              {title}
+            </h3>
+          </Link>
 
           {/* Location / Address */}
           <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-gray-500 pt-0.5">
@@ -125,9 +152,19 @@ export function PropertyCard({ property }: PropertyCardProps) {
           </div>
 
           {/* Circular Details Button */}
-          <div className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-700 group-hover:bg-brand-primary group-hover:text-white transition-colors">
+          <Link
+            href={`/properties/${property.id}`}
+            onClick={(e) => {
+              if (onViewDetails) {
+                e.preventDefault();
+                onViewDetails(property);
+              }
+            }}
+            aria-label="Batafsil ma'lumot"
+            className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-700 group-hover:bg-brand-primary group-hover:text-white transition-colors"
+          >
             <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          </div>
+          </Link>
 
         </div>
 

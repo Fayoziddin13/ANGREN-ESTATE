@@ -25,10 +25,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const mappedRealtors = (realtors || []).map((r) => ({
+      ...r,
+      photo_url: r.photo_url || r.avatar_url || null,
+      avatar_url: r.avatar_url || r.photo_url || null,
+      instagram_url: r.instagram_url || r.instagram || null,
+      instagram: r.instagram_url || r.instagram || null,
+    }));
+
     return NextResponse.json({
       success: true,
-      count: realtors?.length || 0,
-      realtors: realtors || [],
+      count: mappedRealtors.length,
+      realtors: mappedRealtors,
     });
   } catch (error: any) {
     console.error("[Public Realtors GET] Uncaught error:", error);

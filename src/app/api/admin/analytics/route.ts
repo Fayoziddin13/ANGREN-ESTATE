@@ -91,15 +91,19 @@ export async function GET(req: NextRequest) {
       eventsQuery = eventsQuery.gte("created_at", startDate);
     }
 
-    // Query 2: Properties for supply & outcomes (only needed columns)
+    // Query 2: Properties for supply & outcomes (needed columns)
     const propertiesQuery = supabaseAdmin
       .from("properties")
-      .select("id, status, property_type, district_name_uz, views_count");
+      .select("id, status, property_type, district_name_uz, views_count, price, price_usd, area_sqm, created_at, updated_at");
 
-    // Query 3: Leads count for conversion tracking
-    const leadsQuery = supabaseAdmin
+    // Query 3: Leads count for separate lead tracking
+    let leadsQuery = supabaseAdmin
       .from("leads")
-      .select("id");
+      .select("id, created_at, status, property_id");
+
+    if (startDate) {
+      leadsQuery = leadsQuery.gte("created_at", startDate);
+    }
 
     const [eventsRes, propertiesRes, leadsRes] = await Promise.all([
       eventsQuery,
@@ -113,13 +117,21 @@ export async function GET(req: NextRequest) {
     const rawProperties: any[] = propertiesRes.data || [];
     const rawLeads: any[] = leadsRes.data || [];
 
-    // 3. Aggregate KPIs
+    // 3. Aggregate KPIs & Sessions
     let pageViews = 0;
     let phoneClicks = 0;
     let telegramClicks = 0;
     let favoritesAdds = 0;
     let searches = 0;
-    const sessionSet = new Set<string>();
+
+    interface SessionInfo {
+      first: number;
+      last: number;
+      count: number;
+      hasConversionAction: boolean;
+    }
+
+    const sessionMap = new Map<string, SessionInfo>();
 
     const deviceCounts: Record<string, number> = {
       iPhone: 0,
@@ -137,7 +149,32 @@ export async function GET(req: NextRequest) {
     };
 
     for (const evt of rawEvents) {
-      if (evt.session_id) sessionSet.add(evt.session_id);
+      const isConversionAction =
+        evt.event_type === "phone_click" || evt.event_type === "telegram_click";
+
+      if (evt.session_id) {
+        const ts = evt.created_at ? new Date(evt.created_at).getTime() : 0;
+        const existing = sessionMap.get(evt.session_id);
+        if (!existing) {
+          sessionMap.set(evt.session_id, {
+            first: ts,
+            last: ts,
+            count: 1,
+            hasConversionAction: isConversionAction,
+          });
+        } else {
+          existing.count++;
+          if (ts > 0 && (existing.first === 0 || ts < existing.first)) {
+            existing.first = ts;
+          }
+          if (ts > existing.last) {
+            existing.last = ts;
+          }
+          if (isConversionAction) {
+            existing.hasConversionAction = true;
+          }
+        }
+      }
 
       switch (evt.event_type) {
         case "page_view":
@@ -173,11 +210,46 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const uniqueVisitors = sessionSet.size || (rawEvents.length > 0 ? 1 : 0);
-    const totalEvents = rawEvents.length;
-
-    // Total visits is either page_view count or minimum unique visitor baseline
+    const uniqueVisitors = sessionMap.size || (rawEvents.length > 0 ? 1 : 0);
     const totalVisits = Math.max(pageViews, uniqueVisitors);
+
+    // Calculate real average session duration from recorded event timestamps
+    let totalDurationSeconds = 0;
+    let singleEventSessions = 0;
+    for (const [, s] of sessionMap.entries()) {
+      if (s.count === 1) {
+        singleEventSessions++;
+      }
+      if (s.last > s.first && s.first > 0) {
+        totalDurationSeconds += Math.round((s.last - s.first) / 1000);
+      }
+    }
+
+    const avgDurationSec =
+      sessionMap.size > 0 ? Math.round(totalDurationSeconds / sessionMap.size) : 0;
+    const mins = Math.floor(avgDurationSec / 60);
+    const secs = avgDurationSec % 60;
+    const avgSessionStr = `${mins}m ${secs.toString().padStart(2, "0")}s`;
+
+    // Real bounce rate: sessions with exactly 1 event / total unique sessions
+    const bounceRateStr =
+      sessionMap.size > 0
+        ? `${((singleEventSessions / sessionMap.size) * 100).toFixed(1)}%`
+        : "0.0%";
+
+    // Non-double-counted unique session conversion rate:
+    // Count unique sessions that performed at least one phone_click or telegram_click
+    let convertingSessionsCount = 0;
+    for (const [, s] of sessionMap.entries()) {
+      if (s.hasConversionAction) {
+        convertingSessionsCount++;
+      }
+    }
+
+    const conversionRateStr =
+      uniqueVisitors > 0
+        ? `${((convertingSessionsCount / uniqueVisitors) * 100).toFixed(1)}%`
+        : "0.0%";
 
     const kpis: AnalyticsKPISummary = {
       total_visits: totalVisits,
@@ -186,73 +258,73 @@ export async function GET(req: NextRequest) {
       telegram_chats: telegramClicks,
       favorites_added: favoritesAdds,
       searches_executed: searches,
-      avg_session: uniqueVisitors > 0 ? "3m 42s" : "0m 00s",
-      bounce_rate: uniqueVisitors > 0 ? "34.2%" : "0.0%",
+      avg_session: avgSessionStr,
+      bounce_rate: bounceRateStr,
     };
 
     // 4. Device Distribution
     const totalDeviceEvents =
-      deviceCounts.iPhone + deviceCounts.Android + deviceCounts.Desktop + deviceCounts.Tablet || 1;
+      deviceCounts.iPhone + deviceCounts.Android + deviceCounts.Desktop + deviceCounts.Tablet;
 
     const devices: AnalyticsDeviceStat[] = [
       {
         name: "Apple iPhone (iOS)",
         count: deviceCounts.iPhone,
-        percent: Math.round((deviceCounts.iPhone / totalDeviceEvents) * 100),
+        percent: totalDeviceEvents > 0 ? Math.round((deviceCounts.iPhone / totalDeviceEvents) * 100) : 0,
       },
       {
         name: "Android Smartphone",
         count: deviceCounts.Android,
-        percent: Math.round((deviceCounts.Android / totalDeviceEvents) * 100),
+        percent: totalDeviceEvents > 0 ? Math.round((deviceCounts.Android / totalDeviceEvents) * 100) : 0,
       },
       {
         name: "Desktop (Chrome / Mac / Win)",
         count: deviceCounts.Desktop,
-        percent: Math.round((deviceCounts.Desktop / totalDeviceEvents) * 100),
+        percent: totalDeviceEvents > 0 ? Math.round((deviceCounts.Desktop / totalDeviceEvents) * 100) : 0,
       },
       {
         name: "Tablet (iPad / Android Tablet)",
         count: deviceCounts.Tablet,
-        percent: Math.round((deviceCounts.Tablet / totalDeviceEvents) * 100),
+        percent: totalDeviceEvents > 0 ? Math.round((deviceCounts.Tablet / totalDeviceEvents) * 100) : 0,
       },
     ];
 
     // 5. Traffic Sources Distribution
     const totalSourcesEvents =
       sourceCounts.Telegram +
-        sourceCounts.Instagram +
-        sourceCounts.Google +
-        sourceCounts.Direct +
-        sourceCounts.Referral || 1;
+      sourceCounts.Instagram +
+      sourceCounts.Google +
+      sourceCounts.Direct +
+      sourceCounts.Referral;
 
     const traffic_sources: AnalyticsTrafficSourceStat[] = [
       {
         name: "Telegram kanallar va guruhlar",
         visits: sourceCounts.Telegram,
-        percent: Math.round((sourceCounts.Telegram / totalSourcesEvents) * 100),
+        percent: totalSourcesEvents > 0 ? Math.round((sourceCounts.Telegram / totalSourcesEvents) * 100) : 0,
         color: "bg-sky-500",
       },
       {
         name: "Instagram stories va bio link",
         visits: sourceCounts.Instagram,
-        percent: Math.round((sourceCounts.Instagram / totalSourcesEvents) * 100),
+        percent: totalSourcesEvents > 0 ? Math.round((sourceCounts.Instagram / totalSourcesEvents) * 100) : 0,
         color: "bg-pink-500",
       },
       {
         name: "Google Qidiruv (SEO organik)",
         visits: sourceCounts.Google,
-        percent: Math.round((sourceCounts.Google / totalSourcesEvents) * 100),
+        percent: totalSourcesEvents > 0 ? Math.round((sourceCounts.Google / totalSourcesEvents) * 100) : 0,
         color: "bg-emerald-500",
       },
       {
         name: "To‘g‘ridan-to‘g‘ri (Direct / Bookmark)",
         visits: sourceCounts.Direct,
-        percent: Math.round((sourceCounts.Direct / totalSourcesEvents) * 100),
+        percent: totalSourcesEvents > 0 ? Math.round((sourceCounts.Direct / totalSourcesEvents) * 100) : 0,
         color: "bg-amber-500",
       },
     ];
 
-    // 6. Property Types Demand Breakdown
+    // 6. Property Types Demand Breakdown (Real Views from Database)
     const typeViews: Record<string, number> = {
       apartment: 0,
       house: 0,
@@ -260,7 +332,6 @@ export async function GET(req: NextRequest) {
       land: 0,
     };
 
-    // Calculate views per property type
     for (const prop of rawProperties) {
       const pt = prop.property_type || "apartment";
       if (typeViews[pt] !== undefined) {
@@ -269,126 +340,127 @@ export async function GET(req: NextRequest) {
     }
 
     const totalTypeViews =
-      typeViews.apartment + typeViews.house + typeViews.commercial + typeViews.land || 1;
+      typeViews.apartment + typeViews.house + typeViews.commercial + typeViews.land;
 
     const property_types_demand: AnalyticsDemandStat[] = [
       {
         type_uz: "Kvartiralar",
         type_ru: "Квартиры",
-        percentage: Math.round((typeViews.apartment / totalTypeViews) * 100) || 54,
+        percentage: totalTypeViews > 0 ? Math.round((typeViews.apartment / totalTypeViews) * 100) : 0,
         views: typeViews.apartment,
-        growth: "+14%",
+        growth: "—",
       },
       {
         type_uz: "Hovli va Kottejlar",
         type_ru: "Дома и коттеджи",
-        percentage: Math.round((typeViews.house / totalTypeViews) * 100) || 26,
+        percentage: totalTypeViews > 0 ? Math.round((typeViews.house / totalTypeViews) * 100) : 0,
         views: typeViews.house,
-        growth: "+8%",
+        growth: "—",
       },
       {
         type_uz: "Tijorat maydonlari",
         type_ru: "Коммерческая",
-        percentage: Math.round((typeViews.commercial / totalTypeViews) * 100) || 14,
+        percentage: totalTypeViews > 0 ? Math.round((typeViews.commercial / totalTypeViews) * 100) : 0,
         views: typeViews.commercial,
-        growth: "+19%",
+        growth: "—",
       },
       {
         type_uz: "Yer uchastkalari",
         type_ru: "Земельные участки",
-        percentage: Math.round((typeViews.land / totalTypeViews) * 100) || 6,
+        percentage: totalTypeViews > 0 ? Math.round((typeViews.land / totalTypeViews) * 100) : 0,
         views: typeViews.land,
-        growth: "+4%",
+        growth: "—",
       },
     ];
 
-    // 7. Districts Demand & Supply Breakdown
-    const districts_data: AnalyticsDistrictStat[] = [
-      {
-        name_uz: "Angren Markazi",
-        name_ru: "Центр Ангрена",
-        views: rawProperties
-          .filter((p) => (p.district_name_uz || "").includes("Markaz"))
-          .reduce((sum, p) => sum + (p.views_count || 0), 0) || 18,
-        searches: Math.max(12, Math.round(searches * 0.45)),
-        supply_count: rawProperties.filter(
-          (p) => p.status === "published" && (p.district_name_uz || "").includes("Markaz")
-        ).length || 3,
-        avg_price_sqm: "7.4 mln UZS",
-        closed_deals: rawProperties.filter(
-          (p) =>
-            (p.status === "sold" || p.status === "rented") &&
-            (p.district_name_uz || "").includes("Markaz")
-        ).length || 1,
-        avg_days_on_market: 19,
-        ratio: "Talab yuqori (Defitsit)",
-        ratio_ru: "Высокий спрос (Дефицит)",
-        ratio_color: "emerald",
-      },
-      {
-        name_uz: "5/1 dahasi",
-        name_ru: "Массив 5/1",
-        views: rawProperties
-          .filter((p) => (p.district_name_uz || "").includes("5/1"))
-          .reduce((sum, p) => sum + (p.views_count || 0), 0) || 14,
-        searches: Math.max(8, Math.round(searches * 0.3)),
-        supply_count: rawProperties.filter(
-          (p) => p.status === "published" && (p.district_name_uz || "").includes("5/1")
-        ).length || 2,
-        avg_price_sqm: "5.6 mln UZS",
-        closed_deals: rawProperties.filter(
-          (p) =>
-            (p.status === "sold" || p.status === "rented") &&
-            (p.district_name_uz || "").includes("5/1")
-        ).length || 1,
-        avg_days_on_market: 22,
-        ratio: "Barqaror balans",
-        ratio_ru: "Стабильный баланс",
-        ratio_color: "blue",
-      },
-      {
-        name_uz: "Dukent daryosi bo‘yi",
-        name_ru: "Берег Дукента",
-        views: rawProperties
-          .filter((p) => (p.district_name_uz || "").includes("Dukent"))
-          .reduce((sum, p) => sum + (p.views_count || 0), 0) || 9,
-        searches: Math.max(5, Math.round(searches * 0.15)),
-        supply_count: rawProperties.filter(
-          (p) => p.status === "published" && (p.district_name_uz || "").includes("Dukent")
-        ).length || 2,
-        avg_price_sqm: "4.9 mln UZS",
-        closed_deals: rawProperties.filter(
-          (p) =>
-            (p.status === "sold" || p.status === "rented") &&
-            (p.district_name_uz || "").includes("Dukent")
-        ).length || 0,
-        avg_days_on_market: 28,
-        ratio: "Mavsumiy talab",
-        ratio_ru: "Сезонный спрос",
-        ratio_color: "amber",
-      },
-      {
-        name_uz: "Yangiobod mavzesi",
-        name_ru: "Массив Янгиабад",
-        views: rawProperties
-          .filter((p) => (p.district_name_uz || "").includes("Yangiobod"))
-          .reduce((sum, p) => sum + (p.views_count || 0), 0) || 6,
-        searches: Math.max(3, Math.round(searches * 0.1)),
-        supply_count: rawProperties.filter(
-          (p) => p.status === "published" && (p.district_name_uz || "").includes("Yangiobod")
-        ).length || 1,
-        avg_price_sqm: "3.8 mln UZS",
-        closed_deals: rawProperties.filter(
-          (p) =>
-            (p.status === "sold" || p.status === "rented") &&
-            (p.district_name_uz || "").includes("Yangiobod")
-        ).length || 0,
-        avg_days_on_market: 34,
-        ratio: "Taklif yetarli",
-        ratio_ru: "Достаточное предложение",
-        ratio_color: "slate",
-      },
+    // 7. Districts Demand & Supply Breakdown (Real Database Calculations)
+    const districtConfigs = [
+      { name_uz: "Angren Markazi", name_ru: "Центр Ангрена", filter: "Markaz" },
+      { name_uz: "5/1 dahasi", name_ru: "Массив 5/1", filter: "5/1" },
+      { name_uz: "Dukent daryosi bo‘yi", name_ru: "Берег Дукента", filter: "Dukent" },
+      { name_uz: "Yangiobod mavzesi", name_ru: "Массив Янгиабад", filter: "Yangiobod" },
     ];
+
+    const districts_data: AnalyticsDistrictStat[] = districtConfigs.map((cfg) => {
+      const matched = rawProperties.filter((p) =>
+        (p.district_name_uz || "").includes(cfg.filter)
+      );
+      const views = matched.reduce((sum, p) => sum + (p.views_count || 0), 0);
+      const supply = matched.filter((p) => p.status === "published").length;
+      const closed = matched.filter((p) => p.status === "sold" || p.status === "rented");
+
+      // Calculate real average price per sqm
+      const validPriceProps = matched.filter(
+        (p) => Number(p.price) > 0 && Number(p.area_sqm) > 0
+      );
+      let avgPriceSqm = "—";
+      if (validPriceProps.length > 0) {
+        const sumPerSqm = validPriceProps.reduce(
+          (sum, p) => sum + Number(p.price) / Number(p.area_sqm),
+          0
+        );
+        const avg = sumPerSqm / validPriceProps.length;
+        avgPriceSqm = `${(avg / 1_000_000).toFixed(1)} mln UZS`;
+      }
+
+      // Real days on market for closed properties
+      let avgDays = 0;
+      if (closed.length > 0) {
+        const totalDays = closed.reduce((sum, p) => {
+          if (p.created_at && p.updated_at) {
+            const diff = Math.max(
+              1,
+              Math.round(
+                (new Date(p.updated_at).getTime() - new Date(p.created_at).getTime()) /
+                  (1000 * 60 * 60 * 24)
+              )
+            );
+            return sum + diff;
+          }
+          return sum + 0;
+        }, 0);
+        avgDays = Math.round(totalDays / closed.length);
+      }
+
+      // Searches from real search/filter events
+      const districtSearches = rawEvents.filter((e) => {
+        if (e.event_type !== "search" && e.event_type !== "filter_used") return false;
+        const meta = JSON.stringify(e.metadata || "").toLowerCase();
+        return meta.includes(cfg.filter.toLowerCase());
+      }).length;
+
+      let ratio = "Barqaror balans";
+      let ratio_ru = "Стабильный баланс";
+      let ratio_color = "blue";
+
+      if (supply === 0 && views > 0) {
+        ratio = "Talab yuqori (Defitsit)";
+        ratio_ru = "Высокий спрос (Дефицит)";
+        ratio_color = "emerald";
+      } else if (supply > 0 && views === 0) {
+        ratio = "Taklif yetarli";
+        ratio_ru = "Достаточное предложение";
+        ratio_color = "slate";
+      } else if (views > 20) {
+        ratio = "Faol talab";
+        ratio_ru = "Активный спрос";
+        ratio_color = "emerald";
+      }
+
+      return {
+        name_uz: cfg.name_uz,
+        name_ru: cfg.name_ru,
+        views,
+        searches: districtSearches,
+        supply_count: supply,
+        avg_price_sqm: avgPriceSqm,
+        closed_deals: closed.length,
+        avg_days_on_market: avgDays,
+        ratio,
+        ratio_ru,
+        ratio_color,
+      };
+    });
 
     // 8. Outcomes & Deal Velocity
     const soldCount = rawProperties.filter((p) => p.status === "sold").length;
@@ -396,18 +468,35 @@ export async function GET(req: NextRequest) {
     const activeSupply = rawProperties.filter((p) => p.status === "published").length;
     const closedDeals = soldCount + rentedCount;
 
-    const conversionRatio =
-      totalVisits > 0
-        ? `${(((phoneClicks + telegramClicks + rawLeads.length) / totalVisits) * 100).toFixed(1)}%`
-        : "4.8%";
+    const allClosedProps = rawProperties.filter(
+      (p) => p.status === "sold" || p.status === "rented"
+    );
+    let overallAvgDaysOnMarket = 0;
+    if (allClosedProps.length > 0) {
+      const sumDays = allClosedProps.reduce((sum, p) => {
+        if (p.created_at && p.updated_at) {
+          const diff = Math.max(
+            1,
+            Math.round(
+              (new Date(p.updated_at).getTime() - new Date(p.created_at).getTime()) /
+                (1000 * 60 * 60 * 24)
+            )
+          );
+          return sum + diff;
+        }
+        return sum + 0;
+      }, 0);
+      overallAvgDaysOnMarket = Math.round(sumDays / allClosedProps.length);
+    }
 
     const outcomes: AnalyticsOutcomesStat = {
       closed_deals: closedDeals,
       sold_count: soldCount,
       rented_count: rentedCount,
       active_supply: activeSupply,
-      avg_days_on_market: 22,
-      conversion_rate: conversionRatio,
+      avg_days_on_market: overallAvgDaysOnMarket,
+      conversion_rate: conversionRateStr,
+      total_leads: rawLeads.length,
     };
 
     // 9. Recent Events Stream (50 latest)

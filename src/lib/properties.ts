@@ -57,6 +57,8 @@ export function mapRowToProperty(row: any): Property {
           photo_url: realtorObj.photo_url || realtorObj.avatar_url || undefined,
           phone: realtorObj.phone || "",
           telegram: realtorObj.telegram || "",
+          instagram_url: realtorObj.instagram_url || realtorObj.instagram || undefined,
+          instagram: realtorObj.instagram_url || realtorObj.instagram || undefined,
           experience_years: Number(realtorObj.experience_years || 1),
           position_uz: realtorObj.position_uz || undefined,
           position_ru: realtorObj.position_ru || undefined,

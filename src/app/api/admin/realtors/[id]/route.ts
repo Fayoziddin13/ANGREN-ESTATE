@@ -21,8 +21,32 @@ async function verifyAuth(request: NextRequest) {
   return null;
 }
 
+function sanitizeInstagramUrl(url: any): string | null {
+  if (!url || typeof url !== "string") return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  let fullUrl = trimmed;
+  if (fullUrl.startsWith("@")) {
+    fullUrl = `https://instagram.com/${fullUrl.slice(1)}`;
+  } else if (!fullUrl.startsWith("http://") && !fullUrl.startsWith("https://")) {
+    fullUrl = `https://instagram.com/${fullUrl}`;
+  }
+  if (!fullUrl.startsWith("https://")) {
+    throw new Error("Instagram havolasi xavfsiz HTTPS protokoli bilan bo'lishi shart (masalan: https://instagram.com/username)");
+  }
+  try {
+    const parsed = new URL(fullUrl);
+    if (!parsed.hostname.includes("instagram.com")) {
+      throw new Error("Faqat haqiqiy Instagram havolasi (instagram.com) qabul qilinadi");
+    }
+  } catch (err: any) {
+    throw new Error(err.message || "Noto'g'ri Instagram havolasi");
+  }
+  return fullUrl;
+}
+
 /**
- * Admin Realtor Update Endpoint (Edit & is_active Toggle)
+ * Admin Realtor Update Endpoint (Edit, Photo, Instagram & is_active Toggle)
  * STRICT ARCHITECTURAL CONSTRAINT: NO DELETE METHOD IS IMPLEMENTED.
  * Realtor records are permanent business history in Supabase.
  * De-listing is performed strictly via is_active = false.
@@ -53,7 +77,27 @@ export async function PATCH(
     if (body.name !== undefined) updates.name = String(body.name).trim().slice(0, 150);
     if (body.phone !== undefined) updates.phone = String(body.phone).trim().slice(0, 50);
     if (body.telegram !== undefined) updates.telegram = body.telegram ? String(body.telegram).trim().slice(0, 100) : null;
-    if (body.avatar_url !== undefined) updates.avatar_url = body.avatar_url ? String(body.avatar_url).trim() : null;
+    
+    // Photo update (support both photo_url and avatar_url)
+    if (body.photo_url !== undefined || body.avatar_url !== undefined) {
+      const p = body.photo_url !== undefined ? body.photo_url : body.avatar_url;
+      const photoVal = p ? String(p).trim() : null;
+      updates.avatar_url = photoVal;
+      updates.photo_url = photoVal;
+    }
+
+    // Instagram URL update with strict HTTPS validation
+    let validatedInstagram: string | null = undefined as any;
+    if (body.instagram_url !== undefined || body.instagram !== undefined) {
+      const rawInsta = body.instagram_url !== undefined ? body.instagram_url : body.instagram;
+      try {
+        validatedInstagram = sanitizeInstagramUrl(rawInsta);
+        updates.instagram_url = validatedInstagram;
+      } catch (valErr: any) {
+        return NextResponse.json({ success: false, error: valErr.message }, { status: 400 });
+      }
+    }
+
     if (body.experience_years !== undefined) updates.experience_years = Math.max(Number(body.experience_years) || 0, 0);
     if (body.position_uz !== undefined) updates.position_uz = String(body.position_uz).trim().slice(0, 100);
     if (body.position_ru !== undefined) updates.position_ru = String(body.position_ru).trim().slice(0, 100);
@@ -69,22 +113,48 @@ export async function PATCH(
     if (body.display_order !== undefined) updates.display_order = Number(body.display_order) || 0;
     if (body.is_active !== undefined) updates.is_active = Boolean(body.is_active);
 
-    const { data: updatedRealtor, error } = await supabaseAdmin
+    let { data: updatedRealtor, error } = await supabaseAdmin
       .from("realtors")
       .update(updates)
       .eq("id", id)
       .select("*")
       .single();
 
+    if (error && (error.message.includes("photo_url") || error.message.includes("instagram_url"))) {
+      // Fallback if photo_url or instagram_url column is not yet in remote table schema
+      const fallbackUpdates = { ...updates };
+      delete fallbackUpdates.photo_url;
+      delete fallbackUpdates.instagram_url;
+      const retry = await supabaseAdmin
+        .from("realtors")
+        .update(fallbackUpdates)
+        .eq("id", id)
+        .select("*")
+        .single();
+      updatedRealtor = retry.data;
+      error = retry.error;
+    }
+
     if (error) {
       console.error("[Admin Realtor PATCH] Update error:", error.message);
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
+    const resPhoto = updates.photo_url !== undefined ? updates.photo_url : (updatedRealtor?.avatar_url || updatedRealtor?.photo_url || null);
+    const resInsta = updates.instagram_url !== undefined ? updates.instagram_url : (updatedRealtor?.instagram_url || updatedRealtor?.instagram || null);
+
     return NextResponse.json({
       success: true,
-      realtor: updatedRealtor,
-      message: "Realtor updated successfully",
+      realtor: {
+        ...updatedRealtor,
+        photo_url: resPhoto,
+        avatar_url: resPhoto,
+        instagram_url: resInsta,
+        instagram: resInsta,
+      },
+      message: updates.is_active !== undefined 
+        ? (updates.is_active ? "Realtor activated successfully" : "Realtor deactivated successfully")
+        : "Realtor updated successfully",
     });
   } catch (error: any) {
     console.error("[Admin Realtor PATCH] Uncaught error:", error);

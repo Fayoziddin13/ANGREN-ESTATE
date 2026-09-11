@@ -286,10 +286,10 @@ export default function ContactsPage() {
                     className="flex flex-col rounded-3xl bg-white/95 backdrop-blur-xl border border-gray-100 p-6 shadow-card hover:shadow-elevated transition-all duration-300 group"
                   >
                     <div className="flex items-center gap-4 mb-4">
-                      <div className="relative h-16 w-16 rounded-2xl overflow-hidden bg-brand-light flex items-center justify-center text-brand-primary font-black text-2xl shrink-0 shadow-sm">
-                        {r.avatar_url ? (
+                      <div className="relative h-16 w-16 rounded-2xl overflow-hidden bg-brand-light flex items-center justify-center text-brand-primary font-black text-2xl shrink-0 shadow-sm border border-brand-border/40">
+                        {r.photo_url || r.avatar_url ? (
                           <Image
-                            src={r.avatar_url}
+                            src={r.photo_url || r.avatar_url || ""}
                             alt={r.name}
                             fill
                             className="object-cover"
@@ -318,10 +318,10 @@ export default function ContactsPage() {
                       </div>
                     )}
 
-                    <div className="mt-auto grid grid-cols-2 gap-2.5 pt-4 border-t border-gray-100">
+                    <div className={`mt-auto grid ${r.instagram_url || r.instagram ? "grid-cols-3" : "grid-cols-2"} gap-2 pt-4 border-t border-gray-100`}>
                       <a
                         href={`tel:${r.phone}`}
-                        className="flex items-center justify-center gap-2 rounded-2xl bg-brand-primary px-3.5 py-2.5 text-xs font-bold text-white hover:bg-brand-primary-hover shadow-sm active:scale-95 transition-all"
+                        className="flex items-center justify-center gap-1.5 rounded-2xl bg-brand-primary px-3 py-2.5 text-xs font-bold text-white hover:bg-brand-primary-hover shadow-sm active:scale-95 transition-all"
                       >
                         <Phone className="h-3.5 w-3.5" />
                         <span>{t.aboutPage.callBtn}</span>
@@ -330,11 +330,23 @@ export default function ContactsPage() {
                         href={r.telegram.startsWith("http") ? r.telegram : `https://t.me/${r.telegram.replace("@", "")}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white px-3.5 py-2.5 text-xs font-bold text-brand-dark hover:bg-gray-50 shadow-sm active:scale-95 transition-all"
+                        className="flex items-center justify-center gap-1.5 rounded-2xl border border-gray-200 bg-white px-3 py-2.5 text-xs font-bold text-brand-dark hover:bg-gray-50 shadow-sm active:scale-95 transition-all"
                       >
                         <Send className="h-3.5 w-3.5 text-sky-600" />
                         <span>{t.aboutPage.telegramBtn}</span>
                       </a>
+                      {(r.instagram_url || r.instagram) && (
+                        <a
+                          href={r.instagram_url || r.instagram}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center justify-center gap-1.5 rounded-2xl border border-pink-200 bg-pink-50/50 px-2.5 py-2.5 text-xs font-bold text-pink-700 hover:bg-pink-100 shadow-sm active:scale-95 transition-all"
+                          title="Instagram"
+                        >
+                          <Instagram className="h-3.5 w-3.5 text-pink-600" />
+                          <span>Instagram</span>
+                        </a>
+                      )}
                     </div>
                   </div>
                 ))}

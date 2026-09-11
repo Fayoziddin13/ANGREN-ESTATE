@@ -356,7 +356,17 @@ export default function RentPage() {
 
       {/* 4. SECONDARY DISCOVERY CONTENT */}
       <div id="rent-offers-section">
-        <PopularSection properties={filteredProperties} />
+        <PopularSection
+          properties={filteredProperties}
+          title={locale === "uz" ? "Ijaradagi barcha takliflar" : "Все предложения по аренде"}
+          subtitle={
+            locale === "uz"
+              ? `${filteredProperties.length} ta faol ijara obyekti`
+              : `${filteredProperties.length} активных объектов в аренду`
+          }
+          id="rent-catalog"
+          viewAllHref=""
+        />
         <TrustSection />
         <Footer />
       </div>

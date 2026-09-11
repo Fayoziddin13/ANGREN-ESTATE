@@ -183,6 +183,7 @@ export interface AnalyticsOutcomesStat {
   active_supply: number;
   avg_days_on_market: number;
   conversion_rate: string;
+  total_leads?: number;
 }
 
 export interface AnalyticsDashboardPayload {
@@ -212,6 +213,7 @@ export interface Realtor {
   phone: string;
   telegram: string;
   instagram?: string;
+  instagram_url?: string;
   bio_uz?: string;
   bio_ru?: string;
   display_order?: number;

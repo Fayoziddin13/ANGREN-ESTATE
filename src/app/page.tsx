@@ -11,6 +11,7 @@ import { CollapsiblePropertyList } from "@/components/map/CollapsiblePropertyLis
 import { PopularSection } from "@/components/property/PopularSection";
 import { TrustSection } from "@/components/home/TrustSection";
 import { Footer } from "@/components/layout/Footer";
+import { ScrollRailNav } from "@/components/layout/ScrollRailNav";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { useProperties } from "@/lib/propertyStore";
 import { trackEvent } from "@/lib/analytics";
@@ -228,8 +229,11 @@ export default function HomePage() {
       {/* 1. Sticky Header */}
       <Header />
 
+      {/* Desktop Vertical Navigation Rail */}
+      <ScrollRailNav />
+
       {/* 2. MAP-FIRST PRIMARY VIEWPORT */}
-      <main className="relative w-full h-[calc(100vh-64px)] sm:h-[calc(100vh-80px)] overflow-hidden bg-gray-100">
+      <main id="map-section" className="relative w-full h-[calc(100vh-64px)] sm:h-[calc(100vh-80px)] overflow-hidden bg-gray-100">
         {/* Full-Screen Angren Interactive Map */}
         <AngrenMap
           properties={filteredProperties}
@@ -375,11 +379,19 @@ export default function HomePage() {
       {/* 3. SECONDARY DISCOVERY CONTENT (Below the Map Fold) */}
       <div id="popular-section">
         {/* Popular Offers */}
-        <PopularSection properties={filteredProperties} />
+        <PopularSection
+          properties={filteredProperties}
+          viewAllHref={transactionType === "rent" ? "/ijara" : "/sotib-olish"}
+          limit={4}
+        />
+      </div>
 
+      <div id="trust-section">
         {/* Trust Badges */}
         <TrustSection />
+      </div>
 
+      <div id="footer-section">
         {/* Footer */}
         <Footer />
       </div>

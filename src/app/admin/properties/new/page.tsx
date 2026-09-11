@@ -442,7 +442,7 @@ export default function AddPropertyPage() {
                 ? "bg-[#16543C] text-white border-emerald-800 shadow-xs"
                 : activeStep > item.step
                 ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                : "bg-white text-slate-400 border-slate-200"
+                : "bg-white text-slate-500 font-medium border-slate-200 hover:text-slate-800"
             }`}
           >
             <span className="mr-1">{item.step}.</span>
@@ -852,25 +852,25 @@ export default function AddPropertyPage() {
                 </div>
                 <div className="text-right">
                   <div className="text-xl font-black text-[#16543C]">${priceUsd.toLocaleString()}</div>
-                  <div className="text-xs text-slate-400">{(priceUzs / 1000000).toFixed(0)} mln UZS</div>
+                  <div className="text-xs text-slate-600 font-medium">{(priceUzs / 1000000).toFixed(0)} mln UZS</div>
                 </div>
               </div>
 
               <div className="grid grid-cols-4 gap-2 text-center text-xs pt-2 border-t border-slate-200">
                 <div className="p-2 bg-white rounded-xl">
-                  <span className="text-slate-400 text-[10px]">Maydon</span>
+                  <span className="text-slate-600 font-bold text-[10px]">Maydon</span>
                   <div className="font-bold">{areaSqm} m²</div>
                 </div>
                 <div className="p-2 bg-white rounded-xl">
-                  <span className="text-slate-400 text-[10px]">Xonalar</span>
+                  <span className="text-slate-600 font-bold text-[10px]">Xonalar</span>
                   <div className="font-bold">{rooms}</div>
                 </div>
                 <div className="p-2 bg-white rounded-xl">
-                  <span className="text-slate-400 text-[10px]">Qavat</span>
+                  <span className="text-slate-600 font-bold text-[10px]">Qavat</span>
                   <div className="font-bold">{floor}/{totalFloors}</div>
                 </div>
                 <div className="p-2 bg-white rounded-xl">
-                  <span className="text-slate-400 text-[10px]">Ta'mir</span>
+                  <span className="text-slate-600 font-bold text-[10px]">Ta'mir</span>
                   <div className="font-bold capitalize">{renovation}</div>
                 </div>
               </div>

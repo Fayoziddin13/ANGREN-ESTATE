@@ -254,7 +254,7 @@ export default function AdminMapManagementPage() {
 
         {/* Legend Overlay at Bottom Left */}
         <div className="absolute bottom-6 left-4 z-10 bg-white/95 backdrop-blur-md rounded-2xl p-3 shadow-elevated border border-slate-200 text-[11px] font-bold space-y-1.5">
-          <div className="text-[10px] text-slate-400 uppercase tracking-wider">Statuslar</div>
+          <div className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Statuslar</div>
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1.5 text-emerald-800">
               <span className="h-2.5 w-2.5 rounded-full bg-[#16543C]" /> Nashr qilingan
@@ -281,7 +281,7 @@ export default function AdminMapManagementPage() {
               <Compass className="h-4 w-4 text-[#16543C]" />
               <span>Xarita Boshqaruvi</span>
             </h2>
-            <span className="text-xs font-bold text-slate-500">
+            <span className="text-xs font-bold text-slate-600">
               {filtered.length} ta obyekt
             </span>
           </div>
@@ -325,7 +325,7 @@ export default function AdminMapManagementPage() {
               </span>
               <button
                 onClick={() => setSelectedProperty(null)}
-                className="text-[11px] font-bold text-slate-400 hover:text-slate-700"
+                className="text-[11px] font-bold text-slate-500 hover:text-slate-900"
               >
                 Yopish
               </button>
@@ -334,7 +334,7 @@ export default function AdminMapManagementPage() {
             <h3 className="font-extrabold text-xs text-slate-900 truncate">
               {selectedProperty.title_uz}
             </h3>
-            <p className="text-[11px] text-slate-500">{selectedProperty.address_uz}</p>
+            <p className="text-[11px] text-slate-600 font-medium">{selectedProperty.address_uz}</p>
 
             {/* Coordinates editor */}
             <div className="space-y-2 pt-2 border-t border-emerald-200/50">
@@ -355,7 +355,7 @@ export default function AdminMapManagementPage() {
                 <div className="space-y-2">
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
-                      <label className="text-[10px] text-slate-500">Lat</label>
+                      <label className="text-[10px] font-bold text-slate-600">Lat</label>
                       <input
                         type="number"
                         step="0.0001"
@@ -365,7 +365,7 @@ export default function AdminMapManagementPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-slate-500">Lng</label>
+                      <label className="text-[10px] font-bold text-slate-600">Lng</label>
                       <input
                         type="number"
                         step="0.0001"
@@ -383,14 +383,14 @@ export default function AdminMapManagementPage() {
                   </button>
                 </div>
               ) : (
-                <div className="text-[11px] font-mono text-slate-600 bg-white p-2 rounded-xl border border-slate-200">
+                <div className="text-[11px] font-mono text-slate-700 bg-white p-2 rounded-xl border border-slate-200 font-medium">
                   {selectedProperty.coordinates.lat.toFixed(5)}, {selectedProperty.coordinates.lng.toFixed(5)}
                 </div>
               )}
             </div>
           </div>
         ) : (
-          <div className="p-4 bg-slate-50 text-center text-xs text-slate-400">
+          <div className="p-4 bg-slate-50 text-center text-xs text-slate-500 font-medium">
             Xaritadagi obyektni bosing yoki quyidagi ro‘yxatdan tanlang
           </div>
         )}
@@ -415,13 +415,13 @@ export default function AdminMapManagementPage() {
             >
               <div className="min-w-0">
                 <h4 className="font-bold text-xs text-slate-800 truncate">{p.title_uz}</h4>
-                <p className="text-[11px] text-slate-400 truncate">{p.address_uz}</p>
+                <p className="text-[11px] text-slate-500 font-medium truncate">{p.address_uz}</p>
               </div>
               <div className="text-right shrink-0">
                 <div className="text-xs font-black text-[#16543C]">
                   ${p.price_usd?.toLocaleString()}
                 </div>
-                <span className="text-[10px] uppercase font-bold text-slate-400">{p.status}</span>
+                <span className="text-[10px] uppercase font-bold text-slate-500">{p.status}</span>
               </div>
             </div>
           ))}

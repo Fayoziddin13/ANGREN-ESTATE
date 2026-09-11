@@ -16,6 +16,7 @@ import {
   Send,
   ArrowRight,
   UserCheck,
+  Instagram,
 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -170,10 +171,10 @@ export default function AboutPage() {
                     className="flex flex-col rounded-2xl bg-brand-canvas/70 border border-brand-border/60 p-5 shadow-sm hover:shadow-card transition-all"
                   >
                     <div className="flex items-center gap-3.5 mb-4">
-                      <div className="relative h-14 w-14 rounded-2xl overflow-hidden bg-brand-light flex items-center justify-center text-brand-primary font-black text-xl shrink-0 shadow-sm">
-                        {r.avatar_url ? (
+                      <div className="relative h-14 w-14 rounded-2xl overflow-hidden bg-brand-light flex items-center justify-center text-brand-primary font-black text-xl shrink-0 shadow-sm border border-brand-border/40">
+                        {r.photo_url || r.avatar_url ? (
                           <Image
-                            src={r.avatar_url}
+                            src={r.photo_url || r.avatar_url || ""}
                             alt={r.name}
                             fill
                             className="object-cover"
@@ -214,7 +215,7 @@ export default function AboutPage() {
                       </div>
                     )}
 
-                    <div className="mt-auto grid grid-cols-2 gap-2 pt-2 border-t border-gray-100">
+                    <div className={`mt-auto grid ${r.instagram_url || r.instagram ? "grid-cols-3" : "grid-cols-2"} gap-2 pt-2 border-t border-gray-100`}>
                       <a
                         href={`tel:${r.phone}`}
                         className="flex items-center justify-center gap-1.5 rounded-xl bg-brand-primary px-3 py-2 text-xs font-bold text-white hover:bg-brand-primary-hover transition-colors"
@@ -231,6 +232,18 @@ export default function AboutPage() {
                         <Send className="h-3.5 w-3.5 text-sky-600" />
                         <span>{t.aboutPage.telegramBtn}</span>
                       </a>
+                      {(r.instagram_url || r.instagram) && (
+                        <a
+                          href={r.instagram_url || r.instagram}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center justify-center gap-1.5 rounded-xl border border-pink-200 bg-pink-50/50 px-2.5 py-2 text-xs font-bold text-pink-700 hover:bg-pink-100 transition-colors"
+                          title="Instagram"
+                        >
+                          <Instagram className="h-3.5 w-3.5 text-pink-600" />
+                          <span>Instagram</span>
+                        </a>
+                      )}
                     </div>
                   </div>
                 ))}

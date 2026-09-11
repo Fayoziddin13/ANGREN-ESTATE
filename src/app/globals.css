@@ -38,3 +38,65 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #16543C;
 }
+
+/* Realistic Multi-Layer Atmospheric Cloud Drift (Seamless 50% loop) */
+@keyframes mapCloudDriftLow {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes mapCloudDriftMid {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes mapCloudDriftHigh {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-map-cloud-drift-low {
+  animation: mapCloudDriftLow 48s linear infinite;
+  will-change: transform;
+}
+
+.animate-map-cloud-drift-mid {
+  animation: mapCloudDriftMid 75s linear infinite;
+  will-change: transform;
+}
+
+.animate-map-cloud-drift-high {
+  animation: mapCloudDriftHigh 115s linear infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-map-cloud-drift-low,
+  .animate-map-cloud-drift-mid,
+  .animate-map-cloud-drift-high {
+    animation: none !important;
+  }
+}
+
+/* Ensure map markers stay cleanly above the cloud overlay layer (z-[1]) */
+.maplibregl-marker {
+  z-index: 10 !important;
+}
+
+.maplibregl-marker:hover,
+.maplibregl-marker.active {
+  z-index: 25 !important;
+}
+

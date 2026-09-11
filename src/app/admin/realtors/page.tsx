@@ -24,6 +24,11 @@ import {
   RefreshCw,
   Clock,
   Eye,
+  Instagram,
+  Upload,
+  Camera,
+  Trash2,
+  Power,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useRealtors } from "@/lib/realtorStore";
@@ -34,11 +39,13 @@ interface RealtorFormData {
   name: string;
   phone: string;
   telegram: string;
+  instagram_url: string;
   experience_years: number;
   specialization_uz: string;
   specialization_ru: string;
   districts_str: string;
   avatar_url: string;
+  photo_url: string;
   bio_uz: string;
   bio_ru: string;
   is_active: boolean;
@@ -48,11 +55,13 @@ const emptyForm: RealtorFormData = {
   name: "",
   phone: "+998 ",
   telegram: "@",
+  instagram_url: "",
   experience_years: 3,
   specialization_uz: "",
   specialization_ru: "",
   districts_str: "",
   avatar_url: "",
+  photo_url: "",
   bio_uz: "",
   bio_ru: "",
   is_active: true,
@@ -78,6 +87,8 @@ export default function AdminRealtorsPage() {
   const [formData, setFormData] = useState<RealtorFormData>(emptyForm);
   const [searchQuery, setSearchQuery] = useState("");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoUploadError, setPhotoUploadError] = useState<string | null>(null);
 
   // Assigned Properties Modal state
   const [propertiesModalRealtor, setPropertiesModalRealtor] = useState<Realtor | null>(null);
@@ -100,26 +111,91 @@ export default function AdminRealtorsPage() {
   const handleOpenAddModal = () => {
     setEditingRealtorId(null);
     setFormData(emptyForm);
+    setPhotoUploadError(null);
     setModalOpen(true);
   };
 
   // Open Edit Modal
   const handleOpenEditModal = (realtor: Realtor) => {
     setEditingRealtorId(realtor.id);
+    const photo = realtor.photo_url || realtor.avatar_url || "";
+    const instagram = realtor.instagram_url || realtor.instagram || "";
     setFormData({
       name: realtor.name,
       phone: realtor.phone,
-      telegram: realtor.telegram,
+      telegram: realtor.telegram || "",
+      instagram_url: instagram,
       experience_years: realtor.experience_years,
       specialization_uz: realtor.specialization_uz,
       specialization_ru: realtor.specialization_ru,
       districts_str: (realtor.districts || []).join(", "),
-      avatar_url: realtor.avatar_url || "",
+      avatar_url: photo,
+      photo_url: photo,
       bio_uz: realtor.bio_uz || "",
       bio_ru: realtor.bio_ru || "",
       is_active: realtor.is_active,
     });
+    setPhotoUploadError(null);
     setModalOpen(true);
+  };
+
+  // Handle Photo File Upload
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setPhotoUploadError(
+        locale === "uz"
+          ? "Rasm hajmi 5MB dan oshmasligi lozim"
+          : "Размер фото не должен превышать 5МБ"
+      );
+      return;
+    }
+
+    setUploadingPhoto(true);
+    setPhotoUploadError(null);
+
+    try {
+      const data = new FormData();
+      data.append("photo", file);
+      if (editingRealtorId) {
+        data.append("realtor_id", editingRealtorId);
+      }
+
+      const res = await fetch("/api/admin/realtors/upload", {
+        method: "POST",
+        body: data,
+      });
+      const json = await res.json();
+
+      if (res.ok && json.success && json.url) {
+        setFormData((prev) => ({
+          ...prev,
+          photo_url: json.url,
+          avatar_url: json.url,
+        }));
+        showToast(
+          locale === "uz" ? "Rieltor fotosi yuklandi" : "Фото риелтора успешно загружено"
+        );
+      } else {
+        setPhotoUploadError(
+          json.error || (locale === "uz" ? "Rasm yuklashda xatolik" : "Ошибка загрузки фото")
+        );
+      }
+    } catch (err: any) {
+      setPhotoUploadError(err.message || "Rasm yuklab bo'lmadi");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setFormData((prev) => ({
+      ...prev,
+      photo_url: "",
+      avatar_url: "",
+    }));
   };
 
   // Save Realtor Form
@@ -136,15 +212,19 @@ export default function AdminRealtorsPage() {
       .map((d) => d.trim())
       .filter(Boolean);
 
+    const resolvedPhoto = formData.photo_url.trim() || formData.avatar_url.trim() || undefined;
+
     const payload = {
       name: formData.name.trim(),
       phone: formData.phone.trim(),
       telegram: formData.telegram.trim(),
+      instagram_url: formData.instagram_url.trim() || undefined,
       experience_years: Number(formData.experience_years) || 1,
       specialization_uz: formData.specialization_uz.trim() || "Ko‘chmas mulk mutaxassisi",
       specialization_ru: formData.specialization_ru.trim() || "Специалист по недвижимости",
       districts: districtsArray.length > 0 ? districtsArray : ["Angren"],
-      avatar_url: formData.avatar_url.trim() || undefined,
+      avatar_url: resolvedPhoto,
+      photo_url: resolvedPhoto,
       bio_uz: formData.bio_uz.trim() || undefined,
       bio_ru: formData.bio_ru.trim() || undefined,
       is_active: formData.is_active,
@@ -154,6 +234,7 @@ export default function AdminRealtorsPage() {
       const ok = await updateRealtor(editingRealtorId, payload);
       if (ok) {
         showToast(locale === "uz" ? "Rieltor ma'lumotlari yangilandi" : "Данные риелтора обновлены");
+        setModalOpen(false);
       } else {
         showToast(locale === "uz" ? "Xatolik yuz berdi" : "Произошла ошибка");
       }
@@ -161,12 +242,31 @@ export default function AdminRealtorsPage() {
       const created = await addRealtor(payload);
       if (created) {
         showToast(locale === "uz" ? "Yangi rieltor qo‘shildi" : "Новый риелтор успешно добавлен");
+        setModalOpen(false);
       } else {
         showToast(locale === "uz" ? "Xatolik yuz berdi" : "Произошла ошибка");
       }
     }
+  };
 
-    setModalOpen(false);
+  // Toggle Realtor Status with Safe Confirmation (NO PHYSICAL DELETE)
+  const handleToggleRealtorStatus = async (realtor: Realtor) => {
+    if (realtor.is_active) {
+      const confirmed = window.confirm(
+        locale === "uz"
+          ? `«${realtor.name}»ni nofaol qilmoqchimisiz? Rieltor jamoat sahifalaridan yashiriladi, lekin unga tegishli barcha obyektlar va arizalar saqlanib qoladi.`
+          : `Сделать «${realtor.name}» неактивным? Риелтор будет скрыт с публичного сайта, но все прикрепленные объекты и лиды сохранятся.`
+      );
+      if (!confirmed) return;
+    }
+    const ok = await toggleRealtorStatus(realtor.id);
+    if (ok) {
+      showToast(
+        realtor.is_active
+          ? (locale === "uz" ? "Rieltor nofaol qilindi (saytdan yashirildi)" : "Риелтор скрыт с сайта")
+          : (locale === "uz" ? "Rieltor faollashtirildi" : "Риелтор активирован")
+      );
+    }
   };
 
   // Fetch Assigned Properties for a Realtor
@@ -317,7 +417,7 @@ export default function AdminRealtorsPage() {
 
       {/* Realtors Grid or Empty State */}
       {!isLoaded ? (
-        <div className="text-center py-16 text-slate-400 text-sm flex items-center justify-center gap-2">
+        <div className="text-center py-16 text-slate-600 font-medium text-sm flex items-center justify-center gap-2">
           <RefreshCw className="h-4 w-4 animate-spin text-[#16543C]" />
           <span>{locale === "uz" ? "Yuklanmoqda..." : "Загрузка..."}</span>
         </div>
@@ -365,28 +465,32 @@ export default function AdminRealtorsPage() {
                   {/* Top: Avatar, Name, Status Badge */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="relative h-12 w-12 rounded-2xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200">
-                        {realtor.avatar_url ? (
+                      <div className="relative h-14 w-14 rounded-2xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200 shadow-sm">
+                        {realtor.photo_url || realtor.avatar_url ? (
                           <Image
-                            src={realtor.avatar_url}
+                            src={realtor.photo_url || realtor.avatar_url || ""}
                             alt={realtor.name}
                             fill
                             className="object-cover"
                           />
                         ) : (
-                          <div className="h-full w-full flex items-center justify-center bg-emerald-50 text-[#16543C] font-extrabold text-sm">
+                          <div className="h-full w-full flex items-center justify-center bg-emerald-50 text-[#16543C] font-extrabold text-base">
                             {realtor.name.charAt(0)}
                           </div>
                         )}
                       </div>
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <h4 className="text-sm font-bold text-slate-900 leading-snug">
                             {realtor.name}
                           </h4>
-                          {!realtor.is_active && (
-                            <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-200 text-slate-600">
-                              {locale === "uz" ? "Nofaol" : "Неактивен"}
+                          {!realtor.is_active ? (
+                            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+                              {locale === "uz" ? "Nofaol / Yashirilgan" : "Неактивен / Скрыт"}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                              {locale === "uz" ? "Faol" : "Активен"}
                             </span>
                           )}
                         </div>
@@ -396,17 +500,17 @@ export default function AdminRealtorsPage() {
 
                     {/* Status Pill Toggle */}
                     <button
-                      onClick={() => toggleRealtorStatus(realtor.id)}
+                      onClick={() => handleToggleRealtorStatus(realtor)}
                       className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold transition-colors ${
                         realtor.is_active
-                          ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
-                          : "bg-slate-200 text-slate-600 hover:bg-slate-300"
+                          ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300"
+                          : "bg-slate-200 text-slate-700 hover:bg-slate-300 border border-slate-300"
                       }`}
                       title={locale === "uz" ? "Holatni o‘zgartirish (Faol / Nofaol)" : "Сменить статус (Активен / Неактивен)"}
                     >
                       <span
                         className={`h-1.5 w-1.5 rounded-full ${
-                          realtor.is_active ? "bg-emerald-600" : "bg-slate-400"
+                          realtor.is_active ? "bg-emerald-600" : "bg-slate-500"
                         }`}
                       />
                       <span>{realtor.is_active ? t.admin.statusActive : t.admin.statusHidden}</span>
@@ -414,27 +518,40 @@ export default function AdminRealtorsPage() {
                   </div>
 
                   {/* Details */}
-                  <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 pt-1">
+                  <div className="grid grid-cols-2 gap-2 text-xs text-slate-700 pt-1">
                     <div className="flex items-center gap-1.5">
-                      <Phone className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                      <span className="truncate">{realtor.phone}</span>
+                      <Phone className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+                      <span className="truncate font-medium">{realtor.phone}</span>
                     </div>
                     {realtor.telegram && (
                       <div className="flex items-center gap-1.5">
                         <Send className="h-3.5 w-3.5 text-[#2AABEE] shrink-0" />
-                        <span className="truncate">{realtor.telegram}</span>
+                        <span className="truncate font-medium">{realtor.telegram}</span>
+                      </div>
+                    )}
+                    {(realtor.instagram_url || realtor.instagram) && (
+                      <div className="flex items-center gap-1.5">
+                        <Instagram className="h-3.5 w-3.5 text-pink-600 shrink-0" />
+                        <a
+                          href={realtor.instagram_url || realtor.instagram}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="truncate text-pink-600 font-semibold hover:underline"
+                        >
+                          Instagram
+                        </a>
                       </div>
                     )}
                     <div className="flex items-center gap-1.5">
-                      <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                      <Calendar className="h-3.5 w-3.5 text-slate-500 shrink-0" />
                       <span>
                         {realtor.experience_years}{" "}
                         {locale === "uz" ? "yil tajriba" : "лет опыта"}
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                      <span className="truncate">{(realtor.districts || []).join(", ")}</span>
+                      <MapPin className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+                      <span className="truncate font-medium">{(realtor.districts || []).join(", ")}</span>
                     </div>
                   </div>
 
@@ -442,7 +559,7 @@ export default function AdminRealtorsPage() {
                   <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
                     <button
                       onClick={() => openPropertiesModal(realtor)}
-                      className="flex items-center justify-between p-2 rounded-xl bg-emerald-50/60 hover:bg-emerald-100/70 border border-emerald-100 text-left transition-colors group"
+                      className="flex items-center justify-between p-2 rounded-xl bg-emerald-50/70 hover:bg-emerald-100 border border-emerald-200 text-left transition-colors group"
                       title={locale === "uz" ? "Biriktirilgan obyektlarni ko‘rish" : "Посмотреть прикреплённые объекты"}
                     >
                       <div className="flex items-center gap-1.5 text-slate-700 font-semibold text-[11px]">
@@ -456,7 +573,7 @@ export default function AdminRealtorsPage() {
 
                     <button
                       onClick={() => openLeadsModal(realtor)}
-                      className="flex items-center justify-between p-2 rounded-xl bg-sky-50/60 hover:bg-sky-100/70 border border-sky-100 text-left transition-colors group"
+                      className="flex items-center justify-between p-2 rounded-xl bg-sky-50/70 hover:bg-sky-100 border border-sky-200 text-left transition-colors group"
                       title={locale === "uz" ? "Rieltordan kelgan lidlarni ko‘rish" : "Посмотреть лиды риелтора"}
                     >
                       <div className="flex items-center gap-1.5 text-slate-700 font-semibold text-[11px]">
@@ -471,22 +588,43 @@ export default function AdminRealtorsPage() {
 
                   {/* Bio */}
                   {bio && (
-                    <p className="text-xs text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-100 italic">
+                    <p className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-200 italic font-medium">
                       "{bio}"
                     </p>
                   )}
                 </div>
 
                 {/* Bottom Card Actions: STRICTLY NO DELETE BUTTON */}
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                  <span className="text-[11px] text-slate-400">
+                <div className="pt-3 border-t border-slate-200 flex items-center justify-between flex-wrap gap-2">
+                  <span className="text-[11px] text-slate-500 font-mono">
                     UUID: {realtor.id.slice(0, 8)}...
                   </span>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => handleToggleRealtorStatus(realtor)}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                        realtor.is_active
+                          ? "text-amber-800 bg-amber-100/80 hover:bg-amber-200 border border-amber-300"
+                          : "text-emerald-800 bg-emerald-100/80 hover:bg-emerald-200 border border-emerald-300"
+                      }`}
+                      title={
+                        realtor.is_active
+                          ? (locale === "uz" ? "Rieltorni nofaol qilish (saytdan yashirish)" : "Деактивировать риелтора")
+                          : (locale === "uz" ? "Rieltorni qayta faollashtirish" : "Активировать риелтора")
+                      }
+                    >
+                      <Power className="h-3.5 w-3.5" />
+                      <span>
+                        {realtor.is_active
+                          ? (locale === "uz" ? "Nofaol qilish" : "Деактивировать")
+                          : (locale === "uz" ? "Faollashtirish" : "Активировать")}
+                      </span>
+                    </button>
+
                     <button
                       onClick={() => openPropertiesModal(realtor)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 transition-colors"
                       title={locale === "uz" ? "Obyektlarni boshqarish" : "Управление объектами"}
                     >
                       <Building2 className="h-3.5 w-3.5" />
@@ -495,7 +633,7 @@ export default function AdminRealtorsPage() {
 
                     <button
                       onClick={() => handleOpenEditModal(realtor)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-[#16543C] bg-emerald-50 hover:bg-emerald-100 transition-colors"
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-[#16543C] bg-emerald-100/80 hover:bg-emerald-200 border border-emerald-300 transition-colors"
                       title={t.admin.editRealtor}
                     >
                       <Edit2 className="h-3.5 w-3.5" />
@@ -575,7 +713,7 @@ export default function AdminRealtorsPage() {
             {/* Assigned Properties List */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h4 className="text-xs font-extrabold uppercase text-slate-400 tracking-wider">
+                <h4 className="text-xs font-extrabold uppercase text-slate-600 tracking-wider">
                   {locale === "uz"
                     ? `Mavjud obyektlar (${assignedProperties.length})`
                     : `Текущие объекты (${assignedProperties.length})`}
@@ -583,12 +721,12 @@ export default function AdminRealtorsPage() {
               </div>
 
               {loadingProperties ? (
-                <div className="py-8 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+                <div className="py-8 text-center text-xs text-slate-600 font-medium flex items-center justify-center gap-2">
                   <RefreshCw className="h-4 w-4 animate-spin text-[#16543C]" />
                   <span>{locale === "uz" ? "Yuklanmoqda..." : "Загрузка..."}</span>
                 </div>
               ) : assignedProperties.length === 0 ? (
-                <div className="py-8 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                <div className="py-8 text-center text-xs text-slate-500 font-medium bg-slate-50 rounded-xl border border-dashed border-slate-200">
                   {locale === "uz"
                     ? "Ushbu rieltorga hozircha hech qanday obyekt biriktirilmagan."
                     : "К этому риелтору пока не прикреплено ни одного объекта."}
@@ -718,12 +856,12 @@ export default function AdminRealtorsPage() {
 
             {/* Leads List */}
             {loadingLeads ? (
-              <div className="py-12 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+              <div className="py-12 text-center text-xs text-slate-600 font-medium flex items-center justify-center gap-2">
                 <RefreshCw className="h-4 w-4 animate-spin text-sky-600" />
                 <span>{locale === "uz" ? "Yuklanmoqda..." : "Загрузка..."}</span>
               </div>
             ) : attributedLeads.length === 0 ? (
-              <div className="py-12 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+              <div className="py-12 text-center text-xs text-slate-500 font-medium bg-slate-50 rounded-xl border border-dashed border-slate-200">
                 {locale === "uz"
                   ? "Ushbu rieltorga hozircha hech qanday murojaat kelib tushmagan."
                   : "По этому риелтору пока не зафиксировано обращений."}
@@ -773,7 +911,7 @@ export default function AdminRealtorsPage() {
                       </p>
                     )}
 
-                    <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-100">
+                    <div className="flex items-center justify-between text-[10px] text-slate-500 font-medium pt-1 border-t border-slate-100">
                       <span>ID: {lead.id.slice(0, 8)}...</span>
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
@@ -934,18 +1072,118 @@ export default function AdminRealtorsPage() {
                 </div>
               </div>
 
-              {/* Avatar URL */}
-              <div className="space-y-1">
-                <label className="font-bold text-slate-700">
-                  {t.admin.realtorAvatar}
+              {/* Photo Upload & Preview */}
+              <div className="space-y-2 p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
+                <label className="font-bold text-slate-800 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Camera className="h-4 w-4 text-[#16543C]" />
+                    {locale === "uz" ? "Rieltor fotosurati" : "Фотография риелтора"}
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-normal">
+                    JPEG, PNG, WEBP (max 5MB)
+                  </span>
                 </label>
-                <input
-                  type="url"
-                  value={formData.avatar_url}
-                  onChange={(e) => setFormData({ ...formData, avatar_url: e.target.value })}
-                  placeholder="https://images.unsplash.com/..."
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#16543C] outline-none"
-                />
+
+                {photoUploadError && (
+                  <div className="p-2 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-medium flex items-center gap-1.5">
+                    <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
+                    <span>{photoUploadError}</span>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-4">
+                  {formData.photo_url || formData.avatar_url ? (
+                    <div className="relative h-16 w-16 rounded-2xl overflow-hidden bg-slate-200 border-2 border-emerald-500 shrink-0 shadow-sm">
+                      <Image
+                        src={formData.photo_url || formData.avatar_url}
+                        alt="Preview"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="h-16 w-16 rounded-2xl bg-emerald-50 border-2 border-dashed border-emerald-300 flex items-center justify-center text-emerald-800 shrink-0 font-bold text-lg">
+                      {formData.name ? formData.name.charAt(0).toUpperCase() : <Camera className="h-6 w-6 text-[#16543C]" />}
+                    </div>
+                  )}
+
+                  <div className="flex-1 space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#16543C] hover:bg-[#0E3324] text-white text-xs font-bold transition-colors shadow-sm">
+                        <Upload className="h-3.5 w-3.5" />
+                        <span>
+                          {uploadingPhoto
+                            ? (locale === "uz" ? "Yuklanmoqda..." : "Загрузка...")
+                            : formData.photo_url || formData.avatar_url
+                            ? (locale === "uz" ? "Almashtirish" : "Заменить")
+                            : (locale === "uz" ? "Rasm yuklash" : "Загрузить фото")}
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/png, image/jpeg, image/webp"
+                          disabled={uploadingPhoto}
+                          onChange={handlePhotoUpload}
+                          className="hidden"
+                        />
+                      </label>
+
+                      {(formData.photo_url || formData.avatar_url) && (
+                        <button
+                          type="button"
+                          onClick={handleRemovePhoto}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-rose-100 text-slate-700 hover:text-rose-700 text-xs font-bold transition-colors"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          <span>{locale === "uz" ? "O‘chirish" : "Удалить"}</span>
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-500">
+                      {locale === "uz"
+                        ? "Saytda va bosh sahifada ushbu fotosurat aks etadi."
+                        : "Это фото будет отображаться на сайте и главной странице."}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Direct photo URL fallback input */}
+                <div className="pt-2 border-t border-slate-200/80">
+                  <input
+                    type="url"
+                    value={formData.photo_url || formData.avatar_url}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        photo_url: e.target.value,
+                        avatar_url: e.target.value,
+                      })
+                    }
+                    placeholder={locale === "uz" ? "Yoki rasm URL havolasini kiriting (https://...)" : "Или вставьте прямую ссылку на фото (https://...)"}
+                    className="w-full px-3 py-1.5 text-xs rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#16543C] outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Instagram URL */}
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700 flex items-center gap-1.5">
+                  <Instagram className="h-4 w-4 text-pink-600" />
+                  <span>Instagram profili</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formData.instagram_url}
+                    onChange={(e) => setFormData({ ...formData, instagram_url: e.target.value })}
+                    placeholder="https://instagram.com/realtor_angren yoki @username"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#16543C] outline-none text-xs"
+                  />
+                </div>
+                <p className="text-[11px] text-slate-500">
+                  {locale === "uz"
+                    ? "Rieltor kartasida rasmiy Instagram sahifasiga havola ko‘rsatiladi."
+                    : "Ссылка на Instagram будет отображаться в профиле риелтора на сайте."}
+                </p>
               </div>
 
               {/* Bio UZ & RU */}

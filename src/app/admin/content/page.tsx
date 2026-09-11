@@ -120,23 +120,23 @@ export default function AdminContentPage() {
   };
 
   return (
-    <div className="space-y-6 pb-16">
+    <div className="p-4 sm:p-8 max-w-7xl mx-auto w-full space-y-6 pb-16">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-6 right-6 z-50 bg-emerald-900 border border-emerald-500/50 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-2 backdrop-blur-md animate-in fade-in slide-in-from-top-4">
-          <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-          <span className="text-sm font-medium">{toastMessage}</span>
+        <div className="fixed top-6 right-6 z-50 bg-[#16543C] border border-emerald-600 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-4">
+          <CheckCircle2 className="w-5 h-5 text-emerald-200" />
+          <span className="text-sm font-semibold">{toastMessage}</span>
         </div>
       )}
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-            <FileText className="w-7 h-7 text-emerald-400" />
+          <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+            <FileText className="w-7 h-7 text-[#16543C]" />
             {locale === "uz" ? "Kontent Boshqaruvi (CMS)" : "Управление Контентом (CMS)"}
           </h1>
-          <p className="text-slate-400 text-sm mt-1">
+          <p className="text-slate-600 text-sm mt-1 font-medium">
             {locale === "uz"
               ? "Bosh sahifa, 'Biz haqimizda', kontaktlar, e’lon banneri va SEO sozlamalarini boshqarish"
               : "Управление главной страницей, 'О нас', контактами, баннером и SEO настройками"}
@@ -148,9 +148,9 @@ export default function AdminContentPage() {
             type="button"
             onClick={loadData}
             disabled={isLoading}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl border border-slate-700/70 text-sm font-medium transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 rounded-xl border border-slate-300 text-sm font-bold shadow-xs transition-colors disabled:opacity-50"
           >
-            <RotateCcw className={`w-4 h-4 text-slate-400 ${isLoading ? "animate-spin" : ""}`} />
+            <RotateCcw className={`w-4 h-4 text-slate-500 ${isLoading ? "animate-spin" : ""}`} />
             {locale === "uz" ? "Yangilash" : "Обновить"}
           </button>
 
@@ -158,7 +158,7 @@ export default function AdminContentPage() {
             type="button"
             onClick={() => handleSaveSection(activeTab)}
             disabled={isSaving || isLoading}
-            className="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold text-sm shadow-lg shadow-emerald-900/30 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-5 py-2 bg-[#16543C] hover:bg-[#0E3324] text-white rounded-xl font-bold text-sm shadow-sm hover:shadow-md transition-all disabled:opacity-50"
           >
             <Save className="w-4 h-4" />
             {isSaving
@@ -170,14 +170,14 @@ export default function AdminContentPage() {
 
       {/* Conflict Banner Alert */}
       {conflictError && (
-        <div className="p-4 bg-amber-950/40 border border-amber-500/50 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-200">
+        <div className="p-4 bg-amber-50 border border-amber-300 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-900">
           <div className="flex items-center gap-3">
-            <AlertTriangle className="w-6 h-6 text-amber-400 shrink-0" />
-            <p className="text-sm font-medium">{conflictError}</p>
+            <AlertTriangle className="w-6 h-6 text-amber-600 shrink-0" />
+            <p className="text-sm font-semibold">{conflictError}</p>
           </div>
           <button
             onClick={loadData}
-            className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition-colors shrink-0 flex items-center gap-1.5"
+            className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-colors shrink-0 flex items-center gap-1.5"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             {locale === "uz" ? "Qayta yuklash" : "Перезагрузить"}
@@ -186,10 +186,10 @@ export default function AdminContentPage() {
       )}
 
       {/* Language Policy Standard Notice */}
-      <div className="p-4 bg-emerald-950/20 border border-emerald-500/30 rounded-2xl flex items-center gap-3 text-xs text-slate-300">
-        <Globe className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+      <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-3 text-xs text-emerald-950 font-medium">
+        <Globe className="w-5 h-5 text-[#16543C] flex-shrink-0" />
         <div>
-          <span className="font-bold text-white">
+          <span className="font-bold text-[#16543C]">
             {locale === "uz" ? "Til standarti: " : "Языковой стандарт: "}
           </span>
           {locale === "uz"
@@ -199,14 +199,14 @@ export default function AdminContentPage() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-slate-800 flex items-center gap-4 sm:gap-6 overflow-x-auto text-sm font-semibold scrollbar-none">
+      <div className="border-b border-slate-200 flex items-center gap-4 sm:gap-6 overflow-x-auto text-sm font-bold scrollbar-none">
         <button
           type="button"
           onClick={() => setActiveTab("hero")}
           className={`pb-3 px-1 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${
             activeTab === "hero"
-              ? "border-emerald-500 text-emerald-400"
-              : "border-transparent text-slate-400 hover:text-white"
+              ? "border-[#16543C] text-[#16543C]"
+              : "border-transparent text-slate-500 hover:text-slate-900"
           }`}
         >
           <Sparkles className="w-4 h-4" />
@@ -218,8 +218,8 @@ export default function AdminContentPage() {
           onClick={() => setActiveTab("about")}
           className={`pb-3 px-1 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${
             activeTab === "about"
-              ? "border-emerald-500 text-emerald-400"
-              : "border-transparent text-slate-400 hover:text-white"
+              ? "border-[#16543C] text-[#16543C]"
+              : "border-transparent text-slate-500 hover:text-slate-900"
           }`}
         >
           <Layers className="w-4 h-4" />
@@ -231,8 +231,8 @@ export default function AdminContentPage() {
           onClick={() => setActiveTab("contacts")}
           className={`pb-3 px-1 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${
             activeTab === "contacts"
-              ? "border-emerald-500 text-emerald-400"
-              : "border-transparent text-slate-400 hover:text-white"
+              ? "border-[#16543C] text-[#16543C]"
+              : "border-transparent text-slate-500 hover:text-slate-900"
           }`}
         >
           <Phone className="w-4 h-4" />
@@ -244,8 +244,8 @@ export default function AdminContentPage() {
           onClick={() => setActiveTab("announcement")}
           className={`pb-3 px-1 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${
             activeTab === "announcement"
-              ? "border-emerald-500 text-emerald-400"
-              : "border-transparent text-slate-400 hover:text-white"
+              ? "border-[#16543C] text-[#16543C]"
+              : "border-transparent text-slate-500 hover:text-slate-900"
           }`}
         >
           <Megaphone className="w-4 h-4" />
@@ -257,8 +257,8 @@ export default function AdminContentPage() {
           onClick={() => setActiveTab("seo")}
           className={`pb-3 px-1 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${
             activeTab === "seo"
-              ? "border-emerald-500 text-emerald-400"
-              : "border-transparent text-slate-400 hover:text-white"
+              ? "border-[#16543C] text-[#16543C]"
+              : "border-transparent text-slate-500 hover:text-slate-900"
           }`}
         >
           <Search className="w-4 h-4" />
@@ -269,15 +269,15 @@ export default function AdminContentPage() {
       {/* 1. HERO SECTION */}
       {activeTab === "hero" && (
         <div className="space-y-6">
-          <div className="bg-slate-900/60 backdrop-blur-md p-6 rounded-3xl border border-slate-800 space-y-6">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-emerald-400" />
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
+            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-[#16543C]" />
               {locale === "uz" ? "Hero Sarlavhalari va Nishon (Badge)" : "Заголовки и значок Hero"}
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                   Hero Badge (O‘zbekcha - Lotin)
                 </label>
                 <input
@@ -289,13 +289,13 @@ export default function AdminContentPage() {
                       hero: { ...payload.hero, badge_uz: e.target.value },
                     })
                   }
-                  className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
                   placeholder="ANGREN KO‘CHMAS MULKI"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                   Hero Badge (Русский)
                 </label>
                 <input
@@ -307,13 +307,13 @@ export default function AdminContentPage() {
                       hero: { ...payload.hero, badge_ru: e.target.value },
                     })
                   }
-                  className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
                   placeholder="НЕДВИЖИМОСТЬ АНГРЕНА"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                   Hero Title (O‘zbekcha - Lotin)
                 </label>
                 <input
@@ -325,13 +325,13 @@ export default function AdminContentPage() {
                       hero: { ...payload.hero, title_uz: e.target.value },
                     })
                   }
-                  className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
                   placeholder="Angrendagi ko‘chmas mulk — bir xaritada"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                   Hero Title (Русский)
                 </label>
                 <input
@@ -343,13 +343,13 @@ export default function AdminContentPage() {
                       hero: { ...payload.hero, title_ru: e.target.value },
                     })
                   }
-                  className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
                   placeholder="Недвижимость Ангрена — на одной карте"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                   Hero Subtitle (O‘zbekcha - Lotin)
                 </label>
                 <textarea
@@ -361,13 +361,13 @@ export default function AdminContentPage() {
                       hero: { ...payload.hero, subtitle_uz: e.target.value },
                     })
                   }
-                  className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
                   placeholder="Kvartiralar, hovlilar va tijorat binolarini shahar xaritasida qulay toping"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                   Hero Subtitle (Русский)
                 </label>
                 <textarea
@@ -379,7 +379,7 @@ export default function AdminContentPage() {
                       hero: { ...payload.hero, subtitle_ru: e.target.value },
                     })
                   }
-                  className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
                   placeholder="Удобный поиск квартир, домов и коммерческой недвижимости на карте города"
                 />
               </div>
@@ -387,19 +387,19 @@ export default function AdminContentPage() {
           </div>
 
           {/* Hero Live Preview Card */}
-          <div className="bg-slate-950/60 p-6 rounded-3xl border border-slate-800/80">
-            <div className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+          <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+            <div className="text-xs font-bold text-[#16543C] uppercase tracking-wider mb-3 flex items-center gap-1.5">
               <Eye className="w-4 h-4" />
               {locale === "uz" ? "Jonli ko‘rinish namoyishi" : "Живой предпросмотр"}
             </div>
-            <div className="bg-gradient-to-r from-emerald-950/40 via-slate-900 to-slate-950 p-6 rounded-2xl border border-emerald-500/20 text-center space-y-3">
-              <span className="inline-block px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-[11px] font-bold text-emerald-300">
+            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs text-center space-y-3">
+              <span className="inline-block px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-bold text-emerald-800">
                 {locale === "uz" ? payload.hero.badge_uz : payload.hero.badge_ru}
               </span>
-              <h3 className="text-xl md:text-2xl font-black text-white">
+              <h3 className="text-xl md:text-2xl font-black text-slate-900">
                 {locale === "uz" ? payload.hero.title_uz : payload.hero.title_ru}
               </h3>
-              <p className="text-sm text-slate-300 max-w-xl mx-auto">
+              <p className="text-sm text-slate-600 max-w-xl mx-auto font-medium">
                 {locale === "uz" ? payload.hero.subtitle_uz : payload.hero.subtitle_ru}
               </p>
             </div>
@@ -409,15 +409,15 @@ export default function AdminContentPage() {
 
       {/* 2. ABOUT US SECTION */}
       {activeTab === "about" && (
-        <div className="bg-slate-900/60 backdrop-blur-md p-6 rounded-3xl border border-slate-800 space-y-6">
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <Layers className="w-5 h-5 text-emerald-400" />
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
+          <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+            <Layers className="w-5 h-5 text-[#16543C]" />
             {locale === "uz" ? "'Biz Haqimizda' Sahifasi Matnlari" : "Тексты страницы 'О нас'"}
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Badge (O‘zbekcha - Lotin)
               </label>
               <input
@@ -429,12 +429,12 @@ export default function AdminContentPage() {
                     about: { ...payload.about, badge_uz: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Badge (Русский)
               </label>
               <input
@@ -446,12 +446,12 @@ export default function AdminContentPage() {
                     about: { ...payload.about, badge_ru: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Headline (O‘zbekcha - Lotin)
               </label>
               <input
@@ -463,12 +463,12 @@ export default function AdminContentPage() {
                     about: { ...payload.about, headline_uz: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Headline (Русский)
               </label>
               <input
@@ -480,12 +480,12 @@ export default function AdminContentPage() {
                     about: { ...payload.about, headline_ru: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 1-Abzas: Platforma maqsadi (O‘zbekcha)
               </label>
               <textarea
@@ -497,12 +497,12 @@ export default function AdminContentPage() {
                     about: { ...payload.about, intro_p1_uz: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 1-й Абзац: Цель платформы (Русский)
               </label>
               <textarea
@@ -514,12 +514,12 @@ export default function AdminContentPage() {
                     about: { ...payload.about, intro_p1_ru: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 2-Abzas: Rieltorlar va ekspertlar (O‘zbekcha)
               </label>
               <textarea
@@ -531,12 +531,12 @@ export default function AdminContentPage() {
                     about: { ...payload.about, intro_p2_uz: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 2-й Абзац: Риелторы и специалисты (Русский)
               </label>
               <textarea
@@ -548,12 +548,12 @@ export default function AdminContentPage() {
                     about: { ...payload.about, intro_p2_ru: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 3-Abzas: Vazifa va shaffoflik (O‘zbekcha)
               </label>
               <textarea
@@ -565,12 +565,12 @@ export default function AdminContentPage() {
                     about: { ...payload.about, intro_p3_uz: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 3-й Абзац: Прозрачность и задачи (Русский)
               </label>
               <textarea
@@ -582,12 +582,12 @@ export default function AdminContentPage() {
                     about: { ...payload.about, intro_p3_ru: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Missiya (O‘zbekcha)
               </label>
               <textarea
@@ -599,12 +599,12 @@ export default function AdminContentPage() {
                     about: { ...payload.about, mission_uz: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Миссия (Русский)
               </label>
               <textarea
@@ -616,7 +616,7 @@ export default function AdminContentPage() {
                     about: { ...payload.about, mission_ru: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
           </div>
@@ -625,15 +625,15 @@ export default function AdminContentPage() {
 
       {/* 3. CONTACTS SECTION */}
       {activeTab === "contacts" && (
-        <div className="bg-slate-900/60 backdrop-blur-md p-6 rounded-3xl border border-slate-800 space-y-6">
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <Phone className="w-5 h-5 text-emerald-400" />
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
+          <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+            <Phone className="w-5 h-5 text-[#16543C]" />
             {locale === "uz" ? "Kompaniya va Bosh Ofis Kontaktlari" : "Контакты компании и головного офиса"}
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Kompaniya Nomi (Company Name)
               </label>
               <input
@@ -645,12 +645,12 @@ export default function AdminContentPage() {
                     contacts: { ...payload.contacts, company_name: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Asosiy Telefon (Primary Phone)
               </label>
               <input
@@ -662,12 +662,12 @@ export default function AdminContentPage() {
                     contacts: { ...payload.contacts, phone: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Qo‘shimcha Telefon (Secondary Phone)
               </label>
               <input
@@ -679,12 +679,12 @@ export default function AdminContentPage() {
                     contacts: { ...payload.contacts, phone_secondary: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Email
               </label>
               <input
@@ -696,12 +696,12 @@ export default function AdminContentPage() {
                     contacts: { ...payload.contacts, email: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Telegram Foydalanuvchi Nomi
               </label>
               <input
@@ -713,12 +713,12 @@ export default function AdminContentPage() {
                     contacts: { ...payload.contacts, telegram: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Telegram Havola (URL)
               </label>
               <input
@@ -730,12 +730,12 @@ export default function AdminContentPage() {
                     contacts: { ...payload.contacts, telegram_url: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Instagram Login
               </label>
               <input
@@ -747,12 +747,12 @@ export default function AdminContentPage() {
                     contacts: { ...payload.contacts, instagram: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Instagram Havola (URL)
               </label>
               <input
@@ -764,12 +764,12 @@ export default function AdminContentPage() {
                     contacts: { ...payload.contacts, instagram_url: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Manzil (O‘zbekcha - Lotin)
               </label>
               <input
@@ -781,12 +781,12 @@ export default function AdminContentPage() {
                     contacts: { ...payload.contacts, address_uz: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Адрес (Русский)
               </label>
               <input
@@ -798,12 +798,12 @@ export default function AdminContentPage() {
                     contacts: { ...payload.contacts, address_ru: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Ish Vaqtlari (O‘zbekcha)
               </label>
               <input
@@ -815,12 +815,12 @@ export default function AdminContentPage() {
                     contacts: { ...payload.contacts, working_hours_uz: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Режим работы (Русский)
               </label>
               <input
@@ -832,7 +832,7 @@ export default function AdminContentPage() {
                     contacts: { ...payload.contacts, working_hours_ru: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
           </div>
@@ -841,14 +841,14 @@ export default function AdminContentPage() {
 
       {/* 4. ANNOUNCEMENT SECTION */}
       {activeTab === "announcement" && (
-        <div className="bg-slate-900/60 backdrop-blur-md p-6 rounded-3xl border border-slate-800 space-y-6">
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
-                <Megaphone className="w-5 h-5 text-emerald-400" />
+              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Megaphone className="w-5 h-5 text-[#16543C]" />
                 {locale === "uz" ? "Saytning Yuqori Qismidagi E’lon Banneri" : "Верхний баннер объявлений сайта"}
               </h2>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-slate-600 font-medium mt-1">
                 {locale === "uz"
                   ? "Barcha sahifalarning yuqori qismida favqulodda xabar yoki yangilikni ko‘rsatish"
                   : "Показ важных объявлений или акций в шапке всех страниц сайта"}
@@ -868,8 +868,8 @@ export default function AdminContentPage() {
                 }
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-              <span className="ml-3 text-xs font-semibold text-slate-300">
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#16543C]"></div>
+              <span className="ml-3 text-xs font-bold text-slate-700">
                 {payload.announcement.is_active
                   ? locale === "uz" ? "Faol (Ko‘rinmoqda)" : "Активен"
                   : locale === "uz" ? "O‘chirilgan" : "Отключен"}
@@ -877,9 +877,9 @@ export default function AdminContentPage() {
             </label>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-800">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-200">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Banner Matni (O‘zbekcha - Lotin)
               </label>
               <input
@@ -891,12 +891,12 @@ export default function AdminContentPage() {
                     announcement: { ...payload.announcement, text_uz: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Banner Matni (Русский)
               </label>
               <input
@@ -908,12 +908,12 @@ export default function AdminContentPage() {
                     announcement: { ...payload.announcement, text_ru: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Havola Manzili (URL)
               </label>
               <input
@@ -925,20 +925,20 @@ export default function AdminContentPage() {
                     announcement: { ...payload.announcement, link_url: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
                 placeholder="/sotib-olish"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Banner Uslubi / Rangi
               </label>
               <div className="flex items-center gap-3">
                 {[
-                  { id: "info", uz: "Axborot (Yashil)", color: "border-emerald-500/40 bg-emerald-500/10 text-emerald-300" },
-                  { id: "warning", uz: "Ogohlantirish (Sariq)", color: "border-amber-500/40 bg-amber-500/10 text-amber-300" },
-                  { id: "success", uz: "Muvaffaqiyat (Yorqin)", color: "border-teal-500/40 bg-teal-500/10 text-teal-300" },
+                  { id: "info", uz: "Axborot (Yashil)", color: "border-emerald-600 bg-emerald-50 text-emerald-800" },
+                  { id: "warning", uz: "Ogohlantirish (Sariq)", color: "border-amber-600 bg-amber-50 text-amber-800" },
+                  { id: "success", uz: "Muvaffaqiyat (Yorqin)", color: "border-teal-600 bg-teal-50 text-teal-800" },
                 ].map((item) => (
                   <button
                     type="button"
@@ -949,10 +949,10 @@ export default function AdminContentPage() {
                         announcement: { ...payload.announcement, type: item.id as any },
                       })
                     }
-                    className={`px-4 py-2 rounded-xl text-xs font-semibold border transition-all ${
+                    className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
                       payload.announcement.type === item.id
-                        ? `${item.color} shadow-md`
-                        : "border-slate-800 text-slate-400 hover:text-white"
+                        ? `${item.color} shadow-sm ring-1 ring-emerald-600`
+                        : "border-slate-300 text-slate-700 bg-white hover:bg-slate-50"
                     }`}
                   >
                     {item.uz}
@@ -964,17 +964,17 @@ export default function AdminContentPage() {
 
           {/* Live Banner Preview */}
           {payload.announcement.is_active && (
-            <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-2">
-              <div className="text-[10px] uppercase font-semibold text-slate-400">
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+              <div className="text-[10px] uppercase font-bold text-slate-600">
                 {locale === "uz" ? "Banner ko‘rinishi:" : "Предпросмотр баннера:"}
               </div>
               <div
-                className={`p-3 rounded-xl border text-center text-xs font-semibold flex items-center justify-center gap-2 ${
+                className={`p-3 rounded-xl border text-center text-xs font-bold flex items-center justify-center gap-2 ${
                   payload.announcement.type === "warning"
-                    ? "bg-amber-950/60 text-amber-300 border-amber-500/40"
+                    ? "bg-amber-50 text-amber-900 border-amber-300"
                     : payload.announcement.type === "success"
-                    ? "bg-emerald-900/60 text-white border-emerald-500/40"
-                    : "bg-emerald-950/60 text-emerald-300 border-emerald-500/40"
+                    ? "bg-teal-50 text-teal-900 border-teal-300"
+                    : "bg-emerald-50 text-emerald-900 border-emerald-300"
                 }`}
               >
                 <Megaphone className="w-4 h-4 flex-shrink-0" />
@@ -987,15 +987,15 @@ export default function AdminContentPage() {
 
       {/* 5. SEO SECTION */}
       {activeTab === "seo" && (
-        <div className="bg-slate-900/60 backdrop-blur-md p-6 rounded-3xl border border-slate-800 space-y-6">
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <Search className="w-5 h-5 text-emerald-400" />
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
+          <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+            <Search className="w-5 h-5 text-[#16543C]" />
             {locale === "uz" ? "Qidiruv Tizimi va Meta Sozlamalari (SEO)" : "Поисковая оптимизация и метатеги (SEO)"}
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Site Title (O‘zbekcha - Lotin)
               </label>
               <input
@@ -1007,12 +1007,12 @@ export default function AdminContentPage() {
                     seo: { ...payload.seo, site_title_uz: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Site Title (Русский)
               </label>
               <input
@@ -1024,12 +1024,12 @@ export default function AdminContentPage() {
                     seo: { ...payload.seo, site_title_ru: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Meta Description (O‘zbekcha - Lotin)
               </label>
               <textarea
@@ -1041,12 +1041,12 @@ export default function AdminContentPage() {
                     seo: { ...payload.seo, meta_description_uz: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Meta Description (Русский)
               </label>
               <textarea
@@ -1058,12 +1058,12 @@ export default function AdminContentPage() {
                     seo: { ...payload.seo, meta_description_ru: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Kalit So‘zlar (Keywords UZ)
               </label>
               <input
@@ -1075,12 +1075,12 @@ export default function AdminContentPage() {
                     seo: { ...payload.seo, keywords_uz: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Ключевые слова (Keywords RU)
               </label>
               <input
@@ -1092,7 +1092,7 @@ export default function AdminContentPage() {
                     seo: { ...payload.seo, keywords_ru: e.target.value },
                   })
                 }
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
               />
             </div>
           </div>
@@ -1105,7 +1105,7 @@ export default function AdminContentPage() {
           type="button"
           onClick={() => handleSaveSection(activeTab)}
           disabled={isSaving || isLoading}
-          className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm shadow-xl shadow-emerald-900/40 transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-6 py-3 bg-[#16543C] hover:bg-[#0E3324] text-white rounded-xl font-bold text-sm shadow-sm hover:shadow-md transition-all disabled:opacity-50"
         >
           <Save className="w-4 h-4" />
           {isSaving

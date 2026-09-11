@@ -28,6 +28,7 @@ import {
   ChevronRight,
   Eye,
   Info,
+  Instagram,
 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -500,10 +501,19 @@ export default function PropertyDetailView({
               {/* Contact Card */}
               <div className="sticky top-28 p-6 rounded-3xl bg-white border border-gray-200/80 shadow-elevated space-y-6">
                 <div className="flex items-center gap-3.5 pb-4 border-b border-gray-100">
-                  <div className="w-14 h-14 rounded-2xl bg-emerald-950 text-white flex items-center justify-center font-bold text-lg border-2 border-[#16543C] shadow-sm">
-                    {property.realtor && property.realtor.is_active && property.realtor.name
-                      ? property.realtor.name.slice(0, 2).toUpperCase()
-                      : "AE"}
+                  <div className="relative w-14 h-14 rounded-2xl bg-emerald-950 text-white flex items-center justify-center font-bold text-lg border-2 border-[#16543C] shadow-sm overflow-hidden shrink-0">
+                    {property.realtor && property.realtor.is_active && (property.realtor.photo_url || property.realtor.avatar_url) ? (
+                      <Image
+                        src={property.realtor.photo_url || property.realtor.avatar_url || ""}
+                        alt={property.realtor.name}
+                        fill
+                        className="object-cover"
+                      />
+                    ) : property.realtor && property.realtor.is_active && property.realtor.name ? (
+                      property.realtor.name.slice(0, 2).toUpperCase()
+                    ) : (
+                      "AE"
+                    )}
                   </div>
                   <div>
                     <div className="font-bold text-gray-900 text-base">
@@ -575,6 +585,18 @@ export default function PropertyDetailView({
                       >
                         <Send className="w-4 h-4" />
                         <span>Telegram orqali yozish</span>
+                      </a>
+                    )}
+
+                    {property.realtor && property.realtor.is_active && (property.realtor.instagram_url || property.realtor.instagram) && (
+                      <a
+                        href={property.realtor.instagram_url || property.realtor.instagram}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full py-3.5 px-4 rounded-2xl border border-pink-200 bg-pink-50/60 hover:bg-pink-100 text-pink-700 text-sm font-bold shadow-sm flex items-center justify-center gap-2 transition-all active:scale-98"
+                      >
+                        <Instagram className="w-4 h-4 text-pink-600" />
+                        <span>Instagram profil</span>
                       </a>
                     )}
                   </div>

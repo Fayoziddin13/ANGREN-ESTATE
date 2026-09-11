@@ -73,7 +73,15 @@ export default function AdminDashboardPage() {
     analyticsData?.kpis?.phone_calls ?? leads.filter((l) => l.type === "phone").length;
   const telegramClicks =
     analyticsData?.kpis?.telegram_chats ?? leads.filter((l) => l.type === "telegram").length;
-  const avgDaysOnMarket = analyticsData?.outcomes?.avg_days_on_market || 22;
+  const avgDaysOnMarket = analyticsData?.outcomes?.avg_days_on_market ?? 0;
+
+  const saleCount = properties.filter((p) => p.transaction_type === "sale").length;
+  const rentCount = properties.filter((p) => p.transaction_type === "rent").length;
+  const totalTx = saleCount + rentCount;
+  const saleRentRatio = totalTx > 0 ? `${Math.round((saleCount / totalTx) * 100)}% / ${Math.round((rentCount / totalTx) * 100)}%` : "0% / 0%";
+
+  const totalClosed = soldProperties.length + rentedProperties.length;
+  const dealEfficiencyRate = properties.length > 0 ? `${((totalClosed / properties.length) * 100).toFixed(1)}%` : "0.0%";
 
   // Chart data based on live totalViews
   const timeLabels =
@@ -170,7 +178,7 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         {/* Total Properties */}
         <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-2">
-          <div className="flex items-center justify-between text-slate-400">
+          <div className="flex items-center justify-between text-slate-600">
             <span className="text-[11px] font-bold uppercase tracking-wider">
               {locale === "uz" ? "Jami obyektlar" : "Всего объектов"}
             </span>
@@ -179,31 +187,31 @@ export default function AdminDashboardPage() {
           <div className="text-2xl font-black text-slate-900">
             {isPropLoaded ? properties.length : "..."}
           </div>
-          <div className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          <div className="text-[11px] text-emerald-700 font-semibold flex items-center gap-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
             <span>{publishedProperties.length} {locale === "uz" ? "faol e'londa" : "активно"}</span>
           </div>
         </div>
 
         {/* Drafts */}
         <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-2">
-          <div className="flex items-center justify-between text-slate-400">
+          <div className="flex items-center justify-between text-slate-600">
             <span className="text-[11px] font-bold uppercase tracking-wider">
               {locale === "uz" ? "Qoralamalar" : "Черновики"}
             </span>
-            <AlertCircle className="h-4 w-4 text-amber-500" />
+            <AlertCircle className="h-4 w-4 text-amber-600" />
           </div>
           <div className="text-2xl font-black text-slate-900">
             {isPropLoaded ? draftProperties.length : "..."}
           </div>
-          <div className="text-[11px] text-slate-400 font-medium">
+          <div className="text-[11px] text-slate-600 font-medium">
             {locale === "uz" ? "Nashr kutilmoqda" : "Ожидает публикации"}
           </div>
         </div>
 
         {/* Sold / Rented */}
         <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-2">
-          <div className="flex items-center justify-between text-slate-400">
+          <div className="flex items-center justify-between text-slate-600">
             <span className="text-[11px] font-bold uppercase tracking-wider">
               {locale === "uz" ? "Bitimlar" : "Сделки"}
             </span>
@@ -212,14 +220,14 @@ export default function AdminDashboardPage() {
           <div className="text-2xl font-black text-slate-900">
             {soldProperties.length + rentedProperties.length}
           </div>
-          <div className="text-[11px] text-blue-600 font-semibold">
+          <div className="text-[11px] text-blue-700 font-semibold">
             {soldProperties.length} sotildi • {rentedProperties.length} ijara
           </div>
         </div>
 
         {/* Views */}
         <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-2">
-          <div className="flex items-center justify-between text-slate-400">
+          <div className="flex items-center justify-between text-slate-600">
             <span className="text-[11px] font-bold uppercase tracking-wider">
               {locale === "uz" ? "Ko‘rishlar" : "Просмотры"}
             </span>
@@ -228,31 +236,31 @@ export default function AdminDashboardPage() {
           <div className="text-2xl font-black text-slate-900">
             {totalViews.toLocaleString()}
           </div>
-          <div className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+          <div className="text-[11px] text-emerald-700 font-semibold flex items-center gap-1">
             <TrendingUp className="h-3 w-3" />
-            <span>+18.4%</span>
+            <span>{totalViews > 0 ? `${totalViews} ta` : "—"}</span>
           </div>
         </div>
 
         {/* Contacts Clicks (Phone + Telegram) */}
         <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-2">
-          <div className="flex items-center justify-between text-slate-400">
+          <div className="flex items-center justify-between text-slate-600">
             <span className="text-[11px] font-bold uppercase tracking-wider">
               {locale === "uz" ? "Aloqa so‘rovlari" : "Контакты"}
             </span>
-            <PhoneCall className="h-4 w-4 text-emerald-600" />
+            <PhoneCall className="h-4 w-4 text-emerald-700" />
           </div>
           <div className="text-2xl font-black text-slate-900">
             {phoneClicks + telegramClicks}
           </div>
-          <div className="text-[11px] text-slate-500 font-medium">
+          <div className="text-[11px] text-slate-600 font-medium">
             {phoneClicks} tel • {telegramClicks} TG
           </div>
         </div>
 
         {/* Registered Users */}
         <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-2">
-          <div className="flex items-center justify-between text-slate-400">
+          <div className="flex items-center justify-between text-slate-600">
             <span className="text-[11px] font-bold uppercase tracking-wider">
               {locale === "uz" ? "Foydalanuvchilar" : "Пользователи"}
             </span>
@@ -261,7 +269,7 @@ export default function AdminDashboardPage() {
           <div className="text-2xl font-black text-slate-900">
             {usersCount !== null ? usersCount : "..."}
           </div>
-          <div className="text-[11px] text-emerald-600 font-semibold">
+          <div className="text-[11px] text-emerald-700 font-semibold">
             {totalFavorites} {locale === "uz" ? "sevimlilar" : "в избранном"}
           </div>
         </div>
@@ -276,7 +284,7 @@ export default function AdminDashboardPage() {
               <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider">
                 {locale === "uz" ? "Foydalanuvchilar faolligi va ko‘rishlar" : "Динамика просмотров"}
               </h2>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-600 mt-0.5">
                 {locale === "uz" ? "Davr bo‘yicha e'lonlar ko‘rilish traektoriyasi" : "Просмотры объявлений по выбранному периоду"}
               </p>
             </div>
@@ -292,14 +300,14 @@ export default function AdminDashboardPage() {
                 const heightPercent = Math.round((val / maxViews) * 100);
                 return (
                   <div key={idx} className="flex-1 flex flex-col items-center gap-2 group">
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">
                       {val}
                     </div>
                     <div
                       style={{ height: `${heightPercent}%` }}
                       className="w-full bg-gradient-to-t from-[#16543C] to-emerald-400 rounded-t-xl group-hover:from-emerald-600 group-hover:to-emerald-300 transition-all shadow-xs"
                     />
-                    <span className="text-[10px] font-bold text-slate-400 mt-2 truncate max-w-[48px]">
+                    <span className="text-[10px] font-bold text-slate-600 mt-2 truncate max-w-[48px]">
                       {timeLabels[idx]}
                     </span>
                   </div>
@@ -311,16 +319,16 @@ export default function AdminDashboardPage() {
           {/* Mini Insights Row */}
           <div className="grid grid-cols-3 gap-3 pt-3 border-t border-slate-100 text-xs">
             <div>
-              <span className="text-slate-400 text-[11px]">{locale === "uz" ? "O‘rtacha sotilish vaqti" : "Срок на рынке"}</span>
-              <div className="font-extrabold text-slate-800 text-sm mt-0.5">{avgDaysOnMarket} {locale === "uz" ? "kun" : "дней"}</div>
+              <span className="text-slate-600 text-[11px] font-semibold">{locale === "uz" ? "O‘rtacha sotilish vaqti" : "Срок на рынке"}</span>
+              <div className="font-extrabold text-slate-900 text-sm mt-0.5">{avgDaysOnMarket > 0 ? `${avgDaysOnMarket} ${locale === "uz" ? "kun" : "дней"}` : "—"}</div>
             </div>
             <div>
-              <span className="text-slate-400 text-[11px]">{locale === "uz" ? "Sotuv/Ijara nisbati" : "Продажа / Аренда"}</span>
-              <div className="font-extrabold text-slate-800 text-sm mt-0.5">72% / 28%</div>
+              <span className="text-slate-600 text-[11px] font-semibold">{locale === "uz" ? "Sotuv/Ijara nisbati" : "Продажа / Аренда"}</span>
+              <div className="font-extrabold text-slate-900 text-sm mt-0.5">{saleRentRatio}</div>
             </div>
             <div>
-              <span className="text-slate-400 text-[11px]">{locale === "uz" ? "Eng faol tuman" : "Популярный район"}</span>
-              <div className="font-extrabold text-slate-800 text-sm mt-0.5">Markaz (Angren)</div>
+              <span className="text-slate-600 text-[11px] font-semibold">{locale === "uz" ? "Eng faol tuman" : "Популярный район"}</span>
+              <div className="font-extrabold text-slate-900 text-sm mt-0.5">Markaz (Angren)</div>
             </div>
           </div>
         </div>
@@ -337,7 +345,7 @@ export default function AdminDashboardPage() {
                 {newLeads.length} {locale === "uz" ? "yangi" : "новых"}
               </span>
             </div>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-600">
               {locale === "uz" ? "Telefon yoki Telegram orqali qoldirilgan qiziqishlar" : "Обращения по телефону и Telegram"}
             </p>
           </div>
@@ -514,9 +522,9 @@ export default function AdminDashboardPage() {
             ))}
           </div>
 
-          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-700">
             <span>{locale === "uz" ? "Bozor samaradorligi:" : "Конверсия сделок:"}</span>
-            <span className="font-bold text-[#16543C]">94.2%</span>
+            <span className="font-bold text-[#16543C]">{dealEfficiencyRate}</span>
           </div>
         </div>
       </div>
