@@ -142,7 +142,7 @@ export function FloatingSearchPanel({
 
         {/* Text Search Input */}
         {onSearchQueryChange && (
-          <div className="relative flex-1 min-w-[140px] sm:min-w-[180px]">
+          <div className="relative flex-1 min-w-[120px] max-w-[170px]">
             <div className="flex w-full items-center gap-1.5 rounded-xl border border-gray-200/80 bg-white/90 px-3 py-1.5 text-xs font-semibold text-gray-800 focus-within:border-brand-primary focus-within:ring-2 focus-within:ring-brand-primary/20 transition-all">
               <Search className="h-3.5 w-3.5 text-brand-primary shrink-0" />
               <input
@@ -166,7 +166,7 @@ export function FloatingSearchPanel({
         )}
 
         {/* Dropdown 1: District */}
-        <div className="relative flex-1">
+        <div className="relative flex-1 min-w-[100px] max-w-[140px]">
           <button
             onClick={() => {
               setDistrictOpen(!districtOpen);
@@ -212,7 +212,7 @@ export function FloatingSearchPanel({
         </div>
 
         {/* Dropdown 2: Property Type */}
-        <div className="relative flex-1">
+        <div className="relative flex-1 min-w-[100px] max-w-[140px]">
           <button
             onClick={() => {
               setTypeOpen(!typeOpen);
@@ -258,7 +258,7 @@ export function FloatingSearchPanel({
         </div>
 
         {/* Dropdown 3: Price */}
-        <div className="relative flex-1">
+        <div className="relative flex-1 min-w-[100px] max-w-[130px]">
           <button
             onClick={() => {
               setPriceOpen(!priceOpen);
@@ -305,7 +305,8 @@ export function FloatingSearchPanel({
 
         {/* Action / Reset Button & Live Count Badge */}
         <div className="flex items-center justify-between sm:justify-start gap-2 shrink-0 pt-1 sm:pt-0">
-          <div className="flex items-center gap-1.5 rounded-xl bg-brand-light px-3 py-2 text-xs font-bold text-brand-primary">
+          {/* Redundant on laptop screens since catalog switcher shows totalCount */}
+          <div className="flex sm:hidden 2xl:flex items-center gap-1.5 rounded-xl bg-brand-light px-3 py-2 text-xs font-bold text-brand-primary">
             <span className="h-2 w-2 rounded-full bg-brand-primary animate-pulse" />
             <span>{totalCount} {locale === "uz" ? "obyekt" : "объектов"}</span>
           </div>

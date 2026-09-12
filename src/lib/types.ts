@@ -17,11 +17,15 @@ export type Locale = "uz" | "ru";
 export type Currency = "UZS" | "USD";
 
 export interface PropertyUtilities {
-  gas: boolean;
-  water: boolean;
-  sewerage: boolean;
-  heating: boolean;
-  electricity: boolean;
+  electricity?: boolean;
+  gas?: boolean;
+  cold_water?: boolean;
+  hot_water?: boolean;
+  heating?: boolean;
+  internet?: boolean;
+  water?: boolean;
+  sewerage?: boolean;
+  custom?: string[];
 }
 
 export interface PropertyAmenities {
@@ -93,8 +97,12 @@ export interface Property {
   contact_phone: string;
   contact_telegram?: string;
   telegram?: string;
+  owner_phone?: string;
   realtor_id?: string;
   realtor?: Realtor;
+  facade_m?: number;
+  depth_m?: number;
+  dimensions?: string;
 }
 
 export interface Favorite {

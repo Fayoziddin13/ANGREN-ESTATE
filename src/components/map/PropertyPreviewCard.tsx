@@ -2,13 +2,14 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { X, Heart, MapPin, Maximize2, Bed, Bath, ArrowRight, Phone, Send, Layers } from "lucide-react";
+import { X, Heart, MapPin, Maximize2, Bed, Bath, ArrowRight, Phone, Send, Layers, Calendar } from "lucide-react";
 import { Property } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useAuth } from "@/context/AuthContext";
 import { useFavorites } from "@/lib/favoriteStore";
 import { trackEvent } from "@/lib/analytics";
+import { formatPublishedDate } from "@/lib/dateFormat";
 
 interface PropertyPreviewCardProps {
   property: Property;
@@ -43,6 +44,8 @@ export function PropertyPreviewCard({
 
   const floorNum = property.floor_number ?? property.floor;
   const totalFloors = property.floors ?? property.total_floors;
+  const isHouse = property.property_type === "house_yard" || property.property_type === "land";
+  const publishedDateStr = formatPublishedDate(property.published_at || property.created_at, locale, true);
 
   const getPropertyTypeLabel = (type: string, loc: string) => {
     switch (type) {
@@ -89,17 +92,28 @@ export function PropertyPreviewCard({
           alt={title}
           fill
           sizes="400px"
+          loading="lazy"
+          priority={false}
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
 
         {/* Transaction & Property Type Badges */}
         <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5">
-          <span className="rounded-xl bg-brand-primary px-3 py-1 text-xs font-bold tracking-wide text-white shadow-sm">
+          <span
+            className={`rounded-xl px-3 py-1 text-xs font-black tracking-wide text-white shadow-sm ${
+              isSale ? "bg-[#16543C]" : "bg-[#1D4ED8]"
+            }`}
+          >
             {badgeText}
           </span>
           <span className="rounded-xl bg-white/90 backdrop-blur-md px-2.5 py-1 text-[11px] font-bold text-gray-800 shadow-sm">
             {getPropertyTypeLabel(property.property_type, locale)}
           </span>
+          {property.area_sotikh && (property.property_type === "house_yard" || property.property_type === "land") && (
+            <span className="rounded-xl bg-emerald-950/80 backdrop-blur-md px-2 py-1 text-[11px] font-bold text-emerald-200 shadow-sm">
+              {property.area_sotikh} {locale === "uz" ? "сотих" : "соток"}
+            </span>
+          )}
         </div>
 
         {/* Favorite Button */}
@@ -130,29 +144,72 @@ export function PropertyPreviewCard({
           </div>
         </div>
 
-        {/* Specs Row */}
+        {/* Specs Row & Published Date */}
         <div className="flex items-center justify-between border-t border-gray-100 pt-2.5 text-xs font-semibold text-gray-600">
-          <div className="flex items-center gap-1.5">
-            <Maximize2 className="h-3.5 w-3.5 text-gray-400" />
-            <span>{property.area_sqm} {t.common.sqm}</span>
-          </div>
-          {property.rooms && (
-            <div className="flex items-center gap-1.5">
-              <Bed className="h-3.5 w-3.5 text-gray-400" />
-              <span>{property.rooms} {t.common.rooms}</span>
+          {property.property_type === "land" ? (
+            <div className="flex items-center gap-2.5">
+              {property.area_sotikh ? (
+                <span className="font-bold text-[#16543C]">
+                  {property.area_sotikh} {locale === "uz" ? "sotix" : "соток"}
+                </span>
+              ) : null}
+              {property.dimensions || (property.facade_m && property.depth_m) ? (
+                <span className="text-gray-500 font-medium">
+                  {property.dimensions || `${property.facade_m} × ${property.depth_m} m`}
+                </span>
+              ) : null}
+            </div>
+          ) : isHouse ? (
+            <div className="flex items-center gap-2.5">
+              {property.area_sotikh ? (
+                <span className="font-bold text-[#16543C]">
+                  {property.area_sotikh} {locale === "uz" ? "sotix" : "соток"}
+                </span>
+              ) : null}
+              <div className="flex items-center gap-1">
+                <Maximize2 className="h-3.5 w-3.5 text-gray-400" />
+                <span>Uy: {property.area_sqm} {t.common.sqm}</span>
+              </div>
+              {property.dimensions || (property.facade_m && property.depth_m) ? (
+                <span className="text-gray-500 font-medium text-[11px]">
+                  {property.dimensions || `${property.facade_m} × ${property.depth_m} m`}
+                </span>
+              ) : null}
+              {property.rooms ? (
+                <div className="flex items-center gap-1">
+                  <Bed className="h-3.5 w-3.5 text-gray-400" />
+                  <span>{property.rooms} {t.common.rooms}</span>
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2.5">
+              {floorNum ? (
+                <div className="flex items-center gap-1 font-bold text-gray-700">
+                  <Layers className="h-3.5 w-3.5 text-brand-primary" />
+                  <span>{floorNum}{totalFloors ? `/${totalFloors}` : ""} {locale === "uz" ? "qavat" : "эт."}</span>
+                </div>
+              ) : null}
+              <div className="flex items-center gap-1">
+                <Maximize2 className="h-3.5 w-3.5 text-gray-400" />
+                <span>{property.area_sqm} {t.common.sqm}</span>
+              </div>
+              {property.rooms ? (
+                <div className="flex items-center gap-1">
+                  <Bed className="h-3.5 w-3.5 text-gray-400" />
+                  <span>{property.rooms} {t.common.rooms}</span>
+                </div>
+              ) : null}
             </div>
           )}
-          {floorNum ? (
-            <div className="flex items-center gap-1.5">
-              <Layers className="h-3.5 w-3.5 text-gray-400" />
-              <span>{floorNum}{totalFloors ? `/${totalFloors}` : ""}-{locale === "uz" ? "qavat" : "эт."}</span>
+
+          {/* Published Date */}
+          {publishedDateStr && (
+            <div className="flex items-center gap-1 text-[11px] text-gray-400 font-medium">
+              <Calendar className="h-3 w-3 text-gray-400" />
+              <span>{publishedDateStr}</span>
             </div>
-          ) : property.bathrooms ? (
-            <div className="flex items-center gap-1.5">
-              <Bath className="h-3.5 w-3.5 text-gray-400" />
-              <span>{property.bathrooms}</span>
-            </div>
-          ) : null}
+          )}
         </div>
 
         {/* "Batafsil ko'rish" Main Button */}

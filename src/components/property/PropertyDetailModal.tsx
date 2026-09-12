@@ -19,6 +19,12 @@ import {
   ShieldCheck,
   Calendar,
   Check,
+  Zap,
+  Flame,
+  Droplets,
+  Thermometer,
+  Wifi,
+  User,
 } from "lucide-react";
 import { Property } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
@@ -314,57 +320,111 @@ export function PropertyDetailModal({
               </div>
             </div>
 
-            {/* Visual Parameter Blocks (Requested in User Brief) */}
+            {/* Visual Parameter Blocks (Dynamic by Property Type) */}
             <div className="space-y-2.5">
               <h2 className="text-sm font-bold tracking-tight text-gray-800">
                 {t.propertyDetail.detailsTitle}
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {/* Maydon */}
-                <div className="flex flex-col p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10">
-                  <span className="text-[11px] font-semibold text-gray-500 flex items-center gap-1">
-                    <Maximize2 className="h-3.5 w-3.5 text-brand-primary" />
-                    <span>{t.propertyDetail.area}</span>
-                  </span>
-                  <span className="text-base sm:text-lg font-extrabold text-brand-dark pt-1">
-                    {property.area_sqm} {t.common.sqm}
-                  </span>
-                </div>
+                {property.property_type === "house_yard" || property.property_type === "land" ? (
+                  <>
+                    {/* Yer maydoni (Sotix) */}
+                    <div className="flex flex-col p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10">
+                      <span className="text-[11px] font-semibold text-gray-500 flex items-center gap-1">
+                        <Maximize2 className="h-3.5 w-3.5 text-brand-primary" />
+                        <span>{locale === "uz" ? "Yer maydoni" : "Площадь участка"}</span>
+                      </span>
+                      <span className="text-base sm:text-lg font-extrabold text-brand-dark pt-1">
+                        {property.area_sotikh ? `${property.area_sotikh} ${locale === "uz" ? "sotix" : "соток"}` : "—"}
+                      </span>
+                    </div>
 
-                {/* Xonalar */}
-                <div className="flex flex-col p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10">
-                  <span className="text-[11px] font-semibold text-gray-500 flex items-center gap-1">
-                    <Bed className="h-3.5 w-3.5 text-brand-primary" />
-                    <span>{t.propertyDetail.rooms}</span>
-                  </span>
-                  <span className="text-base sm:text-lg font-extrabold text-brand-dark pt-1">
-                    {property.rooms ? `${property.rooms} ${t.common.rooms}` : "—"}
-                  </span>
-                </div>
+                    {/* Uy maydoni (m²) */}
+                    {property.property_type !== "land" && (
+                      <div className="flex flex-col p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10">
+                        <span className="text-[11px] font-semibold text-gray-500 flex items-center gap-1">
+                          <Building className="h-3.5 w-3.5 text-brand-primary" />
+                          <span>{locale === "uz" ? "Uy maydoni" : "Площадь дома"}</span>
+                        </span>
+                        <span className="text-base sm:text-lg font-extrabold text-brand-dark pt-1">
+                          {property.area_sqm} {t.common.sqm}
+                        </span>
+                      </div>
+                    )}
 
-                {/* Sanuzel */}
-                <div className="flex flex-col p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10">
-                  <span className="text-[11px] font-semibold text-gray-500 flex items-center gap-1">
-                    <Bath className="h-3.5 w-3.5 text-brand-primary" />
-                    <span>{t.propertyDetail.bathrooms}</span>
-                  </span>
-                  <span className="text-base sm:text-lg font-extrabold text-brand-dark pt-1">
-                    {property.bathrooms ? `${property.bathrooms} ta` : "1 ta"}
-                  </span>
-                </div>
+                    {/* O'lchamlari / Fasad */}
+                    <div className="flex flex-col p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10">
+                      <span className="text-[11px] font-semibold text-gray-500 flex items-center gap-1">
+                        <Sparkles className="h-3.5 w-3.5 text-brand-primary" />
+                        <span>{locale === "uz" ? "O‘lchamlari" : "Размеры"}</span>
+                      </span>
+                      <span className="text-base sm:text-lg font-extrabold text-brand-dark pt-1">
+                        {property.dimensions || (property.facade_m && property.depth_m ? `${property.facade_m} × ${property.depth_m} m` : property.facade_m ? `Fasad: ${property.facade_m} m` : "—")}
+                      </span>
+                    </div>
 
-                {/* Qavat */}
-                <div className="flex flex-col p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10">
-                  <span className="text-[11px] font-semibold text-gray-500 flex items-center gap-1">
-                    <Building className="h-3.5 w-3.5 text-brand-primary" />
-                    <span>{t.propertyDetail.floor}</span>
-                  </span>
-                  <span className="text-base sm:text-lg font-extrabold text-brand-dark pt-1">
-                    {property.floor
-                      ? `${property.floor} / ${property.total_floors || property.floor}`
-                      : "1 / 1"}
-                  </span>
-                </div>
+                    {/* Xonalar soni */}
+                    {property.property_type !== "land" && (
+                      <div className="flex flex-col p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10">
+                        <span className="text-[11px] font-semibold text-gray-500 flex items-center gap-1">
+                          <Bed className="h-3.5 w-3.5 text-brand-primary" />
+                          <span>{t.propertyDetail.rooms}</span>
+                        </span>
+                        <span className="text-base sm:text-lg font-extrabold text-brand-dark pt-1">
+                          {property.rooms ? `${property.rooms} ${t.common.rooms}` : "—"}
+                        </span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {/* Qavat / Jami qavat (Apartment Primary) */}
+                    <div className="flex flex-col p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10">
+                      <span className="text-[11px] font-semibold text-gray-500 flex items-center gap-1">
+                        <Building className="h-3.5 w-3.5 text-brand-primary" />
+                        <span>{t.propertyDetail.floor}</span>
+                      </span>
+                      <span className="text-base sm:text-lg font-extrabold text-brand-dark pt-1">
+                        {property.floor_number || property.floor
+                          ? `${property.floor_number || property.floor} / ${property.total_floors || property.floors || property.floor_number || 1} qavat`
+                          : "1 / 1"}
+                      </span>
+                    </div>
+
+                    {/* Maydon (m²) */}
+                    <div className="flex flex-col p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10">
+                      <span className="text-[11px] font-semibold text-gray-500 flex items-center gap-1">
+                        <Maximize2 className="h-3.5 w-3.5 text-brand-primary" />
+                        <span>{t.propertyDetail.area}</span>
+                      </span>
+                      <span className="text-base sm:text-lg font-extrabold text-brand-dark pt-1">
+                        {property.area_sqm} {t.common.sqm}
+                      </span>
+                    </div>
+
+                    {/* Xonalar */}
+                    <div className="flex flex-col p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10">
+                      <span className="text-[11px] font-semibold text-gray-500 flex items-center gap-1">
+                        <Bed className="h-3.5 w-3.5 text-brand-primary" />
+                        <span>{t.propertyDetail.rooms}</span>
+                      </span>
+                      <span className="text-base sm:text-lg font-extrabold text-brand-dark pt-1">
+                        {property.rooms ? `${property.rooms} ${t.common.rooms}` : "—"}
+                      </span>
+                    </div>
+
+                    {/* Sanuzel */}
+                    <div className="flex flex-col p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10">
+                      <span className="text-[11px] font-semibold text-gray-500 flex items-center gap-1">
+                        <Bath className="h-3.5 w-3.5 text-brand-primary" />
+                        <span>{t.propertyDetail.bathrooms}</span>
+                      </span>
+                      <span className="text-base sm:text-lg font-extrabold text-brand-dark pt-1">
+                        {property.bathrooms ? `${property.bathrooms} ta` : "1 ta"}
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -378,41 +438,114 @@ export function PropertyDetailModal({
               </p>
             </div>
 
-            {/* Amenities & Utilities */}
+            {/* 6 Core Communications (NO emojis, Professional Lucide Icons) */}
             <div className="space-y-3">
               <h2 className="text-sm font-bold tracking-tight text-gray-800">
-                {t.propertyDetail.amenities}
+                {locale === "uz" ? "Kommunikatsiyalar" : "Коммуникации"}
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                 {[
-                  { label: "Gaz tarmog'i", active: property.utilities.gas },
-                  { label: "Toza ichimlik suvi", active: property.utilities.water },
-                  { label: "Elektr ta'minoti", active: property.utilities.electricity },
-                  { label: "Kanalizatsiya", active: property.utilities.sewerage },
-                  { label: "Markaziy isitish", active: property.utilities.heating },
-                  { label: "Mebel & Texnika", active: property.amenities.furniture },
-                  { label: "Konditsioner", active: property.amenities.ac },
-                  { label: "Avtoturargoh", active: property.amenities.parking },
-                  { label: "Balkon / Terasa", active: property.amenities.balcony },
-                  { label: "Tezkor Internet", active: property.amenities.internet },
-                ].map((item, idx) => (
-                  <div
-                    key={idx}
-                    className={`flex items-center gap-2 p-2.5 rounded-xl text-xs font-medium ${
-                      item.active
-                        ? "bg-brand-light text-brand-dark"
-                        : "bg-gray-50 text-gray-400 opacity-60"
-                    }`}
-                  >
-                    <CheckCircle2
-                      className={`h-3.5 w-3.5 ${
-                        item.active ? "text-brand-primary" : "text-gray-300"
+                  {
+                    icon: Zap,
+                    label: "Svet",
+                    labelRu: "Электричество",
+                    active: property.utilities?.electricity ?? true,
+                  },
+                  {
+                    icon: Flame,
+                    label: "Gaz",
+                    labelRu: "Газ",
+                    active: property.utilities?.gas ?? true,
+                  },
+                  {
+                    icon: Droplets,
+                    label: "Sovuq suv",
+                    labelRu: "Холодная вода",
+                    active: property.utilities?.cold_water ?? property.utilities?.water ?? true,
+                  },
+                  {
+                    icon: Thermometer,
+                    label: "Issiq suv",
+                    labelRu: "Горячая вода",
+                    active: property.utilities?.hot_water ?? true,
+                  },
+                  {
+                    icon: Flame,
+                    label: "Отопление",
+                    labelRu: "Отопление",
+                    active: property.utilities?.heating ?? true,
+                  },
+                  {
+                    icon: Wifi,
+                    label: "Internet",
+                    labelRu: "Интернет",
+                    active: property.utilities?.internet ?? property.amenities?.internet ?? true,
+                  },
+                ].map((item, idx) => {
+                  const Icon = item.icon;
+                  return (
+                    <div
+                      key={idx}
+                      className={`flex items-center gap-2.5 p-3 rounded-2xl text-xs font-bold transition-all ${
+                        item.active
+                          ? "bg-emerald-50 text-[#16543C] border border-emerald-200/80 shadow-xs"
+                          : "bg-gray-50 text-gray-400 border border-gray-100 opacity-60"
                       }`}
-                    />
-                    <span>{item.label}</span>
+                    >
+                      <div className={`flex h-7 w-7 items-center justify-center rounded-xl shrink-0 ${
+                        item.active ? "bg-[#16543C] text-white" : "bg-gray-200 text-gray-400"
+                      }`}>
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <span>{locale === "uz" ? item.label : item.labelRu}</span>
+                    </div>
+                  );
+                })}
+
+                {/* Custom Options if specified */}
+                {Array.isArray(property.utilities?.custom) && property.utilities.custom.map((c, i) => (
+                  <div
+                    key={`custom-${i}`}
+                    className="flex items-center gap-2.5 p-3 rounded-2xl bg-emerald-50 text-[#16543C] border border-emerald-200/80 shadow-xs text-xs font-bold"
+                  >
+                    <div className="flex h-7 w-7 items-center justify-center rounded-xl shrink-0 bg-[#16543C] text-white">
+                      <Check className="h-4 w-4 stroke-[2.5]" />
+                    </div>
+                    <span>{c}</span>
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* Realtor & Owner Contacts */}
+            <div className="p-4 rounded-2xl bg-brand-light/70 border border-brand-primary/15 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="h-11 w-11 rounded-2xl bg-[#16543C] text-white flex items-center justify-center font-black text-sm shrink-0 shadow-sm">
+                  {property.realtor?.name?.charAt(0) || <User className="h-5 w-5" />}
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                    {locale === "uz" ? "Mas'ul rieltor" : "Ответственный риелтор"}
+                  </p>
+                  <p className="text-sm font-extrabold text-gray-900">
+                    {property.realtor?.name || "Jasur Alimov"}
+                  </p>
+                  <p className="text-xs text-emerald-700 font-semibold">
+                    {property.realtor?.phone || property.contact_phone}
+                  </p>
+                </div>
+              </div>
+
+              {property.owner_phone && (
+                <div className="sm:border-l sm:border-gray-200/80 sm:pl-4">
+                  <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                    {locale === "uz" ? "Mulkdor telefoni" : "Телефон собственника"}
+                  </p>
+                  <p className="text-xs font-bold text-gray-800 pt-0.5">
+                    {property.owner_phone}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Security & Authenticity Footnote */}

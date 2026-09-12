@@ -29,6 +29,11 @@ import {
   Eye,
   Info,
   Instagram,
+  Zap,
+  Flame,
+  Droplets,
+  Thermometer,
+  Wifi,
 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -40,6 +45,7 @@ import { getPropertyRepository } from "@/lib/repository/propertyRepository";
 import { Property } from "@/lib/types";
 import { trackEvent } from "@/lib/analytics";
 import { recordPublicLead } from "@/lib/leadClient";
+import { formatPublishedDate } from "@/lib/dateFormat";
 
 // Dynamic import for mini map
 const AngrenMap = dynamic(
@@ -380,37 +386,88 @@ export default function PropertyDetailView({
                     {title}
                   </h1>
 
-                  <div className="flex items-center gap-2 text-sm text-gray-500 mt-2">
-                    <MapPin className="w-4 h-4 text-[#16543C] shrink-0" />
-                    <span>{address}</span>
+                  <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-500 mt-2">
+                    <div className="flex items-center gap-1.5">
+                      <MapPin className="w-4 h-4 text-[#16543C] shrink-0" />
+                      <span>{address}</span>
+                    </div>
+                    {property.published_at && (
+                      <div className="flex items-center gap-1.5 text-slate-400">
+                        <span>•</span>
+                        <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span>{formatPublishedDate(property.published_at)}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 {/* Quick specs pills */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-gray-100">
-                  <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100/80 text-center">
-                    <div className="text-xs text-gray-500 font-medium">{locale === "uz" ? "Umumiy maydon" : "Площадь"}</div>
-                    <div className="text-base font-extrabold text-gray-900 mt-0.5">{property.area_sqm} m²</div>
-                  </div>
+                  {property.property_type === "house_yard" || property.property_type === "land" ? (
+                    <>
+                      <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100/80 text-center">
+                        <div className="text-xs text-gray-500 font-medium">
+                          {locale === "uz" ? "Ер майдони" : "Участок"}
+                        </div>
+                        <div className="text-base font-extrabold text-gray-900 mt-0.5">
+                          {property.area_sotikh ? `${property.area_sotikh} сотих` : `${property.area_sqm} m²`}
+                        </div>
+                      </div>
 
-                  <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100/80 text-center">
-                    <div className="text-xs text-gray-500 font-medium">{locale === "uz" ? "Xonalar" : "Комнаты"}</div>
-                    <div className="text-base font-extrabold text-gray-900 mt-0.5">{property.rooms} {locale === "uz" ? "xona" : "комн."}</div>
-                  </div>
+                      <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100/80 text-center">
+                        <div className="text-xs text-gray-500 font-medium">
+                          {locale === "uz" ? "Уй майдони" : "Жилая пл."}
+                        </div>
+                        <div className="text-base font-extrabold text-gray-900 mt-0.5">
+                          {property.living_area_sqm || property.area_sqm} m²
+                        </div>
+                      </div>
 
-                  <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100/80 text-center">
-                    <div className="text-xs text-gray-500 font-medium">{locale === "uz" ? "Qavat" : "Этаж"}</div>
-                    <div className="text-base font-extrabold text-gray-900 mt-0.5">
-                      {property.floor ? `${property.floor}/${property.total_floors || "-"}` : "-"}
-                    </div>
-                  </div>
+                      <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100/80 text-center">
+                        <div className="text-xs text-gray-500 font-medium">
+                          {locale === "uz" ? "Хоналар" : "Комнаты"}
+                        </div>
+                        <div className="text-base font-extrabold text-gray-900 mt-0.5">
+                          {property.rooms} {locale === "uz" ? "хона" : "комн."}
+                        </div>
+                      </div>
 
-                  <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100/80 text-center">
-                    <div className="text-xs text-gray-500 font-medium">{locale === "uz" ? "Ta’mir" : "Ремонт"}</div>
-                    <div className="text-base font-extrabold text-[#16543C] mt-0.5 capitalize">
-                      {property.renovation || "Yevro"}
-                    </div>
-                  </div>
+                      <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100/80 text-center">
+                        <div className="text-xs text-gray-500 font-medium">
+                          {locale === "uz" ? "Таъмир" : "Ремонт"}
+                        </div>
+                        <div className="text-base font-extrabold text-[#16543C] mt-0.5 capitalize">
+                          {property.renovation || "Евро"}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100/80 text-center">
+                        <div className="text-xs text-gray-500 font-medium">{locale === "uz" ? "Umumiy maydon" : "Площадь"}</div>
+                        <div className="text-base font-extrabold text-gray-900 mt-0.5">{property.area_sqm} m²</div>
+                      </div>
+
+                      <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100/80 text-center">
+                        <div className="text-xs text-gray-500 font-medium">{locale === "uz" ? "Xonalar" : "Комнаты"}</div>
+                        <div className="text-base font-extrabold text-gray-900 mt-0.5">{property.rooms} {locale === "uz" ? "xona" : "комн."}</div>
+                      </div>
+
+                      <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100/80 text-center">
+                        <div className="text-xs text-gray-500 font-medium">{locale === "uz" ? "Qavat" : "Этаж"}</div>
+                        <div className="text-base font-extrabold text-gray-900 mt-0.5">
+                          {property.floor ? `${property.floor}/${property.total_floors || "-"}` : "-"}
+                        </div>
+                      </div>
+
+                      <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100/80 text-center">
+                        <div className="text-xs text-gray-500 font-medium">{locale === "uz" ? "Ta’mir" : "Ремонт"}</div>
+                        <div className="text-base font-extrabold text-[#16543C] mt-0.5 capitalize">
+                          {property.renovation || "Yevro"}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {/* Description */}
@@ -429,22 +486,85 @@ export default function PropertyDetailView({
                 <div>
                   <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-[#16543C]" />
-                    <span>{locale === "uz" ? "Kommunal ta’minot" : "Коммунальные условия"}</span>
+                    <span>{locale === "uz" ? "Kommunikatsiyalar" : "Коммуникации"}</span>
                   </h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div data-testid="communications-grid" className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {[
-                      { label_uz: "Tabiiy gaz", label_ru: "Газ", active: property.utilities.gas },
-                      { label_uz: "Markaziy suv", label_ru: "Водоснабжение", active: property.utilities.water },
-                      { label_uz: "Elektr energiyasi", label_ru: "Электричество", active: property.utilities.electricity },
-                      { label_uz: "Kanalizatsiya", label_ru: "Канализация", active: property.utilities.sewerage },
-                      { label_uz: "Isitish tizimi", label_ru: "Отопление", active: property.utilities.heating },
-                    ].map((item, idx) => (
-                      <div key={idx} className="flex items-center gap-2 text-xs font-semibold text-gray-700">
-                        <CheckCircle2 className="w-4 h-4 text-[#16543C]" />
-                        <span>{locale === "uz" ? item.label_uz : item.label_ru}</span>
-                      </div>
-                    ))}
+                      {
+                        icon: Zap,
+                        label_uz: "Свет (Электр тармоғи)",
+                        label_ru: "Электричество",
+                        active: property.utilities?.electricity ?? true,
+                      },
+                      {
+                        icon: Flame,
+                        label_uz: "Газ (Табиий газ)",
+                        label_ru: "Газ (Природный)",
+                        active: property.utilities?.gas ?? true,
+                      },
+                      {
+                        icon: Droplets,
+                        label_uz: "Совуқ сув (Ичимлик)",
+                        label_ru: "Холодная вода",
+                        active: property.utilities?.cold_water ?? (property.utilities as any)?.water ?? true,
+                      },
+                      {
+                        icon: Thermometer,
+                        label_uz: "Иссиқ сув",
+                        label_ru: "Горячая вода",
+                        active: property.utilities?.hot_water ?? true,
+                      },
+                      {
+                        icon: Flame,
+                        label_uz: "Отопление (Иситиш)",
+                        label_ru: "Отопление",
+                        active: property.utilities?.heating ?? true,
+                      },
+                      {
+                        icon: Wifi,
+                        label_uz: "Интернет (Оптика/Wi-Fi)",
+                        label_ru: "Интернет",
+                        active: property.utilities?.internet ?? true,
+                      },
+                    ].map((item, idx) => {
+                      const Icon = item.icon;
+                      return (
+                        <div
+                          key={idx}
+                          className={`flex items-center gap-2 text-xs font-semibold p-2 rounded-xl transition-colors ${
+                            item.active ? "text-gray-900 bg-emerald-50/70 border border-emerald-100" : "text-gray-400 opacity-60 bg-gray-50 border border-gray-100"
+                          }`}
+                        >
+                          <div className={`flex h-6 w-6 items-center justify-center rounded-lg shrink-0 ${
+                            item.active ? "bg-[#16543C] text-white" : "bg-gray-200 text-gray-400"
+                          }`}>
+                            <Icon className="w-3.5 h-3.5" />
+                          </div>
+                          <span>{locale === "uz" ? item.label_uz : item.label_ru}</span>
+                        </div>
+                      );
+                    })}
                   </div>
+
+                  {/* Custom utilities tags if present */}
+                  {property.utilities?.custom && property.utilities.custom.length > 0 && (
+                    <div className="pt-3.5 mt-3.5 border-t border-gray-100">
+                      <div className="text-xs font-bold text-gray-700 mb-2">
+                        {locale === "uz" ? "Қўшимча қулайликлар:" : "Дополнительные удобства:"}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {property.utilities.custom.map((c, i) => (
+                          <span
+                            key={i}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 text-[#16543C] text-xs font-bold border border-emerald-100"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                            <span>{c}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="pt-4 border-t border-gray-100">
@@ -599,6 +719,23 @@ export default function PropertyDetailView({
                         <span>Instagram profil</span>
                       </a>
                     )}
+                  </div>
+                )}
+
+                {user && (user.role === "admin" || (user as any).is_admin) && property.owner_phone && (
+                  <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-xs space-y-1">
+                    <div className="font-bold text-amber-900 flex items-center justify-between">
+                      <span>🔒 Мулк эгаси рақами</span>
+                      <span className="text-[10px] text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md font-semibold">
+                        Фақат админ
+                      </span>
+                    </div>
+                    <a
+                      href={`tel:${property.owner_phone}`}
+                      className="inline-block font-mono font-black text-amber-950 text-sm hover:underline"
+                    >
+                      {property.owner_phone}
+                    </a>
                   </div>
                 )}
 

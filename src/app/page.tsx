@@ -10,6 +10,7 @@ import { MobileBottomSheet } from "@/components/map/MobileBottomSheet";
 import { MobileFilterSheet } from "@/components/map/MobileFilterSheet";
 import { MobileMapStyleSwitcher } from "@/components/map/MobileMapStyleSwitcher";
 import { CollapsiblePropertyList } from "@/components/map/CollapsiblePropertyList";
+import { PropertyCatalogModal } from "@/components/catalog/PropertyCatalogModal";
 import { PopularSection } from "@/components/property/PopularSection";
 import { TrustSection } from "@/components/home/TrustSection";
 import { Footer } from "@/components/layout/Footer";
@@ -19,6 +20,7 @@ import { useProperties } from "@/lib/propertyStore";
 import { trackEvent } from "@/lib/analytics";
 import { TransactionType, PropertyType, Property } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
+import { useMapMode } from "@/lib/mapStore";
 import { AdvancedFilterState, defaultAdvancedFilters } from "@/components/map/AdvancedFiltersModal";
 import { List, ChevronDown, Map, Layers, Search, SlidersHorizontal } from "lucide-react";
 
@@ -40,8 +42,11 @@ export default function HomePage() {
   const { locale, t } = useLanguage();
   const { publishedProperties } = useProperties();
 
-  // Map Mode: Standard (Sxema) vs Satellite
-  const [mapMode, setMapMode] = useState<"standard" | "satellite">("standard");
+  // Primary View: Map vs Catalog (Default: map)
+  const [activeView, setActiveView] = useState<"map" | "catalog">("map");
+
+  // Map Mode: Standard (Sxema) vs Satellite (Default: satellite, persistent)
+  const [mapMode, setMapMode] = useMapMode();
 
 
   // Filters State
@@ -67,8 +72,8 @@ export default function HomePage() {
   // Analytics on page load
   React.useEffect(() => {
     trackEvent("page_view", { metadata: { page: "home" } });
-    trackEvent("map_view", { metadata: { mode: "standard" } });
-  }, []);
+    trackEvent("map_view", { metadata: { mode: mapMode } });
+  }, [mapMode]);
 
   // Sync initial URL search params for deep linking and testing
   React.useEffect(() => {
@@ -89,8 +94,8 @@ export default function HomePage() {
       if (params.get("list") === "1") {
         setIsListOpen(true);
       }
-      if (params.get("mode") === "satellite") {
-        setMapMode("satellite");
+      if (params.get("mode") === "satellite" || params.get("mode") === "standard") {
+        setMapMode(params.get("mode") as "standard" | "satellite");
       }
       if (params.get("type") === "sale" || params.get("type") === "rent") {
         setTransactionType(params.get("type") as TransactionType);
@@ -280,7 +285,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-white overflow-x-hidden">
       {/* 1. Sticky Header */}
-      <Header />
+      <Header activeTransactionType={transactionType} onTransactionTypeChange={setTransactionType} />
 
       {/* Desktop Vertical Navigation Rail */}
       <ScrollRailNav />
@@ -297,8 +302,52 @@ export default function HomePage() {
           focusDistrict={selectedDistrict}
         />
 
+        {/* Mobile Primary View Switcher: [ ХАРИТА | КАТАЛОГ ] */}
+        <div className="sm:hidden absolute top-2.5 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
+          <div
+            data-testid="primary-view-switcher"
+            className="flex items-center p-1 rounded-2xl bg-white/95 backdrop-blur-xl shadow-elevated border border-white/90 transition-all"
+          >
+            <button
+              type="button"
+              data-testid="view-mode-map"
+              onClick={() => setActiveView("map")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+                activeView === "map"
+                  ? "bg-[#16543C] text-white shadow-card"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/60"
+              }`}
+            >
+              <Map className="h-3.5 w-3.5" />
+              <span>{locale === "uz" ? "ХАРИТА" : "КАРТА"}</span>
+            </button>
+            <button
+              type="button"
+              data-testid="view-mode-catalog"
+              onClick={() => setActiveView("catalog")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+                activeView === "catalog"
+                  ? "bg-[#16543C] text-white shadow-card"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/60"
+              }`}
+            >
+              <Layers className="h-3.5 w-3.5" />
+              <span>{locale === "uz" ? "КАТАЛОГ" : "КАТАЛОГ"}</span>
+              <span
+                className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-full ${
+                  activeView === "catalog"
+                    ? "bg-white text-[#16543C]"
+                    : "bg-emerald-100 text-[#16543C]"
+                }`}
+              >
+                {filteredProperties.length}
+              </span>
+            </button>
+          </div>
+        </div>
+
         {/* Desktop-Only Floating Search & Filter Panel (Top Left) */}
-        <div data-testid="desktop-search-panel" className="hidden sm:block absolute sm:top-4 sm:left-6 sm:right-auto z-20 max-w-4xl pointer-events-none">
+        <div data-testid="desktop-search-panel" className="hidden sm:block absolute sm:top-4 sm:left-6 sm:right-auto z-20 max-w-2xl pointer-events-none">
           <FloatingSearchPanel
             searchQuery={searchQuery}
             onSearchQueryChange={setSearchQuery}
@@ -336,7 +385,7 @@ export default function HomePage() {
         </div>
 
         {/* Mobile-Only Compact Floating Search/Filter Control */}
-        <div className="sm:hidden absolute top-3 left-3 right-3 z-20 pointer-events-auto">
+        <div className="sm:hidden absolute top-14 left-3 right-3 z-20 pointer-events-auto">
           <button
             type="button"
             data-testid="compact-search-trigger"
@@ -379,8 +428,50 @@ export default function HomePage() {
           </button>
         </div>
 
-        {/* Desktop-Only Floating Action Controls (Top Right: Map Style Switcher & List View Toggle) */}
+        {/* Desktop-Only Floating Action Controls (Top Right: Primary View Switcher & Map Style Switcher) */}
         <div className="hidden sm:flex items-center gap-3 absolute sm:top-4 sm:right-6 z-20 pointer-events-auto">
+          {/* Primary View Switcher: [ ХАРИТА | КАТАЛОГ ] */}
+          <div
+            data-testid="desktop-primary-view-switcher"
+            className="flex items-center p-1 rounded-2xl bg-white/95 backdrop-blur-xl shadow-elevated border border-white/90 transition-all"
+          >
+            <button
+              type="button"
+              data-testid="view-mode-map-desktop"
+              onClick={() => setActiveView("map")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+                activeView === "map"
+                  ? "bg-[#16543C] text-white shadow-card"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/60"
+              }`}
+            >
+              <Map className="h-3.5 w-3.5" />
+              <span>{locale === "uz" ? "ХАРИТА" : "КАРТА"}</span>
+            </button>
+            <button
+              type="button"
+              data-testid="view-mode-catalog-desktop"
+              onClick={() => setActiveView("catalog")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+                activeView === "catalog"
+                  ? "bg-[#16543C] text-white shadow-card"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/60"
+              }`}
+            >
+              <Layers className="h-3.5 w-3.5" />
+              <span>{locale === "uz" ? "КАТАЛОГ" : "КАТАЛОГ"}</span>
+              <span
+                className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-full ${
+                  activeView === "catalog"
+                    ? "bg-white text-[#16543C]"
+                    : "bg-emerald-100 text-[#16543C]"
+                }`}
+              >
+                {filteredProperties.length}
+              </span>
+            </button>
+          </div>
+
           {/* Segmented Map Switcher: [ Sxema | Satellite ] */}
           <div data-testid="map-mode-switcher" className="flex items-center p-1 rounded-2xl bg-white/90 backdrop-blur-xl shadow-elevated border border-white/80 transition-all">
             <button
@@ -408,28 +499,6 @@ export default function HomePage() {
               <span>{t.mapSection.satellite}</span>
             </button>
           </div>
-
-          {/* List View Toggle (MAP > LIST) with Liquid Glass Styling */}
-          <button
-            onClick={() => setIsListOpen(!isListOpen)}
-            className={`flex items-center gap-2 rounded-2xl bg-white/90 backdrop-blur-xl px-4 py-2 text-xs font-bold shadow-elevated border border-white/80 transition-all active:scale-95 ${
-              isListOpen
-                ? "bg-[#16543C] text-white border-[#16543C]"
-                : "text-brand-dark hover:bg-white"
-            }`}
-          >
-            <List className="h-4 w-4" />
-            <span>{t.mapSection.listToggle}</span>
-            <span
-              className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
-                isListOpen
-                  ? "bg-white text-[#16543C]"
-                  : "bg-brand-light text-brand-primary"
-              }`}
-            >
-              {filteredProperties.length}
-            </span>
-          </button>
         </div>
 
         {/* Mobile-Only Compact Floating Map Style Switcher (Lower-Right Area) */}
@@ -538,7 +607,27 @@ export default function HomePage() {
         <Footer />
       </div>
 
-      {/* 4. Property Detail Modal (Full view) */}
+      {/* 4. Fullscreen Property Catalog Overlay View */}
+      <PropertyCatalogModal
+        isOpen={activeView === "catalog"}
+        onClose={() => setActiveView("map")}
+        properties={filteredProperties}
+        transactionType={transactionType}
+        onTransactionChange={(t) => {
+          setTransactionType(t);
+          trackEvent("filter_used", { metadata: { transaction_type: t } });
+        }}
+        selectedType={selectedType}
+        onTypeChange={(tp) => {
+          setSelectedType(tp);
+          trackEvent("filter_used", { metadata: { property_type: tp } });
+        }}
+        onViewDetails={handleOpenDetails}
+        searchQuery={searchQuery}
+        onClearFilters={handleResetFilters}
+      />
+
+      {/* 5. Property Detail Modal (Full view) */}
       <PropertyDetailModal
         property={detailProperty}
         isOpen={isDetailOpen}

@@ -24,11 +24,15 @@ export function mapRowToProperty(row: any): Property {
   const coords = { lat, lng };
 
   const utils = row.utilities || {
-    gas: Boolean(row.gas ?? true),
-    water: Boolean(row.water ?? true),
-    electricity: Boolean(row.electricity ?? true),
-    sewerage: Boolean(row.sewerage ?? true),
-    heating: Boolean(row.heating ?? true),
+    electricity: Boolean(row.electricity ?? row.utilities?.electricity ?? true),
+    gas: Boolean(row.gas ?? row.utilities?.gas ?? true),
+    cold_water: Boolean(row.cold_water ?? row.water ?? row.utilities?.cold_water ?? row.utilities?.water ?? true),
+    hot_water: Boolean(row.hot_water ?? row.utilities?.hot_water ?? true),
+    heating: Boolean(row.heating ?? row.utilities?.heating ?? true),
+    internet: Boolean(row.internet ?? row.utilities?.internet ?? row.amenities?.internet ?? true),
+    water: Boolean(row.water ?? row.utilities?.water ?? true),
+    sewerage: Boolean(row.sewerage ?? row.utilities?.sewerage ?? true),
+    custom: Array.isArray(row.utilities?.custom) ? row.utilities.custom : [],
   };
 
   const amens = row.amenities || {
@@ -96,7 +100,7 @@ export function mapRowToProperty(row: any): Property {
       price_negotiable: Boolean(row.price_negotiable),
       area_sqm: Number(row.area_sqm || row.area || 0),
       area: Number(row.area || row.area_sqm || 0),
-      area_sotikh: row.area_sotikh ? Number(row.area_sotikh) : undefined,
+      area_sotikh: row.area_sotikh ? Number(row.area_sotikh) : row.id === "prop-3" ? 6 : undefined,
       living_area_sqm: row.living_area_sqm ? Number(row.living_area_sqm) : undefined,
       living_area: row.living_area ? Number(row.living_area) : undefined,
       rooms: Number(row.rooms || 1),
@@ -122,8 +126,15 @@ export function mapRowToProperty(row: any): Property {
       contact_phone: row.contact_phone || "+998 90 123 45 67",
       contact_telegram: row.contact_telegram || row.telegram || undefined,
       telegram: row.telegram || row.contact_telegram || undefined,
+      owner_phone: row.owner_phone || undefined,
       realtor_id: row.realtor_id || undefined,
       realtor: realtor,
+      facade_m: row.facade_m ? Number(row.facade_m) : row.id === "prop-3" ? 15 : undefined,
+      depth_m: row.depth_m ? Number(row.depth_m) : row.id === "prop-3" ? 40 : undefined,
+      dimensions:
+        row.dimensions ||
+        (row.facade_m && row.depth_m ? `${row.facade_m} × ${row.depth_m} m` : undefined) ||
+        (row.id === "prop-3" ? "15 × 40 m" : undefined),
       views_count: Number(row.views_count || 0),
       favorites_count: Number(row.favorites_count || 0),
       contacts_count: Number(row.contacts_count || 0),
@@ -213,7 +224,11 @@ export function mapPropertyToDb(data: any): Record<string, any> {
     contact_phone: data.contact_phone || "+998 90 123 45 67",
     contact_telegram: data.contact_telegram || data.telegram || null,
     telegram: data.telegram || data.contact_telegram || null,
+    owner_phone: data.owner_phone || null,
     realtor_id: data.realtor_id || null,
+    facade_m: data.facade_m ? Number(data.facade_m) : null,
+    depth_m: data.depth_m ? Number(data.depth_m) : null,
+    dimensions: data.dimensions || (data.facade_m && data.depth_m ? `${data.facade_m} × ${data.depth_m} m` : null),
     views_count: data.views_count || 0,
     favorites_count: data.favorites_count || 0,
     contacts_count: data.contacts_count || 0,

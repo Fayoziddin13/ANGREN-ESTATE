@@ -24,8 +24,14 @@ import { useCurrency } from "@/context/CurrencyContext";
 import { useAuth } from "@/context/AuthContext";
 import { useFavorites } from "@/lib/favoriteStore";
 import { useCMS } from "@/lib/cmsStore";
+import { TransactionType } from "@/lib/types";
 
-export function Header() {
+export interface HeaderProps {
+  activeTransactionType?: TransactionType | "all";
+  onTransactionTypeChange?: (type: TransactionType | "all") => void;
+}
+
+export function Header({ activeTransactionType, onTransactionTypeChange }: HeaderProps = {}) {
   const { locale, setLocale, t } = useLanguage();
   const { currency, setCurrency } = useCurrency();
   const { user, openAuthModal, handleLogout } = useAuth();
@@ -82,12 +88,74 @@ export function Header() {
 
   const pathname = usePathname();
 
+  const isHomeActive = onTransactionTypeChange
+    ? activeTransactionType === "all"
+    : pathname === "/";
+  const isBuyActive = onTransactionTypeChange
+    ? activeTransactionType === "sale"
+    : pathname === "/sotib-olish";
+  const isRentActive = onTransactionTypeChange
+    ? activeTransactionType === "rent"
+    : pathname === "/ijara";
+
   const navItems = [
-    { href: "/", label: t.navigation.home, icon: Home, active: pathname === "/" },
-    { href: "/sotib-olish", label: t.navigation.buy, icon: Building2, active: pathname === "/sotib-olish" },
-    { href: "/ijara", label: t.navigation.rent, icon: KeyRound, active: pathname === "/ijara" },
-    { href: "/biz-haqimizda", label: t.navigation.about, icon: Info, active: pathname === "/biz-haqimizda" },
-    { href: "/kontaktlar", label: t.navigation.contacts, icon: Phone, active: pathname === "/kontaktlar" },
+    {
+      href: "/",
+      label: t.navigation.home,
+      icon: Home,
+      active: isHomeActive,
+      onClick: (e: React.MouseEvent) => {
+        if (onTransactionTypeChange) {
+          e.preventDefault();
+          onTransactionTypeChange("all");
+          if (typeof window !== "undefined" && window.location.pathname !== "/") {
+            window.history.pushState(null, "", "/");
+          }
+        }
+      },
+    },
+    {
+      href: "/sotib-olish",
+      label: t.navigation.buy,
+      icon: Building2,
+      active: isBuyActive,
+      onClick: (e: React.MouseEvent) => {
+        if (onTransactionTypeChange) {
+          e.preventDefault();
+          onTransactionTypeChange("sale");
+          if (typeof window !== "undefined" && window.location.pathname !== "/sotib-olish") {
+            window.history.pushState(null, "", "/sotib-olish");
+          }
+        }
+      },
+    },
+    {
+      href: "/ijara",
+      label: t.navigation.rent,
+      icon: KeyRound,
+      active: isRentActive,
+      onClick: (e: React.MouseEvent) => {
+        if (onTransactionTypeChange) {
+          e.preventDefault();
+          onTransactionTypeChange("rent");
+          if (typeof window !== "undefined" && window.location.pathname !== "/ijara") {
+            window.history.pushState(null, "", "/ijara");
+          }
+        }
+      },
+    },
+    {
+      href: "/biz-haqimizda",
+      label: t.navigation.about,
+      icon: Info,
+      active: pathname === "/biz-haqimizda",
+    },
+    {
+      href: "/kontaktlar",
+      label: t.navigation.contacts,
+      icon: Phone,
+      active: pathname === "/kontaktlar",
+    },
   ];
 
   return (
@@ -122,7 +190,19 @@ export function Header() {
       )}
       <div className="mx-auto flex h-16 sm:h-20 w-full max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8">
         {/* Left: Official Brand Logo & Name */}
-        <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group shrink-0">
+        <Link
+          href="/"
+          onClick={(e) => {
+            if (onTransactionTypeChange) {
+              e.preventDefault();
+              onTransactionTypeChange("all");
+              if (typeof window !== "undefined" && window.location.pathname !== "/") {
+                window.history.pushState(null, "", "/");
+              }
+            }
+          }}
+          className="flex items-center gap-2.5 sm:gap-3 group shrink-0"
+        >
           <div className="flex h-9 w-9 sm:h-11 sm:w-11 rounded-xl overflow-hidden shadow-sm transition-transform duration-200 group-hover:scale-105 shrink-0 bg-brand-dark/20 items-center justify-center">
             <Image
               src="/logo.png"
@@ -151,6 +231,7 @@ export function Header() {
               <Link
                 key={item.label}
                 href={item.href}
+                onClick={item.onClick}
                 className={`relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 group ${
                   item.active
                     ? "text-white font-bold"
@@ -439,7 +520,10 @@ export function Header() {
                   <Link
                     key={item.label}
                     href={item.href}
-                    onClick={() => setMobileMenuOpen(false)}
+                    onClick={(e) => {
+                      if (item.onClick) item.onClick(e);
+                      setMobileMenuOpen(false);
+                    }}
                     className={`flex items-center gap-3 rounded-2xl px-3.5 py-2.5 transition-colors ${
                       item.active
                         ? "bg-white/15 text-white font-bold"

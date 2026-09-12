@@ -102,16 +102,29 @@ export default function EditPropertyPage() {
   const [rooms, setRooms] = useState(3);
   const [floor, setFloor] = useState(4);
   const [totalFloors, setTotalFloors] = useState(9);
+  const [facadeM, setFacadeM] = useState<number | "">("");
+  const [depthM, setDepthM] = useState<number | "">("");
   const [renovation, setRenovation] = useState<RenovationType>("euro");
 
-  // Amenities & Utilities
-  const [utilities, setUtilities] = useState({
-    gas: true,
-    water: true,
+  // Amenities & Utilities (6 core options + custom)
+  const [utilities, setUtilities] = useState<{
+    electricity: boolean;
+    gas: boolean;
+    cold_water: boolean;
+    hot_water: boolean;
+    heating: boolean;
+    internet: boolean;
+    custom?: string[];
+  }>({
     electricity: true,
-    sewerage: true,
+    gas: true,
+    cold_water: true,
+    hot_water: true,
     heating: true,
+    internet: true,
+    custom: [],
   });
+  const [customUtilityInput, setCustomUtilityInput] = useState("");
   const [amenities, setAmenities] = useState({
     furniture: false,
     parking: true,
@@ -128,6 +141,7 @@ export default function EditPropertyPage() {
 
   // Contact
   const [selectedRealtorId, setSelectedRealtorId] = useState("");
+  const [ownerPhone, setOwnerPhone] = useState("");
   const [contactPhone, setContactPhone] = useState("+998 90 123 45 67");
   const [contactTelegram, setContactTelegram] = useState("@angrenestate_admin");
 
@@ -166,12 +180,25 @@ export default function EditPropertyPage() {
     setAreaSqm(found.area_sqm || 0);
     setLivingAreaSqm(found.living_area_sqm || Math.round((found.area_sqm || 0) * 0.75));
     setAreaSotikh(found.area_sotikh || 0);
+    if (found.facade_m) setFacadeM(found.facade_m);
+    if (found.depth_m) setDepthM(found.depth_m);
     setRooms(found.rooms || 1);
     setFloor(found.floor || 1);
     setTotalFloors(found.total_floors || 1);
     setRenovation(found.renovation || "euro");
 
-    if (found.utilities) setUtilities(found.utilities);
+    if (found.utilities) {
+      setUtilities({
+        electricity: found.utilities.electricity ?? true,
+        gas: found.utilities.gas ?? true,
+        cold_water: found.utilities.cold_water ?? (found.utilities as any).water ?? true,
+        hot_water: found.utilities.hot_water ?? true,
+        heating: found.utilities.heating ?? true,
+        internet: found.utilities.internet ?? true,
+        custom: found.utilities.custom || [],
+      });
+    }
+    if (found.owner_phone) setOwnerPhone(found.owner_phone);
     if (found.amenities) setAmenities(found.amenities);
     if (found.images && found.images.length > 0) {
       setImageUrls(found.images);
@@ -252,6 +279,10 @@ export default function EditPropertyPage() {
         polygon: parsedPolygon,
         utilities,
         amenities,
+        facade_m: facadeM ? Number(facadeM) : undefined,
+        depth_m: depthM ? Number(depthM) : undefined,
+        dimensions: facadeM && depthM ? `${facadeM} × ${depthM} m` : undefined,
+        owner_phone: ownerPhone || undefined,
         contact_phone: contactPhone,
         contact_telegram: contactTelegram,
         realtor_id: selectedRealtorId || undefined,
@@ -600,77 +631,178 @@ export default function EditPropertyPage() {
               4. Texnik parametrlar va Qulayliklar
             </h2>
 
-            {/* Area & Rooms */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-              <div className="space-y-1">
-                <label className="font-bold text-slate-700">Umumiy maydon (m²)</label>
-                <input
-                  type="number"
-                  value={areaSqm}
-                  onChange={(e) => setAreaSqm(Number(e.target.value))}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="font-bold text-slate-700">Yashash maydoni (m²)</label>
-                <input
-                  type="number"
-                  value={livingAreaSqm}
-                  onChange={(e) => setLivingAreaSqm(Number(e.target.value))}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="font-bold text-slate-700">Xonalar soni</label>
-                <input
-                  type="number"
-                  value={rooms}
-                  onChange={(e) => setRooms(Number(e.target.value))}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="font-bold text-slate-700">Qavat / Jami qavatlar</label>
-                <div className="flex items-center gap-1">
+            {/* Area, Dimensions & Rooms (Dynamic by Property Type) */}
+            {propertyType === "land" ? (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">Yer maydoni — Sotix (сотих)</label>
                   <input
                     type="number"
-                    value={floor}
-                    onChange={(e) => setFloor(Number(e.target.value))}
-                    className="w-1/2 px-3 py-2 rounded-xl border border-slate-200"
+                    value={areaSotikh || ""}
+                    onChange={(e) => setAreaSotikh(Number(e.target.value))}
+                    placeholder="Masalan: 6"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold"
                   />
-                  <span>/</span>
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">Fasad kengligi (metrda)</label>
                   <input
                     type="number"
-                    value={totalFloors}
-                    onChange={(e) => setTotalFloors(Number(e.target.value))}
-                    className="w-1/2 px-3 py-2 rounded-xl border border-slate-200"
+                    value={facadeM}
+                    onChange={(e) => setFacadeM(e.target.value === "" ? "" : Number(e.target.value))}
+                    placeholder="Masalan: 15"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">Uzunligi / Chuqurligi (metrda)</label>
+                  <input
+                    type="number"
+                    value={depthM}
+                    onChange={(e) => setDepthM(e.target.value === "" ? "" : Number(e.target.value))}
+                    placeholder="Masalan: 40"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold"
                   />
                 </div>
               </div>
-            </div>
+            ) : propertyType === "house_yard" ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">Yer maydoni — Sotix (сотих)</label>
+                  <input
+                    type="number"
+                    value={areaSotikh || ""}
+                    onChange={(e) => setAreaSotikh(Number(e.target.value))}
+                    placeholder="Masalan: 6"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">Uy maydoni (m²)</label>
+                  <input
+                    type="number"
+                    value={areaSqm}
+                    onChange={(e) => setAreaSqm(Number(e.target.value))}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">Xonalar soni</label>
+                  <input
+                    type="number"
+                    value={rooms}
+                    onChange={(e) => setRooms(Number(e.target.value))}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">Fasad kengligi (metrda)</label>
+                  <input
+                    type="number"
+                    value={facadeM}
+                    onChange={(e) => setFacadeM(e.target.value === "" ? "" : Number(e.target.value))}
+                    placeholder="Masalan: 15"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">Uzunligi / Chuqurligi (metrda)</label>
+                  <input
+                    type="number"
+                    value={depthM}
+                    onChange={(e) => setDepthM(e.target.value === "" ? "" : Number(e.target.value))}
+                    placeholder="Masalan: 40"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">Yashash maydoni (m²)</label>
+                  <input
+                    type="number"
+                    value={livingAreaSqm}
+                    onChange={(e) => setLivingAreaSqm(Number(e.target.value))}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">Umumiy maydon (m²)</label>
+                  <input
+                    type="number"
+                    value={areaSqm}
+                    onChange={(e) => setAreaSqm(Number(e.target.value))}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">Yashash maydoni (m²)</label>
+                  <input
+                    type="number"
+                    value={livingAreaSqm}
+                    onChange={(e) => setLivingAreaSqm(Number(e.target.value))}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">Xonalar soni</label>
+                  <input
+                    type="number"
+                    value={rooms}
+                    onChange={(e) => setRooms(Number(e.target.value))}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">Qavat / Jami qavatlar</label>
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="number"
+                      value={floor}
+                      onChange={(e) => setFloor(Number(e.target.value))}
+                      className="w-1/2 px-3 py-2 rounded-xl border border-slate-200 font-bold"
+                    />
+                    <span>/</span>
+                    <input
+                      type="number"
+                      value={totalFloors}
+                      onChange={(e) => setTotalFloors(Number(e.target.value))}
+                      className="w-1/2 px-3 py-2 rounded-xl border border-slate-200 font-bold"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
 
-            {/* Utilities Checkboxes */}
+            {/* Core Communications (6 predefined options) */}
             <div className="space-y-3 pt-2">
-              <label className="text-xs font-bold text-slate-700">Kommunikatsiyalar</label>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs font-bold">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-800">
+                  Асосий коммуникациялар (6 та стандарт параметр)
+                </label>
+                <span className="text-[11px] text-slate-500 font-medium">Ҳаётий муҳим тармоқлар</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs font-bold">
                 {[
-                  { key: "gas", label: "Gaz" },
-                  { key: "water", label: "Suv" },
-                  { key: "electricity", label: "Elektr" },
-                  { key: "sewerage", label: "Kanalizatsiya" },
-                  { key: "heating", label: "Isitish" },
+                  { key: "electricity", label: "Свет (Электр тармоғи)" },
+                  { key: "gas", label: "Газ (Табиий газ)" },
+                  { key: "cold_water", label: "Совуқ сув (Ичимлик суви)" },
+                  { key: "hot_water", label: "Иссиқ сув" },
+                  { key: "heating", label: "Отопление (Иситиш)" },
+                  { key: "internet", label: "Интернет (Оптик тола / Wi-Fi)" },
                 ].map((u) => (
                   <label
                     key={u.key}
-                    className={`flex items-center gap-2 p-3 rounded-2xl border cursor-pointer transition-all ${
+                    className={`flex items-center gap-2.5 p-3 rounded-2xl border cursor-pointer transition-all ${
                       utilities[u.key as keyof typeof utilities]
                         ? "bg-emerald-50 border-emerald-500 text-[#16543C]"
-                        : "border-slate-200 text-slate-600"
+                        : "border-slate-200 text-slate-600 bg-white"
                     }`}
                   >
                     <input
                       type="checkbox"
-                      checked={utilities[u.key as keyof typeof utilities]}
+                      checked={Boolean(utilities[u.key as keyof typeof utilities])}
                       onChange={(e) =>
                         setUtilities({ ...utilities, [u.key]: e.target.checked })
                       }
@@ -679,6 +811,79 @@ export default function EditPropertyPage() {
                     <span>{u.label}</span>
                   </label>
                 ))}
+              </div>
+
+              {/* Custom Options Adder */}
+              <div className="pt-3 border-t border-slate-100 space-y-2">
+                <label className="text-xs font-bold text-slate-700">
+                  Қўшимча коммуникация / қулайлик (Custom option)
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={customUtilityInput}
+                    onChange={(e) => setCustomUtilityInput(e.target.value)}
+                    placeholder="Масалан: Артезиан қудуқ, Генератор, Трансформатор..."
+                    className="flex-1 px-3.5 py-2 rounded-xl border border-slate-200 text-xs"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        if (customUtilityInput.trim()) {
+                          const list = utilities.custom || [];
+                          if (!list.includes(customUtilityInput.trim())) {
+                            setUtilities({
+                              ...utilities,
+                              custom: [...list, customUtilityInput.trim()],
+                            });
+                          }
+                          setCustomUtilityInput("");
+                        }
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (customUtilityInput.trim()) {
+                        const list = utilities.custom || [];
+                        if (!list.includes(customUtilityInput.trim())) {
+                          setUtilities({
+                            ...utilities,
+                            custom: [...list, customUtilityInput.trim()],
+                          });
+                        }
+                        setCustomUtilityInput("");
+                      }
+                    }}
+                    className="px-4 py-2 rounded-xl bg-[#16543C] text-white text-xs font-bold hover:bg-[#0E3324] transition-colors"
+                  >
+                    + Қўшиш
+                  </button>
+                </div>
+                {Array.isArray(utilities.custom) && utilities.custom.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {utilities.custom.map((item, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100 text-slate-700 text-xs font-semibold"
+                      >
+                        <span>{item}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUtilities({
+                              ...utilities,
+                              custom: utilities.custom?.filter((_, i) => i !== idx),
+                            });
+                          }}
+                          className="hover:text-red-500 transition-colors"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -782,15 +987,35 @@ export default function EditPropertyPage() {
               <select
                 value={selectedRealtorId}
                 onChange={(e) => setSelectedRealtorId(e.target.value)}
-                className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-bold"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold"
               >
-                <option value="">Rieltorsiz (Angren Estate operatori)</option>
+                <option value="">(Риелторсиз — Ангрен Эстейт маъмурияти)</option>
                 {realtors.map((r) => (
                   <option key={r.id} value={r.id}>
-                    {r.name} ({locale === "uz" ? r.specialization_uz : r.specialization_ru})
+                    {r.name} ({r.phone}) — {locale === "uz" ? r.specialization_uz : r.specialization_ru}
                   </option>
                 ))}
               </select>
+            </div>
+
+            {/* Owner Direct Phone (Dedicated Field) */}
+            <div className="space-y-2 pt-4 border-t border-slate-100">
+              <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
+                <span>Мулк эгасининг телефони (Owner Phone)</span>
+                <span className="text-[10px] text-amber-700 font-semibold bg-amber-50 px-2 py-0.5 rounded-md">
+                  Фақат админга кўринади
+                </span>
+              </label>
+              <input
+                type="tel"
+                value={ownerPhone}
+                onChange={(e) => setOwnerPhone(e.target.value)}
+                placeholder="+998 90 123 45 67 (Мулк эгаси рақами)"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold bg-amber-50/20"
+              />
+              <p className="text-[11px] text-slate-500">
+                Ушбу рақам саҳифада оммавий кўринмайди, фақат админ панелида мулк эгаси билан тўғридан-тўғри боғланиш учун сақланади.
+              </p>
             </div>
           </div>
         )}

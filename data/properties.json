@@ -50,7 +50,11 @@
       "water": true,
       "heating": true,
       "sewerage": true,
-      "electricity": true
+      "electricity": true,
+      "cold_water": true,
+      "hot_water": true,
+      "internet": true,
+      "custom": []
     },
     "amenities": {
       "ac": true,
@@ -119,7 +123,11 @@
       "water": true,
       "heating": true,
       "sewerage": true,
-      "electricity": true
+      "electricity": true,
+      "cold_water": true,
+      "hot_water": true,
+      "internet": true,
+      "custom": []
     },
     "amenities": {
       "ac": true,
@@ -178,7 +186,12 @@
     },
     "latitude": 41.01,
     "longitude": 70.14,
-    "utilities": {},
+    "utilities": {
+      "cold_water": true,
+      "hot_water": true,
+      "internet": true,
+      "custom": []
+    },
     "amenities": {},
     "contact_phone": "+998 90 123 45 67",
     "views_count": 0,
@@ -241,7 +254,11 @@
       "water": true,
       "heating": true,
       "sewerage": true,
-      "electricity": true
+      "electricity": true,
+      "cold_water": true,
+      "hot_water": true,
+      "internet": true,
+      "custom": []
     },
     "amenities": {
       "ac": true,
@@ -310,7 +327,11 @@
       "water": true,
       "heating": true,
       "sewerage": true,
-      "electricity": true
+      "electricity": true,
+      "cold_water": true,
+      "hot_water": true,
+      "internet": true,
+      "custom": []
     },
     "amenities": {
       "ac": true,
@@ -379,7 +400,11 @@
       "water": true,
       "heating": true,
       "sewerage": true,
-      "electricity": true
+      "electricity": true,
+      "cold_water": true,
+      "hot_water": true,
+      "internet": true,
+      "custom": []
     },
     "amenities": {
       "ac": true,
@@ -438,7 +463,12 @@
     },
     "latitude": 41.01,
     "longitude": 70.14,
-    "utilities": {},
+    "utilities": {
+      "cold_water": true,
+      "hot_water": true,
+      "internet": true,
+      "custom": []
+    },
     "amenities": {},
     "contact_phone": "+998 90 123 45 67",
     "views_count": 0,
@@ -489,7 +519,12 @@
     },
     "latitude": 41.01,
     "longitude": 70.14,
-    "utilities": {},
+    "utilities": {
+      "cold_water": true,
+      "hot_water": true,
+      "internet": true,
+      "custom": []
+    },
     "amenities": {},
     "contact_phone": "+998 90 123 45 67",
     "views_count": 0,
@@ -540,7 +575,12 @@
     },
     "latitude": 41.01,
     "longitude": 70.14,
-    "utilities": {},
+    "utilities": {
+      "cold_water": true,
+      "hot_water": true,
+      "internet": true,
+      "custom": []
+    },
     "amenities": {},
     "contact_phone": "+998 90 123 45 67",
     "views_count": 0,
@@ -601,7 +641,11 @@
       "water": true,
       "heating": true,
       "sewerage": true,
-      "electricity": true
+      "electricity": true,
+      "cold_water": true,
+      "hot_water": true,
+      "internet": true,
+      "custom": []
     },
     "amenities": {
       "ac": true,
@@ -660,7 +704,12 @@
     },
     "latitude": 41.01,
     "longitude": 70.14,
-    "utilities": {},
+    "utilities": {
+      "cold_water": true,
+      "hot_water": true,
+      "internet": true,
+      "custom": []
+    },
     "amenities": {},
     "contact_phone": "+998 90 123 45 67",
     "views_count": 0,
@@ -711,7 +760,12 @@
     },
     "latitude": 41.01,
     "longitude": 70.14,
-    "utilities": {},
+    "utilities": {
+      "cold_water": true,
+      "hot_water": true,
+      "internet": true,
+      "custom": []
+    },
     "amenities": {},
     "contact_phone": "+998 90 123 45 67",
     "views_count": 0,
@@ -762,7 +816,12 @@
     },
     "latitude": 41.01,
     "longitude": 70.14,
-    "utilities": {},
+    "utilities": {
+      "cold_water": true,
+      "hot_water": true,
+      "internet": true,
+      "custom": []
+    },
     "amenities": {},
     "contact_phone": "+998 90 123 45 67",
     "views_count": 0,
@@ -823,7 +882,11 @@
       "water": true,
       "heating": true,
       "sewerage": true,
-      "electricity": true
+      "electricity": true,
+      "cold_water": true,
+      "hot_water": true,
+      "internet": true,
+      "custom": []
     },
     "amenities": {
       "ac": true,
@@ -882,7 +945,12 @@
     },
     "latitude": 41.01,
     "longitude": 70.14,
-    "utilities": {},
+    "utilities": {
+      "cold_water": true,
+      "hot_water": true,
+      "internet": true,
+      "custom": []
+    },
     "amenities": {},
     "contact_phone": "+998 90 123 45 67",
     "views_count": 0,
@@ -933,7 +1001,12 @@
     },
     "latitude": 41.01,
     "longitude": 70.14,
-    "utilities": {},
+    "utilities": {
+      "cold_water": true,
+      "hot_water": true,
+      "internet": true,
+      "custom": []
+    },
     "amenities": {},
     "contact_phone": "+998 90 123 45 67",
     "views_count": 0,
@@ -998,7 +1071,11 @@
       "water": true,
       "heating": true,
       "sewerage": true,
-      "electricity": true
+      "electricity": true,
+      "cold_water": true,
+      "hot_water": true,
+      "internet": true,
+      "custom": []
     },
     "amenities": {
       "ac": true,
@@ -1068,7 +1145,11 @@
       "water": true,
       "sewerage": true,
       "heating": true,
-      "electricity": true
+      "electricity": true,
+      "cold_water": true,
+      "hot_water": true,
+      "internet": true,
+      "custom": []
     },
     "amenities": {
       "furniture": true,
@@ -1139,7 +1220,11 @@
       "water": true,
       "sewerage": true,
       "heating": true,
-      "electricity": true
+      "electricity": true,
+      "cold_water": true,
+      "hot_water": true,
+      "internet": true,
+      "custom": []
     },
     "amenities": {
       "furniture": true,
@@ -1213,7 +1298,11 @@
       "water": true,
       "heating": true,
       "sewerage": true,
-      "electricity": true
+      "electricity": true,
+      "cold_water": true,
+      "hot_water": true,
+      "internet": true,
+      "custom": []
     },
     "amenities": {
       "ac": false,
@@ -1231,7 +1320,11 @@
     "contacts_count": 15,
     "created_at": "2026-09-10T13:12:35.747433+00:00",
     "updated_at": "2026-09-10T13:43:25.510839+00:00",
-    "published_at": "2026-09-10T13:43:25.510839+00:00"
+    "published_at": "2026-09-10T13:43:25.510839+00:00",
+    "area_sotikh": 6,
+    "facade_m": 15,
+    "depth_m": 40,
+    "dimensions": "15 × 40 m"
   },
   {
     "id": "prop-4",
@@ -1288,7 +1381,11 @@
       "water": true,
       "heating": true,
       "sewerage": true,
-      "electricity": true
+      "electricity": true,
+      "cold_water": true,
+      "hot_water": true,
+      "internet": true,
+      "custom": []
     },
     "amenities": {
       "ac": false,
@@ -1360,7 +1457,11 @@
       "water": true,
       "sewerage": true,
       "heating": true,
-      "electricity": true
+      "electricity": true,
+      "cold_water": true,
+      "hot_water": true,
+      "internet": true,
+      "custom": []
     },
     "amenities": {
       "furniture": false,
@@ -1431,7 +1532,11 @@
       "water": true,
       "sewerage": true,
       "heating": true,
-      "electricity": true
+      "electricity": true,
+      "cold_water": true,
+      "hot_water": true,
+      "internet": true,
+      "custom": []
     },
     "amenities": {
       "furniture": true,
@@ -1500,7 +1605,11 @@
       "water": true,
       "electricity": true,
       "sewerage": true,
-      "heating": true
+      "heating": true,
+      "cold_water": true,
+      "hot_water": true,
+      "internet": true,
+      "custom": []
     },
     "amenities": {
       "furniture": false,
@@ -1559,7 +1668,11 @@
       "water": true,
       "electricity": true,
       "sewerage": false,
-      "heating": false
+      "heating": false,
+      "cold_water": true,
+      "hot_water": true,
+      "internet": true,
+      "custom": []
     },
     "amenities": {
       "furniture": false,

@@ -44,6 +44,7 @@ export function MobileMapStyleSwitcher({
   return (
     <div
       ref={containerRef}
+      data-testid="mobile-map-style-switcher"
       className={`sm:hidden absolute z-20 pointer-events-auto ${className}`}
     >
       {/* Popover Menu (Directly above the trigger button) */}
@@ -99,7 +100,8 @@ export function MobileMapStyleSwitcher({
       {/* Compact Floating Map Style Trigger Button */}
       <button
         type="button"
-        data-testid="mobile-map-style-trigger"
+        id="mobile-map-style-toggle"
+        data-testid="mobile-map-style-toggle"
         onClick={() => setIsOpen(!isOpen)}
         aria-label={locale === "uz" ? "Xarita rejimini o‘zgartirish" : "Сменить режим карты"}
         aria-expanded={isOpen}

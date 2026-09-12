@@ -1,14 +1,14 @@
 /** @type {import('next').NextConfig} */
 const cspHeader = `
   default-src 'self';
-  script-src 'self' 'unsafe-inline' 'unsafe-eval';
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api-maps.yandex.ru https://*.yandex.ru https://*.yandex.net https://yastatic.net https://*.yastatic.net;
   worker-src 'self' blob:;
-  child-src 'self' blob:;
+  child-src 'self' blob: https://*.yandex.ru https://*.yastatic.net;
   style-src 'self' 'unsafe-inline';
-  img-src 'self' data: blob: https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://server.arcgisonline.com https://services.arcgisonline.com https://images.unsplash.com https://gemozzkmoogjxtdwvepz.supabase.co https://*.googleusercontent.com;
-  connect-src 'self' https://gemozzkmoogjxtdwvepz.supabase.co wss://gemozzkmoogjxtdwvepz.supabase.co https://accounts.google.com https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://server.arcgisonline.com https://services.arcgisonline.com https://vitals.vercel-insights.com;
+  img-src 'self' data: blob: https://*.yandex.ru https://*.yandex.net https://yastatic.net https://*.yastatic.net https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://server.arcgisonline.com https://services.arcgisonline.com https://images.unsplash.com https://gemozzkmoogjxtdwvepz.supabase.co https://*.googleusercontent.com;
+  connect-src 'self' https://api-maps.yandex.ru https://*.yandex.ru https://*.yandex.net https://yastatic.net https://*.yastatic.net https://gemozzkmoogjxtdwvepz.supabase.co wss://gemozzkmoogjxtdwvepz.supabase.co https://accounts.google.com https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://server.arcgisonline.com https://services.arcgisonline.com https://vitals.vercel-insights.com;
   font-src 'self' data:;
-  frame-src 'self' https://accounts.google.com;
+  frame-src 'self' https://accounts.google.com https://*.yandex.ru https://*.yastatic.net;
   object-src 'none';
   base-uri 'self';
 `.replace(/\s{2,}/g, ' ').trim();

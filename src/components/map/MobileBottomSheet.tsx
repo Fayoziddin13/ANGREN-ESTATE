@@ -3,13 +3,14 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Heart, MapPin, Maximize2, Bed, Bath, Phone, Send, ArrowRight, Layers } from "lucide-react";
+import { X, Heart, MapPin, Maximize2, Bed, Bath, Phone, Send, ArrowRight, Layers, Calendar } from "lucide-react";
 import { Property } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useAuth } from "@/context/AuthContext";
 import { useFavorites } from "@/lib/favoriteStore";
 import { trackEvent } from "@/lib/analytics";
+import { formatPublishedDate } from "@/lib/dateFormat";
 
 interface MobileBottomSheetProps {
   property: Property | null;
@@ -67,6 +68,8 @@ export function MobileBottomSheet({
 
   const floorNum = property.floor_number ?? property.floor;
   const totalFloors = property.floors ?? property.total_floors;
+  const isHouse = property.property_type === "house_yard" || property.property_type === "land";
+  const publishedDateStr = formatPublishedDate(property.published_at || property.created_at, locale, true);
 
   const getPropertyTypeLabel = (type: string, loc: string) => {
     switch (type) {
@@ -119,12 +122,21 @@ export function MobileBottomSheet({
                 className="object-cover"
               />
               <div className="absolute top-1.5 left-1.5 flex items-center gap-1">
-                <span className="rounded-lg bg-brand-primary px-1.5 py-0.5 text-[9px] font-bold text-white shadow-sm">
+                <span
+                  className={`rounded-lg px-1.5 py-0.5 text-[9px] font-black text-white shadow-sm ${
+                    isSale ? "bg-[#16543C]" : "bg-[#1D4ED8]"
+                  }`}
+                >
                   {badgeText}
                 </span>
                 <span className="rounded-lg bg-black/60 backdrop-blur-sm px-1.5 py-0.5 text-[9px] font-bold text-white shadow-sm">
                   {getPropertyTypeLabel(property.property_type, locale)}
                 </span>
+                {isHouse && property.area_sotikh && (
+                  <span className="rounded-lg bg-emerald-950/80 backdrop-blur-sm px-1.5 py-0.5 text-[9px] font-bold text-emerald-200 shadow-sm">
+                    {property.area_sotikh} сот.
+                  </span>
+                )}
               </div>
             </div>
 
@@ -155,29 +167,62 @@ export function MobileBottomSheet({
                 </div>
               </div>
 
-              {/* Specs */}
-              <div className="flex items-center gap-3 text-[10px] font-semibold text-gray-600 pt-1">
-                <div className="flex items-center gap-1">
-                  <Maximize2 className="h-3 w-3 text-gray-400" />
-                  <span>{property.area_sqm} {t.common.sqm}</span>
-                </div>
-                {property.rooms && (
-                  <div className="flex items-center gap-1">
-                    <Bed className="h-3 w-3 text-gray-400" />
-                    <span>{property.rooms}</span>
+              {/* Specs & Published Date */}
+              <div className="flex items-center justify-between text-[10px] font-semibold text-gray-600 pt-1">
+                {property.property_type === "land" ? (
+                  <div className="flex items-center gap-2">
+                    {property.area_sotikh ? (
+                      <span className="font-bold text-[#16543C]">{property.area_sotikh} {locale === "uz" ? "сотих" : "сот."}</span>
+                    ) : null}
+                    {property.dimensions || (property.facade_m && property.depth_m) ? (
+                      <span className="text-gray-500 font-medium">
+                        {property.dimensions || `${property.facade_m} × ${property.depth_m} м`}
+                      </span>
+                    ) : null}
+                  </div>
+                ) : isHouse ? (
+                  <div className="flex items-center gap-2">
+                    {property.area_sotikh ? (
+                      <span className="font-bold text-[#16543C]">{property.area_sotikh} {locale === "uz" ? "сотих" : "сот."}</span>
+                    ) : null}
+                    <div className="flex items-center gap-1">
+                      <Maximize2 className="h-3 w-3 text-gray-400" />
+                      <span>Uy: {property.area_sqm} м²</span>
+                    </div>
+                    {property.rooms && (
+                      <div className="flex items-center gap-1">
+                        <Bed className="h-3 w-3 text-gray-400" />
+                        <span>{property.rooms}</span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    {floorNum ? (
+                      <div className="flex items-center gap-1 font-bold text-gray-700">
+                        <Layers className="h-3 w-3 text-brand-primary" />
+                        <span>{floorNum}{totalFloors ? `/${totalFloors}` : ""} {locale === "uz" ? "қават" : "эт."}</span>
+                      </div>
+                    ) : null}
+                    <div className="flex items-center gap-1">
+                      <Maximize2 className="h-3 w-3 text-gray-400" />
+                      <span>{property.area_sqm} м²</span>
+                    </div>
+                    {property.rooms && (
+                      <div className="flex items-center gap-1">
+                        <Bed className="h-3 w-3 text-gray-400" />
+                        <span>{property.rooms}</span>
+                      </div>
+                    )}
                   </div>
                 )}
-                {floorNum ? (
-                  <div className="flex items-center gap-1">
-                    <Layers className="h-3 w-3 text-gray-400" />
-                    <span>{floorNum}{totalFloors ? `/${totalFloors}` : ""}-{locale === "uz" ? "qavat" : "эт."}</span>
+
+                {publishedDateStr && (
+                  <div className="flex items-center gap-1 text-[9px] text-gray-400 font-medium">
+                    <Calendar className="h-2.5 w-2.5 text-gray-400" />
+                    <span>{publishedDateStr}</span>
                   </div>
-                ) : property.bathrooms ? (
-                  <div className="flex items-center gap-1">
-                    <Bath className="h-3 w-3 text-gray-400" />
-                    <span>{property.bathrooms}</span>
-                  </div>
-                ) : null}
+                )}
               </div>
             </div>
           </div>
