@@ -19,6 +19,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
+  Home,
+  Tag,
 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -26,6 +28,9 @@ import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAdminContact, useRealtors } from "@/lib/realtorStore";
 import { detectDevice, detectTrafficSource } from "@/lib/leadClient";
+
+type DealType = "sale" | "rent";
+type PropertyType = "kvartira" | "hovli" | "yer" | "yangi_qurilish" | "tijorat" | "boshqa";
 
 export default function ContactsPage() {
   const { locale, t } = useLanguage();
@@ -35,19 +40,24 @@ export default function ContactsPage() {
   const [formData, setFormData] = useState({
     name: "",
     phone: "+998 ",
+    dealType: "sale" as DealType,
+    propertyType: "kvartira" as PropertyType,
+    location: "",
+    description: "",
     channel: "phone" as "phone" | "telegram",
-    message: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleSubmitInquiry = async (e: React.FormEvent) => {
+  const handleSubmitListingRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
     const name = formData.name.trim();
     const phone = formData.phone.trim();
+    const location = formData.location.trim();
+    const description = formData.description.trim();
 
     if (name.length < 2) {
       setErrorMessage(locale === "uz" ? "Ismingizni kiriting" : "Введите ваше имя");
@@ -59,6 +69,18 @@ export default function ContactsPage() {
       );
       return;
     }
+    if (!location) {
+      setErrorMessage(
+        locale === "uz" ? "Lokatsiyani kiriting (masalan: 5-mavze)" : "Укажите локацию (например: 5-й массив)"
+      );
+      return;
+    }
+    if (!description || description.length < 3) {
+      setErrorMessage(
+        locale === "uz" ? "Объект ҳақида қисқача маълумот киритинг" : "Введите краткое описание объекта"
+      );
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -66,13 +88,24 @@ export default function ContactsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          type: "inquiry",
+          type: "property_listing_request",
           client_name: name,
           client_phone: phone,
-          message: formData.message.trim(),
+          location,
+          deal_type: formData.dealType,
+          property_type: formData.propertyType,
+          description,
+          message: description,
+          preferred_channel: formData.channel,
           device: detectDevice(),
-          traffic_source: detectTrafficSource(),
+          traffic_source: "Listing Request",
           metadata: {
+            lead_type: "property_listing_request",
+            request_type: "property_listing_request",
+            location,
+            deal_type: formData.dealType,
+            property_type: formData.propertyType,
+            description,
             preferred_channel: formData.channel,
             submitted_from: "/kontaktlar",
           },
@@ -82,7 +115,15 @@ export default function ContactsPage() {
       const json = await res.json();
       if (res.ok && json.success) {
         setSubmitSuccess(true);
-        setFormData({ name: "", phone: "+998 ", channel: "phone", message: "" });
+        setFormData({
+          name: "",
+          phone: "+998 ",
+          dealType: "sale",
+          propertyType: "kvartira",
+          location: "",
+          description: "",
+          channel: "phone",
+        });
       } else {
         setErrorMessage(json.error || (locale === "uz" ? "Xatolik yuz berdi" : "Произошла ошибка"));
       }
@@ -311,10 +352,10 @@ export default function ContactsPage() {
                       </div>
                     </div>
 
-                    {r.districts && r.districts.length > 0 && (
-                      <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-5">
-                        <MapPin className="h-3.5 w-3.5 text-brand-primary shrink-0" />
-                        <span className="truncate">{r.districts.join(", ")}</span>
+                    {(r.location || (r.districts && r.districts.length > 0)) && (
+                      <div className="flex items-center gap-1.5 text-xs text-slate-700 font-semibold mb-5">
+                        <MapPin className="h-4 w-4 text-emerald-700 shrink-0" />
+                        <span className="truncate">{r.location || r.districts?.join(", ")}</span>
                       </div>
                     )}
 
@@ -373,20 +414,18 @@ export default function ContactsPage() {
             )}
           </section>
 
-          {/* SECTION C: Savol yoki taklif bormi? Mutaxassis bilan bog'lanish */}
+          {/* SECTION C: ELON BERISH UCHUN ARIZA / ОСТАВИТЬ ЗАЯВКУ НА РАЗМЕЩЕНИЕ */}
           <section className="space-y-6">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-primary text-white shadow-sm">
-                <MessageSquare className="h-5 w-5" />
+                <Home className="h-5 w-5" />
               </div>
               <div>
                 <h2 className="text-xl sm:text-2xl font-extrabold text-brand-dark">
-                  {locale === "uz" ? "Mutaxassis bilan bog‘lanish" : "Связаться со специалистом"}
+                  {t.contactsPage.listingSectionTitle}
                 </h2>
                 <p className="text-xs sm:text-sm text-gray-500">
-                  {locale === "uz"
-                    ? "Ko‘chmas mulk oldi-sotdisi yoki ijarasi bo‘yicha bepul professional maslahat oling"
-                    : "Получите бесплатную профессиональную консультацию по покупке, продаже или аренде"}
+                  {t.contactsPage.listingSectionSubtitle}
                 </p>
               </div>
             </div>
@@ -398,22 +437,20 @@ export default function ContactsPage() {
                     <CheckCircle2 className="h-8 w-8" />
                   </div>
                   <h3 className="text-lg sm:text-xl font-black text-brand-dark">
-                    {locale === "uz" ? "Murojaatingiz qabul qilindi!" : "Ваша заявка принята!"}
+                    {t.contactsPage.listingSuccessTitle}
                   </h3>
                   <p className="text-xs sm:text-sm text-gray-600 max-w-md mx-auto leading-relaxed">
-                    {locale === "uz"
-                      ? "Rahmat! Tez orada ANGREN ESTATE mutaxassisi siz ko‘rsatgan aloqa vositasi orqali siz bilan bog‘lanadi."
-                      : "Спасибо! Специалист ANGREN ESTATE свяжется с вами в ближайшее время указанным способом связи."}
+                    {t.contactsPage.listingSuccessDesc}
                   </p>
                   <button
                     onClick={() => setSubmitSuccess(false)}
                     className="mt-4 px-6 py-2.5 rounded-2xl bg-brand-light text-brand-primary text-xs font-bold hover:bg-brand-primary hover:text-white transition-colors"
                   >
-                    {locale === "uz" ? "Yangi murojaat yuborish" : "Отправить новую заявку"}
+                    {t.contactsPage.listingNewBtn}
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleSubmitInquiry} className="space-y-4">
+                <form onSubmit={handleSubmitListingRequest} className="space-y-5">
                   {errorMessage && (
                     <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 flex items-center gap-2.5 text-xs text-rose-700 font-semibold">
                       <AlertCircle className="h-4 w-4 shrink-0" />
@@ -421,24 +458,25 @@ export default function ContactsPage() {
                     </div>
                   )}
 
+                  {/* 1. Name & Phone */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-gray-700">
-                        {locale === "uz" ? "Ismingiz *" : "Ваше имя *"}
+                        {locale === "uz" ? "Исмингиз *" : "Ваше имя *"}
                       </label>
                       <input
                         type="text"
                         required
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder={locale === "uz" ? "Masalan, Alisher" : "Например, Алишер"}
+                        placeholder={locale === "uz" ? "Масалан: Алишер" : "Например: Алишер"}
                         className="w-full px-4 py-3 rounded-2xl bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
                       />
                     </div>
 
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-gray-700">
-                        {locale === "uz" ? "Telefon raqamingiz *" : "Номер телефона *"}
+                        {locale === "uz" ? "Телефон рақамингиз *" : "Номер телефона *"}
                       </label>
                       <input
                         type="tel"
@@ -451,9 +489,112 @@ export default function ContactsPage() {
                     </div>
                   </div>
 
+                  {/* 2. Bitim turi (Deal Type Pills) */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-gray-700">
-                      {locale === "uz" ? "Qulay aloqa usuli" : "Удобный способ связи"}
+                      {locale === "uz" ? "Битим тури" : "Тип сделки"}
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, dealType: "sale" })}
+                        className={`flex items-center justify-center gap-2 p-3 rounded-2xl border text-xs font-bold transition-all ${
+                          formData.dealType === "sale"
+                            ? "bg-brand-primary text-white border-brand-primary shadow-sm"
+                            : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                        }`}
+                      >
+                        <Tag className="h-4 w-4" />
+                        <span>{locale === "uz" ? "Сотув" : "Продажа"}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, dealType: "rent" })}
+                        className={`flex items-center justify-center gap-2 p-3 rounded-2xl border text-xs font-bold transition-all ${
+                          formData.dealType === "rent"
+                            ? "bg-brand-primary text-white border-brand-primary shadow-sm"
+                            : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                        }`}
+                      >
+                        <Clock className="h-4 w-4" />
+                        <span>{locale === "uz" ? "Ижара" : "Аренда"}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 3. Mulk turi (Property Type Pills) */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-700">
+                      {locale === "uz" ? "Мулк тури" : "Тип недвижимости"}
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {[
+                        { id: "kvartira", uz: "Квартира", ru: "Квартира" },
+                        { id: "hovli", uz: "Ҳовли уй", ru: "Участок / дом" },
+                        { id: "yer", uz: "Ер участкаси", ru: "Земля" },
+                        { id: "yangi_qurilish", uz: "Янги қурилиш", ru: "Новостройка" },
+                        { id: "tijorat", uz: "Тижорат", ru: "Коммерческая" },
+                        { id: "boshqa", uz: "Бошқа", ru: "Другое" },
+                      ].map((p) => {
+                        const isSelected = formData.propertyType === p.id;
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, propertyType: p.id as PropertyType })}
+                            className={`px-3 py-2.5 rounded-xl border text-xs font-bold text-center transition-all ${
+                              isSelected
+                                ? "bg-brand-primary text-white border-brand-primary shadow-sm"
+                                : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                            }`}
+                          >
+                            {locale === "uz" ? p.uz : p.ru}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 4. Lokatsiya (Required) */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-700 flex items-center gap-1">
+                      <MapPin className="h-3.5 w-3.5 text-emerald-700" />
+                      <span>{locale === "uz" ? "Локация *" : "Локация *"}</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.location}
+                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                      placeholder={locale === "uz" ? "Masalan: 5-mavze, Mustaqillik ko‘chasi" : "Например: 5-й массив, ул. Мустакиллик"}
+                      className="w-full px-4 py-3 rounded-2xl bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
+                    />
+                  </div>
+
+                  {/* 5. Obyekt haqida qisqacha (Required) */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-700">
+                      {locale === "uz" ? "Объект ҳақида қисқача *" : "Кратко об объекте *"}
+                    </label>
+                    <textarea
+                      rows={3}
+                      required
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      placeholder={
+                        locale === "uz"
+                          ? "Masalan: 5 sotixli hovli uy, 4 xona, ta’mirlangan..."
+                          : "Например: дом на 5 сотках, 4 комнаты, с ремонтом..."
+                      }
+                      className="w-full px-4 py-3 rounded-2xl bg-gray-50 border border-gray-200 text-xs font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all resize-none"
+                    />
+                  </div>
+
+                  {/* 6. Preferred Contact Method */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-700">
+                      {locale === "uz" ? "Қулай алоқа усули" : "Удобный способ связи"}
                     </label>
                     <div className="grid grid-cols-2 gap-3">
                       <button
@@ -466,7 +607,7 @@ export default function ContactsPage() {
                         }`}
                       >
                         <Phone className="h-4 w-4" />
-                        <span>{locale === "uz" ? "Telefon qo‘ng‘iroq" : "Телефонный звонок"}</span>
+                        <span>{locale === "uz" ? "Телефон қўнғироқ" : "Телефонный звонок"}</span>
                       </button>
 
                       <button
@@ -484,23 +625,7 @@ export default function ContactsPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-gray-700">
-                      {locale === "uz" ? "Xabar yoki savolingiz (ixtiyoriy)" : "Ваш вопрос или сообщение (необязательно)"}
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={formData.message}
-                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                      placeholder={
-                        locale === "uz"
-                          ? "Qanday ko‘chmas mulk qidiryapsiz yoki qanday taklifingiz bor?"
-                          : "Какую недвижимость ищете или какой у вас вопрос?"
-                      }
-                      className="w-full px-4 py-3 rounded-2xl bg-gray-50 border border-gray-200 text-xs font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all resize-none"
-                    />
-                  </div>
-
+                  {/* 7. Submit Button */}
                   <button
                     type="submit"
                     disabled={isSubmitting}
@@ -509,12 +634,12 @@ export default function ContactsPage() {
                     {isSubmitting ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>{locale === "uz" ? "Yuborilmoqda..." : "Отправка..."}</span>
+                        <span>{locale === "uz" ? "Юборилмоқда..." : "Отправка..."}</span>
                       </>
                     ) : (
                       <>
                         <Send className="h-4 w-4" />
-                        <span>{locale === "uz" ? "Murojaatni yuborish" : "Отправить заявку"}</span>
+                        <span>{t.contactsPage.listingSubmitBtn}</span>
                       </>
                     )}
                   </button>

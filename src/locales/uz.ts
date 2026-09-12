@@ -190,6 +190,12 @@ export const uz = {
     realtorsSectionSubtitle: "Angren tumanlari bo‘yicha ixtisoslashgan mustaqil rieltorlar",
     emptyRealtorsTitle: "Hamkor rieltorlar hozircha kiritilmagan",
     emptyRealtorsDesc: "Yangi rieltorlar administrator tomonidan tez orada qo‘shiladi.",
+    listingSectionTitle: "Эълон бериш учун ариза",
+    listingSectionSubtitle: "Уй-жойингизни ANGREN ESTATE'га жойлаштириш учун маълумот қолдиринг.",
+    listingSuccessTitle: "Аризангиз қабул қилинди",
+    listingSuccessDesc: "Риелторимиз сиз билан боғланиб, объектни сайтга жойлаштириш бўйича маълумотларни аниқлайди.",
+    listingSubmitBtn: "Ариза қолдириш",
+    listingNewBtn: "Янги ариза қолдириш",
   },
   admin: {
     title: "Admin Panel",

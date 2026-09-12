@@ -25,13 +25,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const mappedRealtors = (realtors || []).map((r) => ({
-      ...r,
-      photo_url: r.photo_url || r.avatar_url || null,
-      avatar_url: r.avatar_url || r.photo_url || null,
-      instagram_url: r.instagram_url || r.instagram || null,
-      instagram: r.instagram_url || r.instagram || null,
-    }));
+    const mappedRealtors = (realtors || []).map((r) => {
+      const locText = (r.districts && Array.isArray(r.districts) && r.districts.length > 0)
+        ? r.districts.join(", ")
+        : (r.location || r.location_uz || null);
+
+      return {
+        ...r,
+        location: locText,
+        location_uz: r.location_uz || locText,
+        location_ru: r.location_ru || locText,
+        photo_url: r.photo_url || r.avatar_url || null,
+        avatar_url: r.avatar_url || r.photo_url || null,
+        instagram_url: r.instagram_url || r.instagram || null,
+        instagram: r.instagram_url || r.instagram || null,
+      };
+    });
 
     return NextResponse.json({
       success: true,

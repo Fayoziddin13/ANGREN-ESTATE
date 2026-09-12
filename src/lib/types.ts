@@ -218,6 +218,9 @@ export interface Realtor {
   specialization_uz: string;
   specialization_ru: string;
   districts: string[];
+  location?: string;
+  location_uz?: string;
+  location_ru?: string;
   phone: string;
   telegram: string;
   instagram?: string;
@@ -257,9 +260,23 @@ export interface UserProfile {
   phone?: string;
 }
 
+export interface LeadMetadata {
+  lead_type?: "property_listing_request" | "inquiry" | "contact";
+  request_type?: string;
+  deal_type?: TransactionType;
+  property_type?: PropertyType;
+  location?: string;
+  description?: string;
+  preferred_channel?: "phone" | "telegram";
+  telegram_username?: string;
+  submitted_from?: string;
+  source?: string;
+  [key: string]: any;
+}
+
 export interface Lead {
   id: string;
-  type: "phone" | "telegram" | "inquiry";
+  type: "phone" | "telegram" | "inquiry" | "property_listing_request";
   property_id?: string;
   property_title?: string;
   property_slug?: string;
@@ -276,7 +293,7 @@ export interface Lead {
   status: "new" | "contacted" | "in_progress" | "completed" | "cancelled" | "closed";
   realtor?: Realtor;
   property?: Property;
-  metadata?: Record<string, any>;
+  metadata?: LeadMetadata;
 }
 
 export interface RegisteredUser {

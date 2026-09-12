@@ -103,7 +103,11 @@ export async function PATCH(
     if (body.position_ru !== undefined) updates.position_ru = String(body.position_ru).trim().slice(0, 100);
     if (body.specialization_uz !== undefined) updates.specialization_uz = String(body.specialization_uz).trim().slice(0, 200);
     if (body.specialization_ru !== undefined) updates.specialization_ru = String(body.specialization_ru).trim().slice(0, 200);
-    if (body.districts !== undefined) {
+    if (body.location !== undefined) {
+      const locStr = String(body.location).trim();
+      updates.districts = locStr ? locStr.split(",").map((s: any) => String(s).trim()).filter(Boolean) : [];
+    }
+    if (body.districts !== undefined && body.location === undefined) {
       updates.districts = Array.isArray(body.districts)
         ? body.districts.map((d: any) => String(d).trim()).filter(Boolean)
         : [];
@@ -142,11 +146,17 @@ export async function PATCH(
 
     const resPhoto = updates.photo_url !== undefined ? updates.photo_url : (updatedRealtor?.avatar_url || updatedRealtor?.photo_url || null);
     const resInsta = updates.instagram_url !== undefined ? updates.instagram_url : (updatedRealtor?.instagram_url || updatedRealtor?.instagram || null);
+    const locText = (updatedRealtor?.districts && Array.isArray(updatedRealtor.districts) && updatedRealtor.districts.length > 0)
+      ? updatedRealtor.districts.join(", ")
+      : (body.location !== undefined ? (body.location || null) : null);
 
     return NextResponse.json({
       success: true,
       realtor: {
         ...updatedRealtor,
+        location: locText,
+        location_uz: locText,
+        location_ru: locText,
         photo_url: resPhoto,
         avatar_url: resPhoto,
         instagram_url: resInsta,

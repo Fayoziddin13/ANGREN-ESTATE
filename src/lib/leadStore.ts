@@ -12,6 +12,8 @@ export interface LeadStats {
   cancelled: number;
   phone: number;
   telegram: number;
+  inquiry?: number;
+  listing_request?: number;
 }
 
 export interface LeadFilters {

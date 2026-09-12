@@ -129,17 +129,26 @@ function sanitizeInstagramUrl(url: any): string | null {
   return fullUrl;
 }
 
-    // 4. Attach aggregated counts
-    const enrichedRealtors = realtorList.map((r) => ({
-      ...r,
-      photo_url: r.photo_url || r.avatar_url || null,
-      avatar_url: r.avatar_url || r.photo_url || null,
-      instagram_url: r.instagram_url || r.instagram || null,
-      instagram: r.instagram_url || r.instagram || null,
-      properties_count: propertiesMap[r.id] || 0,
-      assigned_properties_count: propertiesMap[r.id] || 0,
-      leads_count: leadsMap[r.id] || 0,
-    }));
+    // 4. Attach aggregated counts and location mapping
+    const enrichedRealtors = realtorList.map((r) => {
+      const locText = (r.districts && Array.isArray(r.districts) && r.districts.length > 0)
+        ? r.districts.join(", ")
+        : (r.location || r.location_uz || null);
+
+      return {
+        ...r,
+        location: locText,
+        location_uz: r.location_uz || locText,
+        location_ru: r.location_ru || locText,
+        photo_url: r.photo_url || r.avatar_url || null,
+        avatar_url: r.avatar_url || r.photo_url || null,
+        instagram_url: r.instagram_url || r.instagram || null,
+        instagram: r.instagram_url || r.instagram || null,
+        properties_count: propertiesMap[r.id] || 0,
+        assigned_properties_count: propertiesMap[r.id] || 0,
+        leads_count: leadsMap[r.id] || 0,
+      };
+    });
 
     const stats = {
       total: enrichedRealtors.length,
@@ -177,6 +186,7 @@ export async function POST(request: NextRequest) {
       name,
       phone,
       telegram = "",
+      location = "",
       avatar_url = null,
       photo_url = null,
       instagram_url = null,
@@ -216,6 +226,12 @@ export async function POST(request: NextRequest) {
 
     const resolvedPhoto = photo_url || avatar_url ? String(photo_url || avatar_url).trim() : null;
 
+    const parsedDistricts = Array.isArray(districts) && districts.length > 0
+      ? districts.map((d: any) => String(d).trim()).filter(Boolean)
+      : (typeof location === "string" && location.trim()
+          ? location.split(",").map((s) => s.trim()).filter(Boolean)
+          : []);
+
     const newRealtorRow: Record<string, any> = {
       name: name.trim().slice(0, 150),
       phone: phone.trim().slice(0, 50),
@@ -228,7 +244,7 @@ export async function POST(request: NextRequest) {
       position_ru: position_ru ? position_ru.trim().slice(0, 100) : "Ведущий риелтор",
       specialization_uz: specialization_uz ? specialization_uz.trim().slice(0, 200) : "",
       specialization_ru: specialization_ru ? specialization_ru.trim().slice(0, 200) : "",
-      districts: Array.isArray(districts) ? districts.map((d: any) => String(d).trim()).filter(Boolean) : [],
+      districts: parsedDistricts,
       bio_uz: bio_uz ? String(bio_uz).trim() : null,
       bio_ru: bio_ru ? String(bio_ru).trim() : null,
       display_order: Number(display_order) || 0,
@@ -262,11 +278,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
+    const locText = (createdRealtor?.districts && Array.isArray(createdRealtor.districts) && createdRealtor.districts.length > 0)
+      ? createdRealtor.districts.join(", ")
+      : (parsedDistricts.join(", ") || null);
+
     return NextResponse.json(
       {
         success: true,
         realtor: {
           ...createdRealtor,
+          location: locText,
+          location_uz: locText,
+          location_ru: locText,
           photo_url: resolvedPhoto,
           avatar_url: resolvedPhoto,
           instagram_url: validatedInstagram,

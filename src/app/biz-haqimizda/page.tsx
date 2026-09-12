@@ -202,16 +202,10 @@ export default function AboutPage() {
                       </p>
                     )}
 
-                    {r.districts && r.districts.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mb-5">
-                        {r.districts.map((d) => (
-                          <span
-                            key={d}
-                            className="rounded-lg bg-white px-2 py-1 text-[10px] font-medium text-gray-600 border border-gray-100"
-                          >
-                            {d}
-                          </span>
-                        ))}
+                    {(r.location || (r.districts && r.districts.length > 0)) && (
+                      <div className="flex items-center gap-1.5 text-xs text-slate-700 font-semibold mb-4">
+                        <MapPin className="h-4 w-4 text-emerald-700 shrink-0" />
+                        <span className="truncate">{r.location || r.districts?.join(", ")}</span>
                       </div>
                     )}
 

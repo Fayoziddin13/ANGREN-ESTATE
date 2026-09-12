@@ -192,6 +192,12 @@ export const ru: Dictionary = {
     realtorsSectionSubtitle: "Специалисты по районам города Ангрен",
     emptyRealtorsTitle: "Риелторы-партнёры пока не добавлены",
     emptyRealtorsDesc: "Информация о партнёрах появится после публикации администратором.",
+    listingSectionTitle: "Оставить заявку на размещение",
+    listingSectionSubtitle: "Оставьте информацию о недвижимости, которую хотите разместить на ANGREN ESTATE.",
+    listingSuccessTitle: "Заявка принята",
+    listingSuccessDesc: "Наш риелтор свяжется с вами и уточнит информацию для размещения объекта.",
+    listingSubmitBtn: "Оставить заявку",
+    listingNewBtn: "Подать ещё одну заявку",
   },
   admin: {
     title: "Панель администратора",

@@ -58,30 +58,36 @@ export async function POST(req: NextRequest) {
       metadata = {},
     } = body;
 
-    const validTypes = ["phone", "telegram", "inquiry"];
+    const validTypes = ["phone", "telegram", "inquiry", "property_listing_request"];
     if (!type || !validTypes.includes(type)) {
       return NextResponse.json(
-        { success: false, error: "type must be phone, telegram, or inquiry" },
+        { success: false, error: "type must be phone, telegram, inquiry, or property_listing_request" },
         { status: 400 }
       );
     }
 
+    const isListingRequest =
+      type === "property_listing_request" ||
+      metadata?.lead_type === "property_listing_request" ||
+      metadata?.request_type === "property_listing_request";
+
     // Support general consultation inquiries (e.g. from /kontaktlar page)
     const isGeneralInquiry =
+      !isListingRequest &&
       type === "inquiry" &&
       (!rawPropertyId || rawPropertyId === "general" || rawPropertyId === "contact_page");
 
-    if (!isGeneralInquiry && (!rawPropertyId || typeof rawPropertyId !== "string")) {
+    if (!isListingRequest && !isGeneralInquiry && (!rawPropertyId || typeof rawPropertyId !== "string")) {
       return NextResponse.json(
         { success: false, error: "property_id is required for listing interactions" },
         { status: 400 }
       );
     }
 
-    const property_id = isGeneralInquiry ? null : rawPropertyId;
+    const property_id = (isGeneralInquiry || isListingRequest) ? null : rawPropertyId;
 
-    // Strict validation for inquiries
-    if (type === "inquiry") {
+    // Strict validation for inquiries & listing requests
+    if (type === "inquiry" || isListingRequest) {
       const name = String(client_name || "").trim();
       const phone = String(client_phone || "").trim().replace(/[\s\(\)\-]/g, "");
 
@@ -97,6 +103,24 @@ export async function POST(req: NextRequest) {
           { success: false, error: "client_phone must be a valid phone number" },
           { status: 400 }
         );
+      }
+
+      if (isListingRequest) {
+        const locationVal = String(body.location || metadata?.location || "").trim();
+        if (!locationVal) {
+          return NextResponse.json(
+            { success: false, error: "Локация киритилиши шарт" },
+            { status: 400 }
+          );
+        }
+
+        const descVal = String(message || body.description || metadata?.description || "").trim();
+        if (!descVal || descVal.length < 3) {
+          return NextResponse.json(
+            { success: false, error: "Объект ҳақида қисқача маълумот киритилиши шарт" },
+            { status: 400 }
+          );
+        }
       }
     }
 
@@ -161,10 +185,35 @@ export async function POST(req: NextRequest) {
     }
 
     // Resolve property metadata & assigned realtor
-    let propertyTitle = isGeneralInquiry
-      ? rawTitle || "Umumiy murojaat (Aloqa sahifasi)"
-      : rawTitle;
-    let propertySlug = isGeneralInquiry ? rawSlug || "aloqa-sahifasi" : rawSlug;
+    let propertyTitle = rawTitle;
+    let propertySlug = rawSlug;
+
+    if (isListingRequest) {
+      const dealType = body.deal_type || metadata?.deal_type || "sale";
+      const propType = body.property_type || metadata?.property_type || "apartment";
+      const locVal = (body.location || metadata?.location || "").trim();
+      const dealLabel = dealType === "rent" || dealType === "ijara" ? "Ижара" : "Сотув";
+      const propTypeMap: Record<string, string> = {
+        apartment: "Квартира",
+        kvartira: "Квартира",
+        house: "Ҳовли уй",
+        hovli: "Ҳовли уй",
+        land: "Ер участкаси",
+        yer: "Ер участкаси",
+        commercial: "Тижорат",
+        tijorat: "Тижорат",
+        new_building: "Янги қурилиш",
+        yangi_qurilish: "Янги қурилиш",
+        other: "Бошқа",
+        boshqa: "Бошқа",
+      };
+      const propLabel = propTypeMap[propType] || propType;
+      propertyTitle = `Эълон бериш аризаси: ${dealLabel} — ${propLabel} (${locVal})`;
+      propertySlug = "elon-berish-arizasi";
+    } else if (isGeneralInquiry) {
+      propertyTitle = rawTitle || "Umumiy murojaat (Aloqa sahifasi)";
+      propertySlug = rawSlug || "aloqa-sahifasi";
+    }
     let realtorId = rawRealtorId;
 
     if (property_id) {
@@ -185,22 +234,38 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const leadMetadata = {
+      ...(typeof metadata === "object" && metadata !== null ? metadata : {}),
+      ...(isListingRequest
+        ? {
+            lead_type: "property_listing_request",
+            request_type: "property_listing_request",
+            location: (body.location || metadata?.location || "").trim(),
+            deal_type: body.deal_type || metadata?.deal_type || "sale",
+            property_type: body.property_type || metadata?.property_type || "apartment",
+            description: (message || body.description || metadata?.description || "").trim(),
+            preferred_channel: body.preferred_channel || metadata?.preferred_channel || "phone",
+          }
+        : {}),
+    };
+
     // Insert lead record into Supabase public.leads
+    // Note: DB enforces CHECK (type IN ('phone', 'telegram', 'inquiry')). For listing requests, type column is 'inquiry' with metadata.lead_type='property_listing_request'.
     const newLeadRow = {
       property_id,
       realtor_id: realtorId || null,
-      type,
+      type: isListingRequest ? "inquiry" : type,
       status: "new",
       property_title: propertyTitle || null,
       property_slug: propertySlug || null,
       client_name: client_name ? String(client_name).trim().slice(0, 100) : null,
       client_phone: client_phone ? String(client_phone).trim().slice(0, 50) : null,
-      message: message ? String(message).trim().slice(0, 1000) : null,
+      message: message ? String(message).trim().slice(0, 1000) : (isListingRequest ? String(body.description || metadata?.description || "").trim().slice(0, 1000) : null),
       notes: null,
       device: typeof device === "string" ? device.slice(0, 50) : "Desktop",
-      traffic_source: typeof traffic_source === "string" ? traffic_source.slice(0, 50) : "Direct",
+      traffic_source: isListingRequest && (!traffic_source || traffic_source === "Direct") ? "Listing Request" : (typeof traffic_source === "string" ? traffic_source.slice(0, 50) : "Direct"),
       ip_hash: ipHash,
-      metadata: typeof metadata === "object" && metadata !== null ? metadata : {},
+      metadata: leadMetadata,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };

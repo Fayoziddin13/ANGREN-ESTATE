@@ -128,7 +128,7 @@ export default function AdminRealtorsPage() {
       experience_years: realtor.experience_years,
       specialization_uz: realtor.specialization_uz,
       specialization_ru: realtor.specialization_ru,
-      districts_str: (realtor.districts || []).join(", "),
+      districts_str: realtor.location || (realtor.districts || []).join(", "),
       avatar_url: photo,
       photo_url: photo,
       bio_uz: realtor.bio_uz || "",
@@ -223,6 +223,7 @@ export default function AdminRealtorsPage() {
       specialization_uz: formData.specialization_uz.trim() || "Ko‘chmas mulk mutaxassisi",
       specialization_ru: formData.specialization_ru.trim() || "Специалист по недвижимости",
       districts: districtsArray.length > 0 ? districtsArray : ["Angren"],
+      location: formData.districts_str.trim() || (districtsArray.length > 0 ? districtsArray.join(", ") : "Angren"),
       avatar_url: resolvedPhoto,
       photo_url: resolvedPhoto,
       bio_uz: formData.bio_uz.trim() || undefined,
@@ -551,7 +552,7 @@ export default function AdminRealtorsPage() {
                     </div>
                     <div className="flex items-center gap-1.5">
                       <MapPin className="h-3.5 w-3.5 text-slate-500 shrink-0" />
-                      <span className="truncate font-medium">{(realtor.districts || []).join(", ")}</span>
+                      <span className="truncate font-medium">{realtor.location || (realtor.districts || []).join(", ")}</span>
                     </div>
                   </div>
 

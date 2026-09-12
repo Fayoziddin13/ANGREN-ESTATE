@@ -57,7 +57,11 @@ export async function GET(request: NextRequest) {
 
     // Type filter
     if (type && type !== "all") {
-      query = query.eq("type", type);
+      if (type === "property_listing_request") {
+        query = query.or("type.eq.property_listing_request,metadata->>lead_type.eq.property_listing_request");
+      } else {
+        query = query.eq("type", type);
+      }
     }
 
     // Property filter
@@ -125,12 +129,14 @@ export async function GET(request: NextRequest) {
       cancelled: 0,
       phone: 0,
       telegram: 0,
+      inquiry: 0,
+      listing_request: 0,
     };
 
     try {
       const { data: allStats, error: statsError } = await supabaseAdmin
         .from("leads")
-        .select("status, type");
+        .select("status, type, metadata");
 
       if (!statsError && allStats) {
         stats.total = allStats.length;
@@ -141,8 +147,16 @@ export async function GET(request: NextRequest) {
           else if (item.status === "completed" || item.status === "closed") stats.completed++;
           else if (item.status === "cancelled") stats.cancelled++;
 
-          if (item.type === "phone") stats.phone++;
-          else if (item.type === "telegram") stats.telegram++;
+          const isListing = item.type === "property_listing_request" || (item.metadata as any)?.lead_type === "property_listing_request";
+          if (isListing) {
+            stats.listing_request++;
+          } else if (item.type === "inquiry") {
+            stats.inquiry++;
+          } else if (item.type === "phone") {
+            stats.phone++;
+          } else if (item.type === "telegram") {
+            stats.telegram++;
+          }
         }
       }
     } catch {
