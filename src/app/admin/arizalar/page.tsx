@@ -27,6 +27,8 @@ import {
   ArrowRight,
   Eye,
   MessageSquare,
+  RotateCcw,
+  Archive,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { Lead } from "@/lib/types";
@@ -71,6 +73,8 @@ export default function AdminArizalarPage() {
   const [notesDraft, setNotesDraft] = useState("");
   const [isSavingNotes, setIsSavingNotes] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [archiveConfirmRequest, setArchiveConfirmRequest] = useState<Lead | null>(null);
+  const [isArchivingRequest, setIsArchivingRequest] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -714,6 +718,23 @@ export default function AdminArizalarPage() {
                           >
                             <Phone className="h-4 w-4" />
                           </a>
+                          {item.status === "cancelled" ? (
+                            <button
+                              onClick={() => handleUpdateStatus(item.id, "new")}
+                              className="p-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors"
+                              title={locale === "uz" ? "Qayta ko‘rib chiqish (Tiklash)" : "Восстановить заявку"}
+                            >
+                              <RotateCcw className="h-4 w-4" />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setArchiveConfirmRequest(item)}
+                              className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors"
+                              title={locale === "uz" ? "Rad etish / Arxivlash" : "Отклонить / В архив"}
+                            >
+                              <Archive className="h-4 w-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -791,6 +812,23 @@ export default function AdminArizalarPage() {
                       <Phone className="h-3.5 w-3.5" />
                       <span>{item.client_phone || (locale === "uz" ? "Qo‘ng‘iroq" : "Позвонить")}</span>
                     </a>
+                    {item.status === "cancelled" ? (
+                      <button
+                        onClick={() => handleUpdateStatus(item.id, "new")}
+                        className="p-2 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+                        title={locale === "uz" ? "Tiklash" : "Восстановить"}
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setArchiveConfirmRequest(item)}
+                        className="p-2 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors"
+                        title={locale === "uz" ? "Rad etish" : "Отклонить"}
+                      >
+                        <Archive className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                     <button
                       onClick={() => setSelectedRequest(item)}
                       className="px-3.5 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold hover:bg-slate-200 transition-colors"
@@ -1002,7 +1040,7 @@ export default function AdminArizalarPage() {
 
                   <button
                     disabled={isUpdatingStatus}
-                    onClick={() => handleUpdateStatus(selectedRequest.id, "cancelled")}
+                    onClick={() => setArchiveConfirmRequest(selectedRequest)}
                     className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 ${
                       selectedRequest.status === "cancelled"
                         ? "bg-rose-700 text-white border-rose-700 shadow-xs"
@@ -1069,6 +1107,108 @@ export default function AdminArizalarPage() {
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
+
+              {/* Section 6: Archive / Re-activate Management Zone */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <div className="text-xs font-bold text-slate-800">
+                    {selectedRequest.status === "cancelled"
+                      ? (locale === "uz" ? "Ariza rad etilgan / arxivda" : "Заявка отклонена")
+                      : (locale === "uz" ? "Arizani arxivga olish / Rad etish" : "Архивация / Отклонение заявки")}
+                  </div>
+                  <div className="text-[11px] text-slate-500 mt-0.5">
+                    {selectedRequest.status === "cancelled"
+                      ? (locale === "uz" ? "Ushbu arizani qayta ko‘rib chiqishga qaytarishingiz mumkin" : "Вы можете вернуть заявку в работу")
+                      : (locale === "uz" ? "Arizani bekor qilib, audit tarixi bilan arxivga saqlash" : "Отклонить заявку с сохранением аудита")}
+                  </div>
+                </div>
+
+                {selectedRequest.status === "cancelled" ? (
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateStatus(selectedRequest.id, "in_progress")}
+                    className="py-2 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-colors whitespace-nowrap"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    <span>{locale === "uz" ? "Qayta ko‘rib chiqish" : "Вернуть в работу"}</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setArchiveConfirmRequest(selectedRequest)}
+                    className="py-2 px-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors whitespace-nowrap"
+                  >
+                    <Archive className="h-3.5 w-3.5" />
+                    <span>{locale === "uz" ? "Rad etish / Arxivlash" : "Отклонить"}</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Safe Ariza Archive Confirmation Modal */}
+      {archiveConfirmRequest && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3">
+              <div className="h-11 w-11 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center shrink-0">
+                <Archive className="h-5 w-5 text-rose-600" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-slate-900 text-base">
+                  {locale === "uz" ? "Arizani rad etish / arxivlash" : "Отклонить / архивировать заявку"}
+                </h3>
+                <p className="text-[11px] text-slate-500 font-bold">
+                  {archiveConfirmRequest.client_name || (locale === "uz" ? "Mijoz" : "Клиент")} ({archiveConfirmRequest.client_phone})
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-rose-50/60 border border-rose-200/80 rounded-2xl p-3.5 space-y-1.5">
+              <p className="text-xs font-bold text-rose-900">
+                {locale === "uz"
+                  ? "Ariza holati «Rad etildi» qilib belgilanadi"
+                  : "Статус заявки будет изменен на «Отклонено»"}
+              </p>
+              <p className="text-[11px] text-rose-800/90 leading-relaxed font-medium">
+                {locale === "uz"
+                  ? "Arizaning barcha ma'lumotlari, muloqot tarixi va kiritilgan izohlar bazada to‘liq saqlanadi. Istalgan vaqtda uni «Rad etildi» bo‘limidan yana qayta ko‘rib chiqishga tiklashingiz mumkin."
+                  : "Все данные заявки, контакты и заметки сохранятся в базе данных для истории. Вы сможете восстановить её в любое время из вкладки «Отклонено»."}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                disabled={isArchivingRequest}
+                onClick={() => setArchiveConfirmRequest(null)}
+                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition-colors"
+              >
+                {locale === "uz" ? "Bekor qilish" : "Отмена"}
+              </button>
+              <button
+                type="button"
+                disabled={isArchivingRequest}
+                onClick={async () => {
+                  setIsArchivingRequest(true);
+                  try {
+                    await handleUpdateStatus(archiveConfirmRequest.id, "cancelled");
+                    setArchiveConfirmRequest(null);
+                  } finally {
+                    setIsArchivingRequest(false);
+                  }
+                }}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition-colors flex items-center gap-1.5 shadow-sm"
+              >
+                <Archive className="h-3.5 w-3.5" />
+                <span>
+                  {isArchivingRequest
+                    ? locale === "uz" ? "Saqlanmoqda..." : "Сохранение..."
+                    : locale === "uz" ? "Ha, rad etish" : "Да, отклонить"}
+                </span>
+              </button>
             </div>
           </div>
         </div>

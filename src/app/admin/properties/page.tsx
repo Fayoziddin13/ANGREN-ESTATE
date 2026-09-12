@@ -21,6 +21,8 @@ import {
   AlertCircle,
   Archive,
   Check,
+  RotateCcw,
+  AlertTriangle,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useProperties } from "@/lib/propertyStore";
@@ -43,6 +45,8 @@ export default function AdminPropertiesPage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [previewProperty, setPreviewProperty] = useState<Property | null>(null);
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
+  const [archiveConfirmProperty, setArchiveConfirmProperty] = useState<Property | null>(null);
+  const [isArchiving, setIsArchiving] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -400,6 +404,23 @@ export default function AdminPropertiesPage() {
                         >
                           <Copy className="h-4 w-4" />
                         </button>
+                        {prop.status === "archived" ? (
+                          <button
+                            onClick={() => handleStatusChange(prop.id, "published")}
+                            title={locale === "uz" ? "Qayta nashr qilish (Faollashtirish)" : "Опубликовать снова"}
+                            className="p-1.5 rounded-lg text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 transition-colors"
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setArchiveConfirmProperty(prop)}
+                            title={locale === "uz" ? "Arxivga o‘tkazish (Olib tashlash)" : "В архив (Удалить)"}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-amber-700 hover:bg-amber-50 transition-colors"
+                          >
+                            <Archive className="h-4 w-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() =>
                             setActionMenuOpenId(actionMenuOpenId === prop.id ? null : prop.id)
@@ -412,7 +433,7 @@ export default function AdminPropertiesPage() {
 
                       {/* Dropdown Action Popover */}
                       {actionMenuOpenId === prop.id && (
-                        <div className="absolute right-4 mt-2 w-44 rounded-2xl bg-white border border-slate-200 shadow-xl p-1.5 z-30 text-left space-y-0.5">
+                        <div className="absolute right-4 mt-2 w-48 rounded-2xl bg-white border border-slate-200 shadow-xl p-1.5 z-30 text-left space-y-0.5">
                           <Link
                             href={`/admin/properties/${prop.id}`}
                             className="w-full text-left px-3 py-1.5 rounded-xl hover:bg-slate-100 text-slate-700 text-xs font-bold flex items-center gap-1.5"
@@ -455,12 +476,24 @@ export default function AdminPropertiesPage() {
                               Ijaraga berildi
                             </button>
                           )}
-                          {prop.status !== "archived" && (
+                          {prop.status !== "archived" ? (
                             <button
-                              onClick={() => handleStatusChange(prop.id, "archived")}
-                              className="w-full text-left px-3 py-1.5 rounded-xl hover:bg-slate-100 text-slate-600 text-xs font-medium"
+                              onClick={() => {
+                                setActionMenuOpenId(null);
+                                setArchiveConfirmProperty(prop);
+                              }}
+                              className="w-full text-left px-3 py-1.5 rounded-xl hover:bg-amber-50 text-amber-800 text-xs font-semibold flex items-center gap-1.5 border-t border-slate-100 mt-1"
                             >
-                              Arxivlash
+                              <Archive className="h-3.5 w-3.5 text-amber-600" />
+                              <span>{locale === "uz" ? "Arxivga o‘tkazish" : "В архив"}</span>
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleStatusChange(prop.id, "published")}
+                              className="w-full text-left px-3 py-1.5 rounded-xl hover:bg-emerald-50 text-emerald-800 text-xs font-semibold flex items-center gap-1.5 border-t border-slate-100 mt-1"
+                            >
+                              <RotateCcw className="h-3.5 w-3.5 text-emerald-600" />
+                              <span>{locale === "uz" ? "Qayta nashr qilish" : "Опубликовать снова"}</span>
                             </button>
                           )}
                         </div>
@@ -526,6 +559,70 @@ export default function AdminPropertiesPage() {
                 className="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs"
               >
                 Yopish
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Safe Archive Confirmation Modal */}
+      {archiveConfirmProperty && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3">
+              <div className="h-11 w-11 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0">
+                <Archive className="h-5 w-5 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-slate-900 text-base">
+                  {locale === "uz" ? "Obyektni arxivga o‘tkazish" : "Архивировать объект"}
+                </h3>
+                <p className="text-[11px] text-slate-500 font-bold">
+                  ID: {archiveConfirmProperty.id}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-amber-50/60 border border-amber-200/80 rounded-2xl p-3.5 space-y-1.5">
+              <p className="text-xs font-bold text-amber-900 line-clamp-1">
+                {locale === "uz" ? archiveConfirmProperty.title_uz : archiveConfirmProperty.title_ru}
+              </p>
+              <p className="text-[11px] text-amber-800/90 leading-relaxed font-medium">
+                {locale === "uz"
+                  ? "Ushbu obyekt arxivlanadi va ommaviy sayt (xarita, katalog, qidiruv)dan darhol yashiriladi. Barcha parametrlar, fotosuratlar va statistika bazada saqlanadi. Istalgan vaqtda uni «Arxiv» bo‘limidan qayta nashr qilishingiz mumkin."
+                  : "Объект будет перемещен в архив и скрыт из публичного доступа (карты, каталога, поиска). Все данные, фотографии и статистика сохранятся в базе. Вы сможете в любой момент восстановить его из раздела «В архиве»."}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                disabled={isArchiving}
+                onClick={() => setArchiveConfirmProperty(null)}
+                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition-colors"
+              >
+                {locale === "uz" ? "Bekor qilish" : "Отмена"}
+              </button>
+              <button
+                type="button"
+                disabled={isArchiving}
+                onClick={async () => {
+                  setIsArchiving(true);
+                  try {
+                    await handleStatusChange(archiveConfirmProperty.id, "archived");
+                    setArchiveConfirmProperty(null);
+                  } finally {
+                    setIsArchiving(false);
+                  }
+                }}
+                className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition-colors flex items-center gap-1.5 shadow-sm"
+              >
+                <Archive className="h-3.5 w-3.5" />
+                <span>
+                  {isArchiving
+                    ? locale === "uz" ? "Arxivlanmoqda..." : "Архивация..."
+                    : locale === "uz" ? "Ha, arxivlash" : "Да, в архив"}
+                </span>
               </button>
             </div>
           </div>

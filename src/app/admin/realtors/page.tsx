@@ -86,6 +86,9 @@ export default function AdminRealtorsPage() {
   const [editingRealtorId, setEditingRealtorId] = useState<string | null>(null);
   const [formData, setFormData] = useState<RealtorFormData>(emptyForm);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [deactivateConfirmRealtor, setDeactivateConfirmRealtor] = useState<Realtor | null>(null);
+  const [isDeactivating, setIsDeactivating] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoUploadError, setPhotoUploadError] = useState<string | null>(null);
@@ -253,20 +256,12 @@ export default function AdminRealtorsPage() {
   // Toggle Realtor Status with Safe Confirmation (NO PHYSICAL DELETE)
   const handleToggleRealtorStatus = async (realtor: Realtor) => {
     if (realtor.is_active) {
-      const confirmed = window.confirm(
-        locale === "uz"
-          ? `«${realtor.name}»ni nofaol qilmoqchimisiz? Rieltor jamoat sahifalaridan yashiriladi, lekin unga tegishli barcha obyektlar va arizalar saqlanib qoladi.`
-          : `Сделать «${realtor.name}» неактивным? Риелтор будет скрыт с публичного сайта, но все прикрепленные объекты и лиды сохранятся.`
-      );
-      if (!confirmed) return;
+      setDeactivateConfirmRealtor(realtor);
+      return;
     }
     const ok = await toggleRealtorStatus(realtor.id);
     if (ok) {
-      showToast(
-        realtor.is_active
-          ? (locale === "uz" ? "Rieltor nofaol qilindi (saytdan yashirildi)" : "Риелтор скрыт с сайта")
-          : (locale === "uz" ? "Rieltor faollashtirildi" : "Риелтор активирован")
-      );
+      showToast(locale === "uz" ? "Rieltor faollashtirildi (saytda ko‘rsatiladi)" : "Риелтор активирован");
     }
   };
 
@@ -341,13 +336,26 @@ export default function AdminRealtorsPage() {
     setIsAssigning(false);
   };
 
-  const filteredRealtors = realtors.filter(
-    (r) =>
+  const filteredRealtors = realtors.filter((r) => {
+    const matchesSearch =
       r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.phone.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.specialization_uz.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.specialization_ru.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      r.specialization_ru.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "active" && r.is_active) ||
+      (statusFilter === "inactive" && !r.is_active);
+
+    return matchesSearch && matchesStatus;
+  });
+
+  const realtorCounts = {
+    all: realtors.length,
+    active: realtors.filter((r) => r.is_active).length,
+    inactive: realtors.filter((r) => !r.is_active).length,
+  };
 
   return (
     <div className="p-4 sm:p-8 max-w-6xl mx-auto w-full space-y-6">
@@ -381,7 +389,64 @@ export default function AdminRealtorsPage() {
         </button>
       </div>
 
-      {/* Search and Stats Bar */}
+      {/* Status Filter Tabs */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-bold scrollbar-none">
+        <button
+          onClick={() => setStatusFilter("all")}
+          className={`px-3.5 py-2 rounded-xl transition-all whitespace-nowrap flex items-center gap-2 ${
+            statusFilter === "all"
+              ? "bg-[#16543C] text-white shadow-xs"
+              : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+          }`}
+        >
+          <span>{locale === "uz" ? "Barchasi" : "Все"}</span>
+          <span
+            className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+              statusFilter === "all" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"
+            }`}
+          >
+            {realtorCounts.all}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setStatusFilter("active")}
+          className={`px-3.5 py-2 rounded-xl transition-all whitespace-nowrap flex items-center gap-2 ${
+            statusFilter === "active"
+              ? "bg-[#16543C] text-white shadow-xs"
+              : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+          }`}
+        >
+          <span>{locale === "uz" ? "Faol rieltorlar" : "Активные"}</span>
+          <span
+            className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+              statusFilter === "active" ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-800"
+            }`}
+          >
+            {realtorCounts.active}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setStatusFilter("inactive")}
+          className={`px-3.5 py-2 rounded-xl transition-all whitespace-nowrap flex items-center gap-2 ${
+            statusFilter === "inactive"
+              ? "bg-[#16543C] text-white shadow-xs"
+              : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+          }`}
+        >
+          <span>{locale === "uz" ? "Nofaol / Arxiv" : "Неактивные"}</span>
+          <span
+            className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+              statusFilter === "inactive" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"
+            }`}
+          >
+            {realtorCounts.inactive}
+          </span>
+        </button>
+      </div>
+
+      {/* Search Bar */}
       <div className="flex flex-col sm:flex-row items-center gap-3">
         <div className="relative w-full sm:w-80">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -396,23 +461,6 @@ export default function AdminRealtorsPage() {
             }
             className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#16543C] focus:border-transparent transition-all"
           />
-        </div>
-        <div className="flex items-center gap-2 text-xs text-slate-500 font-medium ml-auto">
-          <span>
-            {locale === "uz" ? `Jami: ${realtors.length} ta` : `Всего: ${realtors.length}`}
-          </span>
-          <span className="text-slate-300">•</span>
-          <span className="text-emerald-700 font-bold">
-            {locale === "uz"
-              ? `Faol: ${realtors.filter((r) => r.is_active).length}`
-              : `Активных: ${realtors.filter((r) => r.is_active).length}`}
-          </span>
-          <span className="text-slate-300">•</span>
-          <span className="text-slate-500">
-            {locale === "uz"
-              ? `Nofaol: ${realtors.filter((r) => !r.is_active).length}`
-              : `Неактивных: ${realtors.filter((r) => !r.is_active).length}`}
-          </span>
         </div>
       </div>
 
@@ -1248,6 +1296,79 @@ export default function AdminRealtorsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Deactivate Realtor Confirmation Modal */}
+      {deactivateConfirmRealtor && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3">
+              <div className="h-11 w-11 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0">
+                <Power className="h-5 w-5 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-slate-900 text-base">
+                  {locale === "uz" ? "Rieltorni nofaol qilish" : "Деактивировать риелтора"}
+                </h3>
+                <p className="text-[11px] text-slate-500 font-bold">
+                  {deactivateConfirmRealtor.name}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-amber-50/60 border border-amber-200/80 rounded-2xl p-3.5 space-y-1.5">
+              <p className="text-xs font-bold text-amber-900">
+                {locale === "uz"
+                  ? `«${deactivateConfirmRealtor.name}» saytdan yashiriladi`
+                  : `Риелтор «${deactivateConfirmRealtor.name}» будет скрыт с сайта`}
+              </p>
+              <p className="text-[11px] text-amber-800/90 leading-relaxed font-medium">
+                {locale === "uz"
+                  ? "Rieltor jamoat sahifalaridan (Kontaktlar, Biz haqimizda) yashiriladi. Unga biriktirilgan barcha obyektlar va arizalar tarixi bazada xavfsiz saqlanadi. Istalgan vaqtda uni yana qayta faollashtirishingiz mumkin."
+                  : "Риелтор перестанет отображаться на публичных страницах. Все прикрепленные к нему объекты недвижимости и лиды сохранятся в базе данных. Вы сможете вернуть его в любой момент."}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                disabled={isDeactivating}
+                onClick={() => setDeactivateConfirmRealtor(null)}
+                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition-colors"
+              >
+                {locale === "uz" ? "Bekor qilish" : "Отмена"}
+              </button>
+              <button
+                type="button"
+                disabled={isDeactivating}
+                onClick={async () => {
+                  setIsDeactivating(true);
+                  try {
+                    const ok = await toggleRealtorStatus(deactivateConfirmRealtor.id);
+                    if (ok) {
+                      showToast(
+                        locale === "uz"
+                          ? "Rieltor nofaol qilindi (saytdan yashirildi)"
+                          : "Риелтор скрыт с сайта"
+                      );
+                      setDeactivateConfirmRealtor(null);
+                    }
+                  } finally {
+                    setIsDeactivating(false);
+                  }
+                }}
+                className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition-colors flex items-center gap-1.5 shadow-sm"
+              >
+                <Power className="h-3.5 w-3.5" />
+                <span>
+                  {isDeactivating
+                    ? locale === "uz" ? "Saqlanmoqda..." : "Сохранение..."
+                    : locale === "uz" ? "Ha, nofaol qilish" : "Да, деактивировать"}
+                </span>
+              </button>
+            </div>
           </div>
         </div>
       )}

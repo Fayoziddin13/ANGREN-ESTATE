@@ -302,50 +302,6 @@ export default function HomePage() {
           focusDistrict={selectedDistrict}
         />
 
-        {/* Mobile Primary View Switcher: [ ХАРИТА | КАТАЛОГ ] */}
-        <div className="sm:hidden absolute top-2.5 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
-          <div
-            data-testid="primary-view-switcher"
-            className="flex items-center p-1 rounded-2xl bg-white/95 backdrop-blur-xl shadow-elevated border border-white/90 transition-all"
-          >
-            <button
-              type="button"
-              data-testid="view-mode-map"
-              onClick={() => setActiveView("map")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
-                activeView === "map"
-                  ? "bg-[#16543C] text-white shadow-card"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/60"
-              }`}
-            >
-              <Map className="h-3.5 w-3.5" />
-              <span>{locale === "uz" ? "ХАРИТА" : "КАРТА"}</span>
-            </button>
-            <button
-              type="button"
-              data-testid="view-mode-catalog"
-              onClick={() => setActiveView("catalog")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
-                activeView === "catalog"
-                  ? "bg-[#16543C] text-white shadow-card"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/60"
-              }`}
-            >
-              <Layers className="h-3.5 w-3.5" />
-              <span>{locale === "uz" ? "КАТАЛОГ" : "КАТАЛОГ"}</span>
-              <span
-                className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-full ${
-                  activeView === "catalog"
-                    ? "bg-white text-[#16543C]"
-                    : "bg-emerald-100 text-[#16543C]"
-                }`}
-              >
-                {filteredProperties.length}
-              </span>
-            </button>
-          </div>
-        </div>
-
         {/* Desktop-Only Floating Search & Filter Panel (Top Left) */}
         <div data-testid="desktop-search-panel" className="hidden sm:block absolute sm:top-4 sm:left-6 sm:right-auto z-20 max-w-2xl pointer-events-none">
           <FloatingSearchPanel
@@ -384,48 +340,53 @@ export default function HomePage() {
           />
         </div>
 
-        {/* Mobile-Only Compact Floating Search/Filter Control */}
-        <div className="sm:hidden absolute top-14 left-3 right-3 z-20 pointer-events-auto">
+        {/* Mobile Floating Action Controls (Top Right Vertical Stack: [ Search ] -> [ Map / Catalog ]) */}
+        <div className="sm:hidden absolute top-4 right-4 z-20 flex flex-col items-center gap-2.5 pointer-events-auto">
+          {/* Top: Search Button */}
           <button
             type="button"
             data-testid="compact-search-trigger"
             onClick={() => setIsMobileSearchOpen(true)}
             aria-label={locale === "uz" ? "Qidiruv va filtrlarni ochish" : "Открыть поиск и фильтры"}
-            className="w-full flex items-center justify-between rounded-2xl bg-white/95 backdrop-blur-xl px-3.5 py-2.5 shadow-elevated border border-white/90 active:scale-[0.98] transition-all text-left"
+            className="relative h-11 w-11 rounded-2xl bg-white/95 backdrop-blur-xl shadow-elevated border border-white/90 text-[#16543C] flex items-center justify-center active:scale-95 transition-all"
           >
-            <div className="flex items-center gap-2.5 min-w-0 flex-1">
-              <div className="h-8 w-8 rounded-xl bg-emerald-50 text-[#16543C] flex items-center justify-center shrink-0 shadow-xs">
-                <Search className="h-4 w-4" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-extrabold text-slate-900 truncate">
-                  {searchQuery
-                    ? searchQuery
-                    : locale === "uz"
-                    ? "Angrendan mulk izlash..."
-                    : "Поиск недвижимости в Ангрене..."}
-                </p>
-                <p className="text-[10px] font-medium text-slate-500 truncate">
-                  {activeFilterSummary
-                    ? activeFilterSummary
-                    : locale === "uz"
-                    ? "Barcha turlar • Narx • Hudud"
-                    : "Все типы • Цена • Район"}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0 pl-2">
-              {activeFiltersCount > 0 && (
-                <span className="flex h-5 px-1.5 items-center justify-center rounded-full bg-[#16543C] text-[10px] text-white font-extrabold shadow-sm">
-                  {activeFiltersCount}
-                </span>
-              )}
-              <div className="h-8 w-8 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center">
-                <SlidersHorizontal className="h-4 w-4" />
-              </div>
-            </div>
+            <Search className="h-5 w-5" />
+            {activeFiltersCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-[#16543C] text-[9px] text-white font-extrabold shadow-sm">
+                {activeFiltersCount}
+              </span>
+            )}
           </button>
+
+          {/* Bottom: Map / Catalog Toggle Button */}
+          <div data-testid="primary-view-switcher">
+            <button
+              type="button"
+              data-testid={activeView === "map" ? "view-mode-catalog" : "view-mode-map"}
+              onClick={() => setActiveView(activeView === "map" ? "catalog" : "map")}
+              aria-label={
+                activeView === "map"
+                  ? locale === "uz" ? "Katalog ko‘rinishiga o‘tish" : "Перейти в каталог"
+                  : locale === "uz" ? "Xarita ko‘rinishiga o‘tish" : "Перейти на карту"
+              }
+              className={`relative h-11 w-11 rounded-2xl backdrop-blur-xl shadow-elevated border transition-all flex items-center justify-center active:scale-95 ${
+                activeView === "catalog"
+                  ? "bg-[#16543C] text-white border-[#16543C]"
+                  : "bg-white/95 text-[#16543C] border-white/90"
+              }`}
+            >
+              {activeView === "map" ? (
+                <>
+                  <Layers className="h-5 w-5" />
+                  <span className="absolute -bottom-1 -right-1 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-emerald-600 text-[9px] text-white font-extrabold shadow-sm">
+                    {filteredProperties.length}
+                  </span>
+                </>
+              ) : (
+                <Map className="h-5 w-5" />
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Desktop-Only Floating Action Controls (Top Right: Primary View Switcher & Map Style Switcher) */}

@@ -24,6 +24,9 @@ import {
   Send,
   Trash2,
   Plus,
+  Archive,
+  RotateCcw,
+  AlertTriangle,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useProperties } from "@/lib/propertyStore";
@@ -59,11 +62,13 @@ export default function EditPropertyPage() {
   const propertyId = params?.id as string;
 
   const { locale } = useLanguage();
-  const { properties, updateProperty, isLoaded } = useProperties();
+  const { properties, updateProperty, updatePropertyStatus, isLoaded } = useProperties();
   const { realtors } = useRealtors();
 
   const [activeStep, setActiveStep] = useState(1);
   const totalSteps = 6;
+  const [archiveModalOpen, setArchiveModalOpen] = useState(false);
+  const [isArchiving, setIsArchiving] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -1053,7 +1058,148 @@ export default function EditPropertyPage() {
             )}
           </div>
         </div>
+
+        {/* Admin Management / Safe Archive Zone */}
+        <div className="mt-8 pt-6 border-t border-slate-200">
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black uppercase tracking-wider text-slate-700">
+                  {locale === "uz" ? "Obyekt holati va arxivlash" : "Статус объекта и управление"}
+                </span>
+                <span
+                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                    currentStatus === "published"
+                      ? "bg-emerald-100 text-emerald-800"
+                      : currentStatus === "archived"
+                      ? "bg-slate-200 text-slate-700"
+                      : "bg-amber-100 text-amber-800"
+                  }`}
+                >
+                  {currentStatus === "published"
+                    ? (locale === "uz" ? "Faol (Nashr qilingan)" : "Опубликовано")
+                    : currentStatus === "archived"
+                    ? (locale === "uz" ? "Arxivlangan" : "В архиве")
+                    : (locale === "uz" ? "Qoralama" : "Черновик")}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                {currentStatus === "archived"
+                  ? (locale === "uz"
+                      ? "Bu obyekt arxivda. Ommaviy saytda ko‘rinmaydi. Istalgan vaqtda qayta nashr qilishingiz mumkin."
+                      : "Этот объект находится в архиве и скрыт с сайта. Вы можете восстановить его в любое время.")
+                  : (locale === "uz"
+                      ? "Obyektni arxivga o‘tkazsangiz, u ommaviy saytdan olib tashlanadi, lekin bazada saqlanadi."
+                      : "При архивации объект скрывается из публичного доступа, но сохраняется в базе.")}
+              </p>
+            </div>
+
+            <div className="shrink-0">
+              {currentStatus === "archived" ? (
+                <button
+                  type="button"
+                  disabled={isArchiving}
+                  onClick={async () => {
+                    setIsArchiving(true);
+                    try {
+                      const ok = await updatePropertyStatus(propertyId, "published");
+                      if (ok) {
+                        setCurrentStatus("published");
+                      }
+                    } finally {
+                      setIsArchiving(false);
+                    }
+                  }}
+                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  <span>
+                    {isArchiving
+                      ? (locale === "uz" ? "Tiklanmoqda..." : "Восстановление...")
+                      : (locale === "uz" ? "Arxivdan chiqarish (Qayta nashr)" : "Восстановить из архива")}
+                  </span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setArchiveModalOpen(true)}
+                  className="px-4 py-2 rounded-xl bg-amber-50 border border-amber-300 text-amber-800 hover:bg-amber-100 font-bold text-xs flex items-center gap-1.5 transition-colors"
+                >
+                  <Archive className="h-3.5 w-3.5 text-amber-700" />
+                  <span>{locale === "uz" ? "Arxivga o‘tkazish" : "В архив"}</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Safe Archive Confirmation Modal */}
+      {archiveModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3">
+              <div className="h-11 w-11 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0">
+                <Archive className="h-5 w-5 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-slate-900 text-base">
+                  {locale === "uz" ? "Obyektni arxivga o‘tkazish" : "Архивировать объект"}
+                </h3>
+                <p className="text-[11px] text-slate-500 font-bold">
+                  ID: {propertyId}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-amber-50/60 border border-amber-200/80 rounded-2xl p-3.5 space-y-1.5">
+              <p className="text-xs font-bold text-amber-900 line-clamp-1">
+                {titleUz || titleRu || "Angren ko‘chmas mulk obyekti"}
+              </p>
+              <p className="text-[11px] text-amber-800/90 leading-relaxed font-medium">
+                {locale === "uz"
+                  ? "Ushbu obyekt arxivlanadi va ommaviy sayt (xarita, katalog, qidiruv)dan darhol yashiriladi. Barcha parametrlar, fotosuratlar va statistika bazada saqlanadi. Istalgan vaqtda uni yana qayta nashr qilishingiz mumkin."
+                  : "Объект будет перемещен в архив и скрыт из публичного доступа (карты, каталога, поиска). Все данные, фотографии и статистика сохранятся в базе. Вы сможете в любой момент восстановить его."}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                disabled={isArchiving}
+                onClick={() => setArchiveModalOpen(false)}
+                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition-colors"
+              >
+                {locale === "uz" ? "Bekor qilish" : "Отмена"}
+              </button>
+              <button
+                type="button"
+                disabled={isArchiving}
+                onClick={async () => {
+                  setIsArchiving(true);
+                  try {
+                    const ok = await updatePropertyStatus(propertyId, "archived");
+                    if (ok) {
+                      setCurrentStatus("archived");
+                      setArchiveModalOpen(false);
+                    }
+                  } finally {
+                    setIsArchiving(false);
+                  }
+                }}
+                className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition-colors flex items-center gap-1.5 shadow-sm"
+              >
+                <Archive className="h-3.5 w-3.5" />
+                <span>
+                  {isArchiving
+                    ? locale === "uz" ? "Arxivlanmoqda..." : "Архивация..."
+                    : locale === "uz" ? "Ha, arxivlash" : "Да, в архив"}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
