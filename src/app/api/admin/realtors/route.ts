@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSessionServer, verifyAdminSessionToken } from "@/lib/admin-auth";
 import { supabaseAdmin } from "@/lib/supabaseServer";
+import { getRealtorsMeta, saveRealtorMeta } from "@/lib/realtorMetaStore";
 
 export const dynamic = "force-dynamic";
 
@@ -105,45 +106,26 @@ export async function GET(request: NextRequest) {
       // Non-blocking if leads table is pending
     }
 
-function sanitizeInstagramUrl(url: any): string | null {
-  if (!url || typeof url !== "string") return null;
-  const trimmed = url.trim();
-  if (!trimmed) return null;
-  let fullUrl = trimmed;
-  if (fullUrl.startsWith("@")) {
-    fullUrl = `https://instagram.com/${fullUrl.slice(1)}`;
-  } else if (!fullUrl.startsWith("http://") && !fullUrl.startsWith("https://")) {
-    fullUrl = `https://instagram.com/${fullUrl}`;
-  }
-  if (!fullUrl.startsWith("https://")) {
-    throw new Error("Instagram havolasi xavfsiz HTTPS protokoli bilan bo'lishi shart (masalan: https://instagram.com/username)");
-  }
-  try {
-    const parsed = new URL(fullUrl);
-    if (!parsed.hostname.includes("instagram.com")) {
-      throw new Error("Faqat haqiqiy Instagram havolasi (instagram.com) qabul qilinadi");
-    }
-  } catch (err: any) {
-    throw new Error(err.message || "Noto'g'ri Instagram havolasi");
-  }
-  return fullUrl;
-}
-
     // 4. Attach aggregated counts and location mapping
+    const metaMap = getRealtorsMeta();
     const enrichedRealtors = realtorList.map((r) => {
+      const extra = metaMap[r.id] || {};
       const locText = (r.districts && Array.isArray(r.districts) && r.districts.length > 0)
         ? r.districts.join(", ")
         : (r.location || r.location_uz || null);
+
+      const photo = r.photo_url || r.avatar_url || extra.photo_url || null;
+      const insta = r.instagram_url || r.instagram || extra.instagram_url || null;
 
       return {
         ...r,
         location: locText,
         location_uz: r.location_uz || locText,
         location_ru: r.location_ru || locText,
-        photo_url: r.photo_url || r.avatar_url || null,
-        avatar_url: r.avatar_url || r.photo_url || null,
-        instagram_url: r.instagram_url || r.instagram || null,
-        instagram: r.instagram_url || r.instagram || null,
+        photo_url: photo,
+        avatar_url: photo,
+        instagram_url: insta,
+        instagram: insta,
         properties_count: propertiesMap[r.id] || 0,
         assigned_properties_count: propertiesMap[r.id] || 0,
         leads_count: leadsMap[r.id] || 0,
@@ -276,6 +258,13 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error("[Admin Realtors POST] Insert error:", error.message);
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+
+    if (createdRealtor?.id) {
+      saveRealtorMeta(createdRealtor.id, {
+        instagram_url: validatedInstagram,
+        photo_url: resolvedPhoto,
+      });
     }
 
     const locText = (createdRealtor?.districts && Array.isArray(createdRealtor.districts) && createdRealtor.districts.length > 0)

@@ -223,8 +223,8 @@ export interface Realtor {
   location_ru?: string;
   phone: string;
   telegram: string;
-  instagram?: string;
-  instagram_url?: string;
+  instagram?: string | null;
+  instagram_url?: string | null;
   bio_uz?: string;
   bio_ru?: string;
   display_order?: number;

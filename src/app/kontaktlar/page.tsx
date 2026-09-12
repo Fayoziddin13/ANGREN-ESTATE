@@ -352,13 +352,6 @@ export default function ContactsPage() {
                       </div>
                     </div>
 
-                    {(r.location || (r.districts && r.districts.length > 0)) && (
-                      <div className="flex items-center gap-1.5 text-xs text-slate-700 font-semibold mb-5">
-                        <MapPin className="h-4 w-4 text-emerald-700 shrink-0" />
-                        <span className="truncate">{r.location || r.districts?.join(", ")}</span>
-                      </div>
-                    )}
-
                     <div className={`mt-auto grid ${r.instagram_url || r.instagram ? "grid-cols-3" : "grid-cols-2"} gap-2 pt-4 border-t border-gray-100`}>
                       <a
                         href={`tel:${r.phone}`}
@@ -378,7 +371,7 @@ export default function ContactsPage() {
                       </a>
                       {(r.instagram_url || r.instagram) && (
                         <a
-                          href={r.instagram_url || r.instagram}
+                          href={(r.instagram_url || r.instagram) || undefined}
                           target="_blank"
                           rel="noreferrer"
                           className="flex items-center justify-center gap-1.5 rounded-2xl border border-pink-200 bg-pink-50/50 px-2.5 py-2.5 text-xs font-bold text-pink-700 hover:bg-pink-100 shadow-sm active:scale-95 transition-all"

@@ -710,7 +710,7 @@ export default function PropertyDetailView({
 
                     {property.realtor && property.realtor.is_active && (property.realtor.instagram_url || property.realtor.instagram) && (
                       <a
-                        href={property.realtor.instagram_url || property.realtor.instagram}
+                        href={(property.realtor.instagram_url || property.realtor.instagram) || undefined}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="w-full py-3.5 px-4 rounded-2xl border border-pink-200 bg-pink-50/60 hover:bg-pink-100 text-pink-700 text-sm font-bold shadow-sm flex items-center justify-center gap-2 transition-all active:scale-98"

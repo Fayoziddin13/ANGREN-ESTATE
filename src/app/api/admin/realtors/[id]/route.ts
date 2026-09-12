@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSessionServer, verifyAdminSessionToken } from "@/lib/admin-auth";
 import { supabaseAdmin } from "@/lib/supabaseServer";
+import { saveRealtorMeta, getRealtorsMeta } from "@/lib/realtorMetaStore";
 
 export const dynamic = "force-dynamic";
 
@@ -93,6 +94,7 @@ export async function PATCH(
       try {
         validatedInstagram = sanitizeInstagramUrl(rawInsta);
         updates.instagram_url = validatedInstagram;
+        saveRealtorMeta(id, { instagram_url: validatedInstagram });
       } catch (valErr: any) {
         return NextResponse.json({ success: false, error: valErr.message }, { status: 400 });
       }
@@ -144,8 +146,9 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
-    const resPhoto = updates.photo_url !== undefined ? updates.photo_url : (updatedRealtor?.avatar_url || updatedRealtor?.photo_url || null);
-    const resInsta = updates.instagram_url !== undefined ? updates.instagram_url : (updatedRealtor?.instagram_url || updatedRealtor?.instagram || null);
+    const extra = getRealtorsMeta()[id] || {};
+    const resPhoto = updates.photo_url !== undefined ? updates.photo_url : (updatedRealtor?.avatar_url || updatedRealtor?.photo_url || extra.photo_url || null);
+    const resInsta = updates.instagram_url !== undefined ? updates.instagram_url : (updatedRealtor?.instagram_url || updatedRealtor?.instagram || extra.instagram_url || null);
     const locText = (updatedRealtor?.districts && Array.isArray(updatedRealtor.districts) && updatedRealtor.districts.length > 0)
       ? updatedRealtor.districts.join(", ")
       : (body.location !== undefined ? (body.location || null) : null);

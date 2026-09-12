@@ -3,27 +3,35 @@
 import { useSyncExternalStore, useCallback } from "react";
 
 export type MapMode = "standard" | "satellite";
+export type MapDimension = "2d" | "3d";
 
 export interface MapCameraState {
   center: [number, number];
   zoom: number;
+  pitch: number;
+  bearing: number;
+  dimension: MapDimension;
 }
 
 const MAP_MODE_KEY = "angren_map_style_v1";
 const MAP_CAMERA_KEY = "angren_map_camera_v1";
+const MAP_DIMENSION_KEY = "angren_map_dimension_v1";
 const MAP_MODE_EVENT = "angren_map_mode_change";
+const MAP_DIMENSION_EVENT = "angren_map_dimension_change";
 
 // Angren urban residential center (5-, 6-, 7-mavze and Central districts)
 export const DEFAULT_ANGREN_CENTER: [number, number] = [41.0185, 70.1340];
 export const DEFAULT_MAP_ZOOM = 13.8;
+export const DEFAULT_MAP_PITCH_3D = 45;
+export const DEFAULT_MAP_PITCH_2D = 0;
 
 // Angren City geographic navigation boundaries [South-West [lat, lng], North-East [lat, lng]]
 export const ANGREN_RESTRICT_BOUNDS: [[number, number], [number, number]] = [
-  [40.9650, 70.0400], // Southwest: Qorabog', A373 gateway, southern riverbank
-  [41.0700, 70.2200], // Northeast: Dukent, northern foothills, eastern districts
+  [40.9400, 69.9800], // Southwest: Qorabog', A373 gateway, southern riverbank
+  [41.1000, 70.2800], // Northeast: Dukent, northern foothills, eastern districts
 ];
 
-export const ANGREN_MIN_ZOOM = 12.2;
+export const ANGREN_MIN_ZOOM = 12.0;
 export const ANGREN_MAX_ZOOM = 18.5;
 
 export function normalizeCameraCenter(c: [number, number]): [number, number] {
@@ -36,9 +44,13 @@ export function normalizeCameraCenter(c: [number, number]): [number, number] {
 }
 
 let inMemoryMode: MapMode = "satellite";
+let inMemoryDimension: MapDimension = "3d";
 let inMemoryCamera: MapCameraState = {
   center: DEFAULT_ANGREN_CENTER,
   zoom: DEFAULT_MAP_ZOOM,
+  pitch: DEFAULT_MAP_PITCH_3D,
+  bearing: 0,
+  dimension: "3d",
 };
 
 // Client initialization
@@ -48,6 +60,10 @@ if (typeof window !== "undefined") {
     if (saved === "standard" || saved === "satellite") {
       inMemoryMode = saved;
     }
+    const savedDim = localStorage.getItem(MAP_DIMENSION_KEY);
+    if (savedDim === "2d" || savedDim === "3d") {
+      inMemoryDimension = savedDim;
+    }
     const savedCam = sessionStorage.getItem(MAP_CAMERA_KEY);
     if (savedCam) {
       const parsed = JSON.parse(savedCam);
@@ -55,6 +71,9 @@ if (typeof window !== "undefined") {
         inMemoryCamera = {
           center: normalizeCameraCenter(parsed.center),
           zoom: parsed.zoom,
+          pitch: typeof parsed.pitch === "number" ? parsed.pitch : (inMemoryDimension === "3d" ? DEFAULT_MAP_PITCH_3D : 0),
+          bearing: typeof parsed.bearing === "number" ? parsed.bearing : 0,
+          dimension: (parsed.dimension === "2d" || parsed.dimension === "3d") ? parsed.dimension : inMemoryDimension,
         };
       }
     }
@@ -84,6 +103,29 @@ export function setStoredMapMode(mode: MapMode): void {
   }
 }
 
+export function getStoredMapDimension(): MapDimension {
+  if (typeof window !== "undefined") {
+    try {
+      const saved = localStorage.getItem(MAP_DIMENSION_KEY);
+      if (saved === "2d" || saved === "3d") {
+        inMemoryDimension = saved;
+        return saved;
+      }
+    } catch {}
+  }
+  return inMemoryDimension;
+}
+
+export function setStoredMapDimension(dim: MapDimension): void {
+  inMemoryDimension = dim;
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(MAP_DIMENSION_KEY, dim);
+      window.dispatchEvent(new CustomEvent(MAP_DIMENSION_EVENT, { detail: dim }));
+    } catch {}
+  }
+}
+
 export function isWithinAngrenBounds(center: [number, number]): boolean {
   if (!Array.isArray(center) || center.length < 2) return false;
   const [lat, lng] = center;
@@ -107,6 +149,9 @@ export function getMapCamera(): MapCameraState {
             inMemoryCamera = {
               center: normalized,
               zoom: parsed.zoom,
+              pitch: typeof parsed.pitch === "number" ? parsed.pitch : (inMemoryDimension === "3d" ? DEFAULT_MAP_PITCH_3D : 0),
+              bearing: typeof parsed.bearing === "number" ? parsed.bearing : 0,
+              dimension: (parsed.dimension === "2d" || parsed.dimension === "3d") ? parsed.dimension : inMemoryDimension,
             };
             return inMemoryCamera;
           }
@@ -117,8 +162,21 @@ export function getMapCamera(): MapCameraState {
   return inMemoryCamera;
 }
 
-export function saveMapCamera(center: [number, number], zoom: number): void {
-  inMemoryCamera = { center, zoom };
+export function saveMapCamera(
+  center: [number, number],
+  zoom: number,
+  pitch?: number,
+  bearing?: number,
+  dimension?: MapDimension
+): void {
+  const normCenter = normalizeCameraCenter(center);
+  inMemoryCamera = {
+    center: normCenter,
+    zoom,
+    pitch: typeof pitch === "number" ? pitch : inMemoryCamera.pitch,
+    bearing: typeof bearing === "number" ? bearing : inMemoryCamera.bearing,
+    dimension: dimension || inMemoryCamera.dimension,
+  };
   if (typeof window !== "undefined") {
     try {
       sessionStorage.setItem(MAP_CAMERA_KEY, JSON.stringify(inMemoryCamera));

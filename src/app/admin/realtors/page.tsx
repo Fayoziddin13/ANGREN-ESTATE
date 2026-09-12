@@ -218,7 +218,7 @@ export default function AdminRealtorsPage() {
       name: formData.name.trim(),
       phone: formData.phone.trim(),
       telegram: formData.telegram.trim(),
-      instagram_url: formData.instagram_url.trim() || undefined,
+      instagram_url: formData.instagram_url.trim() ? formData.instagram_url.trim() : null,
       experience_years: Number(formData.experience_years) || 1,
       specialization_uz: formData.specialization_uz.trim() || "Ko‘chmas mulk mutaxassisi",
       specialization_ru: formData.specialization_ru.trim() || "Специалист по недвижимости",
@@ -534,7 +534,7 @@ export default function AdminRealtorsPage() {
                       <div className="flex items-center gap-1.5">
                         <Instagram className="h-3.5 w-3.5 text-pink-600 shrink-0" />
                         <a
-                          href={realtor.instagram_url || realtor.instagram}
+                          href={(realtor.instagram_url || realtor.instagram) || undefined}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="truncate text-pink-600 font-semibold hover:underline"
