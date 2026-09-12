@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     // Type filter
     if (type && type !== "all") {
       if (type === "property_listing_request") {
-        query = query.or("type.eq.property_listing_request,metadata->>lead_type.eq.property_listing_request");
+        query = query.or("type.eq.property_listing_request,metadata->>lead_type.eq.property_listing_request,metadata->>request_type.eq.property_listing_request");
       } else {
         query = query.eq("type", type);
       }
@@ -131,6 +131,14 @@ export async function GET(request: NextRequest) {
       telegram: 0,
       inquiry: 0,
       listing_request: 0,
+      listing_stats: {
+        total: 0,
+        new: 0,
+        in_progress: 0,
+        contacted: 0,
+        completed: 0,
+        cancelled: 0,
+      } as Record<string, number>,
     };
 
     try {
@@ -147,9 +155,17 @@ export async function GET(request: NextRequest) {
           else if (item.status === "completed" || item.status === "closed") stats.completed++;
           else if (item.status === "cancelled") stats.cancelled++;
 
-          const isListing = item.type === "property_listing_request" || (item.metadata as any)?.lead_type === "property_listing_request";
+          const isListing =
+            item.type === "property_listing_request" ||
+            (item.metadata as any)?.lead_type === "property_listing_request" ||
+            (item.metadata as any)?.request_type === "property_listing_request";
           if (isListing) {
             stats.listing_request++;
+            stats.listing_stats.total++;
+            const s = item.status === "closed" ? "completed" : item.status;
+            if (s && stats.listing_stats[s] !== undefined) {
+              stats.listing_stats[s]++;
+            }
           } else if (item.type === "inquiry") {
             stats.inquiry++;
           } else if (item.type === "phone") {

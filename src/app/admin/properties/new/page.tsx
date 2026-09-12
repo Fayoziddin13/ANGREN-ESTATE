@@ -66,6 +66,40 @@ export default function AddPropertyPage() {
       if (s >= 1 && s <= 6) {
         setActiveStep(s);
       }
+      const dt = urlParams.get("deal_type");
+      if (dt === "sale" || dt === "rent") {
+        setTransactionType(dt);
+      }
+      const pt = urlParams.get("property_type");
+      if (pt) {
+        const validTypes: PropertyType[] = ["apartment", "house_yard", "commercial", "land", "new_build", "other"];
+        if (validTypes.includes(pt as PropertyType)) {
+          setPropertyType(pt as PropertyType);
+        } else if (pt === "kvartira") {
+          setPropertyType("apartment");
+        } else if (pt === "uy_hovli" || pt === "hovli" || pt === "dala_hovli" || pt === "house") {
+          setPropertyType("house_yard");
+        } else if (pt === "tijorat") {
+          setPropertyType("commercial");
+        } else if (pt === "yer_uchastkasi") {
+          setPropertyType("land");
+        }
+      }
+      const addr = urlParams.get("address") || urlParams.get("location");
+      if (addr) {
+        setAddressUz(addr);
+        setAddressRu(addr);
+      }
+      const title = urlParams.get("title");
+      if (title) {
+        setTitleUz(title);
+        setTitleRu(title);
+      }
+      const desc = urlParams.get("description") || urlParams.get("desc");
+      if (desc) {
+        setDescUz(desc);
+        setDescRu(desc);
+      }
     }
   }, []);
 

@@ -27,6 +27,8 @@ import {
   MapPin,
   Tag,
   Home,
+  ClipboardList,
+  ArrowRight,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useLeads } from "@/lib/leadStore";
@@ -338,6 +340,32 @@ export default function AdminLeadsPage() {
             {locale === "uz" ? "Tarix saqlangan" : "Сохранено в архиве"}
           </div>
         </div>
+      </div>
+
+      {/* Banner for Arizalar */}
+      <div className="bg-emerald-50/70 rounded-2xl p-4 border border-emerald-200/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-xs">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#16543C] text-white shrink-0">
+            <ClipboardList className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="text-xs font-bold text-[#16543C]">
+              {locale === "uz" ? "E'lon berish arizalari (Arizalar bo‘limi)" : "Заявки на размещение объявлений"}
+            </div>
+            <div className="text-[11px] text-slate-600">
+              {locale === "uz"
+                ? "Foydalanuvchilar tomonidan yuborilgan barcha ko‘chmas mulk arizalari alohida boshqaruv panelida"
+                : "Все заявки пользователей на публикацию объектов в отдельном разделе"}
+            </div>
+          </div>
+        </div>
+        <Link
+          href="/admin/arizalar"
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#16543C] hover:bg-[#124230] text-white text-xs font-bold transition-all shadow-xs shrink-0"
+        >
+          <span>{locale === "uz" ? "Arizalar bo‘limiga o‘tish" : "Перейти к заявкам"}</span>
+          <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
       </div>
 
       {/* Filter and Search Bar */}

@@ -14,6 +14,14 @@ export interface LeadStats {
   telegram: number;
   inquiry?: number;
   listing_request?: number;
+  listing_stats?: {
+    total: number;
+    new: number;
+    in_progress: number;
+    contacted: number;
+    completed: number;
+    cancelled: number;
+  };
 }
 
 export interface LeadFilters {

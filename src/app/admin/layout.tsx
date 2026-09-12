@@ -12,6 +12,7 @@ import {
   UserCheck,
   Users,
   Inbox,
+  ClipboardList,
   FileEdit,
   Compass,
   Settings,
@@ -65,6 +66,12 @@ export default function AdminLayout({
       label: locale === "uz" ? "Obyekt qo‘shish" : "Добавить объект",
       icon: PlusCircle,
       active: pathname === "/admin/properties/new",
+    },
+    {
+      href: "/admin/arizalar",
+      label: locale === "uz" ? "Arizalar" : "Заявки",
+      icon: ClipboardList,
+      active: pathname.startsWith("/admin/arizalar"),
     },
     {
       href: "/admin/realtors",
