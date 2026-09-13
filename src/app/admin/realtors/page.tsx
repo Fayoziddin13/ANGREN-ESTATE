@@ -92,6 +92,10 @@ export default function AdminRealtorsPage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoUploadError, setPhotoUploadError] = useState<string | null>(null);
+  // Permanent Delete state
+  const [permanentDeleteRealtor, setPermanentDeleteRealtor] = useState<Realtor | null>(null);
+  const [permanentDeleteConfirmText, setPermanentDeleteConfirmText] = useState("");
+  const [isPermanentDeleting, setIsPermanentDeleting] = useState(false);
 
   // Assigned Properties Modal state
   const [propertiesModalRealtor, setPropertiesModalRealtor] = useState<Realtor | null>(null);
@@ -687,6 +691,18 @@ export default function AdminRealtorsPage() {
                     >
                       <Edit2 className="h-3.5 w-3.5" />
                       <span>{locale === "uz" ? "Tahrirlash" : "Редактировать"}</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setPermanentDeleteConfirmText("");
+                        setPermanentDeleteRealtor(realtor);
+                      }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors"
+                      title={locale === "uz" ? "To'liq o'chirish (qaytarib bo'lmaydi)" : "Удалить навсегда (необратимо)"}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      <span>{locale === "uz" ? "O'chirish" : "Удалить"}</span>
                     </button>
                   </div>
                 </div>
@@ -1366,6 +1382,111 @@ export default function AdminRealtorsPage() {
                   {isDeactivating
                     ? locale === "uz" ? "Saqlanmoqda..." : "Сохранение..."
                     : locale === "uz" ? "Ha, nofaol qilish" : "Да, деактивировать"}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Permanent Delete Realtor Confirmation Modal */}
+      {permanentDeleteRealtor && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3">
+              <div className="h-11 w-11 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center shrink-0">
+                <Trash2 className="h-5 w-5 text-rose-600" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-rose-900 text-base">
+                  {locale === "uz" ? "To'liq o'chirish — qaytarib bo'lmaydi!" : "Удалить навсегда — необратимо!"}
+                </h3>
+                <p className="text-[11px] text-slate-500 font-bold">
+                  {permanentDeleteRealtor.name}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-rose-50/60 border border-rose-200 rounded-2xl p-3.5 space-y-1.5">
+              <p className="text-xs font-black text-rose-900">
+                {locale === "uz" ? "⚠️ Bu amalni bekor qilib bo'lmaydi!" : "⚠️ Это действие необратимо!"}
+              </p>
+              <ul className="text-[11px] text-rose-800 space-y-1 font-medium">
+                <li>✗ {locale === "uz" ? "Rieltor bazadan butunlay o'chiriladi" : "Риелтор будет полностью удалён из базы"}</li>
+                <li>✗ {locale === "uz" ? "Unga biriktirilgan arizalardagi ma'lumot NULL bo'ladi" : "В связанных заявках realtor_id станет NULL"}</li>
+                <li>✗ {locale === "uz" ? "Bu amalni bekor qilish MUMKIN EMAS" : "Отмена действия НЕВОЗМОЖНА"}</li>
+              </ul>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">
+                {locale === "uz"
+                  ? "Tasdiqlash uchun «O'CHIRAMAN» yozing:"
+                  : "Для подтверждения напишите «УДАЛИТЬ»:"}
+              </label>
+              <input
+                type="text"
+                value={permanentDeleteConfirmText}
+                onChange={(e) => setPermanentDeleteConfirmText(e.target.value)}
+                placeholder={locale === "uz" ? "O'CHIRAMAN" : "УДАЛИТЬ"}
+                className="w-full px-3 py-2.5 rounded-xl border border-rose-200 bg-rose-50/30 text-xs font-bold text-rose-900 placeholder:text-rose-300 focus:outline-none focus:border-rose-500 transition-all"
+                autoComplete="off"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                disabled={isPermanentDeleting}
+                onClick={() => {
+                  setPermanentDeleteRealtor(null);
+                  setPermanentDeleteConfirmText("");
+                }}
+                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition-colors"
+              >
+                {locale === "uz" ? "Bekor qilish" : "Отмена"}
+              </button>
+              <button
+                type="button"
+                disabled={
+                  isPermanentDeleting ||
+                  (locale === "uz"
+                    ? permanentDeleteConfirmText.trim() !== "O'CHIRAMAN"
+                    : permanentDeleteConfirmText.trim().toUpperCase() !== "УДАЛИТЬ")
+                }
+                onClick={async () => {
+                  if (!permanentDeleteRealtor) return;
+                  setIsPermanentDeleting(true);
+                  try {
+                    const res = await fetch(`/api/admin/realtors/${permanentDeleteRealtor.id}`, {
+                      method: "DELETE",
+                    });
+                    const json = await res.json();
+                    if (res.ok && json.success) {
+                      showToast(
+                        locale === "uz"
+                          ? `«${permanentDeleteRealtor.name}» to'liq o'chirildi`
+                          : `«${permanentDeleteRealtor.name}» удалён навсегда`
+                      );
+                      setPermanentDeleteRealtor(null);
+                      setPermanentDeleteConfirmText("");
+                      refreshRealtors();
+                    } else {
+                      showToast(json.error || (locale === "uz" ? "O'chirishda xatolik" : "Ошибка удаления"));
+                    }
+                  } catch {
+                    showToast(locale === "uz" ? "Tarmoq xatoligi" : "Ошибка сети");
+                  } finally {
+                    setIsPermanentDeleting(false);
+                  }
+                }}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:bg-rose-300 disabled:cursor-not-allowed text-white font-bold text-xs transition-colors flex items-center gap-1.5 shadow-sm"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                <span>
+                  {isPermanentDeleting
+                    ? locale === "uz" ? "O'chirilmoqda..." : "Удаление..."
+                    : locale === "uz" ? "To'liq o'chirish" : "Удалить навсегда"}
                 </span>
               </button>
             </div>

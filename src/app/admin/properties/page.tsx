@@ -23,6 +23,7 @@ import {
   Check,
   RotateCcw,
   AlertTriangle,
+  Trash2,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useProperties } from "@/lib/propertyStore";
@@ -35,6 +36,7 @@ export default function AdminPropertiesPage() {
     isLoaded,
     duplicateProperty,
     updatePropertyStatus,
+    deleteProperty,
   } = useProperties();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -47,6 +49,10 @@ export default function AdminPropertiesPage() {
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
   const [archiveConfirmProperty, setArchiveConfirmProperty] = useState<Property | null>(null);
   const [isArchiving, setIsArchiving] = useState(false);
+  // Permanent Delete state
+  const [permanentDeleteProperty, setPermanentDeleteProperty] = useState<Property | null>(null);
+  const [permanentDeleteConfirmText, setPermanentDeleteConfirmText] = useState("");
+  const [isPermanentDeleting, setIsPermanentDeleting] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -415,12 +421,23 @@ export default function AdminPropertiesPage() {
                         ) : (
                           <button
                             onClick={() => setArchiveConfirmProperty(prop)}
-                            title={locale === "uz" ? "Arxivga o‘tkazish (Olib tashlash)" : "В архив (Удалить)"}
+                            title={locale === "uz" ? "Arxivga o'tkazish (Olib tashlash)" : "В архив (Удалить)"}
                             className="p-1.5 rounded-lg text-slate-400 hover:text-amber-700 hover:bg-amber-50 transition-colors"
                           >
                             <Archive className="h-4 w-4" />
                           </button>
                         )}
+                        <button
+                          onClick={() => {
+                            setActionMenuOpenId(null);
+                            setPermanentDeleteConfirmText("");
+                            setPermanentDeleteProperty(prop);
+                          }}
+                          title={locale === "uz" ? "To'liq o'chirish (qaytarib bo'lmaydi)" : "Удалить навсегда (необратимо)"}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-700 hover:bg-rose-50 transition-colors"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                         <button
                           onClick={() =>
                             setActionMenuOpenId(actionMenuOpenId === prop.id ? null : prop.id)
@@ -575,7 +592,7 @@ export default function AdminPropertiesPage() {
               </div>
               <div>
                 <h3 className="font-extrabold text-slate-900 text-base">
-                  {locale === "uz" ? "Obyektni arxivga o‘tkazish" : "Архивировать объект"}
+                  {locale === "uz" ? "Obyektni arxivga o'tkazish" : "Архивировать объект"}
                 </h3>
                 <p className="text-[11px] text-slate-500 font-bold">
                   ID: {archiveConfirmProperty.id}
@@ -589,7 +606,7 @@ export default function AdminPropertiesPage() {
               </p>
               <p className="text-[11px] text-amber-800/90 leading-relaxed font-medium">
                 {locale === "uz"
-                  ? "Ushbu obyekt arxivlanadi va ommaviy sayt (xarita, katalog, qidiruv)dan darhol yashiriladi. Barcha parametrlar, fotosuratlar va statistika bazada saqlanadi. Istalgan vaqtda uni «Arxiv» bo‘limidan qayta nashr qilishingiz mumkin."
+                  ? "Ushbu obyekt arxivlanadi va ommaviy sayt (xarita, katalog, qidiruv)dan darhol yashiriladi. Barcha parametrlar, fotosuratlar va statistika bazada saqlanadi. Istalgan vaqtda uni «Arxiv» bo'limidan qayta nashr qilishingiz mumkin."
                   : "Объект будет перемещен в архив и скрыт из публичного доступа (карты, каталога, поиска). Все данные, фотографии и статистика сохранятся в базе. Вы сможете в любой момент восстановить его из раздела «В архиве»."}
               </p>
             </div>
@@ -622,6 +639,105 @@ export default function AdminPropertiesPage() {
                   {isArchiving
                     ? locale === "uz" ? "Arxivlanmoqda..." : "Архивация..."
                     : locale === "uz" ? "Ha, arxivlash" : "Да, в архив"}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Permanent Delete Confirmation Modal */}
+      {permanentDeleteProperty && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3">
+              <div className="h-11 w-11 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center shrink-0">
+                <Trash2 className="h-5 w-5 text-rose-600" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-rose-900 text-base">
+                  {locale === "uz" ? "To'liq o'chirish — qaytarib bo'lmaydi!" : "Удалить навсегда — необратимо!"}
+                </h3>
+                <p className="text-[11px] text-slate-500 font-bold line-clamp-1">
+                  {locale === "uz" ? permanentDeleteProperty.title_uz : permanentDeleteProperty.title_ru}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-rose-50/60 border border-rose-200 rounded-2xl p-3.5 space-y-1.5">
+              <p className="text-xs font-black text-rose-900">
+                {locale === "uz" ? "⚠️ Bu amalni bekor qilib bo'lmaydi!" : "⚠️ Это действие необратимо!"}
+              </p>
+              <ul className="text-[11px] text-rose-800 space-y-1 font-medium">
+                <li>✗ {locale === "uz" ? "Barcha ma'lumotlar bazadan o'chiriladi" : "Все данные будут удалены из базы"}</li>
+                <li>✗ {locale === "uz" ? "Rasmlar Storage'dan ham o'chiriladi" : "Фотографии будут удалены из Storage"}</li>
+                <li>✗ {locale === "uz" ? "Bu amalni bekor qilish MUMKIN EMAS" : "Отмена действия НЕВОЗМОЖНА"}</li>
+              </ul>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">
+                {locale === "uz"
+                  ? "Tasdiqlash uchun «O'CHIRAMAN» yozing:"
+                  : "Для подтверждения напишите «УДАЛИТЬ»:"}
+              </label>
+              <input
+                type="text"
+                value={permanentDeleteConfirmText}
+                onChange={(e) => setPermanentDeleteConfirmText(e.target.value)}
+                placeholder={locale === "uz" ? "O'CHIRAMAN" : "УДАЛИТЬ"}
+                className="w-full px-3 py-2.5 rounded-xl border border-rose-200 bg-rose-50/30 text-xs font-bold text-rose-900 placeholder:text-rose-300 focus:outline-none focus:border-rose-500 transition-all"
+                autoComplete="off"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                disabled={isPermanentDeleting}
+                onClick={() => {
+                  setPermanentDeleteProperty(null);
+                  setPermanentDeleteConfirmText("");
+                }}
+                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition-colors"
+              >
+                {locale === "uz" ? "Bekor qilish" : "Отмена"}
+              </button>
+              <button
+                type="button"
+                disabled={
+                  isPermanentDeleting ||
+                  (locale === "uz"
+                    ? permanentDeleteConfirmText.trim() !== "O'CHIRAMAN"
+                    : permanentDeleteConfirmText.trim().toUpperCase() !== "УДАЛИТЬ")
+                }
+                onClick={async () => {
+                  if (!permanentDeleteProperty) return;
+                  setIsPermanentDeleting(true);
+                  try {
+                    const ok = await deleteProperty(permanentDeleteProperty.id);
+                    if (ok) {
+                      showToast(
+                        locale === "uz"
+                          ? `«${permanentDeleteProperty.title_uz}» to'liq o'chirildi`
+                          : `«${permanentDeleteProperty.title_ru}» удалён навсегда`
+                      );
+                      setPermanentDeleteProperty(null);
+                      setPermanentDeleteConfirmText("");
+                    } else {
+                      showToast(locale === "uz" ? "O'chirishda xatolik yuz berdi" : "Ошибка при удалении");
+                    }
+                  } finally {
+                    setIsPermanentDeleting(false);
+                  }
+                }}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:bg-rose-300 disabled:cursor-not-allowed text-white font-bold text-xs transition-colors flex items-center gap-1.5 shadow-sm"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                <span>
+                  {isPermanentDeleting
+                    ? locale === "uz" ? "O'chirilmoqda..." : "Удаление..."
+                    : locale === "uz" ? "To'liq o'chirish" : "Удалить навсегда"}
                 </span>
               </button>
             </div>

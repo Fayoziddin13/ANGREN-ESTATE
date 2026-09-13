@@ -20,7 +20,6 @@ async function verifyAuth(request: NextRequest) {
 
   return null;
 }
-
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -106,9 +105,9 @@ export async function PATCH(
 }
 
 /**
- * Emergency developer cleanup route ONLY.
- * Strictly NOT exposed in the Admin UI.
- * Mandates elevated authorization to prevent accidental deletion of business audit history.
+ * Admin-only permanent delete for a lead/ariza.
+ * Requires active admin session (angren_admin_token).
+ * Use for removing test data or truly invalid records.
  */
 export async function DELETE(
   request: NextRequest,
@@ -123,20 +122,14 @@ export async function DELETE(
       );
     }
 
-    // Emergency maintenance check: requires explicit header confirmation
-    const emergencyHeader = request.headers.get("x-emergency-purge-confirm");
-    if (emergencyHeader !== "true") {
+    const { id } = params;
+    if (!id) {
       return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Forbidden: Lead deletion is disabled in the Admin UI to preserve commercial audit history. Use status 'cancelled' instead.",
-        },
-        { status: 403 }
+        { success: false, error: "Lead ID is required" },
+        { status: 400 }
       );
     }
 
-    const { id } = params;
     const { error } = await supabaseAdmin.from("leads").delete().eq("id", id);
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -144,7 +137,7 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: "Lead purged in emergency maintenance mode",
+      message: "Lead permanently deleted",
     });
   } catch (error: any) {
     return NextResponse.json(

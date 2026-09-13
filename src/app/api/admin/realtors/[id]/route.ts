@@ -5,6 +5,24 @@ import { saveRealtorMeta, getRealtorsMeta } from "@/lib/realtorMetaStore";
 
 export const dynamic = "force-dynamic";
 
+function getRealtorStoragePaths(urls: unknown[]): string[] {
+  const paths = new Set<string>();
+
+  for (const url of urls) {
+    if (typeof url !== "string") continue;
+    const marker = "/property-images/";
+    const index = url.indexOf(marker);
+    if (index === -1) continue;
+
+    const path = decodeURIComponent(url.slice(index + marker.length).split("?")[0]);
+    // Realtor uploads are deliberately isolated in this folder. Do not delete
+    // an arbitrary property image just because its URL was placed on a realtor.
+    if (path.startsWith("realtors/")) paths.add(path);
+  }
+
+  return [...paths];
+}
+
 async function verifyAuth(request: NextRequest) {
   const session = await getAdminSessionServer();
   if (session) return session;
@@ -179,18 +197,122 @@ export async function PATCH(
 }
 
 /**
- * STRICTLY DISALLOWED: Realtor records are preserved business history and cannot be deleted.
- * Administrators must use `is_active: false` (deactivation) instead.
+ * Admin-only permanent delete for a realtor.
+ * Deletes realtor photo from Supabase Storage (if stored there), then hard-deletes the DB record.
+ * Requires active admin session (angren_admin_token).
+ * Note: leads.realtor_id FK is ON DELETE SET NULL — linked leads are preserved with null realtor.
  */
-export async function DELETE() {
-  return NextResponse.json(
-    {
-      success: false,
-      error: "Method Not Allowed: Realtor records are preserved business history and cannot be deleted. Use deactivation (is_active: false) instead.",
-    },
-    {
-      status: 405,
-      headers: { Allow: "GET, PATCH" },
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await verifyAuth(request);
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized: Admin session required" },
+        { status: 401 }
+      );
     }
-  );
+
+    const { id } = params;
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: "Realtor ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // 1. Fetch realtor record to get photo URL before deletion
+    const { data: realtorRow, error: fetchError } = await supabaseAdmin
+      .from("realtors")
+      .select("id, name, avatar_url, photo_url")
+      .eq("id", id)
+      .single();
+
+    if (fetchError || !realtorRow) {
+      return NextResponse.json(
+        { success: false, error: "Realtor not found" },
+        { status: 404 }
+      );
+    }
+
+    // 2. Verify that the realtor's uploaded image is not referenced elsewhere.
+    // Realtor uploads use the property-images bucket under realtors/<id>/.
+    const photoUrls = [realtorRow.avatar_url, realtorRow.photo_url].filter(Boolean) as string[];
+    const [otherRealtorsResult, propertiesResult] = await Promise.all([
+      supabaseAdmin
+        .from("realtors")
+        .select("id, avatar_url, photo_url")
+        .neq("id", id),
+      supabaseAdmin
+        .from("properties")
+        .select("id, photos, images, main_image"),
+    ]);
+
+    if (otherRealtorsResult.error || propertiesResult.error) {
+      const error = otherRealtorsResult.error || propertiesResult.error;
+      console.error(`[Admin DELETE Realtor] Media ownership check failed for ${id}:`, error?.message);
+      return NextResponse.json(
+        { success: false, error: "Could not verify realtor photo ownership. Nothing was deleted." },
+        { status: 500 }
+      );
+    }
+
+    const sharedPaths = new Set([
+      ...(otherRealtorsResult.data || []).flatMap((realtor) =>
+        getRealtorStoragePaths([realtor.avatar_url, realtor.photo_url])
+      ),
+      ...(propertiesResult.data || []).flatMap((property) =>
+        getRealtorStoragePaths([
+          ...(Array.isArray(property.photos) ? property.photos : []),
+          ...(Array.isArray(property.images) ? property.images : []),
+          ...(property.main_image ? [property.main_image] : []),
+        ])
+      ),
+    ]);
+    const storagePaths = getRealtorStoragePaths(photoUrls).filter((path) => !sharedPaths.has(path));
+
+    // 3. Delete the database record first. Linked leads and properties retain
+    // their history through ON DELETE SET NULL.
+    const { error: deleteError } = await supabaseAdmin
+      .from("realtors")
+      .delete()
+      .eq("id", id);
+
+    if (deleteError) {
+      console.error(`[Admin DELETE Realtor] DB delete error for ${id}:`, deleteError.message);
+      return NextResponse.json(
+        { success: false, error: deleteError.message },
+        { status: 500 }
+      );
+    }
+
+    // 4. Clean up only an unshared, locally uploaded realtor image.
+    let storageWarning: string | null = null;
+    if (storagePaths.length > 0) {
+      const { error: storageError } = await supabaseAdmin.storage
+        .from("property-images")
+        .remove(storagePaths);
+      if (storageError) {
+        storageWarning = storageError.message;
+        console.error(`[Admin DELETE Realtor] Storage cleanup error for ${id}:`, storageError.message);
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: storageWarning
+        ? `Realtor '${realtorRow.name}' was deleted, but the uploaded photo needs manual cleanup.`
+        : `Realtor '${realtorRow.name}' permanently deleted.`,
+      deletedPhoto: storagePaths.length > 0,
+      storageWarning,
+    });
+  } catch (error: any) {
+    console.error("[Admin DELETE Realtor] Uncaught error:", error);
+    return NextResponse.json(
+      { success: false, error: error?.message || "Internal server error" },
+      { status: 500 }
+    );
+  }
 }
