@@ -223,10 +223,11 @@ export async function DELETE(
       );
     }
 
-    // 1. Fetch realtor record to get photo URL before deletion
+    // 1. Fetch realtor record to get photo URL before deletion.
+    // Note: realtors table only has avatar_url (not photo_url — that column doesn't exist in the schema).
     const { data: realtorRow, error: fetchError } = await supabaseAdmin
       .from("realtors")
-      .select("id, name, avatar_url, photo_url")
+      .select("id, name, avatar_url")
       .eq("id", id)
       .single();
 
@@ -239,11 +240,11 @@ export async function DELETE(
 
     // 2. Verify that the realtor's uploaded image is not referenced elsewhere.
     // Realtor uploads use the property-images bucket under realtors/<id>/.
-    const photoUrls = [realtorRow.avatar_url, realtorRow.photo_url].filter(Boolean) as string[];
+    const photoUrls = [realtorRow.avatar_url].filter(Boolean) as string[];
     const [otherRealtorsResult, propertiesResult] = await Promise.all([
       supabaseAdmin
         .from("realtors")
-        .select("id, avatar_url, photo_url")
+        .select("id, avatar_url")
         .neq("id", id),
       supabaseAdmin
         .from("properties")
@@ -261,7 +262,7 @@ export async function DELETE(
 
     const sharedPaths = new Set([
       ...(otherRealtorsResult.data || []).flatMap((realtor) =>
-        getRealtorStoragePaths([realtor.avatar_url, realtor.photo_url])
+        getRealtorStoragePaths([realtor.avatar_url])
       ),
       ...(propertiesResult.data || []).flatMap((property) =>
         getRealtorStoragePaths([
