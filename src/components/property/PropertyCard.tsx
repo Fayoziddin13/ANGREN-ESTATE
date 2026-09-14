@@ -86,11 +86,55 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
 
-        {/* Transaction Badge (Top Left) */}
-        <div className="absolute top-2.5 sm:top-3.5 left-2.5 sm:left-3.5 z-10">
+        {/* Transaction Badge and Marketing Badges (Top Left) */}
+        <div className="absolute top-2.5 sm:top-3.5 left-2.5 sm:left-3.5 z-10 flex flex-wrap gap-1 sm:gap-1.5 items-center max-w-[75%]">
           <span className="rounded-lg sm:rounded-xl bg-brand-primary px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold tracking-wide text-white shadow-sm">
             {badgeText}
           </span>
+          {property.badges &&
+            property.badges.slice(0, 2).map((b) => {
+              if (b === "top") {
+                return (
+                  <span
+                    key={b}
+                    className="rounded-lg sm:rounded-xl bg-amber-500 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-black tracking-wide text-white shadow-sm flex items-center gap-1"
+                  >
+                    ★ {locale === "uz" ? "TOP" : "ТОП"}
+                  </span>
+                );
+              }
+              if (b === "new") {
+                return (
+                  <span
+                    key={b}
+                    className="rounded-lg sm:rounded-xl bg-emerald-600 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold tracking-wide text-white shadow-sm"
+                  >
+                    {locale === "uz" ? "Yangi" : "Новинка"}
+                  </span>
+                );
+              }
+              if (b === "tez_sotiladi") {
+                return (
+                  <span
+                    key={b}
+                    className="rounded-lg sm:rounded-xl bg-rose-600 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold tracking-wide text-white shadow-sm flex items-center gap-0.5"
+                  >
+                    ⚡ {locale === "uz" ? "Tezkor" : "Срочно"}
+                  </span>
+                );
+              }
+              if (b === "yaxshi_taklif") {
+                return (
+                  <span
+                    key={b}
+                    className="rounded-lg sm:rounded-xl bg-blue-600 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold tracking-wide text-white shadow-sm flex items-center gap-0.5"
+                  >
+                    % {locale === "uz" ? "Super narx" : "Выгодно"}
+                  </span>
+                );
+              }
+              return null;
+            })}
         </div>
 
         {/* Top Right Action Buttons: Compare & Favorite */}
@@ -166,7 +210,12 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
             {/* Area */}
             <div className="flex items-center gap-1">
               <Maximize2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-400" />
-              <span>{property.area_sqm} {t.common.sqm}</span>
+              <span>
+                {property.area_sqm} {t.common.sqm}
+                {property.area_sotikh && property.area_sotikh > 0
+                  ? ` (${property.area_sotikh} ${locale === "uz" ? "sotix" : "сот."})`
+                  : ""}
+              </span>
             </div>
 
             {/* Rooms / Beds */}

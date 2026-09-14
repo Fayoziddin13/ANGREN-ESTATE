@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Header } from "@/components/layout/Header";
 import { FloatingSearchPanel } from "@/components/map/FloatingSearchPanel";
@@ -59,11 +59,20 @@ export default function BuyPage() {
 
   // Filters State
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>("");
   const [transactionType, setTransactionType] = useState<TransactionType | "all">("sale");
   const [selectedDistrict, setSelectedDistrict] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<PropertyType | "all">("all");
   const [priceFilter, setPriceFilter] = useState<string>("all");
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilterState>(defaultAdvancedFilters);
+
+  // Debounce search query by 300ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Selection & Modal States
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
@@ -137,9 +146,9 @@ export default function BuyPage() {
   // Filter properties in real-time
   const filteredProperties = useMemo(() => {
     return activePropertiesPool.filter((p) => {
-      // Search Query Filter (title, address, district, neighborhood, property type)
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
+      // Search Query Filter (title, address, district, description, neighborhood, property type)
+      if (debouncedSearchQuery.trim()) {
+        const q = debouncedSearchQuery.toLowerCase().trim();
         const matchesTitle =
           (p.title_uz || "").toLowerCase().includes(q) ||
           (p.title_ru || "").toLowerCase().includes(q);
@@ -149,9 +158,19 @@ export default function BuyPage() {
         const matchesDistrict =
           (p.district_name_uz || "").toLowerCase().includes(q) ||
           (p.district_name_ru || "").toLowerCase().includes(q);
+        const matchesDesc =
+          (p.description_uz || "").toLowerCase().includes(q) ||
+          (p.description_ru || "").toLowerCase().includes(q);
         const matchesNeighborhood = (p.neighborhood || "").toLowerCase().includes(q);
         const matchesType = (p.property_type || "").toLowerCase().includes(q);
-        if (!matchesTitle && !matchesAddress && !matchesDistrict && !matchesNeighborhood && !matchesType) {
+        if (
+          !matchesTitle &&
+          !matchesAddress &&
+          !matchesDistrict &&
+          !matchesDesc &&
+          !matchesNeighborhood &&
+          !matchesType
+        ) {
           return false;
         }
       }
@@ -168,7 +187,7 @@ export default function BuyPage() {
       if (selectedType !== "all" && p.property_type !== selectedType) {
         return false;
       }
-      // Price Filter
+      // Preset Price Filter
       if (priceFilter === "under300m" && p.price_uzs >= 300000000) {
         return false;
       }
@@ -180,6 +199,14 @@ export default function BuyPage() {
       }
       if (priceFilter === "over600m" && p.price_uzs <= 600000000) {
         return false;
+      }
+
+      // Custom Min / Max Price Filter (exact range in UZS)
+      if (typeof advancedFilters.minPrice === "number" && advancedFilters.minPrice > 0) {
+        if (p.price_uzs < advancedFilters.minPrice) return false;
+      }
+      if (typeof advancedFilters.maxPrice === "number" && advancedFilters.maxPrice > 0) {
+        if (p.price_uzs > advancedFilters.maxPrice) return false;
       }
 
       // Advanced Filters: Rooms
@@ -235,7 +262,7 @@ export default function BuyPage() {
 
       return true;
     });
-  }, [activePropertiesPool, searchQuery, transactionType, selectedDistrict, selectedType, priceFilter, advancedFilters]);
+  }, [activePropertiesPool, debouncedSearchQuery, transactionType, selectedDistrict, selectedType, priceFilter, advancedFilters]);
 
   // Count of currently active filters
   const activeFiltersCount = useMemo(() => {

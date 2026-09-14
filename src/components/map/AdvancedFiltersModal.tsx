@@ -5,10 +5,15 @@ import { X, RotateCcw, Check, SlidersHorizontal, Bed, Maximize2, Layers, Sparkle
 import { useLanguage } from "@/context/LanguageContext";
 import { RenovationType } from "@/lib/types";
 
+import { Coins } from "lucide-react";
+import { useCurrency } from "@/context/CurrencyContext";
+
 export interface AdvancedFilterState {
   rooms: number | "all";
   minArea: number | "";
   maxArea: number | "";
+  minPrice: number | "";
+  maxPrice: number | "";
   minFloor: number | "";
   maxFloor: number | "";
   renovation: RenovationType | "all";
@@ -33,6 +38,8 @@ export const defaultAdvancedFilters: AdvancedFilterState = {
   rooms: "all",
   minArea: "",
   maxArea: "",
+  minPrice: "",
+  maxPrice: "",
   minFloor: "",
   maxFloor: "",
   renovation: "all",
@@ -59,6 +66,7 @@ export function AdvancedFiltersModal({
   totalFilteredCount,
 }: AdvancedFiltersModalProps) {
   const { locale, t } = useLanguage();
+  const { currency, exchangeRate } = useCurrency();
 
   if (!isOpen) return null;
 
@@ -105,6 +113,72 @@ export function AdvancedFiltersModal({
 
         {/* Scrollable Filters Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs divide-y divide-gray-100">
+          {/* Narx oralig'i (Min / Max Custom Price) */}
+          <div className="space-y-2.5 pt-1">
+            <div className="flex items-center justify-between">
+              <label className="font-extrabold text-gray-900 flex items-center gap-1.5 text-xs">
+                <Coins className="h-3.5 w-3.5 text-brand-primary" />
+                <span>{locale === "uz" ? `Narx oralig‘i (${currency})` : `Диапазон цен (${currency})`}</span>
+              </label>
+              <span className="text-[10px] text-gray-400 font-medium">
+                {currency === "USD" ? "$ USD" : "so‘m UZS"}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="number"
+                placeholder={
+                  currency === "USD"
+                    ? locale === "uz" ? "Min $ (masalan: 20000)" : "От $ (напр.: 20000)"
+                    : locale === "uz" ? "Min so‘m (masalan: 250000000)" : "От сум (напр.: 250000000)"
+                }
+                value={
+                  filters.minPrice !== ""
+                    ? currency === "USD"
+                      ? Math.round(Number(filters.minPrice) / exchangeRate)
+                      : filters.minPrice
+                    : ""
+                }
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (!val) {
+                    onChangeFilters({ ...filters, minPrice: "" });
+                  } else {
+                    const num = Number(val);
+                    const inUzs = currency === "USD" ? Math.round(num * exchangeRate) : num;
+                    onChangeFilters({ ...filters, minPrice: inUzs });
+                  }
+                }}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/30 text-xs font-semibold"
+              />
+              <input
+                type="number"
+                placeholder={
+                  currency === "USD"
+                    ? locale === "uz" ? "Max $ (masalan: 60000)" : "До $ (напр.: 60000)"
+                    : locale === "uz" ? "Max so‘m (masalan: 700000000)" : "До сум (напр.: 700000000)"
+                }
+                value={
+                  filters.maxPrice !== ""
+                    ? currency === "USD"
+                      ? Math.round(Number(filters.maxPrice) / exchangeRate)
+                      : filters.maxPrice
+                    : ""
+                }
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (!val) {
+                    onChangeFilters({ ...filters, maxPrice: "" });
+                  } else {
+                    const num = Number(val);
+                    const inUzs = currency === "USD" ? Math.round(num * exchangeRate) : num;
+                    onChangeFilters({ ...filters, maxPrice: inUzs });
+                  }
+                }}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/30 text-xs font-semibold"
+              />
+            </div>
+          </div>
           {/* 1. Xonalar soni (Rooms) */}
           <div className="space-y-2.5 pt-1">
             <label className="font-extrabold text-gray-900 flex items-center gap-1.5 text-xs">

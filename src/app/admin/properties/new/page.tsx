@@ -30,12 +30,14 @@ import { useCurrency } from "@/context/CurrencyContext";
 import { useProperties } from "@/lib/propertyStore";
 import { useRealtors } from "@/lib/realtorStore";
 import { PropertyImageUploader } from "@/components/admin/PropertyImageUploader";
+import { HududPolygonDrawerModal } from "@/components/admin/HududPolygonDrawerModal";
 import dynamic from "next/dynamic";
 import {
   PropertyType,
   TransactionType,
   RenovationType,
   PropertyStatus,
+  HududItem,
 } from "@/lib/types";
 
 const AdminLocationPicker = dynamic(
@@ -124,6 +126,27 @@ export default function AddPropertyPage() {
   const [lng, setLng] = useState(70.1436);
   const [polygonCoords, setPolygonCoords] = useState<string>("");
   const [polygonPoints, setPolygonPoints] = useState<[number, number][]>([]);
+
+  // Badges state
+  const [isTop, setIsTop] = useState(false);
+  const [isFastSale, setIsFastSale] = useState(false);
+  const [isGoodDeal, setIsGoodDeal] = useState(false);
+
+  // Hudud state
+  const [hududId, setHududId] = useState("");
+  const [hududList, setHududList] = useState<HududItem[]>([]);
+  const [isHududModalOpen, setIsHududModalOpen] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/hududs")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success && Array.isArray(d.hududs)) {
+          setHududList(d.hududs);
+        }
+      })
+      .catch((e) => console.error("Error fetching hududs:", e));
+  }, []);
 
   // Specs
   const [areaSqm, setAreaSqm] = useState(65);
@@ -369,6 +392,7 @@ export default function AddPropertyPage() {
         address_ru: addressRu || "г. Ангрен, Центр",
         district_name_uz: district,
         district_name_ru: district,
+        hudud_id: hududId || undefined,
         transaction_type: transactionType,
         property_type: propertyType,
         status,
@@ -376,7 +400,18 @@ export default function AddPropertyPage() {
         price_usd: priceUsd,
         area_sqm: areaSqm,
         living_area_sqm: livingAreaSqm,
-        area_sotikh: areaSotikh > 0 ? areaSotikh : undefined,
+        area_sotikh:
+          (propertyType === "house_yard" || propertyType === "land") && areaSotikh > 0
+            ? Number(areaSotikh)
+            : undefined,
+        is_top: isTop,
+        is_fast_sale: isFastSale,
+        is_good_deal: isGoodDeal,
+        badges: [
+          ...(isTop ? ["top" as const] : []),
+          ...(isFastSale ? ["tez_sotiladi" as const] : []),
+          ...(isGoodDeal ? ["yaxshi_taklif" as const] : []),
+        ],
         rooms,
         floor,
         total_floors: totalFloors,
@@ -623,6 +658,102 @@ export default function AddPropertyPage() {
                 />
               </div>
             </div>
+
+            {/* Property Badges Section */}
+            <div className="pt-4 border-t border-slate-200 space-y-3">
+              <div>
+                <label className="text-xs font-bold text-slate-800">
+                  E’lon nishonlari (Marketing Badges)
+                </label>
+                <p className="text-[11px] text-slate-500">
+                  E’lon kartochkasi va katalogda alohida ajralib turuvchi maxsus nishonlar.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* TOP Badge */}
+                <label
+                  className={`flex items-center justify-between p-3.5 rounded-2xl border cursor-pointer transition-all ${
+                    isTop
+                      ? "border-amber-400 bg-amber-50 text-amber-900 ring-2 ring-amber-400"
+                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-amber-500 text-white text-xs font-black shadow-sm">
+                      ★
+                    </span>
+                    <div>
+                      <span className="text-xs font-extrabold block">TOP E’lon</span>
+                      <span className="text-[10px] text-slate-500">Katalogda yuqorida</span>
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={isTop}
+                    onChange={(e) => setIsTop(e.target.checked)}
+                    className="h-4 w-4 rounded text-amber-600 focus:ring-amber-500"
+                  />
+                </label>
+
+                {/* Tez sotiladi Badge */}
+                <label
+                  className={`flex items-center justify-between p-3.5 rounded-2xl border cursor-pointer transition-all ${
+                    isFastSale
+                      ? "border-rose-400 bg-rose-50 text-rose-900 ring-2 ring-rose-400"
+                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-rose-500 text-white text-xs font-black shadow-sm">
+                      ⚡
+                    </span>
+                    <div>
+                      <span className="text-xs font-extrabold block">Tez sotiladi</span>
+                      <span className="text-[10px] text-slate-500">Shoshilinch taklif</span>
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={isFastSale}
+                    onChange={(e) => setIsFastSale(e.target.checked)}
+                    className="h-4 w-4 rounded text-rose-600 focus:ring-rose-500"
+                  />
+                </label>
+
+                {/* Yaxshi taklif Badge */}
+                <label
+                  className={`flex items-center justify-between p-3.5 rounded-2xl border cursor-pointer transition-all ${
+                    isGoodDeal
+                      ? "border-blue-400 bg-blue-50 text-blue-900 ring-2 ring-blue-400"
+                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-blue-600 text-white text-xs font-black shadow-sm">
+                      %
+                    </span>
+                    <div>
+                      <span className="text-xs font-extrabold block">Yaxshi taklif</span>
+                      <span className="text-[10px] text-slate-500">Qulay narx</span>
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={isGoodDeal}
+                    onChange={(e) => setIsGoodDeal(e.target.checked)}
+                    className="h-4 w-4 rounded text-blue-600 focus:ring-blue-500"
+                  />
+                </label>
+              </div>
+
+              <div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-200/80 text-[11px] text-emerald-800 flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-emerald-600 shrink-0" />
+                <span>
+                  <strong>Yangi (Новинка)</strong> nishoni e’lon birinchi marta chop etilganda (published) 3 kun davomida avtomatik ko‘rsatiladi.
+                </span>
+              </div>
+            </div>
           </div>
         )}
 
@@ -689,20 +820,53 @@ export default function AddPropertyPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Tuman / Daha (Angren)</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700">Tuman / Hudud (Angren)</label>
+                  <button
+                    type="button"
+                    onClick={() => setIsHududModalOpen(true)}
+                    className="text-[11px] font-bold text-[#16543C] hover:underline flex items-center gap-1"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>Yangi hudud yaratish</span>
+                  </button>
+                </div>
                 <select
-                  value={district}
-                  onChange={(e) => setDistrict(e.target.value)}
+                  value={hududId || district}
+                  onChange={(e) => {
+                    const sel = e.target.value;
+                    const found = hududList.find((h) => h.id === sel || h.name_uz === sel);
+                    if (found) {
+                      setHududId(found.id);
+                      setDistrict(found.name_uz);
+                      if (found.latitude && found.longitude) {
+                        setLat(found.latitude);
+                        setLng(found.longitude);
+                      }
+                    } else {
+                      setDistrict(sel);
+                    }
+                  }}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold"
                 >
-                  <option value="Markaz">Markaz (Центр)</option>
-                  <option value="1/1 dahasi">1/1 dahasi</option>
-                  <option value="2/3 dahasi">2/3 dahasi</option>
-                  <option value="5/1 dahasi">5/1 dahasi</option>
-                  <option value="5/2 dahasi">5/2 dahasi</option>
-                  <option value="Dukent">Dukent</option>
-                  <option value="Yangiobod">Yangiobod</option>
-                  <option value="Geolog">Geolog</option>
+                  <option value="">-- Hududni tanlang --</option>
+                  {hududList.length > 0 ? (
+                    hududList.map((h) => (
+                      <option key={h.id} value={h.id}>
+                        {h.name_uz} ({h.name_ru})
+                      </option>
+                    ))
+                  ) : (
+                    <>
+                      <option value="Markaz">Markaz (Центр)</option>
+                      <option value="5-mavze">5-mavze (5-массив)</option>
+                      <option value="6-mavze">6-mavze (6-массив)</option>
+                      <option value="7-mavze">7-mavze (7-массив)</option>
+                      <option value="Dukent">Dukent</option>
+                      <option value="Yangiobod">Yangiobod</option>
+                      <option value="Geolog">Geolog</option>
+                    </>
+                  )}
                 </select>
               </div>
 
@@ -1229,6 +1393,20 @@ export default function AddPropertyPage() {
           )}
         </div>
       </div>
+
+      <HududPolygonDrawerModal
+        isOpen={isHududModalOpen}
+        onClose={() => setIsHududModalOpen(false)}
+        onHududCreated={(newH) => {
+          setHududList((prev) => [newH, ...prev]);
+          setHududId(newH.id);
+          setDistrict(newH.name_uz);
+          if (newH.latitude && newH.longitude) {
+            setLat(newH.latitude);
+            setLng(newH.longitude);
+          }
+        }}
+      />
     </div>
   );
 }

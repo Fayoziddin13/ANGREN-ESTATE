@@ -103,6 +103,25 @@ export interface Property {
   facade_m?: number;
   depth_m?: number;
   dimensions?: string;
+  hudud_id?: string;
+  is_top?: boolean;
+  is_fast_sale?: boolean;
+  is_good_deal?: boolean;
+  badges?: PropertyBadge[];
+}
+
+export type PropertyBadge = "new" | "top" | "tez_sotiladi" | "yaxshi_taklif";
+
+export interface HududItem {
+  id: string;
+  city_id?: string;
+  name_uz: string;
+  name_ru: string;
+  latitude: number;
+  longitude: number;
+  coordinates?: [number, number][];
+  display_order?: number;
+  created_at?: string;
 }
 
 export interface Favorite {
@@ -124,7 +143,8 @@ export type AnalyticsEventType =
   | "phone_click"
   | "telegram_click"
   | "property_share"
-  | "registration";
+  | "registration"
+  | "geo_visit";
 
 export interface AnalyticsEvent {
   id?: string;
@@ -159,6 +179,17 @@ export interface AnalyticsTrafficSourceStat {
   name: string;
   visits: number;
   percent: number;
+  color: string;
+}
+
+export interface AnalyticsGeoStat {
+  city: string;
+  city_ru: string;
+  region: string;
+  region_ru: string;
+  count: number;
+  percent: number;
+  is_angren: boolean;
   color: string;
 }
 
@@ -201,6 +232,9 @@ export interface AnalyticsDashboardPayload {
   kpis: AnalyticsKPISummary;
   devices: AnalyticsDeviceStat[];
   traffic_sources: AnalyticsTrafficSourceStat[];
+  geo_stats?: AnalyticsGeoStat[];
+  angren_share_percent?: number;
+  total_geo_events?: number;
   property_types_demand: AnalyticsDemandStat[];
   districts_data: AnalyticsDistrictStat[];
   outcomes: AnalyticsOutcomesStat;

@@ -142,6 +142,24 @@ export function mapRowToProperty(row: any): Property {
       created_at: row.created_at || new Date().toISOString(),
       updated_at: row.updated_at || new Date().toISOString(),
       published_at: row.published_at || undefined,
+      hudud_id: row.hudud_id || amens?.hudud_id || row.district || undefined,
+      is_top: Boolean(row.is_top ?? amens?.is_top ?? (row.id === "prop-1" || row.id === "prop-4")),
+      is_fast_sale: Boolean(row.is_fast_sale ?? amens?.is_fast_sale ?? (row.id === "prop-2")),
+      is_good_deal: Boolean(row.is_good_deal ?? amens?.is_good_deal ?? (row.id === "prop-5")),
+      badges: (() => {
+        const isTop = Boolean(row.is_top ?? amens?.is_top ?? (row.id === "prop-1" || row.id === "prop-4"));
+        const isFast = Boolean(row.is_fast_sale ?? amens?.is_fast_sale ?? (row.id === "prop-2"));
+        const isGood = Boolean(row.is_good_deal ?? amens?.is_good_deal ?? (row.id === "prop-5"));
+        const pubTime = row.published_at ? new Date(row.published_at).getTime() : new Date(row.created_at || 0).getTime();
+        const isNew = (row.status === "published") && (Date.now() - pubTime < 3 * 24 * 60 * 60 * 1000);
+        
+        const b: any[] = [];
+        if (isTop) b.push("top");
+        if (isNew) b.push("new");
+        if (isFast) b.push("tez_sotiladi");
+        if (isGood) b.push("yaxshi_taklif");
+        return b;
+      })(),
     };
 }
 
@@ -166,8 +184,7 @@ export function mapPropertyToDb(data: any): Record<string, any> {
     typeof val === "string" &&
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(val);
 
-  // Preserve owner_phone, facade_m, depth_m, dimensions inside amenities JSONB
-  // because properties table schema does not have these as separate columns
+  // Preserve owner_phone, facade_m, depth_m, dimensions, badges, is_top, etc. inside amenities JSONB
   const baseAmenities =
     typeof data.amenities === "object" && data.amenities !== null ? { ...data.amenities } : {};
   if (data.owner_phone) baseAmenities.owner_phone = data.owner_phone;
@@ -178,6 +195,11 @@ export function mapPropertyToDb(data: any): Record<string, any> {
   } else if (data.facade_m && data.depth_m) {
     baseAmenities.dimensions = `${data.facade_m} × ${data.depth_m} m`;
   }
+  if (data.is_top !== undefined) baseAmenities.is_top = Boolean(data.is_top);
+  if (data.is_fast_sale !== undefined) baseAmenities.is_fast_sale = Boolean(data.is_fast_sale);
+  if (data.is_good_deal !== undefined) baseAmenities.is_good_deal = Boolean(data.is_good_deal);
+  if (data.hudud_id) baseAmenities.hudud_id = data.hudud_id;
+  if (Array.isArray(data.badges)) baseAmenities.badges = data.badges;
 
   return {
     id: data.id,
@@ -203,8 +225,12 @@ export function mapPropertyToDb(data: any): Record<string, any> {
     area: data.area || data.area_sqm || 0,
     area_sqm: data.area_sqm || data.area || 0,
     living_area: data.living_area || data.living_area_sqm || null,
-    living_area_sqm: data.living_area_sqm || data.living_area || null,
-    area_sotikh: data.area_sotikh ? Number(data.area_sotikh) : null,
+    area_sotikh:
+      (data.property_type === "house_yard" || data.property_type === "land") &&
+      data.area_sotikh &&
+      Number(data.area_sotikh) > 0
+        ? Number(data.area_sotikh)
+        : null,
     rooms: data.rooms || 1,
     bathrooms: data.bathrooms || 1,
     floor: data.floor || data.floor_number || 1,

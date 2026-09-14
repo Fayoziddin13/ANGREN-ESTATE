@@ -56,17 +56,21 @@ export async function trackEvent(
     property_id?: string;
     user_id?: string;
     metadata?: Record<string, any>;
+    [key: string]: any;
   }
 ): Promise<void> {
   if (typeof window === "undefined") return;
 
+  const { property_id, user_id, metadata, ...rest } = payload || {};
+  const combinedMetadata = { ...(metadata || {}), ...rest };
+
   const eventBody = {
     event_type: eventType,
-    property_id: payload?.property_id,
-    user_id: payload?.user_id,
+    property_id,
+    user_id,
     device: getDeviceType(),
     traffic_source: getTrafficSource(),
-    metadata: payload?.metadata || {},
+    metadata: combinedMetadata,
   };
 
   try {

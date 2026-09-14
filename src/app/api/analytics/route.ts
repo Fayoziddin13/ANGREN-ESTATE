@@ -16,6 +16,7 @@ const VALID_EVENT_TYPES = new Set([
   "telegram_click",
   "property_share",
   "registration",
+  "geo_visit",
 ]);
 
 const VALID_DEVICES = new Set(["iPhone", "Android", "Desktop", "Tablet"]);

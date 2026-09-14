@@ -129,6 +129,7 @@ export function PropertyCatalogModal({
             { id: "new_build", label_uz: "Янги бинолар", label_ru: "Новостройки" },
             { id: "land", label_uz: "Ер майдонлари", label_ru: "Земельные участки" },
             { id: "commercial", label_uz: "Тижорат мулки", label_ru: "Коммерческая" },
+            { id: "other", label_uz: "Бошқа турлар", label_ru: "Другое" },
           ].map((cat) => {
             const isActive = selectedType === cat.id;
             return (
@@ -237,8 +238,8 @@ export function PropertyCatalogModal({
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                       />
 
-                      {/* Transaction & Type Badges */}
-                      <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5">
+                      {/* Transaction, Marketing & Type Badges */}
+                      <div className="absolute top-3 left-3 z-10 flex flex-wrap items-center gap-1.5 max-w-[75%]">
                         <span
                           className={`rounded-xl px-2.5 py-1 text-[10px] font-black uppercase text-white shadow-sm ${
                             isSale ? "bg-[#16543C]" : "bg-[#1D4ED8]"
@@ -248,6 +249,50 @@ export function PropertyCatalogModal({
                             ? locale === "uz" ? "Сотув" : "Продажа"
                             : locale === "uz" ? "Ижара" : "Аренда"}
                         </span>
+                        {property.badges &&
+                          property.badges.slice(0, 2).map((b) => {
+                            if (b === "top") {
+                              return (
+                                <span
+                                  key={b}
+                                  className="rounded-xl bg-amber-500 px-2 py-1 text-[10px] font-black text-white shadow-sm"
+                                >
+                                  ★ {locale === "uz" ? "TOP" : "ТОП"}
+                                </span>
+                              );
+                            }
+                            if (b === "new") {
+                              return (
+                                <span
+                                  key={b}
+                                  className="rounded-xl bg-emerald-600 px-2 py-1 text-[10px] font-bold text-white shadow-sm"
+                                >
+                                  {locale === "uz" ? "Янги" : "Новинка"}
+                                </span>
+                              );
+                            }
+                            if (b === "tez_sotiladi") {
+                              return (
+                                <span
+                                  key={b}
+                                  className="rounded-xl bg-rose-600 px-2 py-1 text-[10px] font-bold text-white shadow-sm"
+                                >
+                                  ⚡ {locale === "uz" ? "Тезкор" : "Срочно"}
+                                </span>
+                              );
+                            }
+                            if (b === "yaxshi_taklif") {
+                              return (
+                                <span
+                                  key={b}
+                                  className="rounded-xl bg-blue-600 px-2 py-1 text-[10px] font-bold text-white shadow-sm"
+                                >
+                                  % {locale === "uz" ? "Супер нарх" : "Выгодно"}
+                                </span>
+                              );
+                            }
+                            return null;
+                          })}
                         {isHouse && property.area_sotikh && (
                           <span className="rounded-xl bg-white/90 backdrop-blur-md px-2 py-1 text-[10px] font-extrabold text-slate-800 shadow-sm">
                             {property.area_sotikh} {locale === "uz" ? "сотих" : "соток"}

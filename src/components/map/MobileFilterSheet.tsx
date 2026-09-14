@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -15,8 +15,10 @@ import {
   Bookmark,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { useCurrency } from "@/context/CurrencyContext";
 import { useSavedSearches } from "@/lib/savedSearchStore";
-import { TransactionType, PropertyType } from "@/lib/types";
+import { TransactionType, PropertyType, HududItem } from "@/lib/types";
+import { DEFAULT_ANGREN_HUDUDS } from "@/lib/hududService";
 import {
   AdvancedFiltersModal,
   AdvancedFilterState,
@@ -63,9 +65,23 @@ export function MobileFilterSheet({
   onResetAdvanced,
 }: MobileFilterSheetProps) {
   const { locale, t } = useLanguage();
+  const { currency, exchangeRate } = useCurrency();
   const { saveSearch } = useSavedSearches();
   const [isAdvancedModalOpen, setIsAdvancedModalOpen] = useState(false);
   const [isSavingSearch, setIsSavingSearch] = useState(false);
+
+  const [hududList, setHududList] = useState<HududItem[]>(DEFAULT_ANGREN_HUDUDS);
+
+  useEffect(() => {
+    fetch("/api/hududs")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success && Array.isArray(d.hududs) && d.hududs.length > 0) {
+          setHududList(d.hududs);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSaveCurrentSearch = async () => {
     setIsSavingSearch(true);
@@ -109,12 +125,10 @@ export function MobileFilterSheet({
 
   const districts = [
     { key: "all", label: t.mapSection.allDistricts },
-    { key: "Markaz", label: "Markaz" },
-    { key: "5-mavze", label: "5-mavze" },
-    { key: "6-mavze", label: "6-mavze" },
-    { key: "7-mavze", label: "7-mavze" },
-    { key: "Dukent", label: "Dukent" },
-    { key: "Geolog", label: "Geolog" },
+    ...hududList.map((h) => ({
+      key: h.name_uz,
+      label: locale === "uz" ? h.name_uz : h.name_ru,
+    })),
   ];
 
   const propertyTypes: Array<{ key: PropertyType | "all"; label: string }> = [
@@ -124,6 +138,7 @@ export function MobileFilterSheet({
     { key: "new_build", label: t.searchBar.newBuild },
     { key: "commercial", label: t.searchBar.commercial },
     { key: "land", label: t.searchBar.land },
+    { key: "other", label: locale === "uz" ? "Boshqa" : "Другое" },
   ];
 
   const priceOptions = [
@@ -144,6 +159,18 @@ export function MobileFilterSheet({
   };
 
   const getPriceLabel = () => {
+    if (advancedFilters?.minPrice || advancedFilters?.maxPrice) {
+      const min = advancedFilters.minPrice
+        ? Math.round(Number(advancedFilters.minPrice) / (currency === "USD" ? exchangeRate : 1000000))
+        : "";
+      const max = advancedFilters.maxPrice
+        ? Math.round(Number(advancedFilters.maxPrice) / (currency === "USD" ? exchangeRate : 1000000))
+        : "";
+      const unit = currency === "USD" ? "$" : locale === "uz" ? "mln" : "млн";
+      if (min && max) return `${min} - ${max} ${unit}`;
+      if (min) return `> ${min} ${unit}`;
+      if (max) return `< ${max} ${unit}`;
+    }
     const found = priceOptions.find((po) => po.key === priceFilter);
     return found ? found.label : t.searchBar.priceAny;
   };
@@ -419,27 +446,73 @@ export function MobileFilterSheet({
                   </button>
 
                   {priceOpen && (
-                    <div className="mt-1.5 w-full rounded-2xl border border-slate-200 bg-white p-1.5 shadow-lg space-y-0.5 animate-in fade-in">
+                    <div className="mt-1.5 w-full rounded-2xl border border-slate-200 bg-white p-2 shadow-lg space-y-1.5 animate-in fade-in">
                       {priceOptions.map((po) => (
                         <button
                           key={po.key}
                           type="button"
                           onClick={() => {
                             onPriceFilterChange(po.key);
+                            onAdvancedFiltersChange({ ...advancedFilters, minPrice: "", maxPrice: "" });
                             setPriceOpen(false);
                           }}
                           className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold ${
-                            priceFilter === po.key
+                            priceFilter === po.key && !advancedFilters.minPrice && !advancedFilters.maxPrice
                               ? "bg-emerald-50 text-[#16543C] font-bold"
                               : "text-slate-700 hover:bg-slate-50"
                           }`}
                         >
                           <span>{po.label}</span>
-                          {priceFilter === po.key && (
+                          {priceFilter === po.key && !advancedFilters.minPrice && !advancedFilters.maxPrice && (
                             <Check className="h-4 w-4 text-[#16543C]" />
                           )}
                         </button>
                       ))}
+
+                      <div className="pt-2 mt-1 border-t border-slate-100 px-1 space-y-2">
+                        <div className="flex items-center justify-between text-[11px] font-bold text-slate-700">
+                          <span>{locale === "uz" ? "Aniq narx kiritish" : "Точная цена"}</span>
+                          <span className="text-[10px] text-slate-400 font-semibold">{currency === "USD" ? "$ USD" : "so‘m UZS"}</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            type="number"
+                            placeholder={currency === "USD" ? "Min $" : "Min so‘m"}
+                            value={
+                              advancedFilters.minPrice !== ""
+                                ? currency === "USD"
+                                  ? Math.round(Number(advancedFilters.minPrice) / exchangeRate)
+                                  : advancedFilters.minPrice
+                                : ""
+                            }
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const inUzs = val ? (currency === "USD" ? Math.round(Number(val) * exchangeRate) : Number(val)) : "";
+                              onPriceFilterChange("custom");
+                              onAdvancedFiltersChange({ ...advancedFilters, minPrice: inUzs });
+                            }}
+                            className="w-full px-2.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#16543C]"
+                          />
+                          <input
+                            type="number"
+                            placeholder={currency === "USD" ? "Max $" : "Max so‘m"}
+                            value={
+                              advancedFilters.maxPrice !== ""
+                                ? currency === "USD"
+                                  ? Math.round(Number(advancedFilters.maxPrice) / exchangeRate)
+                                  : advancedFilters.maxPrice
+                                : ""
+                            }
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const inUzs = val ? (currency === "USD" ? Math.round(Number(val) * exchangeRate) : Number(val)) : "";
+                              onPriceFilterChange("custom");
+                              onAdvancedFiltersChange({ ...advancedFilters, maxPrice: inUzs });
+                            }}
+                            className="w-full px-2.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#16543C]"
+                          />
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>

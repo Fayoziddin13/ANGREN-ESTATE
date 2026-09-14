@@ -174,6 +174,50 @@ export function PropertyDetailModal({
                   {locale === "uz" ? "Ijaraga berildi" : "Арендовано"}
                 </span>
               )}
+              {property.badges &&
+                property.badges.map((b) => {
+                  if (b === "top") {
+                    return (
+                      <span
+                        key={b}
+                        className="rounded-full bg-amber-500 px-3 py-1 text-xs font-black text-white shadow-xs flex items-center gap-1"
+                      >
+                        ★ {locale === "uz" ? "TOP E’lon" : "ТОП"}
+                      </span>
+                    );
+                  }
+                  if (b === "new") {
+                    return (
+                      <span
+                        key={b}
+                        className="rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white shadow-xs"
+                      >
+                        {locale === "uz" ? "Yangi" : "Новинка"}
+                      </span>
+                    );
+                  }
+                  if (b === "tez_sotiladi") {
+                    return (
+                      <span
+                        key={b}
+                        className="rounded-full bg-rose-600 px-3 py-1 text-xs font-bold text-white shadow-xs flex items-center gap-1"
+                      >
+                        ⚡ {locale === "uz" ? "Tez sotiladi" : "Быстрая продажа"}
+                      </span>
+                    );
+                  }
+                  if (b === "yaxshi_taklif") {
+                    return (
+                      <span
+                        key={b}
+                        className="rounded-full bg-blue-600 px-3 py-1 text-xs font-bold text-white shadow-xs flex items-center gap-1"
+                      >
+                        % {locale === "uz" ? "Yaxshi taklif" : "Выгодная сделка"}
+                      </span>
+                    );
+                  }
+                  return null;
+                })}
             </div>
 
             <div className="flex items-center gap-2">

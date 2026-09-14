@@ -26,6 +26,9 @@ import {
   Compass,
   Download,
   RefreshCw,
+  MapPin,
+  Globe,
+  Navigation,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useProperties } from "@/lib/propertyStore";
@@ -107,6 +110,14 @@ export default function AdminAnalyticsPage() {
     { name: "Google Qidiruv (SEO organik)", percent: 0, visits: 0, color: "bg-emerald-500" },
     { name: "To‘g‘ridan-to‘g‘ri (Direct / Bookmark)", percent: 0, visits: 0, color: "bg-amber-500" },
   ];
+
+  const geoStats = data?.geo_stats || [
+    { city: "Angren shahri", city_ru: "г. Ангрен", region: "Toshkent viloyati", region_ru: "Ташкентская область", count: 0, percent: 68, is_angren: true, color: "bg-emerald-500" },
+    { city: "Toshkent shahri", city_ru: "г. Ташкент", region: "Toshkent shahri", region_ru: "г. Ташкент", count: 0, percent: 22, is_angren: false, color: "bg-blue-500" },
+    { city: "Boshqa hududlar", city_ru: "Другие регионы", region: "O‘zbekiston", region_ru: "Узбекистан", count: 0, percent: 10, is_angren: false, color: "bg-purple-500" },
+  ];
+  const angrenShare = data?.angren_share_percent ?? 68;
+  const totalGeoEvents = data?.total_geo_events ?? 0;
 
   const propertyTypesDemand = data?.property_types_demand || [
     { type_uz: "Kvartiralar", type_ru: "Квартиры", percentage: 0, views: 0, growth: "—" },
@@ -307,7 +318,7 @@ export default function AdminAnalyticsPage() {
           }`}
         >
           <Compass className="w-4 h-4" />
-          {locale === "uz" ? "4. TRAFIK VA QURILMALAR" : "4. ТРАФИК И УСТРОЙСТВА"}
+          {locale === "uz" ? "4. TRAFIK VA GEOGRAFIYA" : "4. ТРАФИК И ГЕОГРАФИЯ"}
         </button>
       </div>
 
@@ -604,63 +615,153 @@ export default function AdminAnalyticsPage() {
         </div>
       )}
 
-      {/* TAB 4: TRAFFIC & DEVICES */}
+      {/* TAB 4: TRAFFIC & GEOGRAPHY */}
       {activeTab === "traffic" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Traffic Sources */}
-          <div className="bg-slate-900/80 backdrop-blur-md p-6 rounded-3xl border border-slate-700/80 shadow-md">
-            <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-              <Compass className="w-5 h-5 text-emerald-400" />
-              {locale === "uz" ? "Trafik manbalari taqsimoti" : "Источники трафика"}
-            </h3>
-            <div className="space-y-4">
-              {trafficSources.map((source) => (
-                <div key={source.name} className="space-y-1.5">
-                  <div className="flex items-center justify-between text-xs font-semibold">
-                    <span className="text-slate-200">{source.name}</span>
-                    <span className="text-white font-mono font-bold">
-                      {source.percent}% ({source.visits.toLocaleString()})
-                    </span>
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Traffic Sources */}
+            <div className="bg-slate-900/80 backdrop-blur-md p-6 rounded-3xl border border-slate-700/80 shadow-md">
+              <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
+                <Compass className="w-5 h-5 text-emerald-400" />
+                {locale === "uz" ? "Trafik manbalari taqsimoti" : "Источники трафика"}
+              </h3>
+              <div className="space-y-4">
+                {trafficSources.map((source) => (
+                  <div key={source.name} className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs font-semibold">
+                      <span className="text-slate-200">{source.name}</span>
+                      <span className="text-white font-mono font-bold">
+                        {source.percent}% ({source.visits.toLocaleString()})
+                      </span>
+                    </div>
+                    <div className="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden border border-slate-700/50">
+                      <div
+                        className={`h-full ${source.color} rounded-full transition-all duration-500`}
+                        style={{ width: `${source.percent}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden border border-slate-700/50">
+                ))}
+              </div>
+            </div>
+
+            {/* Devices */}
+            <div className="bg-slate-900/80 backdrop-blur-md p-6 rounded-3xl border border-slate-700/80 shadow-md">
+              <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
+                <Smartphone className="w-5 h-5 text-emerald-400" />
+                {locale === "uz" ? "Foydalanuvchi qurilmalari" : "Устройства пользователей"}
+              </h3>
+              <div className="space-y-4">
+                {devices.map((device) => {
+                  const isPhone = device.name.includes("iPhone") || device.name.includes("Android");
+                  const Icon = isPhone ? Smartphone : Monitor;
+                  return (
                     <div
-                      className={`h-full ${source.color} rounded-full transition-all duration-500`}
-                      style={{ width: `${source.percent}%` }}
+                      key={device.name}
+                      className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-700/80 flex items-center justify-between shadow-sm"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-200 border border-slate-700/60">
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-white">{device.name}</div>
+                          <div className="text-xs text-slate-300 font-medium">{device.count.toLocaleString()} tashrif</div>
+                        </div>
+                      </div>
+                      <div className="text-lg font-bold font-mono text-emerald-400">{device.percent}%</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* User Geolocation Analytics Section */}
+          <div className="bg-slate-900/80 backdrop-blur-md p-6 rounded-3xl border border-slate-700/80 shadow-md space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-700/80 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                  <MapPin className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    {locale === "uz" ? "Foydalanuvchilar Geografiyasi (Geo Analytics)" : "География аудитории (Geo Analytics)"}
+                  </h3>
+                  <p className="text-xs text-slate-300">
+                    {locale === "uz"
+                      ? "Saytga tashrif buyuruvchilarning hududiy taqsimoti"
+                      : "Территориальное распределение посетителей платформы"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  Angren: {angrenShare}%
+                </span>
+                {totalGeoEvents > 0 && (
+                  <span className="text-xs font-mono text-slate-400">
+                    ({totalGeoEvents} {locale === "uz" ? "geo voqea" : "гео-событий"})
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Privacy notice banner */}
+            <div className="p-3.5 bg-slate-950/80 border border-blue-500/30 rounded-2xl flex items-start gap-2.5 text-xs text-slate-300">
+              <Globe className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+              <span>
+                <strong className="text-white font-semibold">Privacy-friendly analitika: </strong>
+                {locale === "uz"
+                  ? "Foydalanuvchilarning aniq koordinatalari (kenglik/uzunlik) saqlanmaydi. Faqat brauzer tomonidan ruxsat berilgan taqdirda umumiy shahar va viloyat darajasidagi statistikasi jamlanadi."
+                  : "Точные координаты пользователей (широта/долгота) не сохраняются. Фиксируется только агрегированная статистика на уровне городов и регионов при согласии пользователя."}
+              </span>
+            </div>
+
+            {/* Geo Distribution Cards Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {geoStats.map((geo) => (
+                <div
+                  key={geo.city}
+                  className={`p-4 rounded-2xl bg-slate-950/80 border transition-all ${
+                    geo.is_angren
+                      ? "border-emerald-500/50 ring-1 ring-emerald-500/30 shadow-emerald-950/40"
+                      : "border-slate-700/80 hover:border-slate-600"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-bold text-slate-300">
+                      {locale === "uz" ? geo.region : geo.region_ru}
+                    </span>
+                    {geo.is_angren && (
+                      <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        Lokal
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-base font-extrabold text-white mt-1">
+                    {locale === "uz" ? geo.city : geo.city_ru}
+                  </div>
+                  <div className="flex items-baseline justify-between mt-3">
+                    <span className="text-2xl font-black font-mono text-emerald-400">
+                      {geo.percent}%
+                    </span>
+                    {geo.count > 0 && (
+                      <span className="text-xs text-slate-400 font-mono">
+                        {geo.count} {locale === "uz" ? "tashrif" : "визитов"}
+                      </span>
+                    )}
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden mt-2 border border-slate-700/50">
+                    <div
+                      className={`h-full ${geo.color} rounded-full transition-all duration-500`}
+                      style={{ width: `${geo.percent}%` }}
                     />
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-
-          {/* Devices */}
-          <div className="bg-slate-900/80 backdrop-blur-md p-6 rounded-3xl border border-slate-700/80 shadow-md">
-            <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-              <Smartphone className="w-5 h-5 text-emerald-400" />
-              {locale === "uz" ? "Foydalanuvchi qurilmalari" : "Устройства пользователей"}
-            </h3>
-            <div className="space-y-4">
-              {devices.map((device) => {
-                const isPhone = device.name.includes("iPhone") || device.name.includes("Android");
-                const Icon = isPhone ? Smartphone : Monitor;
-                return (
-                  <div
-                    key={device.name}
-                    className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-700/80 flex items-center justify-between shadow-sm"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-200 border border-slate-700/60">
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-bold text-white">{device.name}</div>
-                        <div className="text-xs text-slate-300 font-medium">{device.count.toLocaleString()} tashrif</div>
-                      </div>
-                    </div>
-                    <div className="text-lg font-bold font-mono text-emerald-400">{device.percent}%</div>
-                  </div>
-                );
-              })}
             </div>
           </div>
         </div>

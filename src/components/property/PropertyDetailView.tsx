@@ -339,7 +339,7 @@ export default function PropertyDetailView({
                   />
 
                   {/* Badges Overlay */}
-                  <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
+                  <div className="absolute top-4 left-4 z-10 flex flex-wrap items-center gap-2">
                     <span className="px-3.5 py-1.5 rounded-xl bg-[#16543C] text-white text-xs font-black tracking-wide shadow-md">
                       {isSale ? (locale === "uz" ? "Sotuv" : "Продажа") : locale === "uz" ? "Ijara" : "Аренда"}
                     </span>
@@ -353,6 +353,50 @@ export default function PropertyDetailView({
                         {locale === "uz" ? "Ijaraga berildi" : "Арендовано"}
                       </span>
                     )}
+                    {property.badges &&
+                      property.badges.map((b) => {
+                        if (b === "top") {
+                          return (
+                            <span
+                              key={b}
+                              className="px-3 py-1.5 rounded-xl bg-amber-500 text-white text-xs font-black tracking-wide shadow-md flex items-center gap-1"
+                            >
+                              ★ {locale === "uz" ? "TOP" : "ТОП"}
+                            </span>
+                          );
+                        }
+                        if (b === "new") {
+                          return (
+                            <span
+                              key={b}
+                              className="px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-bold tracking-wide shadow-md"
+                            >
+                              {locale === "uz" ? "Yangi" : "Новинка"}
+                            </span>
+                          );
+                        }
+                        if (b === "tez_sotiladi") {
+                          return (
+                            <span
+                              key={b}
+                              className="px-3 py-1.5 rounded-xl bg-rose-600 text-white text-xs font-bold tracking-wide shadow-md flex items-center gap-1"
+                            >
+                              ⚡ {locale === "uz" ? "Tez sotiladi" : "Быстрая продажа"}
+                            </span>
+                          );
+                        }
+                        if (b === "yaxshi_taklif") {
+                          return (
+                            <span
+                              key={b}
+                              className="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold tracking-wide shadow-md flex items-center gap-1"
+                            >
+                              % {locale === "uz" ? "Yaxshi taklif" : "Выгодная сделка"}
+                            </span>
+                          );
+                        }
+                        return null;
+                      })}
                     <span className="px-3 py-1.5 rounded-xl bg-black/60 backdrop-blur-md text-white text-xs font-semibold">
                       {district}
                     </span>

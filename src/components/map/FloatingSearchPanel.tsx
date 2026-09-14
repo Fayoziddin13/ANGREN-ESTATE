@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MapPin, Home, Coins, ChevronDown, RotateCcw, Check, Search, X, SlidersHorizontal, Bookmark } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useSavedSearches } from "@/lib/savedSearchStore";
-import { TransactionType, PropertyType } from "@/lib/types";
+import { TransactionType, PropertyType, HududItem } from "@/lib/types";
+import { DEFAULT_ANGREN_HUDUDS } from "@/lib/hududService";
 import { AdvancedFiltersModal, AdvancedFilterState, defaultAdvancedFilters } from "./AdvancedFiltersModal";
 
 interface FloatingSearchPanelProps {
@@ -50,11 +51,24 @@ export function FloatingSearchPanel({
   onResetAdvanced,
 }: FloatingSearchPanelProps) {
   const { locale, t } = useLanguage();
-  const { currency } = useCurrency();
+  const { currency, exchangeRate } = useCurrency();
   const { saveSearch } = useSavedSearches();
 
   const [isAdvancedModalOpen, setIsAdvancedModalOpen] = useState(false);
   const [isSavingSearch, setIsSavingSearch] = useState(false);
+
+  const [hududList, setHududList] = useState<HududItem[]>(DEFAULT_ANGREN_HUDUDS);
+
+  useEffect(() => {
+    fetch("/api/hududs")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success && Array.isArray(d.hududs) && d.hududs.length > 0) {
+          setHududList(d.hududs);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSaveCurrentSearch = async () => {
     setIsSavingSearch(true);
@@ -98,12 +112,10 @@ export function FloatingSearchPanel({
 
   const districts = [
     { key: "all", label: t.mapSection.allDistricts },
-    { key: "Markaz", label: "Markaz" },
-    { key: "5-mavze", label: "5-mavze" },
-    { key: "6-mavze", label: "6-mavze" },
-    { key: "7-mavze", label: "7-mavze" },
-    { key: "Dukent", label: "Dukent" },
-    { key: "Geolog", label: "Geolog" },
+    ...hududList.map((h) => ({
+      key: h.name_uz,
+      label: locale === "uz" ? h.name_uz : h.name_ru,
+    })),
   ];
 
   const propertyTypes: Array<{ key: PropertyType | "all"; label: string }> = [
@@ -113,6 +125,7 @@ export function FloatingSearchPanel({
     { key: "new_build", label: t.searchBar.newBuild },
     { key: "commercial", label: t.searchBar.commercial },
     { key: "land", label: t.searchBar.land },
+    { key: "other", label: locale === "uz" ? "Boshqa" : "Другое" },
   ];
 
   const priceOptions = [
@@ -133,6 +146,18 @@ export function FloatingSearchPanel({
   };
 
   const getPriceLabel = () => {
+    if (advancedFilters?.minPrice || advancedFilters?.maxPrice) {
+      const min = advancedFilters.minPrice
+        ? Math.round(Number(advancedFilters.minPrice) / (currency === "USD" ? exchangeRate : 1000000))
+        : "";
+      const max = advancedFilters.maxPrice
+        ? Math.round(Number(advancedFilters.maxPrice) / (currency === "USD" ? exchangeRate : 1000000))
+        : "";
+      const unit = currency === "USD" ? "$" : locale === "uz" ? "mln" : "млн";
+      if (min && max) return `${min} - ${max} ${unit}`;
+      if (min) return `> ${min} ${unit}`;
+      if (max) return `< ${max} ${unit}`;
+    }
     const found = priceOptions.find((po) => po.key === priceFilter);
     return found ? found.label : t.searchBar.priceAny;
   };
@@ -324,20 +349,70 @@ export function FloatingSearchPanel({
                   key={po.key}
                   onClick={() => {
                     onPriceFilterChange(po.key);
+                    if (advancedFilters && onAdvancedFiltersChange) {
+                      onAdvancedFiltersChange({ ...advancedFilters, minPrice: "", maxPrice: "" });
+                    }
                     setPriceOpen(false);
                   }}
                   className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold ${
-                    priceFilter === po.key
+                    priceFilter === po.key && !advancedFilters?.minPrice && !advancedFilters?.maxPrice
                       ? "bg-brand-light text-brand-primary"
                       : "text-gray-700 hover:bg-gray-50"
                   }`}
                 >
                   <span>{po.label}</span>
-                  {priceFilter === po.key && (
+                  {priceFilter === po.key && !advancedFilters?.minPrice && !advancedFilters?.maxPrice && (
                     <Check className="h-3.5 w-3.5 text-brand-primary" />
                   )}
                 </button>
               ))}
+
+              {advancedFilters && onAdvancedFiltersChange && (
+                <div className="pt-2 mt-1 border-t border-gray-100 px-2 pb-1 space-y-2">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-gray-700">
+                    <span>{locale === "uz" ? "Aniq narx" : "Точная цена"}</span>
+                    <span className="text-[10px] text-gray-400 font-semibold">{currency === "USD" ? "$ USD" : "so‘m UZS"}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <input
+                      type="number"
+                      placeholder={currency === "USD" ? "Min $" : "Min so‘m"}
+                      value={
+                        advancedFilters.minPrice !== ""
+                          ? currency === "USD"
+                            ? Math.round(Number(advancedFilters.minPrice) / exchangeRate)
+                            : advancedFilters.minPrice
+                          : ""
+                      }
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const inUzs = val ? (currency === "USD" ? Math.round(Number(val) * exchangeRate) : Number(val)) : "";
+                        onPriceFilterChange("custom");
+                        onAdvancedFiltersChange({ ...advancedFilters, minPrice: inUzs });
+                      }}
+                      className="w-full px-2 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-brand-primary"
+                    />
+                    <input
+                      type="number"
+                      placeholder={currency === "USD" ? "Max $" : "Max so‘m"}
+                      value={
+                        advancedFilters.maxPrice !== ""
+                          ? currency === "USD"
+                            ? Math.round(Number(advancedFilters.maxPrice) / exchangeRate)
+                            : advancedFilters.maxPrice
+                          : ""
+                      }
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const inUzs = val ? (currency === "USD" ? Math.round(Number(val) * exchangeRate) : Number(val)) : "";
+                        onPriceFilterChange("custom");
+                        onAdvancedFiltersChange({ ...advancedFilters, maxPrice: inUzs });
+                      }}
+                      className="w-full px-2 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-brand-primary"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

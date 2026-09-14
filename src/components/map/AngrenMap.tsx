@@ -3,10 +3,13 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { Property } from "@/lib/types";
+import { Property, HududItem } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCurrency } from "@/context/CurrencyContext";
-import { LocateFixed, Plus, Minus, Box } from "lucide-react";
+import { LocateFixed, Plus, Minus, Box, Navigation, Loader2 } from "lucide-react";
+import { useUserLocation, isWithinAngren, getDistanceKm } from "@/lib/geolocation";
+import { DEFAULT_ANGREN_HUDUDS } from "@/lib/hududService";
+import { trackEvent } from "@/lib/analytics";
 import {
   getMapCamera,
   saveMapCamera,
@@ -72,12 +75,34 @@ export function AngrenMap({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<{ [id: string]: maplibregl.Marker }>({});
+  const userMarkerRef = useRef<maplibregl.Marker | null>(null);
   const [currentZoom, setCurrentZoom] = useState<number>(DEFAULT_ZOOM);
   const [dimension, setDimension] = useState<MapDimension>("3d");
   const [isMapReady, setIsMapReady] = useState(false);
 
   const { locale, t } = useLanguage();
   const { currency, exchangeRate } = useCurrency();
+
+  // User Geolocation Hook & State
+  const {
+    location: userLocation,
+    loading: geoLoading,
+    requestLocation,
+  } = useUserLocation();
+  const [geoNotice, setGeoNotice] = useState<string | null>(null);
+  const [hududList, setHududList] = useState<HududItem[]>(DEFAULT_ANGREN_HUDUDS);
+
+  // Dynamic Hududs list from API
+  useEffect(() => {
+    fetch("/api/hududs")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success && Array.isArray(d.hududs) && d.hududs.length > 0) {
+          setHududList(d.hududs);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Helper to format short price on marker pill
   const formatMarkerPrice = useCallback(
@@ -272,6 +297,38 @@ export function AngrenMap({
             "line-color": "#16543C",
             "line-width": 2.5,
             "line-opacity": 0.9,
+          },
+        });
+      }
+
+      // Setup District / Hudud Boundary Polygon Layer
+      if (!map.getSource("hudud-polygon")) {
+        map.addSource("hudud-polygon", {
+          type: "geojson",
+          data: {
+            type: "FeatureCollection",
+            features: [],
+          },
+        });
+
+        map.addLayer({
+          id: "hudud-polygon-fill",
+          type: "fill",
+          source: "hudud-polygon",
+          paint: {
+            "fill-color": "#10B981",
+            "fill-opacity": 0.18,
+          },
+        });
+
+        map.addLayer({
+          id: "hudud-polygon-line",
+          type: "line",
+          source: "hudud-polygon",
+          paint: {
+            "line-color": "#059669",
+            "line-width": 2.5,
+            "line-opacity": 0.85,
           },
         });
       }
@@ -530,33 +587,155 @@ export function AngrenMap({
     });
   }, [selectedProperty]);
 
-  // 7. Focus on district when selected
+  // 7. Focus on district and draw polygon when selected
   useEffect(() => {
-    if (!focusDistrict || focusDistrict === "all" || !mapRef.current) return;
-    const districtCoords: Record<string, [number, number]> = {
-      markaz: [70.1436, 41.0167],
-      "5-mavze": [70.138, 41.0125],
-      "6-mavze": [70.132, 41.019],
-      "7-mavze": [70.126, 41.024],
-      dukent: [70.175, 41.038],
-      geolog: [70.155, 41.008],
-      yangiobod: [70.108, 41.042],
-    };
+    if (!mapRef.current || !isMapReady) return;
+    const map = mapRef.current;
+    const source = map.getSource("hudud-polygon") as maplibregl.GeoJSONSource | undefined;
 
-    const key = Object.keys(districtCoords).find((k) =>
-      focusDistrict.toLowerCase().includes(k)
+    if (!focusDistrict || focusDistrict === "all") {
+      if (source) {
+        source.setData({
+          type: "FeatureCollection",
+          features: [],
+        });
+      }
+      return;
+    }
+
+    const q = focusDistrict.toLowerCase().trim();
+    const matching = hududList.find(
+      (h) =>
+        h.id.toLowerCase() === q ||
+        h.name_uz.toLowerCase() === q ||
+        h.name_ru.toLowerCase() === q ||
+        q.includes(h.name_uz.toLowerCase()) ||
+        h.name_uz.toLowerCase().includes(q)
     );
-    if (key && districtCoords[key]) {
-      mapRef.current.flyTo({
-        center: districtCoords[key],
-        zoom: 14.2,
+
+    if (matching && matching.coordinates && matching.coordinates.length >= 3) {
+      const coords = matching.coordinates.map(([lat, lng]) => [lng, lat]);
+      if (
+        coords[0][0] !== coords[coords.length - 1][0] ||
+        coords[0][1] !== coords[coords.length - 1][1]
+      ) {
+        coords.push(coords[0]);
+      }
+
+      if (source) {
+        source.setData({
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              properties: { name: matching.name_uz },
+              geometry: {
+                type: "Polygon",
+                coordinates: [coords],
+              },
+            },
+          ],
+        });
+      }
+
+      const centerLng = matching.longitude || coords[0][0];
+      const centerLat = matching.latitude || coords[0][1];
+      map.flyTo({
+        center: [centerLng, centerLat],
+        zoom: 14.5,
         duration: 700,
         essential: true,
       });
+    } else {
+      if (source) {
+        source.setData({
+          type: "FeatureCollection",
+          features: [],
+        });
+      }
+      // Fallback coordinate map
+      const districtCoords: Record<string, [number, number]> = {
+        markaz: [70.1436, 41.0167],
+        "5-mavze": [70.138, 41.0125],
+        "6-mavze": [70.132, 41.019],
+        "7-mavze": [70.126, 41.024],
+        dukent: [70.175, 41.038],
+        geolog: [70.155, 41.008],
+        yangiobod: [70.108, 41.042],
+      };
+      const key = Object.keys(districtCoords).find((k) => q.includes(k));
+      if (key && districtCoords[key]) {
+        map.flyTo({
+          center: districtCoords[key],
+          zoom: 14.2,
+          duration: 700,
+          essential: true,
+        });
+      }
     }
-  }, [focusDistrict]);
+  }, [focusDistrict, isMapReady, hududList]);
 
-  // 8. Navigation & 2D/3D Handlers
+  // 8. User Location Marker Sync on Map
+  useEffect(() => {
+    if (!mapRef.current || !isMapReady || !userLocation) return;
+    const { latitude, longitude, isWithinAngren: inAngren, city, region } = userLocation;
+
+    // Safe aggregated geo tracking (coarse city only, NO private coordinates)
+    trackEvent("geo_visit", {
+      city: city || (inAngren ? "Angren" : "Boshqa"),
+      region: region || "Toshkent viloyati",
+      within_angren: inAngren,
+    });
+
+    if (!userMarkerRef.current) {
+      const el = document.createElement("div");
+      el.className = "user-location-marker relative flex items-center justify-center w-8 h-8 pointer-events-none";
+      el.innerHTML = `
+        <div class="absolute h-8 w-8 rounded-full bg-blue-500/30 animate-ping"></div>
+        <div class="relative h-4 w-4 rounded-full bg-blue-600 border-2 border-white shadow-md"></div>
+      `;
+      userMarkerRef.current = new maplibregl.Marker({ element: el })
+        .setLngLat([longitude, latitude])
+        .addTo(mapRef.current);
+    } else {
+      userMarkerRef.current.setLngLat([longitude, latitude]);
+    }
+  }, [userLocation, isMapReady]);
+
+  // 9. "Mening joylashuvim" Handler (Angren focus protection)
+  const handleUserLocationClick = async () => {
+    const loc = await requestLocation();
+    if (!loc) {
+      setGeoNotice(
+        locale === "uz"
+          ? "Joylashuvni aniqlashga ruxsat berilmadi yoki mavjud emas."
+          : "Геолокация недоступна или доступ запрещен."
+      );
+      setTimeout(() => setGeoNotice(null), 4500);
+      return;
+    }
+
+    if (loc.isWithinAngren) {
+      if (mapRef.current) {
+        mapRef.current.flyTo({
+          center: [loc.longitude, loc.latitude],
+          zoom: 15.5,
+          duration: 800,
+          essential: true,
+        });
+      }
+    } else {
+      // User is outside Angren - maintain Angren camera and inform user
+      setGeoNotice(
+        locale === "uz"
+          ? `Siz Angrendan ${loc.distanceFromAngrenKm} km masofadasiz (${loc.city || "boshqa shahar"}). Xarita Angren shahriga sozlangan.`
+          : `Вы находитесь в ${loc.distanceFromAngrenKm} км от Ангрена (${loc.city || "другой город"}). Карта сфокусирована на Ангрене.`
+      );
+      setTimeout(() => setGeoNotice(null), 5000);
+    }
+  };
+
+  // 10. Navigation & 2D/3D Handlers
   const handleToggleDimension = () => {
     const map = mapRef.current;
     if (!map) return;
@@ -597,21 +776,44 @@ export function AngrenMap({
         className="w-full h-full"
       />
 
-      {/* Floating Glass Navigation Controls: [ 3D / 2D ], [ Reset Center ], [ + ], [ - ] */}
-      <div className="hidden sm:flex flex-col items-center gap-1.5 absolute bottom-8 right-5 z-20 pointer-events-auto">
+      {/* Geolocation Toast Notification */}
+      {geoNotice && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 max-w-sm w-[90%] sm:w-auto px-4 py-2.5 rounded-2xl bg-slate-900/90 text-white text-xs font-semibold shadow-2xl backdrop-blur-md border border-slate-700/80 animate-in fade-in slide-in-from-top-2 flex items-center gap-2">
+          <Navigation className="h-4 w-4 text-blue-400 shrink-0" />
+          <span>{geoNotice}</span>
+        </div>
+      )}
+
+      {/* Floating Glass Navigation Controls: [ 3D / 2D ], [ Mening joylashuvim ], [ Reset Center ], [ + ], [ - ] */}
+      <div className="flex flex-col items-center gap-1.5 absolute bottom-24 sm:bottom-8 right-3 sm:right-5 z-20 pointer-events-auto">
         {/* 2D / 3D Perspective Toggle Button */}
         <button
           onClick={handleToggleDimension}
           data-testid="map-toggle-3d"
           title={locale === "uz" ? (dimension === "3d" ? "2D rejimga o'tish" : "3D perspektivaga o'tish") : (dimension === "3d" ? "Переключить в 2D" : "Включить 3D")}
-          className={`flex h-10 w-10 flex-col items-center justify-center rounded-2xl backdrop-blur-xl shadow-elevated border transition-all active:scale-95 ${
+          className={`flex h-9 w-9 sm:h-10 sm:w-10 flex-col items-center justify-center rounded-2xl backdrop-blur-xl shadow-elevated border transition-all active:scale-95 ${
             dimension === "3d"
               ? "bg-[#16543C] text-white border-[#16543C] ring-2 ring-[#34D399]/40"
               : "bg-white/90 text-gray-700 hover:text-[#16543C] border-white/80 hover:bg-white"
           }`}
         >
-          <Box className="h-4 w-4" />
-          <span className="text-[9px] font-black leading-none mt-0.5">{dimension.toUpperCase()}</span>
+          <Box className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <span className="text-[8px] sm:text-[9px] font-black leading-none mt-0.5">{dimension.toUpperCase()}</span>
+        </button>
+
+        {/* Mening joylashuvim (User Geolocation) Button */}
+        <button
+          onClick={handleUserLocationClick}
+          disabled={geoLoading}
+          data-testid="map-user-location"
+          title={locale === "uz" ? "Mening joylashuvim" : "Моё местоположение"}
+          className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-2xl bg-white/90 backdrop-blur-xl text-gray-700 hover:text-blue-600 shadow-elevated border border-white/80 hover:bg-white transition-all active:scale-95"
+        >
+          {geoLoading ? (
+            <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin text-blue-600" />
+          ) : (
+            <Navigation className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600" />
+          )}
         </button>
 
         {/* Reset Center Button */}
@@ -619,9 +821,9 @@ export function AngrenMap({
           onClick={handleResetCenter}
           data-testid="map-reset-center"
           title={locale === "uz" ? "Angren markaziga qaytish" : "Центр Ангрена"}
-          className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/90 backdrop-blur-xl text-gray-700 hover:text-[#16543C] shadow-elevated border border-white/80 hover:bg-white transition-all active:scale-95"
+          className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-2xl bg-white/90 backdrop-blur-xl text-gray-700 hover:text-[#16543C] shadow-elevated border border-white/80 hover:bg-white transition-all active:scale-95"
         >
-          <LocateFixed className="h-4 w-4" />
+          <LocateFixed className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         </button>
 
         {/* Zoom Controls */}
@@ -629,18 +831,18 @@ export function AngrenMap({
           <button
             onClick={handleZoomIn}
             data-testid="map-zoom-in"
-            className="flex h-9 w-10 items-center justify-center text-gray-700 hover:text-[#16543C] hover:bg-white transition-colors border-b border-gray-100 active:scale-95"
+            className="flex h-8 w-9 sm:h-9 sm:w-10 items-center justify-center text-gray-700 hover:text-[#16543C] hover:bg-white transition-colors border-b border-gray-100 active:scale-95"
             aria-label="Zoom In"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </button>
           <button
             onClick={handleZoomOut}
             data-testid="map-zoom-out"
-            className="flex h-9 w-10 items-center justify-center text-gray-700 hover:text-[#16543C] hover:bg-white transition-colors active:scale-95"
+            className="flex h-8 w-9 sm:h-9 sm:w-10 items-center justify-center text-gray-700 hover:text-[#16543C] hover:bg-white transition-colors active:scale-95"
             aria-label="Zoom Out"
           >
-            <Minus className="h-4 w-4" />
+            <Minus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </button>
         </div>
       </div>
