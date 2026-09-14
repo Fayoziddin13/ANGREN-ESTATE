@@ -30,7 +30,7 @@ export function MobileBottomSheet({
   properties,
 }: MobileBottomSheetProps) {
   const { locale, t } = useLanguage();
-  const { currency } = useCurrency();
+  const { currency, exchangeRate } = useCurrency();
   const { isFavorite, toggleFavorite } = useFavorites();
   const isFavorited = property ? isFavorite(property.id) : false;
 
@@ -38,15 +38,15 @@ export function MobileBottomSheet({
     // Show compact floating pill when no marker is selected
     return (
       <div className="sm:hidden fixed bottom-20 left-4 right-4 z-30 pointer-events-auto">
-        <div className="flex items-center justify-between rounded-2xl bg-white/90 backdrop-blur-xl p-3 shadow-elevated border border-white/80">
+        <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-elevated border border-gray-100 p-3.5 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-brand-primary animate-pulse" />
-            <span className="text-xs font-bold text-brand-dark">
-              {t.mapSection.objectsOnMap(totalCount)}
+            <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs font-bold text-gray-800">
+              {totalCount} {locale === "uz" ? "ta obyekt xaritada mavjud" : "объектов на карте"}
             </span>
           </div>
-          <span className="text-[11px] font-medium text-gray-500">
-            {t.mapSection.selectMarkerNotice}
+          <span className="text-[11px] text-[#16543C] font-extrabold flex items-center gap-1">
+            {locale === "uz" ? "Marker tanlang" : "Выберите маркер"}
           </span>
         </div>
       </div>
@@ -61,10 +61,10 @@ export function MobileBottomSheet({
   const priceDisplay = isSale
     ? currency === "UZS"
       ? `${property.price_uzs.toLocaleString("ru-RU")} UZS`
-      : `$${Math.round(property.price_uzs / 12800).toLocaleString("ru-RU")}`
+      : `$${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")}`
     : currency === "UZS"
       ? `${property.price_uzs.toLocaleString("ru-RU")} UZS / ${t.common.month}`
-      : `$${Math.round(property.price_uzs / 12800).toLocaleString("ru-RU")} / ${t.common.month}`;
+      : `$${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")} / ${t.common.month}`;
 
   const floorNum = property.floor_number ?? property.floor;
   const totalFloors = property.floors ?? property.total_floors;

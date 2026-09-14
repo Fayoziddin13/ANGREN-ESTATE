@@ -77,13 +77,13 @@ export function AngrenMap({
   const [isMapReady, setIsMapReady] = useState(false);
 
   const { locale, t } = useLanguage();
-  const { currency } = useCurrency();
+  const { currency, exchangeRate } = useCurrency();
 
   // Helper to format short price on marker pill
   const formatMarkerPrice = useCallback(
     (priceUzs: number, isSale: boolean): string => {
       if (currency === "USD") {
-        const usd = Math.round(priceUzs / 12800);
+        const usd = Math.round(priceUzs / exchangeRate);
         if (usd >= 1000000) {
           const m = usd / 1000000;
           const fmt = m % 1 === 0 ? m.toString() : m.toFixed(1);
@@ -112,7 +112,7 @@ export function AngrenMap({
       const k = Math.round(priceUzs / 1000);
       return isSale ? `${k} ming` : `${k} ming/oy`;
     },
-    [currency]
+    [currency, exchangeRate]
   );
 
   // 1. Initialize MapLibre GL Map with Real 3D Perspective

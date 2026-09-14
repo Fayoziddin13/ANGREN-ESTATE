@@ -26,6 +26,7 @@ import {
   Plus,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { useCurrency } from "@/context/CurrencyContext";
 import { useProperties } from "@/lib/propertyStore";
 import { useRealtors } from "@/lib/realtorStore";
 import { PropertyImageUploader } from "@/components/admin/PropertyImageUploader";
@@ -53,6 +54,7 @@ const AdminLocationPicker = dynamic(
 export default function AddPropertyPage() {
   const router = useRouter();
   const { locale } = useLanguage();
+  const { exchangeRate } = useCurrency();
   const { addProperty } = useProperties();
   const { realtors } = useRealtors();
 
@@ -174,6 +176,7 @@ export default function AddPropertyPage() {
   const [contactTelegram, setContactTelegram] = useState("@angrenestate_admin");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const DRAFT_KEY = "angren_new_property_draft_v2";
   const [draftAvailable, setDraftAvailable] = useState(false);
 
@@ -338,6 +341,7 @@ export default function AddPropertyPage() {
   const handleSave = async (status: PropertyStatus) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
+    setSaveError(null);
     // Parse polygon if provided
     let parsedPolygon: [number, number][] | undefined = undefined;
     if (polygonCoords.trim()) {
@@ -355,7 +359,7 @@ export default function AddPropertyPage() {
     }
 
     try {
-      await addProperty({
+      const created = await addProperty({
         slug: `angren-${propertyType}-${Date.now().toString().slice(-6)}`,
         title_uz: titleUz || "Angren ko‘chmas mulk obyekti",
         title_ru: titleRu || "Объект недвижимости в Ангрене",
@@ -388,11 +392,19 @@ export default function AddPropertyPage() {
         facade_m: facadeM ? Number(facadeM) : undefined,
         depth_m: depthM ? Number(depthM) : undefined,
         dimensions: facadeM && depthM ? `${facadeM} × ${depthM} m` : undefined,
-        contact_phone: contactPhone,
+        contact_phone: contactPhone || "+998 90 123 45 67",
         contact_telegram: contactTelegram,
         owner_phone: ownerPhone || undefined,
         realtor_id: selectedRealtorId || undefined,
       });
+
+      if (!created) {
+        throw new Error(
+          locale === "uz"
+            ? "Obyektni saqlashda xatolik yuz berdi. Iltimos, ma’lumotlarni tekshirib qayta urinib ko‘ring."
+            : "Ошибка при сохранении объекта. Пожалуйста, проверьте данные и попробуйте снова."
+        );
+      }
 
       // Clear session draft on successful save
       try {
@@ -400,8 +412,9 @@ export default function AddPropertyPage() {
       } catch (e) {}
 
       router.push("/admin/properties");
-    } catch (e) {
+    } catch (e: any) {
       console.error("Error creating property:", e);
+      setSaveError(e?.message || (locale === "uz" ? "Obyektni saqlashda xatolik yuz berdi" : "Ошибка при сохранении"));
       setIsSubmitting(false);
     }
   };
@@ -430,18 +443,30 @@ export default function AddPropertyPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => handleSave("draft")}
-            className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 font-bold text-xs transition-colors"
+            disabled={isSubmitting}
+            className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 font-bold text-xs transition-colors disabled:opacity-50"
           >
             {locale === "uz" ? "Qoralama sifatida saqlash" : "В черновики"}
           </button>
           <button
             onClick={() => handleSave("published")}
-            className="px-5 py-2 rounded-xl bg-[#16543C] text-white hover:bg-[#0E3324] font-bold text-xs transition-colors shadow-sm"
+            disabled={isSubmitting}
+            className="px-5 py-2 rounded-xl bg-[#16543C] text-white hover:bg-[#0E3324] font-bold text-xs transition-colors shadow-sm disabled:opacity-50"
           >
-            {locale === "uz" ? "Nashr qilish" : "Опубликовать"}
+            {isSubmitting
+              ? locale === "uz" ? "Saqlanmoqda..." : "Сохранение..."
+              : locale === "uz" ? "Nashr qilish" : "Опубликовать"}
           </button>
         </div>
       </div>
+
+      {/* Save Error Banner */}
+      {saveError && (
+        <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 flex items-center gap-3 text-rose-900 text-xs font-bold shadow-xs animate-in fade-in">
+          <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+          <span>{saveError}</span>
+        </div>
+      )}
 
       {/* Unsaved Draft Recovery Banner */}
       {draftAvailable && (
@@ -579,7 +604,7 @@ export default function AddPropertyPage() {
                   onChange={(e) => {
                     const usd = Number(e.target.value);
                     setPriceUsd(usd);
-                    setPriceUzs(usd * 12850);
+                    setPriceUzs(Math.round(usd * exchangeRate));
                   }}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#16543C] outline-none text-sm font-bold"
                 />
@@ -592,7 +617,7 @@ export default function AddPropertyPage() {
                   onChange={(e) => {
                     const uzs = Number(e.target.value);
                     setPriceUzs(uzs);
-                    setPriceUsd(Math.round(uzs / 12850));
+                    setPriceUsd(Math.round(uzs / exchangeRate));
                   }}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#16543C] outline-none text-sm font-bold"
                 />

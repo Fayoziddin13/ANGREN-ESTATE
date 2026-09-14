@@ -25,7 +25,7 @@ export function PropertyPreviewCard({
   className = "",
 }: PropertyPreviewCardProps) {
   const { locale, t } = useLanguage();
-  const { currency } = useCurrency();
+  const { currency, exchangeRate } = useCurrency();
   const { isFavorite, toggleFavorite } = useFavorites();
   const isFavorited = isFavorite(property.id);
 
@@ -37,10 +37,10 @@ export function PropertyPreviewCard({
   const priceDisplay = isSale
     ? currency === "UZS"
       ? `${property.price_uzs.toLocaleString("ru-RU")} UZS`
-      : `$${Math.round(property.price_uzs / 12800).toLocaleString("ru-RU")}`
+      : `$${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")}`
     : currency === "UZS"
       ? `${property.price_uzs.toLocaleString("ru-RU")} UZS / ${t.common.month}`
-      : `$${Math.round(property.price_uzs / 12800).toLocaleString("ru-RU")} / ${t.common.month}`;
+      : `$${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")} / ${t.common.month}`;
 
   const floorNum = property.floor_number ?? property.floor;
   const totalFloors = property.floors ?? property.total_floors;

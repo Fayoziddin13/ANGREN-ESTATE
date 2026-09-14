@@ -9,6 +9,7 @@ import { PropertyDetailModal } from "@/components/property/PropertyDetailModal";
 import { MobileBottomSheet } from "@/components/map/MobileBottomSheet";
 import { MobileFilterSheet } from "@/components/map/MobileFilterSheet";
 import { MobileMapStyleSwitcher } from "@/components/map/MobileMapStyleSwitcher";
+import { MobileMapControls } from "@/components/map/MobileMapControls";
 import { CollapsiblePropertyList } from "@/components/map/CollapsiblePropertyList";
 import { PropertyCatalogModal } from "@/components/catalog/PropertyCatalogModal";
 import { PopularSection } from "@/components/property/PopularSection";
@@ -367,54 +368,16 @@ export default function RentPage() {
           />
         </div>
 
-        {/* Mobile Floating Action Controls (Top Right Vertical Stack: [ Search ] -> [ Map / Catalog ]) */}
-        <div className="sm:hidden absolute top-4 right-4 z-20 flex flex-col items-center gap-2.5 pointer-events-auto">
-          {/* Top: Search Button */}
-          <button
-            type="button"
-            data-testid="compact-search-trigger"
-            onClick={() => setIsMobileSearchOpen(true)}
-            aria-label={locale === "uz" ? "Qidiruv va filtrlarni ochish" : "Открыть поиск и фильтры"}
-            className="relative h-11 w-11 rounded-2xl bg-white/95 backdrop-blur-xl shadow-elevated border border-white/90 text-[#16543C] flex items-center justify-center active:scale-95 transition-all"
-          >
-            <Search className="h-5 w-5" />
-            {activeFiltersCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-[#16543C] text-[9px] text-white font-extrabold shadow-sm">
-                {activeFiltersCount}
-              </span>
-            )}
-          </button>
-
-          {/* Bottom: Map / Catalog Toggle Button */}
-          <div data-testid="primary-view-switcher">
-            <button
-              type="button"
-              data-testid={activeView === "map" ? "view-mode-catalog" : "view-mode-map"}
-              onClick={() => setActiveView(activeView === "map" ? "catalog" : "map")}
-              aria-label={
-                activeView === "map"
-                  ? locale === "uz" ? "Katalog ko‘rinishiga o‘tish" : "Перейти в каталог"
-                  : locale === "uz" ? "Xarita ko‘rinishiga o‘tish" : "Перейти на карту"
-              }
-              className={`relative h-11 w-11 rounded-2xl backdrop-blur-xl shadow-elevated border transition-all flex items-center justify-center active:scale-95 ${
-                activeView === "catalog"
-                  ? "bg-[#16543C] text-white border-[#16543C]"
-                  : "bg-white/95 text-[#16543C] border-white/90"
-              }`}
-            >
-              {activeView === "map" ? (
-                <>
-                  <Layers className="h-5 w-5" />
-                  <span className="absolute -bottom-1 -right-1 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-emerald-600 text-[9px] text-white font-extrabold shadow-sm">
-                    {filteredProperties.length}
-                  </span>
-                </>
-              ) : (
-                <Map className="h-5 w-5" />
-              )}
-            </button>
-          </div>
-        </div>
+        {/* Mobile Top Controls: [ Search Pill ] + [ XARITA | KATALOG ] */}
+        <MobileMapControls
+          searchQuery={searchQuery}
+          onOpenSearch={() => setIsMobileSearchOpen(true)}
+          onClearSearch={() => setSearchQuery("")}
+          activeFiltersCount={activeFiltersCount}
+          activeView={activeView}
+          onViewChange={setActiveView}
+          totalCount={filteredProperties.length}
+        />
 
         {/* Desktop-Only Floating Action Controls (Top Right: Primary View Switcher & Map Style Switcher) */}
         <div className="hidden sm:flex items-center gap-3 absolute sm:top-4 sm:right-6 z-20 pointer-events-auto">
@@ -489,11 +452,11 @@ export default function RentPage() {
           </div>
         </div>
 
-        {/* Mobile-Only Compact Floating Map Style Switcher (Lower-Right Area) */}
+        {/* Mobile-Only Floating Map Style Switcher (Scroll-linked: hidden at top, visible on scroll) */}
         <MobileMapStyleSwitcher
           mapMode={mapMode}
           onMapModeChange={setMapMode}
-          className={`bottom-[140px] right-4 ${selectedProperty ? "hidden" : ""}`}
+          className={selectedProperty ? "hidden" : ""}
         />
 
         {/* Desktop Floating Property Preview Card (Bottom Left) */}

@@ -25,7 +25,7 @@ export function CollapsiblePropertyList({
   onViewDetails,
 }: CollapsiblePropertyListProps) {
   const { locale, t } = useLanguage();
-  const { currency } = useCurrency();
+  const { currency, exchangeRate } = useCurrency();
 
   if (!isOpen) return null;
 
@@ -43,8 +43,7 @@ export function CollapsiblePropertyList({
         </div>
         <button
           onClick={onClose}
-          className="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 transition-colors"
-          aria-label="Close"
+          className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
         >
           <X className="h-4 w-4" />
         </button>
@@ -61,10 +60,10 @@ export function CollapsiblePropertyList({
           const priceDisplay = isSale
             ? currency === "UZS"
               ? `${p.price_uzs.toLocaleString("ru-RU")} UZS`
-              : `$${Math.round(p.price_uzs / 12800).toLocaleString("ru-RU")}`
+              : `$${Math.round(p.price_uzs / exchangeRate).toLocaleString("ru-RU")}`
             : currency === "UZS"
               ? `${p.price_uzs.toLocaleString("ru-RU")} UZS / ${t.common.month}`
-              : `$${Math.round(p.price_uzs / 12800).toLocaleString("ru-RU")} / ${t.common.month}`;
+              : `$${Math.round(p.price_uzs / exchangeRate).toLocaleString("ru-RU")} / ${t.common.month}`;
 
           return (
             <div

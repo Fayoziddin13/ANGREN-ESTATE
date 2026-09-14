@@ -126,14 +126,15 @@ export function mapRowToProperty(row: any): Property {
       contact_phone: row.contact_phone || "+998 90 123 45 67",
       contact_telegram: row.contact_telegram || row.telegram || undefined,
       telegram: row.telegram || row.contact_telegram || undefined,
-      owner_phone: row.owner_phone || undefined,
+      owner_phone: row.owner_phone || amens?.owner_phone || undefined,
       realtor_id: row.realtor_id || undefined,
       realtor: realtor,
-      facade_m: row.facade_m ? Number(row.facade_m) : row.id === "prop-3" ? 15 : undefined,
-      depth_m: row.depth_m ? Number(row.depth_m) : row.id === "prop-3" ? 40 : undefined,
+      facade_m: row.facade_m ? Number(row.facade_m) : amens?.facade_m ? Number(amens.facade_m) : row.id === "prop-3" ? 15 : undefined,
+      depth_m: row.depth_m ? Number(row.depth_m) : amens?.depth_m ? Number(amens.depth_m) : row.id === "prop-3" ? 40 : undefined,
       dimensions:
         row.dimensions ||
-        (row.facade_m && row.depth_m ? `${row.facade_m} × ${row.depth_m} m` : undefined) ||
+        amens?.dimensions ||
+        ((row.facade_m || amens?.facade_m) && (row.depth_m || amens?.depth_m) ? `${row.facade_m || amens?.facade_m} × ${row.depth_m || amens?.depth_m} m` : undefined) ||
         (row.id === "prop-3" ? "15 × 40 m" : undefined),
       views_count: Number(row.views_count || 0),
       favorites_count: Number(row.favorites_count || 0),
@@ -160,6 +161,24 @@ export function mapPropertyToDb(data: any): Record<string, any> {
       ? [mainImage, ...rawPhotos.filter((p: string) => p !== mainImage)]
       : rawPhotos;
 
+  // Validate UUID for realtor_id (Supabase requires valid UUID or null)
+  const isValidUuid = (val: any) =>
+    typeof val === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(val);
+
+  // Preserve owner_phone, facade_m, depth_m, dimensions inside amenities JSONB
+  // because properties table schema does not have these as separate columns
+  const baseAmenities =
+    typeof data.amenities === "object" && data.amenities !== null ? { ...data.amenities } : {};
+  if (data.owner_phone) baseAmenities.owner_phone = data.owner_phone;
+  if (data.facade_m) baseAmenities.facade_m = Number(data.facade_m);
+  if (data.depth_m) baseAmenities.depth_m = Number(data.depth_m);
+  if (data.dimensions) {
+    baseAmenities.dimensions = data.dimensions;
+  } else if (data.facade_m && data.depth_m) {
+    baseAmenities.dimensions = `${data.facade_m} × ${data.depth_m} m`;
+  }
+
   return {
     id: data.id,
     slug:
@@ -185,7 +204,7 @@ export function mapPropertyToDb(data: any): Record<string, any> {
     area_sqm: data.area_sqm || data.area || 0,
     living_area: data.living_area || data.living_area_sqm || null,
     living_area_sqm: data.living_area_sqm || data.living_area || null,
-    area_sotikh: data.area_sotikh || null,
+    area_sotikh: data.area_sotikh ? Number(data.area_sotikh) : null,
     rooms: data.rooms || 1,
     bathrooms: data.bathrooms || 1,
     floor: data.floor || data.floor_number || 1,
@@ -205,7 +224,7 @@ export function mapPropertyToDb(data: any): Record<string, any> {
     elevator: Boolean(data.amenities?.elevator || false),
     internet: Boolean(data.amenities?.internet ?? true),
     balcony: Boolean(data.amenities?.balcony || false),
-    amenities: data.amenities || {},
+    amenities: baseAmenities,
     city: "Angren",
     district: data.district || data.district_name_uz || "Markaz",
     district_name_uz: data.district_name_uz || data.district || "Markaz",
@@ -224,11 +243,7 @@ export function mapPropertyToDb(data: any): Record<string, any> {
     contact_phone: data.contact_phone || "+998 90 123 45 67",
     contact_telegram: data.contact_telegram || data.telegram || null,
     telegram: data.telegram || data.contact_telegram || null,
-    owner_phone: data.owner_phone || null,
-    realtor_id: data.realtor_id || null,
-    facade_m: data.facade_m ? Number(data.facade_m) : null,
-    depth_m: data.depth_m ? Number(data.depth_m) : null,
-    dimensions: data.dimensions || (data.facade_m && data.depth_m ? `${data.facade_m} × ${data.depth_m} m` : null),
+    realtor_id: isValidUuid(data.realtor_id) ? data.realtor_id : null,
     views_count: data.views_count || 0,
     favorites_count: data.favorites_count || 0,
     contacts_count: data.contacts_count || 0,

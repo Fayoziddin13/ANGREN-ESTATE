@@ -47,7 +47,7 @@ export function PropertyCatalogModal({
   onClearFilters,
 }: PropertyCatalogModalProps) {
   const { locale, t } = useLanguage();
-  const { currency } = useCurrency();
+  const { currency, exchangeRate } = useCurrency();
   const { isFavorite, toggleFavorite } = useFavorites();
 
   if (!isOpen) return null;
@@ -207,10 +207,10 @@ export function PropertyCatalogModal({
                 const priceDisplay = isSale
                   ? currency === "UZS"
                     ? `${property.price_uzs.toLocaleString("ru-RU")} UZS`
-                    : `$${Math.round(property.price_uzs / 12800).toLocaleString("ru-RU")}`
+                    : `$${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")}`
                   : currency === "UZS"
                   ? `${property.price_uzs.toLocaleString("ru-RU")} UZS / ой`
-                  : `$${Math.round(property.price_uzs / 12800).toLocaleString("ru-RU")} / мес`;
+                  : `$${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")} / мес`;
 
                 const dateDisplay = formatPublishedDate(
                   property.published_at || property.created_at,

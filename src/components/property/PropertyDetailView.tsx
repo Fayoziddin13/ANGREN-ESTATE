@@ -76,7 +76,7 @@ export default function PropertyDetailView({
   const propertyId = (propIdParam || (routeParams?.id as string) || initialProperty?.id || "") as string;
 
   const { locale, t } = useLanguage();
-  const { currency } = useCurrency();
+  const { currency, exchangeRate } = useCurrency();
   const { user, openAuthModal } = useAuth();
   const { isFavorite, toggleFavorite } = useFavorites();
 
@@ -162,14 +162,14 @@ export default function PropertyDetailView({
   const priceDisplay = isSale
     ? currency === "UZS"
       ? `${property.price_uzs.toLocaleString("ru-RU")} UZS`
-      : `$${Math.round(property.price_uzs / 12800).toLocaleString("ru-RU")}`
+      : `$${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")}`
     : currency === "UZS"
     ? `${property.price_uzs.toLocaleString("ru-RU")} UZS / ${t.common.month}`
-    : `$${Math.round(property.price_uzs / 12800).toLocaleString("ru-RU")} / ${t.common.month}`;
+    : `$${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")} / ${t.common.month}`;
 
   const secondaryPrice =
     currency === "UZS"
-      ? `≈ $${Math.round(property.price_uzs / 12800).toLocaleString("ru-RU")}`
+      ? `≈ $${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")}`
       : `≈ ${property.price_uzs.toLocaleString("ru-RU")} UZS`;
 
   const handleShare = () => {

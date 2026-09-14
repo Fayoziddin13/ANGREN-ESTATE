@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -27,8 +27,10 @@ import {
   Archive,
   RotateCcw,
   AlertTriangle,
+  AlertCircle,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { useCurrency } from "@/context/CurrencyContext";
 import { useProperties } from "@/lib/propertyStore";
 import { useRealtors } from "@/lib/realtorStore";
 import { PropertyImageUploader } from "@/components/admin/PropertyImageUploader";
@@ -62,6 +64,7 @@ export default function EditPropertyPage() {
   const propertyId = params?.id as string;
 
   const { locale } = useLanguage();
+  const { exchangeRate } = useCurrency();
   const { properties, updateProperty, updatePropertyStatus, isLoaded } = useProperties();
   const { realtors } = useRealtors();
 
@@ -152,16 +155,9 @@ export default function EditPropertyPage() {
 
   const [currentStatus, setCurrentStatus] = useState<PropertyStatus>("draft");
   const [notFound, setNotFound] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  // Load existing property data
-  useEffect(() => {
-    if (!propertyId || !isLoaded) return;
-    const found = properties.find((p) => p.id === propertyId);
-    if (!found) {
-      setNotFound(true);
-      return;
-    }
-
+  const populateForm = useCallback((found: Property) => {
     setTransactionType(found.transaction_type);
     setPropertyType(found.property_type);
     setTitleUz(found.title_uz || "");
@@ -169,12 +165,14 @@ export default function EditPropertyPage() {
     setDescUz(found.description_uz || "");
     setDescRu(found.description_ru || "");
     setPriceUzs(found.price_uzs || 0);
-    setPriceUsd(found.price_usd || Math.round((found.price_uzs || 0) / 12850));
+    setPriceUsd(found.price_usd || Math.round((found.price_uzs || 0) / exchangeRate));
     setDistrict(found.district_name_uz || "Markaz");
     setAddressUz(found.address_uz || "");
     setAddressRu(found.address_ru || "");
-    setLat(found.coordinates.lat);
-    setLng(found.coordinates.lng);
+    if (found.coordinates) {
+      setLat(found.coordinates.lat);
+      setLng(found.coordinates.lng);
+    }
     setCurrentStatus(found.status);
 
     if (found.polygon && found.polygon.length > 0) {
@@ -214,7 +212,33 @@ export default function EditPropertyPage() {
     if (found.contact_telegram) setContactTelegram(found.contact_telegram);
     if (found.realtor_id) setSelectedRealtorId(found.realtor_id);
     setInitialDataLoaded(true);
-  }, [propertyId, isLoaded, properties]);
+  }, []);
+
+  // Load existing property data
+  useEffect(() => {
+    if (!propertyId) return;
+    if (isLoaded) {
+      const found = properties.find((p) => p.id === propertyId);
+      if (found) {
+        populateForm(found);
+        return;
+      }
+    }
+
+    // Direct API fallback fetch if not present in memory
+    fetch(`/api/admin/properties/${propertyId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.property) {
+          populateForm(data.property);
+        } else if (isLoaded) {
+          setNotFound(true);
+        }
+      })
+      .catch(() => {
+        if (isLoaded) setNotFound(true);
+      });
+  }, [propertyId, isLoaded, properties, populateForm]);
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
@@ -244,6 +268,7 @@ export default function EditPropertyPage() {
   const handleUpdate = async (status: PropertyStatus) => {
     if (isUpdating) return;
     setIsUpdating(true);
+    setSaveError(null);
 
     let parsedPolygon: [number, number][] | undefined = undefined;
     if (polygonPoints.length > 0) {
@@ -255,7 +280,7 @@ export default function EditPropertyPage() {
     }
 
     try {
-      await updateProperty(propertyId, {
+      const updated = await updateProperty(propertyId, {
         title_uz: titleUz || "Angren ko‘chmas mulk obyekti",
         title_ru: titleRu || "Объект недвижимости в Ангрене",
         description_uz: descUz || "Angren shahrida joylashgan qulay ko‘chmas mulk.",
@@ -288,14 +313,23 @@ export default function EditPropertyPage() {
         depth_m: depthM ? Number(depthM) : undefined,
         dimensions: facadeM && depthM ? `${facadeM} × ${depthM} m` : undefined,
         owner_phone: ownerPhone || undefined,
-        contact_phone: contactPhone,
+        contact_phone: contactPhone || "+998 90 123 45 67",
         contact_telegram: contactTelegram,
         realtor_id: selectedRealtorId || undefined,
       });
 
+      if (!updated) {
+        throw new Error(
+          locale === "uz"
+            ? "Obyektni yangilashda xatolik yuz berdi. Iltimos, qayta urinib ko‘ring."
+            : "Ошибка при обновлении объекта. Пожалуйста, попробуйте снова."
+        );
+      }
+
       router.push("/admin/properties");
-    } catch (e) {
+    } catch (e: any) {
       console.error("Error updating property:", e);
+      setSaveError(e?.message || (locale === "uz" ? "Obyektni yangilashda xatolik yuz berdi" : "Ошибка при обновлении"));
       setIsUpdating(false);
     }
   };
@@ -343,20 +377,34 @@ export default function EditPropertyPage() {
           <button
             type="button"
             onClick={() => handleUpdate("draft")}
-            className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-xs transition-colors"
+            disabled={isUpdating}
+            className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-xs transition-colors disabled:opacity-50"
           >
             {locale === "uz" ? "Qoralama sifatida saqlash" : "Сохранить как черновик"}
           </button>
           <button
             type="button"
             onClick={() => handleUpdate("published")}
-            className="px-4 py-2 rounded-xl bg-[#16543C] text-white hover:bg-[#0E3324] font-bold text-xs shadow-md transition-colors flex items-center gap-1.5"
+            disabled={isUpdating}
+            className="px-4 py-2 rounded-xl bg-[#16543C] text-white hover:bg-[#0E3324] font-bold text-xs shadow-md transition-colors flex items-center gap-1.5 disabled:opacity-50"
           >
             <CheckCircle2 className="h-4 w-4" />
-            <span>{locale === "uz" ? "Nashr qilish (Publish)" : "Опубликовать"}</span>
+            <span>
+              {isUpdating
+                ? locale === "uz" ? "Saqlanmoqda..." : "Сохранение..."
+                : locale === "uz" ? "Nashr qilish (Publish)" : "Опубликовать"}
+            </span>
           </button>
         </div>
       </div>
+
+      {/* Save Error Banner */}
+      {saveError && (
+        <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 flex items-center gap-3 text-rose-900 text-xs font-bold shadow-xs animate-in fade-in">
+          <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+          <span>{saveError}</span>
+        </div>
+      )}
 
       {/* Step Indicators */}
       <div className="grid grid-cols-6 gap-2 text-center text-xs font-bold">
@@ -461,7 +509,7 @@ export default function EditPropertyPage() {
                   onChange={(e) => {
                     const usd = Number(e.target.value);
                     setPriceUsd(usd);
-                    setPriceUzs(usd * 12850);
+                    setPriceUzs(Math.round(usd * exchangeRate));
                   }}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#16543C] outline-none text-sm font-bold"
                 />
@@ -474,7 +522,7 @@ export default function EditPropertyPage() {
                   onChange={(e) => {
                     const uzs = Number(e.target.value);
                     setPriceUzs(uzs);
-                    setPriceUsd(Math.round(uzs / 12850));
+                    setPriceUsd(Math.round(uzs / exchangeRate));
                   }}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#16543C] outline-none text-sm font-bold"
                 />

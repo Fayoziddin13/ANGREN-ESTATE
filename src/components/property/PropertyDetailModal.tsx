@@ -46,7 +46,7 @@ export function PropertyDetailModal({
   onClose,
 }: PropertyDetailModalProps) {
   const { locale, t } = useLanguage();
-  const { currency } = useCurrency();
+  const { currency, exchangeRate } = useCurrency();
   const { user, openAuthModal } = useAuth();
   const { isFavorite, toggleFavorite } = useFavorites();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -70,11 +70,11 @@ export function PropertyDetailModal({
   const priceFormatted =
     currency === "UZS"
       ? `${property.price_uzs.toLocaleString("ru-RU")} UZS`
-      : `$${Math.round(property.price_uzs / 12800).toLocaleString("ru-RU")}`;
+      : `$${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")}`;
 
   const secondaryPrice =
     currency === "UZS"
-      ? `≈ $${Math.round(property.price_uzs / 12800).toLocaleString("ru-RU")}`
+      ? `≈ $${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")}`
       : `≈ ${property.price_uzs.toLocaleString("ru-RU")} UZS`;
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
