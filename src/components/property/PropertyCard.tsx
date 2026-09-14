@@ -4,12 +4,13 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Heart, MapPin, Maximize2, Bed, Bath, ArrowRight } from "lucide-react";
+import { Heart, MapPin, Maximize2, Bed, Bath, ArrowRight, Scale } from "lucide-react";
 import { Property } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useAuth } from "@/context/AuthContext";
 import { useFavorites } from "@/lib/favoriteStore";
+import { useCompare } from "@/lib/compareStore";
 import { formatPrice } from "@/lib/currency";
 
 interface PropertyCardProps {
@@ -23,6 +24,8 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
   const { currency, exchangeRate } = useCurrency();
   const { isFavorite, toggleFavorite } = useFavorites();
   const isFavorited = isFavorite(property.id);
+  const { isInCompare, toggleCompare } = useCompare();
+  const isCompared = isInCompare(property.id);
 
   const title = locale === "uz" ? property.title_uz : property.title_ru;
   const address = locale === "uz" ? property.address_uz : property.address_ru;
@@ -54,6 +57,19 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
     toggleFavorite(property.id);
   };
 
+  const handleCompareClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const res = toggleCompare(property);
+    if (res.limitReached) {
+      alert(
+        locale === "uz"
+          ? "Solishtirish uchun ko‘pi bilan 3 ta obyekt tanlash mumkin."
+          : "Для сравнения можно выбрать не более 3 объектов."
+      );
+    }
+  };
+
   return (
     <div
       onClick={handleCardClick}
@@ -77,18 +93,37 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
           </span>
         </div>
 
-        {/* Favorite Heart Button (Top Right) */}
-        <button
-          onClick={handleFavoriteClick}
-          aria-label="Favorite"
-          className="absolute top-2.5 sm:top-3.5 right-2.5 sm:right-3.5 z-10 flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-black/40 backdrop-blur-md text-white shadow-sm hover:scale-110 active:scale-95 transition-all"
-        >
-          <Heart
-            className={`h-3.5 w-3.5 sm:h-4 sm:w-4 transition-colors ${
-              isFavorited ? "fill-red-500 text-red-500" : "text-white"
+        {/* Top Right Action Buttons: Compare & Favorite */}
+        <div className="absolute top-2.5 sm:top-3.5 right-2.5 sm:right-3.5 z-10 flex items-center gap-1.5">
+          {/* Compare Button */}
+          <button
+            type="button"
+            onClick={handleCompareClick}
+            aria-label={locale === "uz" ? "Solishtirish" : "Сравнить"}
+            title={locale === "uz" ? "Solishtirishga qo‘shish" : "Добавить в сравнение"}
+            className={`flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-full backdrop-blur-md shadow-sm hover:scale-110 active:scale-95 transition-all ${
+              isCompared
+                ? "bg-emerald-600 text-white ring-2 ring-white/50"
+                : "bg-black/40 text-white hover:bg-black/60"
             }`}
-          />
-        </button>
+          >
+            <Scale className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          </button>
+
+          {/* Favorite Heart Button */}
+          <button
+            type="button"
+            onClick={handleFavoriteClick}
+            aria-label="Favorite"
+            className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-black/40 backdrop-blur-md text-white shadow-sm hover:scale-110 active:scale-95 transition-all"
+          >
+            <Heart
+              className={`h-3.5 w-3.5 sm:h-4 sm:w-4 transition-colors ${
+                isFavorited ? "fill-red-500 text-red-500" : "text-white"
+              }`}
+            />
+          </button>
+        </div>
       </div>
 
       {/* Property Card Body */}

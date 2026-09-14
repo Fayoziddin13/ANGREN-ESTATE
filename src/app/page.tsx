@@ -111,7 +111,64 @@ export default function HomePage() {
       if (params.get("q")) {
         setSearchQuery(params.get("q") || "");
       }
+      if (params.get("district")) {
+        setSelectedDistrict(params.get("district") || "all");
+      }
+      if (params.get("propertyType")) {
+        setSelectedType((params.get("propertyType") as PropertyType) || "all");
+      }
+      if (params.get("price")) {
+        setPriceFilter(params.get("price") || "all");
+      }
+      if (params.get("rooms")) {
+        const r = params.get("rooms");
+        if (r) {
+          const num = Number(r);
+          setAdvancedFilters((prev) => ({ ...prev, rooms: isNaN(num) ? "all" : num }));
+        }
+      }
     }
+  }, [activePropertiesPool]);
+
+  // Handle global search application and property detail opening from modals
+  React.useEffect(() => {
+    const handleApplySearch = (e: Event) => {
+      const customEvent = e as CustomEvent<any>;
+      const filters = customEvent.detail;
+      if (!filters) return;
+      if (filters.query !== undefined) setSearchQuery(filters.query || "");
+      if (filters.transactionType) setTransactionType(filters.transactionType);
+      if (filters.propertyType) setSelectedType(filters.propertyType);
+      if (filters.district) setSelectedDistrict(filters.district);
+      if (filters.priceRange) setPriceFilter(filters.priceRange);
+      if (filters.rooms !== undefined) {
+        setAdvancedFilters((prev) => ({
+          ...prev,
+          rooms: filters.rooms === "all" ? "all" : Number(filters.rooms),
+        }));
+      }
+    };
+
+    const handleOpenDetail = (e: Event) => {
+      const customEvent = e as CustomEvent<{ id?: string }>;
+      const id = customEvent.detail?.id;
+      if (id) {
+        const found = activePropertiesPool.find((p) => p.id === id);
+        if (found) {
+          setSelectedProperty(found);
+          setDetailProperty(found);
+          setIsDetailOpen(true);
+        }
+      }
+    };
+
+    window.addEventListener("angren_apply_search", handleApplySearch);
+    window.addEventListener("angren_open_detail", handleOpenDetail);
+
+    return () => {
+      window.removeEventListener("angren_apply_search", handleApplySearch);
+      window.removeEventListener("angren_open_detail", handleOpenDetail);
+    };
   }, [activePropertiesPool]);
 
   // Filter properties in real-time

@@ -3,10 +3,12 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Search, Heart, User, LogOut, Sparkles } from "lucide-react";
+import { Home, Search, Heart, User, LogOut, Sparkles, Bookmark, Scale } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import { useFavorites } from "@/lib/favoriteStore";
+import { useCompare } from "@/lib/compareStore";
+import { useSavedSearches } from "@/lib/savedSearchStore";
 import { Modal } from "@/components/ui/Modal";
 
 interface MobileBottomNavProps {
@@ -17,6 +19,8 @@ export function MobileBottomNav({ onSearchClick }: MobileBottomNavProps) {
   const { locale, t } = useLanguage();
   const { user, openAuthModal, handleLogout } = useAuth();
   const { favoritesCount } = useFavorites();
+  const { count: compareCount } = useCompare();
+  const { unreadNotificationsCount } = useSavedSearches();
   const pathname = usePathname();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
@@ -123,6 +127,44 @@ export function MobileBottomNav({ onSearchClick }: MobileBottomNavProps) {
                   </span>
                 </div>
               </Link>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsProfileOpen(false);
+                  window.dispatchEvent(new Event("angren_open_saved_searches"));
+                }}
+                className="w-full flex items-center justify-between p-3 rounded-2xl bg-gray-50 hover:bg-gray-100 border border-gray-100 transition-colors text-left"
+              >
+                <div className="flex items-center gap-2.5 text-xs font-bold text-gray-800">
+                  <Bookmark className="h-4 w-4 text-emerald-600" />
+                  <span>{locale === "uz" ? "Saqlangan qidiruvlar" : "Сохранённые поиски"}</span>
+                </div>
+                {unreadNotificationsCount > 0 && (
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-[10px] font-bold text-white">
+                    {unreadNotificationsCount}
+                  </span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsProfileOpen(false);
+                  window.dispatchEvent(new Event("angren_open_compare"));
+                }}
+                className="w-full flex items-center justify-between p-3 rounded-2xl bg-gray-50 hover:bg-gray-100 border border-gray-100 transition-colors text-left"
+              >
+                <div className="flex items-center gap-2.5 text-xs font-bold text-gray-800">
+                  <Scale className="h-4 w-4 text-emerald-600" />
+                  <span>{locale === "uz" ? "Obyektlarni solishtirish" : "Сравнение объектов"}</span>
+                </div>
+                {compareCount > 0 && (
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-[10px] font-bold text-white">
+                    {compareCount}
+                  </span>
+                )}
+              </button>
             </div>
 
             <div className="pt-2 border-t border-gray-100">

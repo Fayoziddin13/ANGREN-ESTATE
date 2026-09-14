@@ -446,3 +446,70 @@ export interface SiteSettingsData {
   two_factor_ready: boolean;
 }
 
+// -----------------------------------------------------------------------------
+// SAVED SEARCH & ALERTS
+// -----------------------------------------------------------------------------
+export interface SavedSearchFilter {
+  query?: string;
+  transactionType?: TransactionType | "all";
+  propertyType?: PropertyType | "all";
+  district?: string;
+  priceMin?: number;
+  priceMax?: number;
+  rooms?: number;
+}
+
+export interface SavedSearch {
+  id: string;
+  userId?: string;
+  title: string;
+  filters: SavedSearchFilter;
+  createdAt: string;
+  matchedCount?: number;
+}
+
+export interface InAppNotification {
+  id: string;
+  titleUz: string;
+  titleRu: string;
+  messageUz: string;
+  messageRu: string;
+  propertyId?: string;
+  propertySlug?: string;
+  createdAt: string;
+  read: boolean;
+}
+
+// -----------------------------------------------------------------------------
+// INFRASTRUCTURE / POI TYPES
+// -----------------------------------------------------------------------------
+export type POICategory =
+  | "school"
+  | "kindergarten"
+  | "pharmacy"
+  | "supermarket"
+  | "park"
+  | "bus_stop"
+  | "hospital"
+  | "atm";
+
+export interface POIItem {
+  id: string;
+  nameUz: string;
+  nameRu: string;
+  category: POICategory;
+  latitude: number;
+  longitude: number;
+  distanceMeters: number;
+  formattedDistance: string;
+}
+
+export interface InfrastructureSummary {
+  category: POICategory;
+  labelUz: string;
+  labelRu: string;
+  count: number;
+  closestDistance: string;
+  items: POIItem[];
+}
+

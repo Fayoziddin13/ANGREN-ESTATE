@@ -12,8 +12,10 @@ import {
   RotateCcw,
   Check,
   SlidersHorizontal,
+  Bookmark,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { useSavedSearches } from "@/lib/savedSearchStore";
 import { TransactionType, PropertyType } from "@/lib/types";
 import {
   AdvancedFiltersModal,
@@ -61,7 +63,45 @@ export function MobileFilterSheet({
   onResetAdvanced,
 }: MobileFilterSheetProps) {
   const { locale, t } = useLanguage();
+  const { saveSearch } = useSavedSearches();
   const [isAdvancedModalOpen, setIsAdvancedModalOpen] = useState(false);
+  const [isSavingSearch, setIsSavingSearch] = useState(false);
+
+  const handleSaveCurrentSearch = async () => {
+    setIsSavingSearch(true);
+    try {
+      let minPrice: number | undefined;
+      let maxPrice: number | undefined;
+      if (priceFilter === "under-300m") maxPrice = 300000000;
+      else if (priceFilter === "300m-600m") {
+        minPrice = 300000000;
+        maxPrice = 600000000;
+      } else if (priceFilter === "above-600m") minPrice = 600000000;
+
+      const res = await saveSearch({
+        query: searchQuery || undefined,
+        transactionType,
+        propertyType: selectedType,
+        district: selectedDistrict,
+        priceMin: minPrice,
+        priceMax: maxPrice,
+        rooms:
+          advancedFilters?.rooms && advancedFilters.rooms !== "all"
+            ? Number(advancedFilters.rooms)
+            : undefined,
+      });
+
+      if (res.success) {
+        alert(
+          locale === "uz"
+            ? "Qidiruv muvaffaqiyatli saqlandi! Mos yangi e’lonlar haqida bildirishnoma olasiz."
+            : "Поиск успешно сохранён! Вы получите уведомление о новых объектах."
+        );
+      }
+    } finally {
+      setIsSavingSearch(false);
+    }
+  };
 
   const [districtOpen, setDistrictOpen] = useState(false);
   const [typeOpen, setTypeOpen] = useState(false);
@@ -432,6 +472,19 @@ export function MobileFilterSheet({
                   )}
                 </button>
               </div>
+            </div>
+
+            {/* Save Search Button */}
+            <div className="px-5 pb-3">
+              <button
+                type="button"
+                onClick={handleSaveCurrentSearch}
+                disabled={isSavingSearch}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-2xl border border-emerald-300 bg-emerald-50 text-[#16543C] text-xs font-bold hover:bg-emerald-100 transition-all active:scale-[0.98]"
+              >
+                <Bookmark className="h-4 w-4" />
+                <span>{locale === "uz" ? "Ushbu qidiruvni saqlash" : "Сохранить параметры поиска"}</span>
+              </button>
             </div>
 
             {/* Sticky Sheet Footer Actions */}

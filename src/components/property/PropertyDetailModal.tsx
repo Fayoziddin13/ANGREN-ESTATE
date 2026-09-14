@@ -25,12 +25,15 @@ import {
   Thermometer,
   Wifi,
   User,
+  Scale,
 } from "lucide-react";
 import { Property } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useAuth } from "@/context/AuthContext";
 import { useFavorites } from "@/lib/favoriteStore";
+import { useCompare } from "@/lib/compareStore";
+import { PropertyInfrastructureSection } from "./PropertyInfrastructureSection";
 import { recordPublicLead } from "@/lib/leadClient";
 import { trackEvent } from "@/lib/analytics";
 
@@ -49,8 +52,10 @@ export function PropertyDetailModal({
   const { currency, exchangeRate } = useCurrency();
   const { user, openAuthModal } = useAuth();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { isInCompare, toggleCompare } = useCompare();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const isFavorited = property ? isFavorite(property.id) : false;
+  const isCompared = property ? isInCompare(property.id) : false;
   const [copied, setCopied] = useState(false);
 
   if (!isOpen || !property) return null;
@@ -172,6 +177,30 @@ export function PropertyDetailModal({
             </div>
 
             <div className="flex items-center gap-2">
+              {/* Compare Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (!property) return;
+                  const res = toggleCompare(property);
+                  if (res.limitReached) {
+                    alert(
+                      locale === "uz"
+                        ? "Solishtirish uchun ko‘pi bilan 3 ta obyekt tanlash mumkin."
+                        : "Для сравнения можно выбрать не более 3 объектов."
+                    );
+                  }
+                }}
+                className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
+                  isCompared
+                    ? "bg-emerald-600 text-white shadow-xs"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+                title={locale === "uz" ? "Solishtirish" : "Сравнить"}
+              >
+                <Scale className="h-4 w-4" />
+              </button>
+
               {/* Share Button */}
               <button
                 onClick={handleShare}
@@ -516,6 +545,17 @@ export function PropertyDetailModal({
                 ))}
               </div>
             </div>
+
+            {/* Infrastructure Around Property ("Atrofida" / "Рядом") */}
+            {(property.latitude ?? property.coordinates?.lat) &&
+              (property.longitude ?? property.coordinates?.lng) && (
+                <div className="pt-4 border-t border-gray-100">
+                  <PropertyInfrastructureSection
+                    latitude={property.latitude ?? property.coordinates.lat}
+                    longitude={property.longitude ?? property.coordinates.lng}
+                  />
+                </div>
+              )}
 
             {/* Realtor & Owner Contacts */}
             <div className="p-4 rounded-2xl bg-brand-light/70 border border-brand-primary/15 flex flex-col sm:flex-row sm:items-center justify-between gap-3">

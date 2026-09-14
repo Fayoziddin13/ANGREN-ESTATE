@@ -4,6 +4,7 @@ import { LanguageProvider } from "@/context/LanguageContext";
 import { CurrencyProvider } from "@/context/CurrencyContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { GlobalModals } from "@/components/common/GlobalModals";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -58,6 +59,7 @@ export default function RootLayout({
             <AuthProvider>
               {children}
               <AuthModal />
+              <GlobalModals />
             </AuthProvider>
           </CurrencyProvider>
         </LanguageProvider>

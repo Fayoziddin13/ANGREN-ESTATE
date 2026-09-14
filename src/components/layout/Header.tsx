@@ -18,11 +18,16 @@ import {
   User,
   LogOut,
   Heart,
+  Scale,
+  Bookmark,
+  Bell,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useAuth } from "@/context/AuthContext";
 import { useFavorites } from "@/lib/favoriteStore";
+import { useCompare } from "@/lib/compareStore";
+import { useSavedSearches } from "@/lib/savedSearchStore";
 import { useCMS } from "@/lib/cmsStore";
 import { TransactionType } from "@/lib/types";
 
@@ -36,6 +41,8 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
   const { currency, setCurrency } = useCurrency();
   const { user, openAuthModal, handleLogout } = useAuth();
   const { favoritesCount } = useFavorites();
+  const { count: compareCount } = useCompare();
+  const { unreadNotificationsCount } = useSavedSearches();
   const { announcement } = useCMS();
 
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
@@ -262,8 +269,36 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
           })}
         </nav>
 
-        {/* Right Controls: Desktop (Language, Currency, Google Login) */}
-        <div className="hidden sm:flex items-center gap-2.5">
+        {/* Right Controls: Desktop (Saved Searches, Compare, Language, Currency, Google Login) */}
+        <div className="hidden sm:flex items-center gap-2">
+          {/* Quick Trigger: Compare */}
+          {compareCount > 0 && (
+            <button
+              onClick={() => window.dispatchEvent(new Event("angren_open_compare"))}
+              className="flex items-center gap-1.5 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-white/20 hover:border-white/30 transition-all active:scale-95"
+              title={locale === "uz" ? "Obyektlarni solishtirish" : "Сравнение объектов"}
+            >
+              <Scale className="h-3.5 w-3.5 text-emerald-300" />
+              <span className="h-4 min-w-4 px-1 rounded-full bg-emerald-500 text-[10px] font-black flex items-center justify-center text-white">
+                {compareCount}
+              </span>
+            </button>
+          )}
+
+          {/* Quick Trigger: Saved Searches & Alerts */}
+          <button
+            onClick={() => window.dispatchEvent(new Event("angren_open_saved_searches"))}
+            className="relative flex items-center gap-1.5 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-white/20 hover:border-white/30 transition-all active:scale-95"
+            title={locale === "uz" ? "Saqlangan qidiruvlar va bildirishnomalar" : "Сохранённые поиски и уведомления"}
+          >
+            <Bookmark className="h-3.5 w-3.5 text-emerald-200" />
+            {unreadNotificationsCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 min-w-4 px-1 rounded-full bg-emerald-400 text-slate-900 text-[9px] font-black items-center justify-center shadow-xs">
+                {unreadNotificationsCount}
+              </span>
+            )}
+          </button>
+
           {/* Language Dropdown: [ 🌐 RU ⌵ ] */}
           <div className="relative" ref={langRef}>
             <button
@@ -429,6 +464,44 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                         </span>
                       )}
                     </Link>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        window.dispatchEvent(new Event("angren_open_saved_searches"));
+                      }}
+                      className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-medium text-emerald-100 hover:bg-white/10 hover:text-white transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Bookmark className="h-3.5 w-3.5 text-emerald-300" />
+                        <span>{locale === "uz" ? "Saqlangan qidiruvlar" : "Поиски"}</span>
+                      </div>
+                      {unreadNotificationsCount > 0 && (
+                        <span className="px-1.5 py-0.5 rounded-full bg-emerald-500 text-[10px] font-extrabold text-white">
+                          {unreadNotificationsCount}
+                        </span>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        window.dispatchEvent(new Event("angren_open_compare"));
+                      }}
+                      className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-medium text-emerald-100 hover:bg-white/10 hover:text-white transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Scale className="h-3.5 w-3.5 text-emerald-300" />
+                        <span>{locale === "uz" ? "Solishtirish" : "Сравнение"}</span>
+                      </div>
+                      {compareCount > 0 && (
+                        <span className="px-1.5 py-0.5 rounded-full bg-emerald-500 text-[10px] font-extrabold text-white">
+                          {compareCount}
+                        </span>
+                      )}
+                    </button>
                     <button
                       onClick={() => {
                         handleLogout();
@@ -569,6 +642,44 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                       </span>
                     )}
                   </Link>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      window.dispatchEvent(new Event("angren_open_saved_searches"));
+                    }}
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium text-emerald-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Bookmark className="h-3.5 w-3.5 text-emerald-300" />
+                      <span>{locale === "uz" ? "Saqlangan qidiruvlar" : "Сохранённые поиски"}</span>
+                    </div>
+                    {unreadNotificationsCount > 0 && (
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-400 text-slate-900 text-[10px] font-black">
+                        {unreadNotificationsCount}
+                      </span>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      window.dispatchEvent(new Event("angren_open_compare"));
+                    }}
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium text-emerald-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Scale className="h-3.5 w-3.5 text-emerald-300" />
+                      <span>{locale === "uz" ? "Solishtirish" : "Сравнение"}</span>
+                    </div>
+                    {compareCount > 0 && (
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-black">
+                        {compareCount}
+                      </span>
+                    )}
+                  </button>
                 </div>
               ) : (
                 <button

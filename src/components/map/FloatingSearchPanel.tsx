@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { MapPin, Home, Coins, ChevronDown, RotateCcw, Check, Search, X, SlidersHorizontal } from "lucide-react";
+import { MapPin, Home, Coins, ChevronDown, RotateCcw, Check, Search, X, SlidersHorizontal, Bookmark } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCurrency } from "@/context/CurrencyContext";
+import { useSavedSearches } from "@/lib/savedSearchStore";
 import { TransactionType, PropertyType } from "@/lib/types";
 import { AdvancedFiltersModal, AdvancedFilterState, defaultAdvancedFilters } from "./AdvancedFiltersModal";
 
@@ -50,8 +51,46 @@ export function FloatingSearchPanel({
 }: FloatingSearchPanelProps) {
   const { locale, t } = useLanguage();
   const { currency } = useCurrency();
+  const { saveSearch } = useSavedSearches();
 
   const [isAdvancedModalOpen, setIsAdvancedModalOpen] = useState(false);
+  const [isSavingSearch, setIsSavingSearch] = useState(false);
+
+  const handleSaveCurrentSearch = async () => {
+    setIsSavingSearch(true);
+    try {
+      let minPrice: number | undefined;
+      let maxPrice: number | undefined;
+      if (priceFilter === "under-300m") maxPrice = 300000000;
+      else if (priceFilter === "300m-600m") {
+        minPrice = 300000000;
+        maxPrice = 600000000;
+      } else if (priceFilter === "above-600m") minPrice = 600000000;
+
+      const res = await saveSearch({
+        query: searchQuery || undefined,
+        transactionType,
+        propertyType: selectedType,
+        district: selectedDistrict,
+        priceMin: minPrice,
+        priceMax: maxPrice,
+        rooms:
+          advancedFilters?.rooms && advancedFilters.rooms !== "all"
+            ? Number(advancedFilters.rooms)
+            : undefined,
+      });
+
+      if (res.success) {
+        alert(
+          locale === "uz"
+            ? "Qidiruv muvaffaqiyatli saqlandi! Mos yangi e’lonlar haqida bildirishnoma olasiz."
+            : "Поиск успешно сохранён! Вы получите уведомление о новых объектах."
+        );
+      }
+    } finally {
+      setIsSavingSearch(false);
+    }
+  };
 
   const [districtOpen, setDistrictOpen] = useState(false);
   const [typeOpen, setTypeOpen] = useState(false);
@@ -354,6 +393,17 @@ export function FloatingSearchPanel({
               )}
             </button>
           )}
+
+          <button
+            type="button"
+            onClick={handleSaveCurrentSearch}
+            disabled={isSavingSearch}
+            title={locale === "uz" ? "Qidiruvni saqlash" : "Сохранить поиск"}
+            className="flex h-8 px-2.5 items-center gap-1.5 rounded-xl border border-gray-200/80 bg-white/90 text-gray-700 hover:text-brand-primary hover:border-brand-primary/40 hover:bg-white transition-colors shadow-sm text-xs font-bold"
+          >
+            <Bookmark className="h-3.5 w-3.5 text-[#16543C]" />
+            <span className="hidden lg:inline">{locale === "uz" ? "Saqlash" : "Сохранить"}</span>
+          </button>
 
           <button
             onClick={onReset}

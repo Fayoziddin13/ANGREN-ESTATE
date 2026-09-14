@@ -116,6 +116,24 @@ export default function BuyPage() {
     }
   }, [activePropertiesPool]);
 
+  React.useEffect(() => {
+    const handleOpenDetail = (e: Event) => {
+      const customEvent = e as CustomEvent<{ id?: string }>;
+      const id = customEvent.detail?.id;
+      if (id) {
+        const found = publishedProperties.find((p) => p.id === id);
+        if (found) {
+          setSelectedProperty(found);
+          setDetailProperty(found);
+          setIsDetailOpen(true);
+        }
+      }
+    };
+
+    window.addEventListener("angren_open_detail", handleOpenDetail);
+    return () => window.removeEventListener("angren_open_detail", handleOpenDetail);
+  }, [publishedProperties]);
+
   // Filter properties in real-time
   const filteredProperties = useMemo(() => {
     return activePropertiesPool.filter((p) => {

@@ -84,11 +84,12 @@ export function MobileMapControls({
         </div>
       </div>
 
-      {/* 2. Permanent Segmented Control [ XARITA ] [ KATALOG ] */}
-      <div
-        data-testid="mobile-primary-view-switcher"
-        className="flex items-center p-1 rounded-2xl bg-white/95 backdrop-blur-xl shadow-elevated border border-white/90 w-full max-w-[280px]"
-      >
+      {/* 2. Permanent Segmented Control [ XARITA ] [ KATALOG ] - Balanced towards the right */}
+      <div className="w-full flex justify-end">
+        <div
+          data-testid="mobile-primary-view-switcher"
+          className="flex items-center p-1 rounded-2xl bg-white/95 backdrop-blur-xl shadow-elevated border border-white/90 w-[240px]"
+        >
         <button
           type="button"
           data-testid="mobile-view-map"
@@ -127,5 +128,6 @@ export function MobileMapControls({
         </button>
       </div>
     </div>
-  );
+  </div>
+);
 }

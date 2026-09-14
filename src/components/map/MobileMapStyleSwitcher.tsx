@@ -66,7 +66,7 @@ export function MobileMapStyleSwitcher({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.85, y: 15 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
-          className={`sm:hidden fixed bottom-20 right-4 z-40 pb-[env(safe-area-inset-bottom)] pointer-events-auto ${className}`}
+          className={`sm:hidden fixed bottom-36 right-4 z-40 pb-[env(safe-area-inset-bottom)] pointer-events-auto ${className}`}
         >
           {/* Popover Menu (Directly above the trigger button) */}
           <AnimatePresence>

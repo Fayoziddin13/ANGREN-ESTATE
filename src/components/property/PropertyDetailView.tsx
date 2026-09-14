@@ -34,6 +34,7 @@ import {
   Droplets,
   Thermometer,
   Wifi,
+  Scale,
 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -41,6 +42,8 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useAuth } from "@/context/AuthContext";
 import { useFavorites } from "@/lib/favoriteStore";
+import { useCompare } from "@/lib/compareStore";
+import { PropertyInfrastructureSection } from "./PropertyInfrastructureSection";
 import { getPropertyRepository } from "@/lib/repository/propertyRepository";
 import { Property } from "@/lib/types";
 import { trackEvent } from "@/lib/analytics";
@@ -79,8 +82,10 @@ export default function PropertyDetailView({
   const { currency, exchangeRate } = useCurrency();
   const { user, openAuthModal } = useAuth();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { isInCompare, toggleCompare } = useCompare();
 
   const [property, setProperty] = useState<Property | null>(initialProperty || null);
+  const isCompared = property ? isInCompare(property.id) : false;
   const [loading, setLoading] = useState(!initialProperty);
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [copied, setCopied] = useState(false);
@@ -223,6 +228,29 @@ export default function PropertyDetailView({
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => {
+                  if (!property) return;
+                  const res = toggleCompare(property);
+                  if (res.limitReached) {
+                    alert(
+                      locale === "uz"
+                        ? "Solishtirish uchun ko‘pi bilan 3 ta obyekt tanlash mumkin."
+                        : "Для сравнения можно выбрать не более 3 объектов."
+                    );
+                  }
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-colors shadow-sm ${
+                  isCompared
+                    ? "bg-emerald-50 border-emerald-300 text-emerald-800"
+                    : "border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
+                }`}
+                title={locale === "uz" ? "Solishtirishga qo‘shish" : "Добавить в сравнение"}
+              >
+                <Scale className="w-3.5 h-3.5 text-[#16543C]" />
+                <span>{isCompared ? (locale === "uz" ? "Solishtirishda" : "В сравнении") : (locale === "uz" ? "Solishtirish" : "Сравнить")}</span>
+              </button>
+
               <button
                 onClick={handleShare}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold transition-colors shadow-sm"
@@ -618,6 +646,17 @@ export default function PropertyDetailView({
                     onMapModeChange={() => {}}
                   />
                 </div>
+
+                {/* Infrastructure Around Property ("Atrofida" / "Рядом") */}
+                {(property.latitude ?? property.coordinates?.lat) &&
+                  (property.longitude ?? property.coordinates?.lng) && (
+                    <div className="pt-6 border-t border-gray-100">
+                      <PropertyInfrastructureSection
+                        latitude={property.latitude ?? property.coordinates.lat}
+                        longitude={property.longitude ?? property.coordinates.lng}
+                      />
+                    </div>
+                  )}
               </div>
             </div>
 
