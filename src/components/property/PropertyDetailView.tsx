@@ -47,16 +47,21 @@ import { trackEvent } from "@/lib/analytics";
 import { recordPublicLead } from "@/lib/leadClient";
 import { formatPublishedDate } from "@/lib/dateFormat";
 
+function DetailMapLoading() {
+  const { locale } = useLanguage();
+  return (
+    <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400 text-xs font-semibold">
+      {locale === "uz" ? "Xarita yuklanmoqda..." : "Загрузка карты..."}
+    </div>
+  );
+}
+
 // Dynamic import for mini map
 const AngrenMap = dynamic(
   () => import("@/components/map/AngrenMap").then((mod) => mod.AngrenMap),
   {
     ssr: false,
-    loading: () => (
-      <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400 text-xs font-semibold">
-        Xarita yuklanmoqda...
-      </div>
-    ),
+    loading: () => <DetailMapLoading />,
   }
 );
 
@@ -395,7 +400,7 @@ export default function PropertyDetailView({
                       <div className="flex items-center gap-1.5 text-slate-400">
                         <span>•</span>
                         <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span>{formatPublishedDate(property.published_at)}</span>
+                        <span>{formatPublishedDate(property.published_at, locale)}</span>
                       </div>
                     )}
                   </div>
@@ -407,16 +412,16 @@ export default function PropertyDetailView({
                     <>
                       <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100/80 text-center">
                         <div className="text-xs text-gray-500 font-medium">
-                          {locale === "uz" ? "Ер майдони" : "Участок"}
+                          {locale === "uz" ? "Yer maydoni" : "Участок"}
                         </div>
                         <div className="text-base font-extrabold text-gray-900 mt-0.5">
-                          {property.area_sotikh ? `${property.area_sotikh} сотих` : `${property.area_sqm} m²`}
+                          {property.area_sotikh ? `${property.area_sotikh} ${locale === "uz" ? "sotix" : "соток"}` : `${property.area_sqm} m²`}
                         </div>
                       </div>
 
                       <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100/80 text-center">
                         <div className="text-xs text-gray-500 font-medium">
-                          {locale === "uz" ? "Уй майдони" : "Жилая пл."}
+                          {locale === "uz" ? "Uy maydoni" : "Жилая пл."}
                         </div>
                         <div className="text-base font-extrabold text-gray-900 mt-0.5">
                           {property.living_area_sqm || property.area_sqm} m²
@@ -425,19 +430,19 @@ export default function PropertyDetailView({
 
                       <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100/80 text-center">
                         <div className="text-xs text-gray-500 font-medium">
-                          {locale === "uz" ? "Хоналар" : "Комнаты"}
+                          {locale === "uz" ? "Xonalar" : "Комнаты"}
                         </div>
                         <div className="text-base font-extrabold text-gray-900 mt-0.5">
-                          {property.rooms} {locale === "uz" ? "хона" : "комн."}
+                          {property.rooms} {locale === "uz" ? "xona" : "комн."}
                         </div>
                       </div>
 
                       <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100/80 text-center">
                         <div className="text-xs text-gray-500 font-medium">
-                          {locale === "uz" ? "Таъмир" : "Ремонт"}
+                          {locale === "uz" ? "Ta’mir" : "Ремонт"}
                         </div>
                         <div className="text-base font-extrabold text-[#16543C] mt-0.5 capitalize">
-                          {property.renovation || "Евро"}
+                          {property.renovation || (locale === "uz" ? "Yevro" : "Евро")}
                         </div>
                       </div>
                     </>
@@ -492,37 +497,37 @@ export default function PropertyDetailView({
                     {[
                       {
                         icon: Zap,
-                        label_uz: "Свет (Электр тармоғи)",
+                        label_uz: "Elektr (Svet)",
                         label_ru: "Электричество",
                         active: property.utilities?.electricity ?? true,
                       },
                       {
                         icon: Flame,
-                        label_uz: "Газ (Табиий газ)",
+                        label_uz: "Tabiiy gaz",
                         label_ru: "Газ (Природный)",
                         active: property.utilities?.gas ?? true,
                       },
                       {
                         icon: Droplets,
-                        label_uz: "Совуқ сув (Ичимлик)",
+                        label_uz: "Ichimlik suvi (Sovuq suv)",
                         label_ru: "Холодная вода",
                         active: property.utilities?.cold_water ?? (property.utilities as any)?.water ?? true,
                       },
                       {
                         icon: Thermometer,
-                        label_uz: "Иссиқ сув",
+                        label_uz: "Issiq suv",
                         label_ru: "Горячая вода",
                         active: property.utilities?.hot_water ?? true,
                       },
                       {
                         icon: Flame,
-                        label_uz: "Отопление (Иситиш)",
+                        label_uz: "Isitish tizimi (Otopleniye)",
                         label_ru: "Отопление",
                         active: property.utilities?.heating ?? true,
                       },
                       {
                         icon: Wifi,
-                        label_uz: "Интернет (Оптика/Wi-Fi)",
+                        label_uz: "Internet (Optika / Wi-Fi)",
                         label_ru: "Интернет",
                         active: property.utilities?.internet ?? true,
                       },
@@ -550,7 +555,7 @@ export default function PropertyDetailView({
                   {property.utilities?.custom && property.utilities.custom.length > 0 && (
                     <div className="pt-3.5 mt-3.5 border-t border-gray-100">
                       <div className="text-xs font-bold text-gray-700 mb-2">
-                        {locale === "uz" ? "Қўшимча қулайликлар:" : "Дополнительные удобства:"}
+                        {locale === "uz" ? "Qo‘shimcha qulayliklar:" : "Дополнительные удобства:"}
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {property.utilities.custom.map((c, i) => (
@@ -704,7 +709,7 @@ export default function PropertyDetailView({
                         className="w-full py-3.5 px-4 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white text-sm font-bold shadow-md shadow-sky-500/20 flex items-center justify-center gap-2 transition-all active:scale-98"
                       >
                         <Send className="w-4 h-4" />
-                        <span>Telegram orqali yozish</span>
+                        <span>{locale === "uz" ? "Telegram orqali yozish" : "Написать в Telegram"}</span>
                       </a>
                     )}
 
@@ -716,7 +721,7 @@ export default function PropertyDetailView({
                         className="w-full py-3.5 px-4 rounded-2xl border border-pink-200 bg-pink-50/60 hover:bg-pink-100 text-pink-700 text-sm font-bold shadow-sm flex items-center justify-center gap-2 transition-all active:scale-98"
                       >
                         <Instagram className="w-4 h-4 text-pink-600" />
-                        <span>Instagram profil</span>
+                        <span>{locale === "uz" ? "Instagram profil" : "Профиль Instagram"}</span>
                       </a>
                     )}
                   </div>
@@ -725,9 +730,9 @@ export default function PropertyDetailView({
                 {user && (user.role === "admin" || (user as any).is_admin) && property.owner_phone && (
                   <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-xs space-y-1">
                     <div className="font-bold text-amber-900 flex items-center justify-between">
-                      <span>🔒 Мулк эгаси рақами</span>
+                      <span>{locale === "uz" ? "🔒 Mulk egasi raqami" : "🔒 Номер владельца"}</span>
                       <span className="text-[10px] text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md font-semibold">
-                        Фақат админ
+                        {locale === "uz" ? "Faqat admin" : "Только админ"}
                       </span>
                     </div>
                     <a
@@ -742,10 +747,12 @@ export default function PropertyDetailView({
                 <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-100 text-xs text-gray-600 space-y-1.5">
                   <div className="font-bold text-[#16543C] flex items-center gap-1.5">
                     <ShieldCheck className="w-4 h-4" />
-                    <span>Xavfsiz bitim kafolati</span>
+                    <span>{locale === "uz" ? "Xavfsiz bitim kafolati" : "Гарантия безопасной сделки"}</span>
                   </div>
                   <p>
-                    Barcha hujjatlar va kadastr ma’lumotlari mutaxassislar tomonidan to‘liq tekshirilgan.
+                    {locale === "uz"
+                      ? "Barcha hujjatlar va kadastr ma’lumotlari mutaxassislar tomonidan to‘liq tekshirilgan."
+                      : "Все документы и кадастровые данные полностью проверены специалистами."}
                   </p>
                 </div>
               </div>

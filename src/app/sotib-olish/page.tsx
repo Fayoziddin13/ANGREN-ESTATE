@@ -24,17 +24,24 @@ import { useMapMode } from "@/lib/mapStore";
 import { AdvancedFilterState, defaultAdvancedFilters } from "@/components/map/AdvancedFiltersModal";
 import { List, ChevronDown, Map, Layers, Search, SlidersHorizontal, Building2 } from "lucide-react";
 
+function MapLoadingPlaceholder() {
+  const { locale } = useLanguage();
+  return (
+    <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 text-gray-400">
+      <div className="h-8 w-8 rounded-full border-2 border-brand-primary border-t-transparent animate-spin mb-2" />
+      <span className="text-xs font-semibold">
+        {locale === "uz" ? "Angren xaritasi yuklanmoqda..." : "Загрузка карты Ангрена..."}
+      </span>
+    </div>
+  );
+}
+
 // Dynamic import for WebGL map to disable SSR
 const AngrenMap = dynamic(
   () => import("@/components/map/AngrenMap").then((mod) => mod.AngrenMap),
   {
     ssr: false,
-    loading: () => (
-      <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 text-gray-400">
-        <div className="h-8 w-8 rounded-full border-2 border-brand-primary border-t-transparent animate-spin mb-2" />
-        <span className="text-xs font-semibold">Angren xaritasi yuklanmoqda...</span>
-      </div>
-    ),
+    loading: () => <MapLoadingPlaceholder />,
   }
 );
 
@@ -249,10 +256,11 @@ export default function BuyPage() {
       if (typeMap[selectedType]) parts.push(typeMap[selectedType]);
     }
     if (priceFilter !== "all") {
+      const mlnText = locale === "uz" ? "mln" : "млн";
       const priceMap: Record<string, string> = {
-        under300m: "< 300 млн",
-        "300to600m": "300 - 600 млн",
-        over600m: "> 600 млн",
+        under300m: `< 300 ${mlnText}`,
+        "300to600m": `300 - 600 ${mlnText}`,
+        over600m: `> 600 ${mlnText}`,
       };
       if (priceMap[priceFilter]) parts.push(priceMap[priceFilter]);
     }
@@ -260,7 +268,7 @@ export default function BuyPage() {
       return parts.join(" • ");
     }
     return "";
-  }, [transactionType, selectedDistrict, selectedType, priceFilter, t]);
+  }, [transactionType, selectedDistrict, selectedType, priceFilter, t, locale]);
 
   const handleResetFilters = () => {
     setSearchQuery("");
@@ -426,7 +434,7 @@ export default function BuyPage() {
               }`}
             >
               <Map className="h-3.5 w-3.5" />
-              <span>{locale === "uz" ? "ХАРИТА" : "КАРТА"}</span>
+              <span>{locale === "uz" ? "XARITA" : "КАРТА"}</span>
             </button>
             <button
               type="button"
@@ -439,7 +447,7 @@ export default function BuyPage() {
               }`}
             >
               <Layers className="h-3.5 w-3.5" />
-              <span>{locale === "uz" ? "КАТАЛОГ" : "КАТАЛОГ"}</span>
+              <span>{locale === "uz" ? "KATALOG" : "КАТАЛОГ"}</span>
               <span
                 className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-full ${
                   activeView === "catalog"

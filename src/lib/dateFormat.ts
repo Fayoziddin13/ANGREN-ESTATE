@@ -47,7 +47,12 @@ export function formatPublishedDate(
     return `${day} ${m}, ${year}`;
   }
 
-  // Uzbek Cyrillic standard for local Angren market readability
-  const m = short ? uzCyrillicMonthsShort[month] : uzCyrillicMonths[month];
+  if (locale === "uz-Cyrl") {
+    const m = short ? uzCyrillicMonthsShort[month] : uzCyrillicMonths[month];
+    return `${day} ${m}, ${year}`;
+  }
+
+  // Standard Uzbek Latin
+  const m = short ? uzLatinMonthsShort[month] : uzLatinMonths[month];
   return `${day} ${m}, ${year}`;
 }

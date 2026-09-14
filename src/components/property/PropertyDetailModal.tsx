@@ -386,7 +386,7 @@ export function PropertyDetailModal({
                       </span>
                       <span className="text-base sm:text-lg font-extrabold text-brand-dark pt-1">
                         {property.floor_number || property.floor
-                          ? `${property.floor_number || property.floor} / ${property.total_floors || property.floors || property.floor_number || 1} qavat`
+                          ? `${property.floor_number || property.floor} / ${property.total_floors || property.floors || property.floor_number || 1} ${locale === "uz" ? "qavat" : "эт."}`
                           : "1 / 1"}
                       </span>
                     </div>
@@ -420,7 +420,7 @@ export function PropertyDetailModal({
                         <span>{t.propertyDetail.bathrooms}</span>
                       </span>
                       <span className="text-base sm:text-lg font-extrabold text-brand-dark pt-1">
-                        {property.bathrooms ? `${property.bathrooms} ta` : "1 ta"}
+                        {property.bathrooms ? `${property.bathrooms} ${locale === "uz" ? "ta" : ""}`.trim() : (locale === "uz" ? "1 ta" : "1")}
                       </span>
                     </div>
                   </>
@@ -471,7 +471,7 @@ export function PropertyDetailModal({
                   },
                   {
                     icon: Flame,
-                    label: "Отопление",
+                    label: "Isitish",
                     labelRu: "Отопление",
                     active: property.utilities?.heating ?? true,
                   },
@@ -552,7 +552,11 @@ export function PropertyDetailModal({
             <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-200/60 flex items-center gap-3 text-xs text-gray-500">
               <ShieldCheck className="h-5 w-5 text-brand-primary shrink-0" />
               <span>
-                Ushbu obyekt <strong>ANGREN ESTATE</strong> mutaxassislari tomonidan hujjatlar va fotosuratlar bo‘yicha to‘liq tekshirilgan.
+                {locale === "uz" ? (
+                  <>Ushbu obyekt <strong>ANGREN ESTATE</strong> mutaxassislari tomonidan hujjatlar va fotosuratlar bo‘yicha to‘liq tekshirilgan.</>
+                ) : (
+                  <>Данный объект полностью проверен специалистами <strong>ANGREN ESTATE</strong> по документам и фотографиям.</>
+                )}
               </span>
             </div>
           </div>

@@ -218,7 +218,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
               ANGREN ESTATE
             </span>
             <span className="text-[10px] sm:text-[11px] font-medium text-emerald-200/70 tracking-wider uppercase mt-0.5">
-              Ko‘chmas mulk
+              {locale === "ru" ? "Недвижимость" : "Ko‘chmas mulk"}
             </span>
           </div>
         </Link>

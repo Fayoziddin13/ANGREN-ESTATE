@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseServer";
 import { CMSFullPayload } from "@/lib/types";
 
@@ -170,6 +170,24 @@ export async function GET() {
           payload.seo = { ...payload.seo, ...row.value };
         } else if (row.key === "site_settings" && row.value) {
           payload.settings = { ...payload.settings, ...row.value };
+          if (row.value.admin_phone) {
+            payload.contacts.phone = row.value.admin_phone;
+          }
+          if (row.value.admin_telegram) {
+            payload.contacts.telegram = row.value.admin_telegram;
+            payload.contacts.telegram_url = row.value.admin_telegram.startsWith("http")
+              ? row.value.admin_telegram
+              : `https://t.me/${row.value.admin_telegram.replace("@", "")}`;
+          }
+          if (row.value.admin_email) {
+            payload.contacts.email = row.value.admin_email;
+          }
+          if (row.value.instagram) {
+            payload.contacts.instagram = row.value.instagram;
+            payload.contacts.instagram_url = row.value.instagram.startsWith("http")
+              ? row.value.instagram
+              : `https://instagram.com/${row.value.instagram.replace("@", "")}`;
+          }
         }
       }
     }

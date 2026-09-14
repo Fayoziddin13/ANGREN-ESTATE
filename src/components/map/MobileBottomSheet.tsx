@@ -172,22 +172,22 @@ export function MobileBottomSheet({
                 {property.property_type === "land" ? (
                   <div className="flex items-center gap-2">
                     {property.area_sotikh ? (
-                      <span className="font-bold text-[#16543C]">{property.area_sotikh} {locale === "uz" ? "сотих" : "сот."}</span>
+                      <span className="font-bold text-[#16543C]">{property.area_sotikh} {locale === "uz" ? "sotix" : "сот."}</span>
                     ) : null}
                     {property.dimensions || (property.facade_m && property.depth_m) ? (
                       <span className="text-gray-500 font-medium">
-                        {property.dimensions || `${property.facade_m} × ${property.depth_m} м`}
+                        {property.dimensions || `${property.facade_m} × ${property.depth_m} ${locale === "uz" ? "m" : "м"}`}
                       </span>
                     ) : null}
                   </div>
                 ) : isHouse ? (
                   <div className="flex items-center gap-2">
                     {property.area_sotikh ? (
-                      <span className="font-bold text-[#16543C]">{property.area_sotikh} {locale === "uz" ? "сотих" : "сот."}</span>
+                      <span className="font-bold text-[#16543C]">{property.area_sotikh} {locale === "uz" ? "sotix" : "сот."}</span>
                     ) : null}
                     <div className="flex items-center gap-1">
                       <Maximize2 className="h-3 w-3 text-gray-400" />
-                      <span>Uy: {property.area_sqm} м²</span>
+                      <span>{locale === "uz" ? "Uy" : "Дом"}: {property.area_sqm} {locale === "uz" ? "m²" : "м²"}</span>
                     </div>
                     {property.rooms && (
                       <div className="flex items-center gap-1">
@@ -201,12 +201,12 @@ export function MobileBottomSheet({
                     {floorNum ? (
                       <div className="flex items-center gap-1 font-bold text-gray-700">
                         <Layers className="h-3 w-3 text-brand-primary" />
-                        <span>{floorNum}{totalFloors ? `/${totalFloors}` : ""} {locale === "uz" ? "қават" : "эт."}</span>
+                        <span>{floorNum}{totalFloors ? `/${totalFloors}` : ""} {locale === "uz" ? "qavat" : "эт."}</span>
                       </div>
                     ) : null}
                     <div className="flex items-center gap-1">
                       <Maximize2 className="h-3 w-3 text-gray-400" />
-                      <span>{property.area_sqm} м²</span>
+                      <span>{property.area_sqm} {locale === "uz" ? "m²" : "м²"}</span>
                     </div>
                     {property.rooms && (
                       <div className="flex items-center gap-1">

@@ -111,7 +111,7 @@ export function PropertyPreviewCard({
           </span>
           {property.area_sotikh && (property.property_type === "house_yard" || property.property_type === "land") && (
             <span className="rounded-xl bg-emerald-950/80 backdrop-blur-md px-2 py-1 text-[11px] font-bold text-emerald-200 shadow-sm">
-              {property.area_sotikh} {locale === "uz" ? "сотих" : "соток"}
+              {property.area_sotikh} {locale === "uz" ? "sotix" : "соток"}
             </span>
           )}
         </div>
@@ -168,7 +168,7 @@ export function PropertyPreviewCard({
               ) : null}
               <div className="flex items-center gap-1">
                 <Maximize2 className="h-3.5 w-3.5 text-gray-400" />
-                <span>Uy: {property.area_sqm} {t.common.sqm}</span>
+                <span>{locale === "uz" ? "Uy" : "Дом"}: {property.area_sqm} {t.common.sqm}</span>
               </div>
               {property.dimensions || (property.facade_m && property.depth_m) ? (
                 <span className="text-gray-500 font-medium text-[11px]">

@@ -77,7 +77,7 @@ export default function ContactsPage() {
     }
     if (!description || description.length < 3) {
       setErrorMessage(
-        locale === "uz" ? "Объект ҳақида қисқача маълумот киритинг" : "Введите краткое описание объекта"
+        locale === "uz" ? "Obyekt haqida qisqacha ma’lumot kiriting" : "Введите краткое описание объекта"
       );
       return;
     }
@@ -455,21 +455,21 @@ export default function ContactsPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-gray-700">
-                        {locale === "uz" ? "Исмингиз *" : "Ваше имя *"}
+                        {locale === "uz" ? "Ismingiz *" : "Ваше имя *"}
                       </label>
                       <input
                         type="text"
                         required
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder={locale === "uz" ? "Масалан: Алишер" : "Например: Алишер"}
+                        placeholder={locale === "uz" ? "Masalan: Alisher" : "Например: Алишер"}
                         className="w-full px-4 py-3 rounded-2xl bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
                       />
                     </div>
 
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-gray-700">
-                        {locale === "uz" ? "Телефон рақамингиз *" : "Номер телефона *"}
+                        {locale === "uz" ? "Telefon raqamingiz *" : "Номер телефона *"}
                       </label>
                       <input
                         type="tel"
@@ -485,7 +485,7 @@ export default function ContactsPage() {
                   {/* 2. Bitim turi (Deal Type Pills) */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-gray-700">
-                      {locale === "uz" ? "Битим тури" : "Тип сделки"}
+                      {locale === "uz" ? "Bitim turi" : "Тип сделки"}
                     </label>
                     <div className="grid grid-cols-2 gap-3">
                       <button
@@ -498,7 +498,7 @@ export default function ContactsPage() {
                         }`}
                       >
                         <Tag className="h-4 w-4" />
-                        <span>{locale === "uz" ? "Сотув" : "Продажа"}</span>
+                        <span>{locale === "uz" ? "Sotuv" : "Продажа"}</span>
                       </button>
 
                       <button
@@ -511,7 +511,7 @@ export default function ContactsPage() {
                         }`}
                       >
                         <Clock className="h-4 w-4" />
-                        <span>{locale === "uz" ? "Ижара" : "Аренда"}</span>
+                        <span>{locale === "uz" ? "Ijara" : "Аренда"}</span>
                       </button>
                     </div>
                   </div>
@@ -519,16 +519,16 @@ export default function ContactsPage() {
                   {/* 3. Mulk turi (Property Type Pills) */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-gray-700">
-                      {locale === "uz" ? "Мулк тури" : "Тип недвижимости"}
+                      {locale === "uz" ? "Mulk turi" : "Тип недвижимости"}
                     </label>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {[
-                        { id: "kvartira", uz: "Квартира", ru: "Квартира" },
-                        { id: "hovli", uz: "Ҳовли уй", ru: "Участок / дом" },
-                        { id: "yer", uz: "Ер участкаси", ru: "Земля" },
-                        { id: "yangi_qurilish", uz: "Янги қурилиш", ru: "Новостройка" },
-                        { id: "tijorat", uz: "Тижорат", ru: "Коммерческая" },
-                        { id: "boshqa", uz: "Бошқа", ru: "Другое" },
+                        { id: "kvartira", uz: "Kvartira", ru: "Квартира" },
+                        { id: "hovli", uz: "Hovli uy", ru: "Участок / дом" },
+                        { id: "yer", uz: "Yer uchastkasi", ru: "Земля" },
+                        { id: "yangi_qurilish", uz: "Yangi qurilish", ru: "Новостройка" },
+                        { id: "tijorat", uz: "Tijorat", ru: "Коммерческая" },
+                        { id: "boshqa", uz: "Boshqa", ru: "Другое" },
                       ].map((p) => {
                         const isSelected = formData.propertyType === p.id;
                         return (
@@ -553,7 +553,7 @@ export default function ContactsPage() {
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-gray-700 flex items-center gap-1">
                       <MapPin className="h-3.5 w-3.5 text-emerald-700" />
-                      <span>{locale === "uz" ? "Локация *" : "Локация *"}</span>
+                      <span>{locale === "uz" ? "Lokatsiya *" : "Локация *"}</span>
                     </label>
                     <input
                       type="text"
@@ -568,7 +568,7 @@ export default function ContactsPage() {
                   {/* 5. Obyekt haqida qisqacha (Required) */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-gray-700">
-                      {locale === "uz" ? "Объект ҳақида қисқача *" : "Кратко об объекте *"}
+                      {locale === "uz" ? "Obyekt haqida qisqacha *" : "Кратко об объекте *"}
                     </label>
                     <textarea
                       rows={3}
@@ -587,7 +587,7 @@ export default function ContactsPage() {
                   {/* 6. Preferred Contact Method */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-gray-700">
-                      {locale === "uz" ? "Қулай алоқа усули" : "Удобный способ связи"}
+                      {locale === "uz" ? "Qulay aloqa usuli" : "Удобный способ связи"}
                     </label>
                     <div className="grid grid-cols-2 gap-3">
                       <button
@@ -600,7 +600,7 @@ export default function ContactsPage() {
                         }`}
                       >
                         <Phone className="h-4 w-4" />
-                        <span>{locale === "uz" ? "Телефон қўнғироқ" : "Телефонный звонок"}</span>
+                        <span>{locale === "uz" ? "Telefon qo‘ng‘iroq" : "Телефонный звонок"}</span>
                       </button>
 
                       <button
@@ -627,7 +627,7 @@ export default function ContactsPage() {
                     {isSubmitting ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>{locale === "uz" ? "Юборилмоқда..." : "Отправка..."}</span>
+                        <span>{locale === "uz" ? "Yuborilmoqda..." : "Отправка..."}</span>
                       </>
                     ) : (
                       <>
