@@ -719,49 +719,64 @@ export default function AdminLeadsPage() {
                   <div className="flex items-center justify-between">
                     <div className="text-xs font-black text-emerald-950 flex items-center gap-1.5 uppercase tracking-wide">
                       <Home className="w-4 h-4 text-[#16543C]" />
-                      <span>{locale === "uz" ? "Эълон бериш аризаси маълумотлари" : "Данные заявки на размещение"}</span>
+                      <span>{locale === "uz" ? "E’lon berish arizasi ma’lumotlari" : "Данные заявки на размещение"}</span>
                     </div>
                     <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
-                      {locale === "uz" ? "Янги ариза" : "Новая заявка"}
+                      {locale === "uz" ? "Yangi ariza" : "Новая заявка"}
                     </span>
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
                     <div className="bg-white p-2.5 rounded-xl border border-emerald-100">
-                      <div className="text-[10px] font-bold text-slate-500 uppercase">{locale === "uz" ? "Битим тури" : "Тип сделки"}</div>
+                      <div className="text-[10px] font-bold text-slate-500 uppercase">{locale === "uz" ? "Bitim turi" : "Тип сделки"}</div>
                       <div className="text-xs font-black text-slate-900 mt-0.5">
-                        {selectedLead.metadata?.deal_type === "rent" || (selectedLead.metadata?.deal_type as string) === "ijara" ? (locale === "uz" ? "Ижара" : "Аренда") : (locale === "uz" ? "Сотув" : "Продажа")}
+                        {selectedLead.metadata?.deal_type === "rent" || (selectedLead.metadata?.deal_type as string) === "ijara" ? (locale === "uz" ? "Ijara" : "Аренда") : (locale === "uz" ? "Sotuv" : "Продажа")}
                       </div>
                     </div>
 
                     <div className="bg-white p-2.5 rounded-xl border border-emerald-100">
-                      <div className="text-[10px] font-bold text-slate-500 uppercase">{locale === "uz" ? "Мулк тури" : "Тип недвижимости"}</div>
+                      <div className="text-[10px] font-bold text-slate-500 uppercase">{locale === "uz" ? "Mulk turi" : "Тип недвижимости"}</div>
                       <div className="text-xs font-black text-slate-900 mt-0.5">
                         {(() => {
                           const pt = selectedLead.metadata?.property_type;
-                          const map: Record<string, string> = {
+                          const mapUz: Record<string, string> = {
+                            kvartira: "Kvartira",
+                            apartment: "Kvartira",
+                            hovli: "Hovli / Uy",
+                            house: "Hovli / Uy",
+                            yer: "Yer uchastkasi",
+                            land: "Yer uchastkasi",
+                            yangi_qurilish: "Yangi qurilish",
+                            new_building: "Yangi qurilish",
+                            tijorat: "Tijorat",
+                            commercial: "Tijorat",
+                            boshqa: "Boshqa",
+                            other: "Boshqa",
+                          };
+                          const mapRu: Record<string, string> = {
                             kvartira: "Квартира",
                             apartment: "Квартира",
-                            hovli: "Ҳовли уй",
-                            house: "Ҳовли уй",
-                            yer: "Ер участкаси",
-                            land: "Ер участкаси",
-                            yangi_qurilish: "Янги қурилиш",
-                            new_building: "Янги қурилиш",
-                            tijorat: "Тижорат",
-                            commercial: "Тижорат",
-                            boshqa: "Бошқа",
-                            other: "Бошқа",
+                            hovli: "Дом / Участок",
+                            house: "Дом / Участок",
+                            yer: "Земельный участок",
+                            land: "Земельный участок",
+                            yangi_qurilish: "Новостройка",
+                            new_building: "Новостройка",
+                            tijorat: "Коммерческая",
+                            commercial: "Коммерческая",
+                            boshqa: "Другое",
+                            other: "Другое",
                           };
-                          return (pt && map[pt]) || pt || (locale === "uz" ? "Квартира" : "Квартира");
+                          const m = locale === "uz" ? mapUz : mapRu;
+                          return (pt && m[pt]) || pt || (locale === "uz" ? "Kvartira" : "Квартира");
                         })()}
                       </div>
                     </div>
 
                     <div className="bg-white p-2.5 rounded-xl border border-emerald-100 col-span-2 sm:col-span-1">
-                      <div className="text-[10px] font-bold text-slate-500 uppercase">{locale === "uz" ? "Алоқа усули" : "Способ связи"}</div>
+                      <div className="text-[10px] font-bold text-slate-500 uppercase">{locale === "uz" ? "Aloqa usuli" : "Способ связи"}</div>
                       <div className="text-xs font-black text-slate-900 mt-0.5">
-                        {selectedLead.metadata?.preferred_channel === "telegram" ? "Telegram" : (locale === "uz" ? "Телефон" : "Телефон")}
+                        {selectedLead.metadata?.preferred_channel === "telegram" ? "Telegram" : (locale === "uz" ? "Telefon" : "Телефон")}
                       </div>
                     </div>
                   </div>
@@ -770,7 +785,7 @@ export default function AdminLeadsPage() {
                     <div className="bg-white p-3 rounded-xl border border-emerald-100 flex items-start gap-2">
                       <MapPin className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
                       <div>
-                        <div className="text-[10px] font-bold text-slate-500 uppercase">{locale === "uz" ? "Локация / Манзил" : "Локация / Адрес"}</div>
+                        <div className="text-[10px] font-bold text-slate-500 uppercase">{locale === "uz" ? "Manzil / Hudud" : "Локация / Адрес"}</div>
                         <div className="text-xs font-bold text-slate-900 mt-0.5">{selectedLead.metadata.location}</div>
                       </div>
                     </div>
@@ -778,7 +793,7 @@ export default function AdminLeadsPage() {
 
                   {(selectedLead.metadata?.description || selectedLead.message) && (
                     <div className="bg-white p-3 rounded-xl border border-emerald-100 space-y-1">
-                      <div className="text-[10px] font-bold text-slate-500 uppercase">{locale === "uz" ? "Объект ҳақида қисқача" : "Кратко об объекте"}</div>
+                      <div className="text-[10px] font-bold text-slate-500 uppercase">{locale === "uz" ? "Obyekt haqida qisqacha" : "Кратко об объекте"}</div>
                       <div className="text-xs font-medium text-slate-800 whitespace-pre-wrap leading-relaxed">
                         {selectedLead.metadata?.description || selectedLead.message}
                       </div>

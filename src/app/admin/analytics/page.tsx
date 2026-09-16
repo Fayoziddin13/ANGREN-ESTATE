@@ -105,10 +105,10 @@ export default function AdminAnalyticsPage() {
   ];
 
   const trafficSources = data?.traffic_sources || [
-    { name: "Telegram kanallar va guruhlar", percent: 0, visits: 0, color: "bg-sky-500" },
-    { name: "Instagram stories va bio link", percent: 0, visits: 0, color: "bg-pink-500" },
-    { name: "Google Qidiruv (SEO organik)", percent: 0, visits: 0, color: "bg-emerald-500" },
-    { name: "To‘g‘ridan-to‘g‘ri (Direct / Bookmark)", percent: 0, visits: 0, color: "bg-amber-500" },
+    { name: "Telegram kanallar va guruhlar", name_ru: "Telegram каналы и группы", percent: 0, visits: 0, color: "bg-sky-500" },
+    { name: "Instagram stories va bio link", name_ru: "Instagram stories и bio link", percent: 0, visits: 0, color: "bg-pink-500" },
+    { name: "Google Qidiruv (SEO organik)", name_ru: "Google Поиск (SEO органика)", percent: 0, visits: 0, color: "bg-emerald-500" },
+    { name: "To‘g‘ridan-to‘g‘ri (Direct / Bookmark)", name_ru: "Прямой переход (Direct / Закладки)", percent: 0, visits: 0, color: "bg-amber-500" },
   ];
 
   const geoStats = data?.geo_stats || [
@@ -350,7 +350,9 @@ export default function AdminAnalyticsPage() {
                     <div className="flex items-center justify-between text-xs font-semibold">
                       <span className="text-slate-200">{locale === "uz" ? item.type_uz : item.type_ru}</span>
                       <div className="flex items-center gap-2">
-                        <span className="text-emerald-400 font-bold">{item.views} ta ko‘rish</span>
+                        <span className="text-emerald-400 font-bold">
+                          {item.views} {locale === "uz" ? "ta ko‘rish" : "просмотров"}
+                        </span>
                         <span className="text-white font-mono font-bold">{item.percentage}%</span>
                       </div>
                     </div>
@@ -373,15 +375,21 @@ export default function AdminAnalyticsPage() {
               </h3>
               <div className="space-y-4">
                 <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-700/80 flex items-center justify-between">
-                  <span className="text-xs text-slate-200 font-medium">Bajarilgan qidiruvlar & filtrlar</span>
+                  <span className="text-xs text-slate-200 font-medium">
+                    {locale === "uz" ? "Bajarilgan qidiruvlar & filtrlar" : "Выполненные поиски и фильтры"}
+                  </span>
                   <span className="text-lg font-bold font-mono text-emerald-400">{kpis.searches_executed}</span>
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-700/80 flex items-center justify-between">
-                  <span className="text-xs text-slate-200 font-medium">Sevimlilarga qo‘shilgan</span>
+                  <span className="text-xs text-slate-200 font-medium">
+                    {locale === "uz" ? "Sevimlilarga qo‘shilgan" : "Добавлено в избранное"}
+                  </span>
                   <span className="text-lg font-bold font-mono text-rose-400">{kpis.favorites_added}</span>
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-700/80 flex items-center justify-between">
-                  <span className="text-xs text-slate-200 font-medium">Jami telefon va telegram kontaktlari</span>
+                  <span className="text-xs text-slate-200 font-medium">
+                    {locale === "uz" ? "Jami telefon va telegram kontaktlari" : "Контакты по звонкам и Telegram"}
+                  </span>
                   <span className="text-lg font-bold font-mono text-sky-400">{kpis.phone_calls + kpis.telegram_chats}</span>
                 </div>
               </div>
@@ -596,14 +604,16 @@ export default function AdminAnalyticsPage() {
                         {locale === "uz" ? d.name_uz : d.name_ru}
                       </td>
                       <td className="py-3.5 px-4 font-mono font-bold text-emerald-400">
-                        {d.closed_deals} ta
+                        {d.closed_deals} {locale === "uz" ? "ta" : "сделок"}
                       </td>
                       <td className="py-3.5 px-4 font-mono font-bold text-white">
                         {d.avg_days_on_market} {locale === "uz" ? "kun" : "дней"}
                       </td>
                       <td className="py-3.5 px-4">
                         <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-500/40">
-                          {d.avg_days_on_market < 25 ? "Yuqori likvid" : "O‘rta likvid"}
+                          {d.avg_days_on_market < 25
+                            ? (locale === "uz" ? "Yuqori likvid" : "Высокая")
+                            : (locale === "uz" ? "O‘rta likvid" : "Средняя")}
                         </span>
                       </td>
                     </tr>
@@ -629,7 +639,9 @@ export default function AdminAnalyticsPage() {
                 {trafficSources.map((source) => (
                   <div key={source.name} className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs font-semibold">
-                      <span className="text-slate-200">{source.name}</span>
+                      <span className="text-slate-200">
+                        {locale === "uz" ? source.name : ((source as any).name_ru || source.name)}
+                      </span>
                       <span className="text-white font-mono font-bold">
                         {source.percent}% ({source.visits.toLocaleString()})
                       </span>
@@ -666,7 +678,9 @@ export default function AdminAnalyticsPage() {
                         </div>
                         <div>
                           <div className="text-sm font-bold text-white">{device.name}</div>
-                          <div className="text-xs text-slate-300 font-medium">{device.count.toLocaleString()} tashrif</div>
+                          <div className="text-xs text-slate-300 font-medium">
+                            {device.count.toLocaleString()} {locale === "uz" ? "tashrif" : "визитов"}
+                          </div>
                         </div>
                       </div>
                       <div className="text-lg font-bold font-mono text-emerald-400">{device.percent}%</div>

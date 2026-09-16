@@ -67,7 +67,7 @@ export function PropertyCatalogModal({
             className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs sm:text-sm transition-all active:scale-95 shrink-0"
           >
             <ArrowLeft className="h-4 w-4 text-[#16543C]" />
-            <span>{locale === "uz" ? "Харитага қайтиш" : "Вернуться на карту"}</span>
+            <span>{locale === "uz" ? "Xaritaga qaytish" : "Вернуться на карту"}</span>
           </button>
 
           {/* Transaction Type Segmented Control */}
@@ -80,7 +80,7 @@ export function PropertyCatalogModal({
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              {locale === "uz" ? "Барчаси" : "Все"}
+              {locale === "uz" ? "Barchasi" : "Все"}
             </button>
             <button
               onClick={() => onTransactionChange("sale")}
@@ -90,7 +90,7 @@ export function PropertyCatalogModal({
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              {locale === "uz" ? "Сотув" : "Продажа"}
+              {locale === "uz" ? "Sotuv" : "Продажа"}
             </button>
             <button
               onClick={() => onTransactionChange("rent")}
@@ -100,7 +100,7 @@ export function PropertyCatalogModal({
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              {locale === "uz" ? "Ижара" : "Аренда"}
+              {locale === "uz" ? "Ijara" : "Аренда"}
             </button>
           </div>
 
@@ -108,7 +108,7 @@ export function PropertyCatalogModal({
           <div className="flex items-center gap-2">
             <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-[#16543C] text-xs font-extrabold border border-emerald-200/70">
               <span>{properties.length}</span>
-              <span>{locale === "uz" ? "та эълон" : "объектов"}</span>
+              <span>{locale === "uz" ? "ta e’lon" : "объектов"}</span>
             </span>
             <button
               onClick={onClose}
@@ -123,13 +123,13 @@ export function PropertyCatalogModal({
         {/* Property Type Category Filter Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
           {[
-            { id: "all", label_uz: "Барча турлар", label_ru: "Все типы" },
-            { id: "apartment", label_uz: "Квартиралар", label_ru: "Квартиры" },
-            { id: "house_yard", label_uz: "Ҳовли / Уй", label_ru: "Дома / Участки" },
-            { id: "new_build", label_uz: "Янги бинолар", label_ru: "Новостройки" },
-            { id: "land", label_uz: "Ер майдонлари", label_ru: "Земельные участки" },
-            { id: "commercial", label_uz: "Тижорат мулки", label_ru: "Коммерческая" },
-            { id: "other", label_uz: "Бошқа турлар", label_ru: "Другое" },
+            { id: "all", label_uz: "Barcha turlar", label_ru: "Все типы" },
+            { id: "apartment", label_uz: "Kvartiralar", label_ru: "Квартиры" },
+            { id: "house_yard", label_uz: "Hovli / Uy", label_ru: "Дома / Участки" },
+            { id: "new_build", label_uz: "Yangi binolar", label_ru: "Новостройки" },
+            { id: "land", label_uz: "Yer maydonlari", label_ru: "Земельные участки" },
+            { id: "commercial", label_uz: "Tijorat mulki", label_ru: "Коммерческая" },
+            { id: "other", label_uz: "Boshqa turlar", label_ru: "Другое" },
           ].map((cat) => {
             const isActive = selectedType === cat.id;
             return (
@@ -156,12 +156,12 @@ export function PropertyCatalogModal({
           <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
             <span>
               {locale === "uz"
-                ? `Ангрен шаҳри бўйича ${properties.length} та фаол эълон`
+                ? `Angren shahri bo‘yicha ${properties.length} ta faol e’lon`
                 : `Найдено ${properties.length} активных объявлений в Ангрене`}
             </span>
             {searchQuery && (
               <span className="italic">
-                "{searchQuery}" {locale === "uz" ? "бўйича қидирув" : "поиск"}
+                "{searchQuery}" {locale === "uz" ? "bo‘yicha qidiruv" : "поиск"}
               </span>
             )}
           </div>
@@ -174,11 +174,11 @@ export function PropertyCatalogModal({
               </div>
               <div className="space-y-1">
                 <h3 className="text-base font-extrabold text-slate-800">
-                  {locale === "uz" ? "Бирорта ҳам эълон топилмади" : "Объявления не найдены"}
+                  {locale === "uz" ? "Birorta ham e’lon topilmadi" : "Объявления не найдены"}
                 </h3>
                 <p className="text-xs text-slate-500 max-w-sm">
                   {locale === "uz"
-                    ? "Филтрларни тозалаб кўринг ёки бошқа категорияни танланг."
+                    ? "Filtrlarni tozalab ko‘ring yoki boshqa kategoriyani tanlang."
                     : "Попробуйте сбросить фильтры или выбрать другую категорию."}
                 </p>
               </div>
@@ -187,7 +187,7 @@ export function PropertyCatalogModal({
                   onClick={onClearFilters}
                   className="px-4 py-2 rounded-xl bg-[#16543C] text-white text-xs font-bold shadow-sm"
                 >
-                  {locale === "uz" ? "Филтрларни тозалаш" : "Сбросить фильтры"}
+                  {locale === "uz" ? "Filtrlarni tozalash" : "Сбросить фильтры"}
                 </button>
               )}
             </div>
@@ -246,8 +246,8 @@ export function PropertyCatalogModal({
                           }`}
                         >
                           {isSale
-                            ? locale === "uz" ? "Сотув" : "Продажа"
-                            : locale === "uz" ? "Ижара" : "Аренда"}
+                            ? locale === "uz" ? "Sotuv" : "Продажа"
+                            : locale === "uz" ? "Ijara" : "Аренда"}
                         </span>
                         {property.badges &&
                           property.badges.slice(0, 2).map((b) => {
@@ -342,16 +342,16 @@ export function PropertyCatalogModal({
                           /* House specs: land sotix, house area, rooms */
                           <div className="flex items-center gap-3">
                             {property.area_sotikh ? (
-                              <span>{property.area_sotikh} {locale === "uz" ? "сот." : "сот."}</span>
+                              <span>{property.area_sotikh} {locale === "uz" ? "sotix" : "сот."}</span>
                             ) : null}
                             <div className="flex items-center gap-1">
                               <Maximize2 className="h-3 w-3 text-slate-400" />
-                              <span>{property.area_sqm} м²</span>
+                              <span>{property.area_sqm} {locale === "uz" ? "m²" : "м²"}</span>
                             </div>
                             {property.rooms ? (
                               <div className="flex items-center gap-1">
                                 <Bed className="h-3 w-3 text-slate-400" />
-                                <span>{property.rooms} {locale === "uz" ? "хона" : "комн."}</span>
+                                <span>{property.rooms} {locale === "uz" ? "xona" : "комн."}</span>
                               </div>
                             ) : null}
                           </div>
@@ -360,18 +360,18 @@ export function PropertyCatalogModal({
                           <div className="flex items-center gap-3">
                             <div className="flex items-center gap-1">
                               <Maximize2 className="h-3 w-3 text-slate-400" />
-                              <span>{property.area_sqm} м²</span>
+                              <span>{property.area_sqm} {locale === "uz" ? "m²" : "м²"}</span>
                             </div>
                             {property.rooms ? (
                               <div className="flex items-center gap-1">
                                 <Bed className="h-3 w-3 text-slate-400" />
-                                <span>{property.rooms} {locale === "uz" ? "хона" : "комн."}</span>
+                                <span>{property.rooms} {locale === "uz" ? "xona" : "комн."}</span>
                               </div>
                             ) : null}
                             {floorNum ? (
                               <div className="flex items-center gap-1">
                                 <Layers className="h-3 w-3 text-slate-400" />
-                                <span>{floorNum}{totalFloors ? `/${totalFloors}` : ""} {locale === "uz" ? "қават" : "эт."}</span>
+                                <span>{floorNum}{totalFloors ? `/${totalFloors}` : ""} {locale === "uz" ? "qavat" : "эт."}</span>
                               </div>
                             ) : null}
                           </div>

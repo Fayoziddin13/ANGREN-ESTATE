@@ -118,23 +118,23 @@ export default function AdminSettingsPage() {
   };
 
   return (
-    <div className="p-4 sm:p-8 max-w-7xl mx-auto w-full space-y-6 pb-16">
+    <div className="p-3.5 sm:p-8 max-w-7xl mx-auto w-full space-y-6 pb-20">
       {/* Toast */}
       {toastMessage && (
-        <div className="fixed top-6 right-6 z-50 bg-[#16543C] border border-emerald-600 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-4">
-          <CheckCircle2 className="w-5 h-5 text-emerald-200" />
-          <span className="text-sm font-semibold">{toastMessage}</span>
+        <div className="fixed top-16 sm:top-6 right-4 sm:right-6 z-50 bg-[#16543C] border border-emerald-600 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-4">
+          <CheckCircle2 className="w-5 h-5 text-emerald-200 shrink-0" />
+          <span className="text-xs sm:text-sm font-semibold">{toastMessage}</span>
         </div>
       )}
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-            <Settings className="w-7 h-7 text-[#16543C]" />
-            {locale === "uz" ? "Platforma Sozlamalari" : "Настройки Платформы"}
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2 sm:gap-3">
+            <Settings className="w-6 h-6 sm:w-7 sm:h-7 text-[#16543C] shrink-0" />
+            <span>{locale === "uz" ? "Platforma Sozlamalari" : "Настройки Платформы"}</span>
           </h1>
-          <p className="text-slate-600 text-sm mt-1 font-medium">
+          <p className="text-slate-600 text-xs sm:text-sm mt-1 font-medium">
             {locale === "uz"
               ? "Xarita parametrlari, kontaktlar, valyuta va admin xavfsizlik sozlamalari"
               : "Параметры карты, контакты, валюта и безопасность администратора"}
@@ -146,22 +146,24 @@ export default function AdminSettingsPage() {
             type="button"
             onClick={handleSaveSettings}
             disabled={isSaving}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#16543C] hover:bg-[#0E3324] text-white rounded-xl font-bold text-sm shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+            className="flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 bg-[#16543C] hover:bg-[#0E3324] text-white rounded-xl font-bold text-xs sm:text-sm shadow-sm hover:shadow-md transition-all disabled:opacity-50"
           >
-            <Save className="w-4 h-4" />
-            {isSaving
-              ? locale === "uz"
-                ? "Saqlanmoqda..."
-                : "Сохранение..."
-              : locale === "uz"
-              ? "Sozlamalarni saqlash"
-              : "Сохранить настройки"}
+            <Save className="w-4 h-4 shrink-0" />
+            <span>
+              {isSaving
+                ? locale === "uz"
+                  ? "Saqlanmoqda..."
+                  : "Сохранение..."
+                : locale === "uz"
+                ? "Sozlamalarni saqlash"
+                : "Сохранить настройки"}
+            </span>
           </button>
         )}
       </div>
 
       {/* Settings Navigation Tabs */}
-      <div className="border-b border-slate-200 flex items-center gap-6 overflow-x-auto text-sm font-bold">
+      <div className="border-b border-slate-200 flex items-center gap-3 sm:gap-6 overflow-x-auto text-xs sm:text-sm font-bold no-scrollbar">
         <button
           onClick={() => setActiveTab("general")}
           className={`pb-3 px-1 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${

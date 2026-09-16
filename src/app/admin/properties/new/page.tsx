@@ -24,6 +24,9 @@ import {
   Send,
   Trash2,
   Plus,
+  Globe,
+  Languages,
+  Loader2,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCurrency } from "@/context/CurrencyContext";
@@ -136,6 +139,87 @@ export default function AddPropertyPage() {
   const [hududId, setHududId] = useState("");
   const [hududList, setHududList] = useState<HududItem[]>([]);
   const [isHududModalOpen, setIsHududModalOpen] = useState(false);
+
+  // Translation state
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translationNotice, setTranslationNotice] = useState<{
+    type: "success" | "error" | "info";
+    msg: string;
+  } | null>(null);
+
+  const handleAutoTranslate = async (direction: "uz_to_ru" | "ru_to_uz") => {
+    setIsTranslating(true);
+    setTranslationNotice(null);
+    try {
+      const from = direction === "uz_to_ru" ? "uz" : "ru";
+      const to = direction === "uz_to_ru" ? "ru" : "uz";
+      const sourceTitle = from === "uz" ? titleUz : titleRu;
+      const sourceDesc = from === "uz" ? descUz : descRu;
+
+      if (!sourceTitle && !sourceDesc) {
+        setTranslationNotice({
+          type: "info",
+          msg:
+            locale === "uz"
+              ? "Avval manba tilida sarlavha yoki tavsifni kiriting."
+              : "Сначала введите заголовок или описание на исходном языке.",
+        });
+        setIsTranslating(false);
+        return;
+      }
+
+      const res = await fetch("/api/admin/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: [
+            { key: "title", text: sourceTitle, from, to },
+            { key: "desc", text: sourceDesc, from, to },
+          ],
+        }),
+      });
+
+      const data = await res.json();
+      if (data?.success && Array.isArray(data.results)) {
+        for (const item of data.results) {
+          if (item.key === "title" && item.result?.translatedText) {
+            if (to === "ru") setTitleRu(item.result.translatedText);
+            else setTitleUz(item.result.translatedText);
+          }
+          if (item.key === "desc" && item.result?.translatedText) {
+            if (to === "ru") setDescRu(item.result.translatedText);
+            else setDescUz(item.result.translatedText);
+          }
+        }
+        setTranslationNotice({
+          type: "success",
+          msg:
+            locale === "uz"
+              ? "Kontent muvaffaqiyatli tarjima qilindi. Natijani tekshirishingiz mumkin."
+              : "Контент успешно переведен. Вы можете проверить и отредактировать результат.",
+        });
+      } else {
+        setTranslationNotice({
+          type: "error",
+          msg:
+            data?.error ||
+            (locale === "uz"
+              ? "Tarjima xizmati javob bermadi. Matnni qo‘lda kiritishingiz mumkin."
+              : "Сервис перевода недоступен. Вы можете ввести перевод вручную."),
+        });
+      }
+    } catch {
+      setTranslationNotice({
+        type: "error",
+        msg:
+          locale === "uz"
+            ? "Tarjimada xatolik yuz berdi. Matnni qo‘lda kiritishingiz mumkin."
+            : "Ошибка при переводе. Вы можете ввести перевод вручную.",
+      });
+    } finally {
+      setIsTranslating(false);
+    }
+  };
 
   useEffect(() => {
     fetch("/api/hududs")
@@ -750,7 +834,10 @@ export default function AddPropertyPage() {
               <div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-200/80 text-[11px] text-emerald-800 flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-emerald-600 shrink-0" />
                 <span>
-                  <strong>Yangi (Новинка)</strong> nishoni e’lon birinchi marta chop etilganda (published) 3 kun davomida avtomatik ko‘rsatiladi.
+                  <strong>{locale === "uz" ? "Yangi" : "Новинка"}</strong>{" "}
+                  {locale === "uz"
+                    ? "nishoni e’lon birinchi marta chop etilganda (published) 3 kun davomida avtomatik ko‘rsatiladi."
+                    : "значок автоматически отображается в течение 3 дней после первой публикации."}
                 </span>
               </div>
             </div>
@@ -760,52 +847,168 @@ export default function AddPropertyPage() {
         {/* STEP 2: Sarlavha & Tavsiflar (Bilingual UZ / RU) */}
         {activeStep === 2 && (
           <div className="space-y-5">
-            <h2 className="text-base font-extrabold text-slate-900 border-b pb-2">
-              2. Sarlavha va Tavsif (UZ & RU)
-            </h2>
-
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700">Sarlavha (O‘zbekcha - Lotin)</label>
-              <input
-                type="text"
-                value={titleUz}
-                onChange={(e) => setTitleUz(e.target.value)}
-                placeholder="Masalan: Angren markazida 3 xonali ta’mirlangan kvartira"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#16543C] outline-none text-xs font-medium"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700">Sarlavha (Русский)</label>
-              <input
-                type="text"
-                value={titleRu}
-                onChange={(e) => setTitleRu(e.target.value)}
-                placeholder="Например: 3-комнатная квартира с ремонтом в центре Ангрена"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#16543C] outline-none text-xs font-medium"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Batafsil tavsif (UZ)</label>
-                <textarea
-                  rows={4}
-                  value={descUz}
-                  onChange={(e) => setDescUz(e.target.value)}
-                  placeholder="Kvartira qavatida, atrofida bog‘cha, maktab, bozor joylashgan..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#16543C] outline-none text-xs"
-                />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-3">
+              <div>
+                <h2 className="text-base font-extrabold text-slate-900">
+                  {locale === "uz" ? "2. Sarlavha va Tavsif (UZ & RU)" : "2. Заголовок и Описание (UZ & RU)"}
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {locale === "uz"
+                    ? "Ikkala tildagi matnni kiriting yoki avtomatik tarjimadan foydalaning."
+                    : "Заполните текст на обоих языках или используйте автоматический перевод."}
+                </p>
               </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Описание объекта (RU)</label>
-                <textarea
-                  rows={4}
-                  value={descRu}
-                  onChange={(e) => setDescRu(e.target.value)}
-                  placeholder="Квартира на удобном этаже, рядом детский сад, школа, рынок..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#16543C] outline-none text-xs"
-                />
+
+              {/* Language status badges */}
+              <div className="flex items-center gap-2 text-xs">
+                <span
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold ${
+                    titleUz.trim() && descUz.trim()
+                      ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                      : titleUz.trim()
+                      ? "bg-amber-100 text-amber-800 border border-amber-300"
+                      : "bg-slate-100 text-slate-600"
+                  }`}
+                >
+                  UZ: {titleUz.trim() && descUz.trim() ? "✓ To‘liq" : titleUz.trim() ? "Qisman" : "Bo‘sh"}
+                </span>
+                <span
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold ${
+                    titleRu.trim() && descRu.trim()
+                      ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                      : titleRu.trim()
+                      ? "bg-amber-100 text-amber-800 border border-amber-300"
+                      : "bg-slate-100 text-slate-600"
+                  }`}
+                >
+                  RU: {titleRu.trim() && descRu.trim() ? "✓ Заполнено" : titleRu.trim() ? "Частично" : "Пусто"}
+                </span>
+              </div>
+            </div>
+
+            {/* Translation Action Toolbar */}
+            <div className="flex flex-wrap items-center gap-2 p-3 bg-slate-50 rounded-2xl border border-slate-200">
+              <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5 mr-1">
+                <Languages className="h-4 w-4 text-[#16543C]" />
+                {locale === "uz" ? "Avto-tarjima:" : "Авто-перевод:"}
+              </span>
+
+              <button
+                type="button"
+                disabled={isTranslating || (!titleUz.trim() && !descUz.trim())}
+                onClick={() => handleAutoTranslate("uz_to_ru")}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:border-[#16543C] text-slate-800 hover:text-[#16543C] text-xs font-bold transition-all disabled:opacity-40 disabled:hover:border-slate-300 shadow-sm"
+              >
+                {isTranslating ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-[#16543C]" />
+                ) : (
+                  <Globe className="h-3.5 w-3.5 text-emerald-700" />
+                )}
+                <span>UZ → RU ({locale === "uz" ? "Ruschaga" : "на русский"})</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={isTranslating || (!titleRu.trim() && !descRu.trim())}
+                onClick={() => handleAutoTranslate("ru_to_uz")}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:border-[#16543C] text-slate-800 hover:text-[#16543C] text-xs font-bold transition-all disabled:opacity-40 disabled:hover:border-slate-300 shadow-sm"
+              >
+                {isTranslating ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-[#16543C]" />
+                ) : (
+                  <Globe className="h-3.5 w-3.5 text-blue-700" />
+                )}
+                <span>RU → UZ ({locale === "uz" ? "O‘zbekchaga" : "на узбекский"})</span>
+              </button>
+            </div>
+
+            {translationNotice && (
+              <div
+                className={`p-3 rounded-xl text-xs flex items-center justify-between gap-2 border ${
+                  translationNotice.type === "success"
+                    ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                    : translationNotice.type === "error"
+                    ? "bg-red-50 text-red-800 border-red-200"
+                    : "bg-blue-50 text-blue-800 border-blue-200"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  {translationNotice.type === "success" ? (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  ) : (
+                    <AlertCircle className="h-4 w-4 text-red-600 shrink-0" />
+                  )}
+                  <span>{translationNotice.msg}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setTranslationNotice(null)}
+                  className="text-slate-400 hover:text-slate-600 font-bold px-1"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* UZ Language Card */}
+              <div className="p-4 rounded-2xl border border-emerald-200 bg-emerald-50/20 space-y-3">
+                <div className="flex items-center justify-between pb-1 border-b border-emerald-100">
+                  <span className="text-xs font-extrabold text-[#16543C] flex items-center gap-1.5">
+                    🇺🇿 O‘zbekcha (Lotin)
+                  </span>
+                  <span className="text-[11px] text-slate-500 font-medium">Asosiy sayt tili</span>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700">Sarlavha (UZ)</label>
+                  <input
+                    type="text"
+                    value={titleUz}
+                    onChange={(e) => setTitleUz(e.target.value)}
+                    placeholder="Masalan: Angren markazida 3 xonali ta’mirlangan kvartira"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#16543C] outline-none text-xs font-semibold"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700">Batafsil tavsif (UZ)</label>
+                  <textarea
+                    rows={4}
+                    value={descUz}
+                    onChange={(e) => setDescUz(e.target.value)}
+                    placeholder="Kvartira qavatida, atrofida bog‘cha, maktab, bozor joylashgan..."
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#16543C] outline-none text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* RU Language Card */}
+              <div className="p-4 rounded-2xl border border-slate-200 bg-white space-y-3 shadow-sm">
+                <div className="flex items-center justify-between pb-1 border-b border-slate-100">
+                  <span className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
+                    🇷🇺 Русский язык
+                  </span>
+                  <span className="text-[11px] text-slate-500 font-medium">Для русскоязычных</span>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700">Заголовок (RU)</label>
+                  <input
+                    type="text"
+                    value={titleRu}
+                    onChange={(e) => setTitleRu(e.target.value)}
+                    placeholder="Например: 3-комнатная квартира с ремонтом в центре Ангрена"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#16543C] outline-none text-xs font-semibold"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700">Описание объекта (RU)</label>
+                  <textarea
+                    rows={4}
+                    value={descRu}
+                    onChange={(e) => setDescRu(e.target.value)}
+                    placeholder="Квартира на удобном этаже, рядом детский сад, школа, рынок..."
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#16543C] outline-none text-xs"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -1096,18 +1299,22 @@ export default function AddPropertyPage() {
             <div className="space-y-3 pt-2">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-800">
-                  Асосий коммуникациялар (6 та стандарт параметр)
+                  {locale === "uz"
+                    ? "Asosiy kommunikatsiyalar (6 ta standart parametr)"
+                    : "Основные коммуникации (6 стандартных параметров)"}
                 </label>
-                <span className="text-[11px] text-slate-500 font-medium">Ҳаётий муҳим тармоқлар</span>
+                <span className="text-[11px] text-slate-500 font-medium">
+                  {locale === "uz" ? "Hayotiy muhim tarmoqlar" : "Жизненно важные коммуникации"}
+                </span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs font-bold">
                 {[
-                  { key: "electricity", label: "Свет (Электр тармоғи)" },
-                  { key: "gas", label: "Газ (Табиий газ)" },
-                  { key: "cold_water", label: "Совуқ сув (Ичимлик суви)" },
-                  { key: "hot_water", label: "Иссиқ сув" },
-                  { key: "heating", label: "Отопление (Иситиш)" },
-                  { key: "internet", label: "Интернет (Оптик тола / Wi-Fi)" },
+                  { key: "electricity", label: locale === "uz" ? "Elektr tarmog‘i" : "Электросеть" },
+                  { key: "gas", label: locale === "uz" ? "Tabiiy gaz" : "Природный газ" },
+                  { key: "cold_water", label: locale === "uz" ? "Sovuq suv" : "Холодная вода" },
+                  { key: "hot_water", label: locale === "uz" ? "Issiq suv" : "Горячая вода" },
+                  { key: "heating", label: locale === "uz" ? "Isitish tizimi" : "Отопление" },
+                  { key: "internet", label: locale === "uz" ? "Internet (Optik tola / Wi-Fi)" : "Интернет (Оптоволокно / Wi-Fi)" },
                 ].map((u) => (
                   <label
                     key={u.key}
@@ -1133,14 +1340,20 @@ export default function AddPropertyPage() {
               {/* Custom Options Adder */}
               <div className="pt-3 border-t border-slate-100 space-y-2">
                 <label className="text-xs font-bold text-slate-700">
-                  Қўшимча коммуникация / қулайлик (Custom option)
+                  {locale === "uz"
+                    ? "Qo‘shimcha kommunikatsiya va qulayliklar"
+                    : "Дополнительные коммуникации и удобства"}
                 </label>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
                     value={customUtilityInput}
                     onChange={(e) => setCustomUtilityInput(e.target.value)}
-                    placeholder="Масалан: Артезиан қудуқ, Генератор, Трансформатор..."
+                    placeholder={
+                      locale === "uz"
+                        ? "Masalan: Artezian quduq, Generator, Transformator..."
+                        : "Например: Артезианская скважина, Генератор, Трансформатор..."
+                    }
                     className="flex-1 px-3.5 py-2 rounded-xl border border-slate-200 text-xs"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
@@ -1174,7 +1387,7 @@ export default function AddPropertyPage() {
                     }}
                     className="px-4 py-2 rounded-xl bg-[#16543C] text-white text-xs font-bold hover:bg-[#0E3324] transition-colors"
                   >
-                    + Қўшиш
+                    {locale === "uz" ? "+ Qo‘shish" : "+ Добавить"}
                   </button>
                 </div>
                 {Array.isArray(utilities.custom) && utilities.custom.length > 0 && (
@@ -1182,18 +1395,16 @@ export default function AddPropertyPage() {
                     {utilities.custom.map((item, idx) => (
                       <span
                         key={idx}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100 text-slate-700 text-xs font-semibold"
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 text-[#16543C] text-xs font-bold border border-emerald-200"
                       >
                         <span>{item}</span>
                         <button
                           type="button"
                           onClick={() => {
-                            setUtilities({
-                              ...utilities,
-                              custom: utilities.custom?.filter((_, i) => i !== idx),
-                            });
+                            const updated = utilities.custom?.filter((_, i) => i !== idx);
+                            setUtilities({ ...utilities, custom: updated });
                           }}
-                          className="hover:text-red-500 transition-colors"
+                          className="hover:text-red-600"
                         >
                           ×
                         </button>
@@ -1224,30 +1435,70 @@ export default function AddPropertyPage() {
           </div>
         )}
 
-        {/* STEP 5: Media & Mas'ul Rieltor & Owner Phone */}
+        {/* STEP 5: Images & Media Upload */}
         {activeStep === 5 && (
-          <div className="space-y-6">
-            <h2 className="text-base font-extrabold text-slate-900 border-b pb-2">
-              5. Suratlar, Mas'ul Rieltor va Aloqa
-            </h2>
-
-            {/* Images */}
-            <div className="space-y-3">
-              <label className="text-xs font-bold text-slate-700">Obyekt suratlari</label>
-              <PropertyImageUploader
-                images={imageUrls}
-                mainImage={mainImage}
-                onChangeImages={setImageUrls}
-                onChangeMainImage={setMainImage}
-                propertyId="new"
-              />
+          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+            <div className="border-b border-slate-100 pb-4">
+              <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                <Camera className="h-5 w-5 text-[#16543C]" />
+                <span>{locale === "uz" ? "5-bosqich: Fotosuratlar va Video" : "Этап 5: Фотографии и Видео"}</span>
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                {locale === "uz"
+                  ? "Obyektning sifatli rasmlari ko‘rishlar sonini 4 baravargacha oshiradi."
+                  : "Качественные фотографии увеличивают количество просмотров до 4 раз."}
+              </p>
             </div>
 
-            {/* Assigned Realtor (Assign / Change / Unassign) */}
-            <div className="space-y-3 pt-4 border-t border-slate-100">
+            <PropertyImageUploader
+              images={imageUrls}
+              onChangeImages={(urls: string[]) => {
+                setImageUrls(urls);
+                if (!mainImage && urls.length > 0) {
+                  setMainImage(urls[0]);
+                }
+              }}
+              mainImage={mainImage}
+              onChangeMainImage={(url: string) => setMainImage(url)}
+            />
+
+            <div className="space-y-2 pt-4 border-t border-slate-100">
+              <label className="text-xs font-bold text-slate-800">
+                {locale === "uz" ? "Video sharh havolasi (YouTube / Vimeo / MP4)" : "Ссылка на видеообзор (YouTube / Vimeo / MP4)"}
+              </label>
+              <input
+                type="url"
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder="https://youtube.com/watch?v=..."
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* STEP 6: Contacts, Assigned Realtor & Confirmation */}
+        {activeStep === 6 && (
+          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+            <div className="border-b border-slate-100 pb-4">
+              <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                <Phone className="h-5 w-5 text-[#16543C]" />
+                <span>{locale === "uz" ? "6-bosqich: Aloqa va Mas’ul Rieltor" : "Этап 6: Контакты и Ответственный Риелтор"}</span>
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                {locale === "uz"
+                  ? "Mulk egasi ma’lumotlari faqat adminga ko‘rinadi. Mijozlar esa e’londagi ommaviy telefon yoki mas’ul rieltor orqali bog‘lanadi."
+                  : "Контакты владельца видны только администратору. Клиенты связываются по публичному номеру или через ответственного риелтора."}
+              </p>
+            </div>
+
+            {/* Realtor Selector */}
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-800">
-                  Масъул Риелторни бириктириш (Assign / Change / Unassign)
+                  {locale === "uz"
+                    ? "Mas’ul rieltorni biriktirish"
+                    : "Назначить ответственного риелтора"}
                 </label>
                 {selectedRealtorId && (
                   <button
@@ -1255,7 +1506,7 @@ export default function AddPropertyPage() {
                     onClick={() => setSelectedRealtorId("")}
                     className="text-xs font-bold text-red-600 hover:underline flex items-center gap-1"
                   >
-                    <span>Риелторни бўшатиш (Unassign)</span>
+                    <span>{locale === "uz" ? "Rieltorni bo‘shatish" : "Открепить риелтора"}</span>
                   </button>
                 )}
               </div>
@@ -1264,10 +1515,14 @@ export default function AddPropertyPage() {
                 onChange={(e) => setSelectedRealtorId(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold"
               >
-                <option value="">(Риелторсиз — Ангрен Эстейт маъмурияти)</option>
+                <option value="">
+                  {locale === "uz"
+                    ? "(Rieltorsiz — Angren Estate ma’muriyati)"
+                    : "(Без риелтора — Администрация Angren Estate)"}
+                </option>
                 {realtors.map((r) => (
                   <option key={r.id} value={r.id}>
-                    {r.name} ({r.phone}) — {r.specialization_uz}
+                    {r.name} ({r.phone}) — {locale === "uz" ? r.specialization_uz : r.specialization_ru}
                   </option>
                 ))}
               </select>
@@ -1276,27 +1531,29 @@ export default function AddPropertyPage() {
             {/* Owner Direct Phone (Dedicated Field) */}
             <div className="space-y-2 pt-4 border-t border-slate-100">
               <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
-                <span>Мулк эгасининг телефони (Owner Phone)</span>
+                <span>{locale === "uz" ? "Mulk egasining telefoni" : "Номер телефона владельца"}</span>
                 <span className="text-[10px] text-amber-700 font-semibold bg-amber-50 px-2 py-0.5 rounded-md">
-                  Фақат админга кўринади
+                  {locale === "uz" ? "Faqat adminga ko‘rinadi" : "Видно только админу"}
                 </span>
               </label>
               <input
                 type="tel"
                 value={ownerPhone}
                 onChange={(e) => setOwnerPhone(e.target.value)}
-                placeholder="+998 90 123 45 67 (Мулк эгаси рақами)"
+                placeholder="+998 90 123 45 67"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold bg-amber-50/20"
               />
               <p className="text-[11px] text-slate-500">
-                Ушбу рақам саҳифада оммавий кўринмайди, фақат админ панелида мулк эгаси билан тўғридан-тўғри боғланиш учун сақланади.
+                {locale === "uz"
+                  ? "Ushbu raqam sahifada ommaviy ko‘rinmaydi, faqat admin panelida mulk egasi bilan to‘g‘ridan-to‘g‘ri bog‘lanish uchun saqlanadi."
+                  : "Этот номер не отображается публично на сайте, а сохраняется только в панели администратора для связи с владельцем."}
               </p>
             </div>
 
             {/* Public Contact Phone */}
             <div className="space-y-2 pt-4 border-t border-slate-100">
               <label className="text-xs font-bold text-slate-800">
-                Эълонда чиқувчи оммавий телефон (Contact Phone)
+                {locale === "uz" ? "E’londagi ommaviy telefon" : "Публичный телефон для связи"}
               </label>
               <input
                 type="tel"

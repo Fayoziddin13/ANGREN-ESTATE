@@ -647,16 +647,16 @@ export default function AdminRealtorsPage() {
                   )}
                 </div>
 
-                {/* Bottom Card Actions: STRICTLY NO DELETE BUTTON */}
-                <div className="pt-3 border-t border-slate-200 flex items-center justify-between flex-wrap gap-2">
-                  <span className="text-[11px] text-slate-500 font-mono">
-                    UUID: {realtor.id.slice(0, 8)}...
+                {/* Bottom Card Actions: Responsive on Mobile */}
+                <div className="pt-3 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+                  <span className="text-[11px] text-slate-400 font-mono">
+                    ID: {realtor.id.slice(0, 8)}...
                   </span>
 
-                  <div className="flex items-center gap-1.5">
+                  <div className="grid grid-cols-2 sm:flex sm:items-center gap-1.5 w-full sm:w-auto">
                     <button
                       onClick={() => handleToggleRealtorStatus(realtor)}
-                      className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                      className={`inline-flex items-center justify-center gap-1 px-2.5 py-2 sm:py-1.5 rounded-xl text-xs font-bold transition-colors ${
                         realtor.is_active
                           ? "text-amber-800 bg-amber-100/80 hover:bg-amber-200 border border-amber-300"
                           : "text-emerald-800 bg-emerald-100/80 hover:bg-emerald-200 border border-emerald-300"
@@ -667,8 +667,8 @@ export default function AdminRealtorsPage() {
                           : (locale === "uz" ? "Rieltorni qayta faollashtirish" : "Активировать риелтора")
                       }
                     >
-                      <Power className="h-3.5 w-3.5" />
-                      <span>
+                      <Power className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">
                         {realtor.is_active
                           ? (locale === "uz" ? "Nofaol qilish" : "Деактивировать")
                           : (locale === "uz" ? "Faollashtirish" : "Активировать")}
@@ -677,20 +677,20 @@ export default function AdminRealtorsPage() {
 
                     <button
                       onClick={() => openPropertiesModal(realtor)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 transition-colors"
+                      className="inline-flex items-center justify-center gap-1 px-2.5 py-2 sm:py-1.5 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 transition-colors"
                       title={locale === "uz" ? "Obyektlarni boshqarish" : "Управление объектами"}
                     >
-                      <Building2 className="h-3.5 w-3.5" />
-                      <span>{locale === "uz" ? "Obyektlar" : "Объекты"}</span>
+                      <Building2 className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{locale === "uz" ? "Obyektlar" : "Объекты"}</span>
                     </button>
 
                     <button
                       onClick={() => handleOpenEditModal(realtor)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-[#16543C] bg-emerald-100/80 hover:bg-emerald-200 border border-emerald-300 transition-colors"
+                      className="inline-flex items-center justify-center gap-1 px-2.5 py-2 sm:py-1.5 rounded-xl text-xs font-bold text-[#16543C] bg-emerald-100/80 hover:bg-emerald-200 border border-emerald-300 transition-colors"
                       title={t.admin.editRealtor}
                     >
-                      <Edit2 className="h-3.5 w-3.5" />
-                      <span>{locale === "uz" ? "Tahrirlash" : "Редактировать"}</span>
+                      <Edit2 className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{locale === "uz" ? "Tahrirlash" : "Редактировать"}</span>
                     </button>
 
                     <button
@@ -698,11 +698,11 @@ export default function AdminRealtorsPage() {
                         setPermanentDeleteConfirmText("");
                         setPermanentDeleteRealtor(realtor);
                       }}
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors"
+                      className="inline-flex items-center justify-center gap-1 px-2.5 py-2 sm:py-1.5 rounded-xl text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors"
                       title={locale === "uz" ? "To'liq o'chirish (qaytarib bo'lmaydi)" : "Удалить навсегда (необратимо)"}
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
-                      <span>{locale === "uz" ? "O'chirish" : "Удалить"}</span>
+                      <Trash2 className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{locale === "uz" ? "O'chirish" : "Удалить"}</span>
                     </button>
                   </div>
                 </div>

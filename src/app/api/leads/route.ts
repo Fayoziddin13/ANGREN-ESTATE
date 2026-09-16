@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
         const descVal = String(message || body.description || metadata?.description || "").trim();
         if (!descVal || descVal.length < 3) {
           return NextResponse.json(
-            { success: false, error: "Объект ҳақида қисқача маълумот киритилиши шарт" },
+            { success: false, error: "Obyekt haqida qisqacha ma’lumot kiritilishi shart" },
             { status: 400 }
           );
         }
@@ -192,23 +192,23 @@ export async function POST(req: NextRequest) {
       const dealType = body.deal_type || metadata?.deal_type || "sale";
       const propType = body.property_type || metadata?.property_type || "apartment";
       const locVal = (body.location || metadata?.location || "").trim();
-      const dealLabel = dealType === "rent" || dealType === "ijara" ? "Ижара" : "Сотув";
+      const dealLabel = dealType === "rent" || dealType === "ijara" ? "Ijara" : "Sotuv";
       const propTypeMap: Record<string, string> = {
-        apartment: "Квартира",
-        kvartira: "Квартира",
-        house: "Ҳовли уй",
-        hovli: "Ҳовли уй",
-        land: "Ер участкаси",
-        yer: "Ер участкаси",
-        commercial: "Тижорат",
-        tijorat: "Тижорат",
-        new_building: "Янги қурилиш",
-        yangi_qurilish: "Янги қурилиш",
-        other: "Бошқа",
-        boshqa: "Бошқа",
+        apartment: "Kvartira",
+        kvartira: "Kvartira",
+        house: "Hovli / Uy",
+        hovli: "Hovli / Uy",
+        land: "Yer uchastkasi",
+        yer: "Yer uchastkasi",
+        commercial: "Tijorat",
+        tijorat: "Tijorat",
+        new_building: "Yangi qurilish",
+        yangi_qurilish: "Yangi qurilish",
+        other: "Boshqa",
+        boshqa: "Boshqa",
       };
       const propLabel = propTypeMap[propType] || propType;
-      propertyTitle = `Эълон бериш аризаси: ${dealLabel} — ${propLabel} (${locVal})`;
+      propertyTitle = `E’lon berish arizasi: ${dealLabel} — ${propLabel} (${locVal})`;
       propertySlug = "elon-berish-arizasi";
     } else if (isGeneralInquiry) {
       propertyTitle = rawTitle || "Umumiy murojaat (Aloqa sahifasi)";

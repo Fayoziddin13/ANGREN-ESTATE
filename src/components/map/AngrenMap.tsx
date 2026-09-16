@@ -6,7 +6,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { Property, HududItem } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCurrency } from "@/context/CurrencyContext";
-import { LocateFixed, Plus, Minus, Box, Navigation, Loader2 } from "lucide-react";
+import { LocateFixed, Plus, Minus, Box, Navigation, Loader2, Layers } from "lucide-react";
 import { useUserLocation, isWithinAngren, getDistanceKm } from "@/lib/geolocation";
 import { DEFAULT_ANGREN_HUDUDS } from "@/lib/hududService";
 import { trackEvent } from "@/lib/analytics";
@@ -799,6 +799,31 @@ export function AngrenMap({
         >
           <Box className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           <span className="text-[8px] sm:text-[9px] font-black leading-none mt-0.5">{dimension.toUpperCase()}</span>
+        </button>
+
+        {/* Sxema / Sputnik (Vector / Satellite) Layer Switcher */}
+        <button
+          onClick={() => onMapModeChange(mapMode === "satellite" ? "standard" : "satellite")}
+          data-testid="map-toggle-layer"
+          title={
+            locale === "uz"
+              ? mapMode === "satellite"
+                ? "Sxema xaritaga o‘tish"
+                : "Sputnik rejimiga o‘tish"
+              : mapMode === "satellite"
+              ? "Переключить на схему"
+              : "Включить спутник"
+          }
+          className={`flex h-9 w-9 sm:h-10 sm:w-10 flex-col items-center justify-center rounded-2xl backdrop-blur-xl shadow-elevated border transition-all active:scale-95 ${
+            mapMode === "satellite"
+              ? "bg-blue-600 text-white border-blue-600 ring-2 ring-blue-400/40"
+              : "bg-white/90 text-gray-700 hover:text-blue-600 border-white/80 hover:bg-white"
+          }`}
+        >
+          <Layers className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <span className="text-[8px] sm:text-[9px] font-black leading-none mt-0.5">
+            {mapMode === "satellite" ? "SAT" : "MAP"}
+          </span>
         </button>
 
         {/* Mening joylashuvim (User Geolocation) Button */}
