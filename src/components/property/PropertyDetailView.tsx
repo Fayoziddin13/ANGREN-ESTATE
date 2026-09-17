@@ -49,6 +49,13 @@ import { Property } from "@/lib/types";
 import { trackEvent } from "@/lib/analytics";
 import { recordPublicLead } from "@/lib/leadClient";
 import { formatPublishedDate } from "@/lib/dateFormat";
+import {
+  getPropertyTitle,
+  getPropertyDescription,
+  getPropertyAddress,
+  getPropertyDistrict,
+  getRenovationLabel,
+} from "@/lib/propertyFormatters";
 
 function DetailMapLoading() {
   const { locale } = useLanguage();
@@ -154,10 +161,10 @@ export default function PropertyDetailView({
     );
   }
 
-  const title = locale === "uz" ? property.title_uz : property.title_ru;
-  const description = locale === "uz" ? property.description_uz : property.description_ru;
-  const address = locale === "uz" ? property.address_uz : property.address_ru;
-  const district = locale === "uz" ? property.district_name_uz : property.district_name_ru;
+  const title = getPropertyTitle(property, locale);
+  const description = getPropertyDescription(property, locale);
+  const address = getPropertyAddress(property, locale);
+  const district = getPropertyDistrict(property, locale);
   const isSale = property.transaction_type === "sale";
   const favorited = isFavorite(property.id);
   const isSold = property.status === "sold";
@@ -224,7 +231,7 @@ export default function PropertyDetailView({
               <span>/</span>
               <span>{isSale ? (locale === "uz" ? "Sotuv" : "Продажа") : locale === "uz" ? "Ijara" : "Аренда"}</span>
               <span>/</span>
-              <span className="text-gray-900 font-bold truncate">Angren, {district}</span>
+              <span className="text-gray-900 font-bold truncate">{locale === "uz" ? "Angren," : "г. Ангрен,"} {district}</span>
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
@@ -487,7 +494,7 @@ export default function PropertyDetailView({
                           {locale === "uz" ? "Yer maydoni" : "Участок"}
                         </div>
                         <div className="text-base font-extrabold text-gray-900 mt-0.5">
-                          {property.area_sotikh ? `${property.area_sotikh} ${locale === "uz" ? "sotix" : "соток"}` : `${property.area_sqm} m²`}
+                          {property.area_sotikh ? `${property.area_sotikh} ${locale === "uz" ? "sotix" : "соток"}` : `${property.area_sqm} ${locale === "uz" ? "m²" : "м²"}`}
                         </div>
                       </div>
 
@@ -496,7 +503,7 @@ export default function PropertyDetailView({
                           {locale === "uz" ? "Uy maydoni" : "Жилая пл."}
                         </div>
                         <div className="text-base font-extrabold text-gray-900 mt-0.5">
-                          {property.living_area_sqm || property.area_sqm} m²
+                          {property.living_area_sqm || property.area_sqm} {locale === "uz" ? "m²" : "м²"}
                         </div>
                       </div>
 
@@ -514,7 +521,7 @@ export default function PropertyDetailView({
                           {locale === "uz" ? "Ta’mir" : "Ремонт"}
                         </div>
                         <div className="text-base font-extrabold text-[#16543C] mt-0.5 capitalize">
-                          {property.renovation || (locale === "uz" ? "Yevro" : "Евро")}
+                          {getRenovationLabel(property.renovation, locale)}
                         </div>
                       </div>
                     </>
@@ -522,7 +529,7 @@ export default function PropertyDetailView({
                     <>
                       <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100/80 text-center">
                         <div className="text-xs text-gray-500 font-medium">{locale === "uz" ? "Umumiy maydon" : "Площадь"}</div>
-                        <div className="text-base font-extrabold text-gray-900 mt-0.5">{property.area_sqm} m²</div>
+                        <div className="text-base font-extrabold text-gray-900 mt-0.5">{property.area_sqm} {locale === "uz" ? "m²" : "м²"}</div>
                       </div>
 
                       <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100/80 text-center">
@@ -540,7 +547,7 @@ export default function PropertyDetailView({
                       <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100/80 text-center">
                         <div className="text-xs text-gray-500 font-medium">{locale === "uz" ? "Ta’mir" : "Ремонт"}</div>
                         <div className="text-base font-extrabold text-[#16543C] mt-0.5 capitalize">
-                          {property.renovation || "Yevro"}
+                          {getRenovationLabel(property.renovation, locale)}
                         </div>
                       </div>
                     </>
@@ -678,7 +685,7 @@ export default function PropertyDetailView({
                     <MapPin className="w-5 h-5 text-[#16543C]" />
                     <span>{locale === "uz" ? "Xaritadagi joylashuvi" : "Расположение на карте"}</span>
                   </h3>
-                  <span className="text-xs text-gray-500 font-medium">Angren shahri</span>
+                  <span className="text-xs text-gray-500 font-medium">{locale === "uz" ? "Angren shahri" : "г. Ангрен"}</span>
                 </div>
 
                 <div className="relative h-72 w-full rounded-2xl overflow-hidden border border-gray-200">

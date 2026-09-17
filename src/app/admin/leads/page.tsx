@@ -460,7 +460,7 @@ export default function AdminLeadsPage() {
           >
             <option value="all">{locale === "uz" ? "Barcha kanallar" : "Все каналы"}</option>
             <option value="property_listing_request">
-              {locale === "uz" ? "Эълон бериш аризалари" : "Заявки на размещение"}
+              {locale === "uz" ? "E’lon berish arizalari" : "Заявки на размещение"}
             </option>
             <option value="phone">{locale === "uz" ? "Telefon qo‘ng‘iroq" : "Телефонный звонок"}</option>
             <option value="telegram">Telegram</option>
@@ -581,7 +581,7 @@ export default function AdminLeadsPage() {
                         {isListingRequest(lead) ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
                             <Home className="w-3 h-3 text-[#16543C]" />
-                            <span>{locale === "uz" ? "Эълон бериш" : "Размещение"}</span>
+                            <span>{locale === "uz" ? "E’lon berish" : "Размещение"}</span>
                           </span>
                         ) : lead.type === "phone" ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-900 border border-blue-200">

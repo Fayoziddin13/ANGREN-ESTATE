@@ -45,6 +45,12 @@ import {
   Property,
   HududItem,
 } from "@/lib/types";
+import {
+  getPropertyTypeLabel,
+  getDealTypeLabel,
+  getBadgeLabel,
+  getPropertyStatusLabel,
+} from "@/lib/propertyFormatters";
 import { HududPolygonDrawerModal } from "@/components/admin/HududPolygonDrawerModal";
 
 const AdminLocationPicker = dynamic(
@@ -460,10 +466,19 @@ export default function EditPropertyPage() {
   if (notFound) {
     return (
       <div className="p-8 max-w-lg mx-auto text-center space-y-4">
-        <h2 className="text-xl font-black text-slate-900">Obyekt topilmadi</h2>
-        <p className="text-xs text-slate-500">Bunday ID ga ega obyekt mavjud emas yoki o‘chirilgan.</p>
-        <Link href="/admin/properties" className="inline-block px-4 py-2 rounded-xl bg-[#16543C] text-white text-xs font-bold">
-          Ro‘yxatga qaytish
+        <h2 className="text-xl font-black text-slate-900">
+          {locale === "uz" ? "Obyekt topilmadi" : "Объект не найден"}
+        </h2>
+        <p className="text-xs text-slate-500">
+          {locale === "uz"
+            ? "Bunday ID ga ega obyekt mavjud emas yoki o‘chirilgan."
+            : "Объект с таким ID не существует или был удален."}
+        </p>
+        <Link
+          href="/admin/properties"
+          className="inline-block px-4 py-2 rounded-xl bg-[#16543C] text-white text-xs font-bold"
+        >
+          {locale === "uz" ? "Ro‘yxatga qaytish" : "Вернуться к списку"}
         </Link>
       </div>
     );
@@ -486,7 +501,7 @@ export default function EditPropertyPage() {
                 {locale === "uz" ? "Obyektni tahrirlash" : "Редактирование объекта"}
               </h1>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-700">
-                {currentStatus}
+                {getPropertyStatusLabel(currentStatus, locale)}
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
@@ -515,7 +530,7 @@ export default function EditPropertyPage() {
             <span>
               {isUpdating
                 ? locale === "uz" ? "Saqlanmoqda..." : "Сохранение..."
-                : locale === "uz" ? "Nashr qilish (Publish)" : "Опубликовать"}
+                : locale === "uz" ? "Nashr qilish" : "Опубликовать"}
             </span>
           </button>
         </div>
@@ -532,12 +547,12 @@ export default function EditPropertyPage() {
       {/* Step Indicators */}
       <div className="grid grid-cols-6 gap-2 text-center text-xs font-bold">
         {[
-          { num: 1, label: "Asosiy" },
-          { num: 2, label: "Sarlavha" },
-          { num: 3, label: "Xarita & Manzil" },
-          { num: 4, label: "Xususiyatlar" },
-          { num: 5, label: "Rasmlar" },
-          { num: 6, label: "Kontakt" },
+          { num: 1, label: locale === "uz" ? "Turi & Narxi" : "Тип и цена" },
+          { num: 2, label: locale === "uz" ? "Sarlavha & Matn" : "Заголовок и текст" },
+          { num: 3, label: locale === "uz" ? "Manzil & Xarita" : "Адрес и карта" },
+          { num: 4, label: locale === "uz" ? "Parametrlar" : "Параметры" },
+          { num: 5, label: locale === "uz" ? "Rasmlar" : "Фотографии" },
+          { num: 6, label: locale === "uz" ? "Aloqa & Rieltor" : "Контакты и риелтор" },
         ].map((step) => (
           <button
             key={step.num}
@@ -551,7 +566,9 @@ export default function EditPropertyPage() {
                 : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
             }`}
           >
-            <div className="text-[10px] opacity-70">Bosqich {step.num}</div>
+            <div className="text-[10px] opacity-70">
+              {locale === "uz" ? `Bosqich ${step.num}` : `Этап ${step.num}`}
+            </div>
             <div className="truncate text-xs">{step.label}</div>
           </button>
         ))}
@@ -563,12 +580,14 @@ export default function EditPropertyPage() {
         {activeStep === 1 && (
           <div className="space-y-6">
             <h2 className="text-base font-extrabold text-slate-900 border-b pb-2">
-              1. Bitim va Obyekt turi
+              {locale === "uz" ? "1. Bitim va ko‘chmas mulk turi" : "1. Сделка и тип недвижимости"}
             </h2>
 
             {/* Transaction Type */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-700">Bitim turi</label>
+              <label className="text-xs font-bold text-slate-700">
+                {locale === "uz" ? "Bitim turi" : "Тип сделки"}
+              </label>
               <div className="grid grid-cols-2 gap-3 max-w-sm">
                 <button
                   type="button"
@@ -579,7 +598,7 @@ export default function EditPropertyPage() {
                       : "border-slate-200 hover:bg-slate-50"
                   }`}
                 >
-                  Sotuv (Sale)
+                  {locale === "uz" ? "Sotuv (Ko‘chmas mulkni sotish)" : "Продажа (Продажа недвижимости)"}
                 </button>
                 <button
                   type="button"
@@ -590,22 +609,24 @@ export default function EditPropertyPage() {
                       : "border-slate-200 hover:bg-slate-50"
                   }`}
                 >
-                  Ijara (Rent)
+                  {locale === "uz" ? "Ijara (Oylik ijara)" : "Аренда (Ежемесячная аренда)"}
                 </button>
               </div>
             </div>
 
             {/* Property Type */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-700">Ko‘chmas mulk turi</label>
+              <label className="text-xs font-bold text-slate-700">
+                {locale === "uz" ? "Ko‘chmas mulk turi" : "Тип недвижимости"}
+              </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {[
-                  { key: "apartment", label: "Kvartira" },
-                  { key: "house_yard", label: "Hovli / Kottej" },
-                  { key: "new_build", label: "Yangi bino (Novostroyka)" },
-                  { key: "land", label: "Yer maydoni" },
-                  { key: "commercial", label: "Tijorat binosi" },
-                  { key: "other", label: "Boshqa" },
+                  { key: "apartment", label: getPropertyTypeLabel("apartment", locale) },
+                  { key: "house_yard", label: getPropertyTypeLabel("house_yard", locale) },
+                  { key: "new_build", label: getPropertyTypeLabel("new_build", locale) },
+                  { key: "land", label: getPropertyTypeLabel("land", locale) },
+                  { key: "commercial", label: getPropertyTypeLabel("commercial", locale) },
+                  { key: "other", label: getPropertyTypeLabel("other", locale) },
                 ].map((type) => (
                   <button
                     key={type.key}
@@ -626,7 +647,9 @@ export default function EditPropertyPage() {
             {/* Price Fields */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Narx (USD $)</label>
+                <label className="text-xs font-bold text-slate-700">
+                  {locale === "uz" ? "Narx (USD $)" : "Цена (USD $)"}
+                </label>
                 <input
                   type="number"
                   value={priceUsd}
@@ -639,7 +662,9 @@ export default function EditPropertyPage() {
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Narx (UZS so‘mda)</label>
+                <label className="text-xs font-bold text-slate-700">
+                  {locale === "uz" ? "Narx (UZS so‘mda)" : "Цена (UZS сум)"}
+                </label>
                 <input
                   type="number"
                   value={priceUzs}
@@ -657,10 +682,12 @@ export default function EditPropertyPage() {
             <div className="pt-4 border-t border-slate-200 space-y-3">
               <div>
                 <label className="text-xs font-bold text-slate-800">
-                  E’lon nishonlari (Marketing Badges)
+                  {locale === "uz" ? "E’lon nishonlari (Marketing nishonlari)" : "Значки объявления (Маркетинговые значки)"}
                 </label>
                 <p className="text-[11px] text-slate-500">
-                  E’lon kartochkasi va katalogda alohida ajralib turuvchi maxsus nishonlar.
+                  {locale === "uz"
+                    ? "E’lon kartochkasi va katalogda alohida ajralib turuvchi maxsus nishonlar."
+                    : "Специальные значки, выделяющие карточку в каталоге."}
                 </p>
               </div>
 
@@ -678,8 +705,12 @@ export default function EditPropertyPage() {
                       ★
                     </span>
                     <div>
-                      <span className="text-xs font-extrabold block">TOP E’lon</span>
-                      <span className="text-[10px] text-slate-500">Katalogda yuqorida</span>
+                      <span className="text-xs font-extrabold block">
+                        {locale === "uz" ? "TOP E’lon" : "ТОП объявление"}
+                      </span>
+                      <span className="text-[10px] text-slate-500">
+                        {locale === "uz" ? "Katalogda yuqorida" : "Вверху каталога"}
+                      </span>
                     </div>
                   </div>
                   <input
@@ -703,8 +734,12 @@ export default function EditPropertyPage() {
                       ⚡
                     </span>
                     <div>
-                      <span className="text-xs font-extrabold block">Tez sotiladi</span>
-                      <span className="text-[10px] text-slate-500">Shoshilinch taklif</span>
+                      <span className="text-xs font-extrabold block">
+                        {locale === "uz" ? "Tez sotiladi" : "Быстрая продажа"}
+                      </span>
+                      <span className="text-[10px] text-slate-500">
+                        {locale === "uz" ? "Shoshilinch taklif" : "Срочное предложение"}
+                      </span>
                     </div>
                   </div>
                   <input
@@ -728,8 +763,12 @@ export default function EditPropertyPage() {
                       %
                     </span>
                     <div>
-                      <span className="text-xs font-extrabold block">Yaxshi taklif</span>
-                      <span className="text-[10px] text-slate-500">Qulay narx</span>
+                      <span className="text-xs font-extrabold block">
+                        {locale === "uz" ? "Yaxshi taklif" : "Выгодная сделка"}
+                      </span>
+                      <span className="text-[10px] text-slate-500">
+                        {locale === "uz" ? "Qulay narx" : "Выгодная цена"}
+                      </span>
                     </div>
                   </div>
                   <input
@@ -867,25 +906,31 @@ export default function EditPropertyPage() {
                   <span className="text-xs font-extrabold text-[#16543C] flex items-center gap-1.5">
                     🇺🇿 O‘zbekcha (Lotin)
                   </span>
-                  <span className="text-[11px] text-slate-500 font-medium">Asosiy sayt tili</span>
+                  <span className="text-[11px] text-slate-500 font-medium">
+                    {locale === "uz" ? "Asosiy sayt tili" : "Основной язык сайта"}
+                  </span>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Sarlavha (UZ)</label>
+                  <label className="text-xs font-bold text-slate-700">
+                    {locale === "uz" ? "Sarlavha (UZ)" : "Заголовок (UZ)"}
+                  </label>
                   <input
                     type="text"
                     value={titleUz}
                     onChange={(e) => setTitleUz(e.target.value)}
-                    placeholder="Masalan: Shinam 3 xonali kvartira, 6-mavze"
+                    placeholder={locale === "uz" ? "Masalan: Shinam 3 xonali kvartira, 6-mavze" : "Например: Уютная 3-комнатная квартира, 6-й микрорайон"}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#16543C] outline-none text-xs font-semibold"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Batafsil tavsif (UZ)</label>
+                  <label className="text-xs font-bold text-slate-700">
+                    {locale === "uz" ? "Batafsil tavsif (UZ)" : "Подробное описание (UZ)"}
+                  </label>
                   <textarea
                     rows={4}
                     value={descUz}
                     onChange={(e) => setDescUz(e.target.value)}
-                    placeholder="Kvartira yoki uy haqida to‘liq ma’lumot..."
+                    placeholder={locale === "uz" ? "Kvartira yoki uy haqida to‘liq ma’lumot..." : "Полная информация о квартире или доме..."}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#16543C] outline-none text-xs"
                   />
                 </div>
@@ -897,25 +942,31 @@ export default function EditPropertyPage() {
                   <span className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
                     🇷🇺 Русский язык
                   </span>
-                  <span className="text-[11px] text-slate-500 font-medium">Для русскоязычных</span>
+                  <span className="text-[11px] text-slate-500 font-medium">
+                    {locale === "uz" ? "Rusiyzabon foydalanuvchilar uchun" : "Для русскоязычных пользователей"}
+                  </span>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Заголовок (RU)</label>
+                  <label className="text-xs font-bold text-slate-700">
+                    {locale === "uz" ? "Sarlavha (RU)" : "Заголовок (RU)"}
+                  </label>
                   <input
                     type="text"
                     value={titleRu}
                     onChange={(e) => setTitleRu(e.target.value)}
-                    placeholder="Например: Уютная 3-комнатная квартира, 6-й микрорайон"
+                    placeholder={locale === "uz" ? "Masalan: Shinam 3 xonali kvartira, 6-mavze" : "Например: Уютная 3-комнатная квартира, 6-й микрорайон"}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#16543C] outline-none text-xs font-semibold"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Описание объекта (RU)</label>
+                  <label className="text-xs font-bold text-slate-700">
+                    {locale === "uz" ? "Obyekt tavsifi (RU)" : "Описание объекта (RU)"}
+                  </label>
                   <textarea
                     rows={4}
                     value={descRu}
                     onChange={(e) => setDescRu(e.target.value)}
-                    placeholder="Полная информация о квартире или доме..."
+                    placeholder={locale === "uz" ? "Kvartira yoki uy haqida to‘liq ma’lumot..." : "Полная информация о квартире или доме..."}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#16543C] outline-none text-xs"
                   />
                 </div>
@@ -928,20 +979,22 @@ export default function EditPropertyPage() {
         {activeStep === 3 && (
           <div className="space-y-5">
             <h2 className="text-base font-extrabold text-slate-900 border-b pb-2">
-              3. Joylashuv va Xarita (Koordinatalar & Polygon)
+              {locale === "uz" ? "3. Joylashuv va xarita (Koordinatalar & Poligon)" : "3. Расположение и карта (Координаты и полигон)"}
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700">Tuman / Hudud (Angren)</label>
+                  <label className="text-xs font-bold text-slate-700">
+                    {locale === "uz" ? "Tuman / Hudud (Angren)" : "Район / Зона (Ангрен)"}
+                  </label>
                   <button
                     type="button"
                     onClick={() => setIsHududModalOpen(true)}
                     className="text-[11px] font-bold text-[#16543C] hover:underline flex items-center gap-1"
                   >
                     <Plus className="h-3.5 w-3.5" />
-                    <span>Yangi hudud yaratish</span>
+                    <span>{locale === "uz" ? "Yangi hudud yaratish" : "Создать новый район"}</span>
                   </button>
                 </div>
                 <select
@@ -972,9 +1025,9 @@ export default function EditPropertyPage() {
                   ) : (
                     <>
                       <option value="Markaz">{locale === "uz" ? "Markaz" : "Центр"}</option>
-                      <option value="5-mavze">{locale === "uz" ? "5-mavze" : "5-массив"}</option>
-                      <option value="6-mavze">{locale === "uz" ? "6-mavze" : "6-массив"}</option>
-                      <option value="7-mavze">{locale === "uz" ? "7-mavze" : "7-массив"}</option>
+                      <option value="5-mavze">{locale === "uz" ? "5-mavze" : "5-й массив"}</option>
+                      <option value="6-mavze">{locale === "uz" ? "6-mavze" : "6-й массив"}</option>
+                      <option value="7-mavze">{locale === "uz" ? "7-mavze" : "7-й массив"}</option>
                       <option value="Dukent">{locale === "uz" ? "Dukent" : "Дукент"}</option>
                       <option value="Yangiobod">{locale === "uz" ? "Yangiobod" : "Янгиабад"}</option>
                       <option value="Geolog">{locale === "uz" ? "Geolog" : "Геолог"}</option>
@@ -984,12 +1037,14 @@ export default function EditPropertyPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Aniq manzil (Ko‘cha va uy)</label>
+                <label className="text-xs font-bold text-slate-700">
+                  {locale === "uz" ? "Aniq manzil (Ko‘cha va uy)" : "Точный адрес (Улица и дом)"}
+                </label>
                 <input
                   type="text"
                   value={addressUz}
                   onChange={(e) => setAddressUz(e.target.value)}
-                  placeholder="Mustaqillik shoh ko‘chasi, 12-uy"
+                  placeholder={locale === "uz" ? "Mustaqillik shoh ko‘chasi, 12-uy" : "ул. Мустакиллик, д. 12"}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium"
                 />
               </div>
@@ -1000,10 +1055,12 @@ export default function EditPropertyPage() {
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                   <MapPin className="h-4 w-4 text-[#16543C]" />
-                  <span>Xaritada nuqtani belgilash (Draggable pin & Polygon)</span>
+                  <span>{locale === "uz" ? "Xaritada nuqtani belgilash" : "Отметка на карте"}</span>
                 </label>
                 <span className="text-[11px] text-slate-500 font-medium">
-                  Xaritadagi belgini suring yoki kerakli joyni bosing
+                  {locale === "uz"
+                    ? "Xaritadagi belgini suring yoki kerakli joyni bosing"
+                    : "Перетащите маркер на карте или кликните в нужном месте"}
                 </span>
               </div>
 
@@ -1029,10 +1086,20 @@ export default function EditPropertyPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 font-bold text-xs text-[#16543C]">
                     <Layers className="h-3.5 w-3.5" />
-                    <span>Yer / Hovli ko‘p burchakli chegarasi (GeoJSON / Koord Array)</span>
+                    <span>
+                      {locale === "uz"
+                        ? "Yer / Hovli ko‘pburchakli chegarasi (GeoJSON)"
+                        : "Границы участка / дома (GeoJSON)"}
+                    </span>
                   </div>
                   <span className="text-[10px] font-mono text-emerald-700 font-bold">
-                    {polygonPoints.length > 0 ? `${polygonPoints.length} ta nuqta belgilandi` : "Nuqtalar yo‘q"}
+                    {polygonPoints.length > 0
+                      ? locale === "uz"
+                        ? `${polygonPoints.length} ta nuqta belgilandi`
+                        : `Точек: ${polygonPoints.length}`
+                      : locale === "uz"
+                      ? "Nuqtalar yo‘q"
+                      : "Нет точек"}
                   </span>
                 </div>
                 <input
@@ -1046,7 +1113,11 @@ export default function EditPropertyPage() {
                       if (Array.isArray(parsed)) setPolygonPoints(parsed);
                     } catch {}
                   }}
-                  placeholder="Xaritada 'Polygon chizish' tugmasini bosing yoki JSON kiriting"
+                  placeholder={
+                    locale === "uz"
+                      ? "Xaritada 'Poligon chizish' tugmasini bosing yoki JSON kiriting"
+                      : "Нажмите кнопку 'Нарисовать полигон' на карте или введите JSON"
+                  }
                   className="w-full px-3 py-2 rounded-xl border border-emerald-200 bg-white text-xs font-mono"
                 />
               </div>
@@ -1058,7 +1129,7 @@ export default function EditPropertyPage() {
         {activeStep === 4 && (
           <div className="space-y-6">
             <h2 className="text-base font-extrabold text-slate-900 border-b pb-2">
-              4. Texnik parametrlar va Qulayliklar
+              {locale === "uz" ? "4. Texnik parametrlar va qulayliklar" : "4. Технические параметры и удобства"}
             </h2>
 
             {/* Area, Dimensions & Rooms (Dynamic by Property Type) */}
@@ -1066,33 +1137,37 @@ export default function EditPropertyPage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                 <div className="space-y-1">
                   <label className="font-bold text-slate-700">
-                    {locale === "uz" ? "Yer maydoni — Sotix" : "Площадь участка — Сотки (соток)"}
+                    {locale === "uz" ? "Yer maydoni — Sotix" : "Площадь участка — Сотки"}
                   </label>
                   <input
                     type="number"
                     value={areaSotikh || ""}
                     onChange={(e) => setAreaSotikh(Number(e.target.value))}
-                    placeholder="Masalan: 6"
+                    placeholder={locale === "uz" ? "Masalan: 6" : "Например: 6"}
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-700">Fasad kengligi (metrda)</label>
+                  <label className="font-bold text-slate-700">
+                    {locale === "uz" ? "Fasad kengligi (metrda)" : "Ширина фасада (в метрах)"}
+                  </label>
                   <input
                     type="number"
                     value={facadeM}
                     onChange={(e) => setFacadeM(e.target.value === "" ? "" : Number(e.target.value))}
-                    placeholder="Masalan: 15"
+                    placeholder={locale === "uz" ? "Masalan: 15" : "Например: 15"}
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-700">Uzunligi / Chuqurligi (metrda)</label>
+                  <label className="font-bold text-slate-700">
+                    {locale === "uz" ? "Uzunligi / Chuqurligi (metrda)" : "Длина / глубина (в метрах)"}
+                  </label>
                   <input
                     type="number"
                     value={depthM}
                     onChange={(e) => setDepthM(e.target.value === "" ? "" : Number(e.target.value))}
-                    placeholder="Masalan: 40"
+                    placeholder={locale === "uz" ? "Masalan: 40" : "Например: 40"}
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold"
                   />
                 </div>
@@ -1101,18 +1176,20 @@ export default function EditPropertyPage() {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
                 <div className="space-y-1">
                   <label className="font-bold text-slate-700">
-                    {locale === "uz" ? "Yer maydoni — Sotix" : "Площадь участка — Сотки (соток)"}
+                    {locale === "uz" ? "Yer maydoni — Sotix" : "Площадь участка — Сотки"}
                   </label>
                   <input
                     type="number"
                     value={areaSotikh || ""}
                     onChange={(e) => setAreaSotikh(Number(e.target.value))}
-                    placeholder="Masalan: 6"
+                    placeholder={locale === "uz" ? "Masalan: 6" : "Например: 6"}
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-700">Uy maydoni (m²)</label>
+                  <label className="font-bold text-slate-700">
+                    {locale === "uz" ? "Uy maydoni (m²)" : "Площадь дома (м²)"}
+                  </label>
                   <input
                     type="number"
                     value={areaSqm}
@@ -1121,7 +1198,9 @@ export default function EditPropertyPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-700">Xonalar soni</label>
+                  <label className="font-bold text-slate-700">
+                    {locale === "uz" ? "Xonalar soni" : "Количество комнат"}
+                  </label>
                   <input
                     type="number"
                     value={rooms}
@@ -1130,27 +1209,33 @@ export default function EditPropertyPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-700">Fasad kengligi (metrda)</label>
+                  <label className="font-bold text-slate-700">
+                    {locale === "uz" ? "Fasad kengligi (metrda)" : "Ширина фасада (в метрах)"}
+                  </label>
                   <input
                     type="number"
                     value={facadeM}
                     onChange={(e) => setFacadeM(e.target.value === "" ? "" : Number(e.target.value))}
-                    placeholder="Masalan: 15"
+                    placeholder={locale === "uz" ? "Masalan: 15" : "Например: 15"}
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-700">Uzunligi / Chuqurligi (metrda)</label>
+                  <label className="font-bold text-slate-700">
+                    {locale === "uz" ? "Uzunligi / Chuqurligi (metrda)" : "Длина / глубина (в метрах)"}
+                  </label>
                   <input
                     type="number"
                     value={depthM}
                     onChange={(e) => setDepthM(e.target.value === "" ? "" : Number(e.target.value))}
-                    placeholder="Masalan: 40"
+                    placeholder={locale === "uz" ? "Masalan: 40" : "Например: 40"}
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-700">Yashash maydoni (m²)</label>
+                  <label className="font-bold text-slate-700">
+                    {locale === "uz" ? "Yashash maydoni (m²)" : "Жилая площадь (м²)"}
+                  </label>
                   <input
                     type="number"
                     value={livingAreaSqm}
@@ -1162,7 +1247,9 @@ export default function EditPropertyPage() {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-700">Umumiy maydon (m²)</label>
+                  <label className="font-bold text-slate-700">
+                    {locale === "uz" ? "Umumiy maydon (m²)" : "Общая площадь (м²)"}
+                  </label>
                   <input
                     type="number"
                     value={areaSqm}
@@ -1171,7 +1258,9 @@ export default function EditPropertyPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-700">Yashash maydoni (m²)</label>
+                  <label className="font-bold text-slate-700">
+                    {locale === "uz" ? "Yashash maydoni (m²)" : "Жилая площадь (м²)"}
+                  </label>
                   <input
                     type="number"
                     value={livingAreaSqm}
@@ -1180,7 +1269,9 @@ export default function EditPropertyPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-700">Xonalar soni</label>
+                  <label className="font-bold text-slate-700">
+                    {locale === "uz" ? "Xonalar soni" : "Количество комнат"}
+                  </label>
                   <input
                     type="number"
                     value={rooms}
@@ -1189,7 +1280,9 @@ export default function EditPropertyPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-700">Qavat / Jami qavatlar</label>
+                  <label className="font-bold text-slate-700">
+                    {locale === "uz" ? "Qavat / Jami qavatlar" : "Этаж / Всего этажей"}
+                  </label>
                   <div className="flex items-center gap-1">
                     <input
                       type="number"
@@ -1333,15 +1426,17 @@ export default function EditPropertyPage() {
 
             {/* Amenities Checkboxes */}
             <div className="space-y-3 pt-2">
-              <label className="text-xs font-bold text-slate-700">Qulayliklar</label>
+              <label className="text-xs font-bold text-slate-700">
+                {locale === "uz" ? "Qo‘shimcha jihozlar" : "Удобства и оснащение"}
+              </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs font-bold">
                 {[
-                  { key: "furniture", label: "Mebel bilan" },
-                  { key: "parking", label: "Avtoturargoh" },
-                  { key: "elevator", label: "Lift" },
-                  { key: "ac", label: "Konditsioner" },
-                  { key: "balcony", label: "Balkon / Lodjiya" },
-                  { key: "internet", label: "Tezkor Internet" },
+                  { key: "furniture", label: locale === "uz" ? "Mebel" : "Мебель" },
+                  { key: "parking", label: locale === "uz" ? "Avtoturargoh" : "Парковка" },
+                  { key: "elevator", label: locale === "uz" ? "Lift" : "Лифт" },
+                  { key: "ac", label: locale === "uz" ? "Konditsioner" : "Кондиционер" },
+                  { key: "balcony", label: locale === "uz" ? "Balkon" : "Балкон" },
+                  { key: "internet", label: locale === "uz" ? "Internet" : "Интернет" },
                 ].map((a) => (
                   <label
                     key={a.key}
@@ -1371,11 +1466,13 @@ export default function EditPropertyPage() {
         {activeStep === 5 && (
           <div className="space-y-5">
             <h2 className="text-base font-extrabold text-slate-900 border-b pb-2">
-              5. Fotosuratlar va Video
+              {locale === "uz" ? "5-bosqich: Fotosuratlar va Video" : "Этап 5: Фотографии и Видео"}
             </h2>
 
             <div className="space-y-3">
-              <label className="text-xs font-bold text-slate-700">Obyekt suratlari</label>
+              <label className="text-xs font-bold text-slate-700">
+                {locale === "uz" ? "Obyekt suratlari" : "Фотографии объекта"}
+              </label>
               <PropertyImageUploader
                 images={imageUrls}
                 mainImage={mainImage}
@@ -1386,7 +1483,9 @@ export default function EditPropertyPage() {
             </div>
 
             <div className="space-y-1 pt-2">
-              <label className="text-xs font-bold text-slate-700">Video havola (YouTube / Vimeo)</label>
+              <label className="text-xs font-bold text-slate-700">
+                {locale === "uz" ? "Video sharh havolasi (YouTube / Vimeo / MP4)" : "Ссылка на видеообзор (YouTube / Vimeo / MP4)"}
+              </label>
               <input
                 type="url"
                 value={videoUrl}
@@ -1402,12 +1501,14 @@ export default function EditPropertyPage() {
         {activeStep === 6 && (
           <div className="space-y-5">
             <h2 className="text-base font-extrabold text-slate-900 border-b pb-2">
-              6. Aloqa va Rieltor biriktirish
+              {locale === "uz" ? "6-bosqich: Aloqa va Mas’ul Rieltor" : "Этап 6: Контакты и Ответственный Риелтор"}
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Aloqa telefoni</label>
+                <label className="text-xs font-bold text-slate-700">
+                  {locale === "uz" ? "E’londagi ommaviy telefon" : "Публичный телефон для связи"}
+                </label>
                 <input
                   type="tel"
                   value={contactPhone}
@@ -1416,7 +1517,9 @@ export default function EditPropertyPage() {
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Telegram foydalanuvchi nomi</label>
+                <label className="text-xs font-bold text-slate-700">
+                  {locale === "uz" ? "Telegram foydalanuvchi nomi" : "Имя пользователя в Telegram"}
+                </label>
                 <input
                   type="text"
                   value={contactTelegram}
@@ -1427,7 +1530,9 @@ export default function EditPropertyPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700">Rieltor / Agent</label>
+              <label className="text-xs font-bold text-slate-700">
+                {locale === "uz" ? "Mas’ul rieltorni biriktirish" : "Назначить ответственного риелтора"}
+              </label>
               <select
                 value={selectedRealtorId}
                 onChange={(e) => setSelectedRealtorId(e.target.value)}
@@ -1478,7 +1583,7 @@ export default function EditPropertyPage() {
             onClick={() => setActiveStep(activeStep - 1)}
             className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs disabled:opacity-40 transition-colors"
           >
-            Orqaga
+            {locale === "uz" ? "Orqaga" : "Назад"}
           </button>
 
           <div className="flex items-center gap-2">
@@ -1488,7 +1593,7 @@ export default function EditPropertyPage() {
                 onClick={() => setActiveStep(activeStep + 1)}
                 className="px-5 py-2 rounded-xl bg-[#16543C] text-white font-bold text-xs hover:bg-[#0E3324] transition-colors flex items-center gap-1.5"
               >
-                <span>Keyingisi</span>
+                <span>{locale === "uz" ? "Keyingisi" : "Далее"}</span>
                 <ArrowRight className="h-3.5 w-3.5" />
               </button>
             ) : (
@@ -1498,7 +1603,7 @@ export default function EditPropertyPage() {
                 className="px-5 py-2 rounded-xl bg-[#16543C] text-white font-bold text-xs hover:bg-[#0E3324] transition-colors flex items-center gap-1.5"
               >
                 <CheckCircle2 className="h-4 w-4" />
-                <span>O‘zgarishlarni nashr qilish</span>
+                <span>{locale === "uz" ? "O‘zgarishlarni saqlash va nashr qilish" : "Сохранить изменения и опубликовать"}</span>
               </button>
             )}
           </div>

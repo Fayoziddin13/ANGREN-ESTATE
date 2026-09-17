@@ -36,6 +36,13 @@ import { useCompare } from "@/lib/compareStore";
 import { PropertyInfrastructureSection } from "./PropertyInfrastructureSection";
 import { recordPublicLead } from "@/lib/leadClient";
 import { trackEvent } from "@/lib/analytics";
+import {
+  getPropertyTitle,
+  getPropertyDescription,
+  getPropertyAddress,
+  getPropertyDistrict,
+  getRenovationLabel,
+} from "@/lib/propertyFormatters";
 
 interface PropertyDetailModalProps {
   property: Property | null;
@@ -60,12 +67,10 @@ export function PropertyDetailModal({
 
   if (!isOpen || !property) return null;
 
-  const title = locale === "uz" ? property.title_uz : property.title_ru;
-  const description =
-    locale === "uz" ? property.description_uz : property.description_ru;
-  const address = locale === "uz" ? property.address_uz : property.address_ru;
-  const district =
-    locale === "uz" ? property.district_name_uz : property.district_name_ru;
+  const title = getPropertyTitle(property, locale);
+  const description = getPropertyDescription(property, locale);
+  const address = getPropertyAddress(property, locale);
+  const district = getPropertyDistrict(property, locale);
   const isSale = property.transaction_type === "sale";
   const badgeText = isSale ? t.popular.saleBadge : t.popular.rentBadge;
   const isSold = property.status === "sold";
@@ -120,19 +125,7 @@ export function PropertyDetailModal({
     });
   };
 
-  // Human-friendly renovation label
-  const getRenovationLabel = () => {
-    switch (property.renovation) {
-      case "designer":
-        return locale === "uz" ? "Dizaynerlik ta'miri" : "Дизайнерский ремонт";
-      case "euro":
-        return locale === "uz" ? "Yevro ta'mirlangan" : "Евроремонт";
-      case "cosmetic":
-        return locale === "uz" ? "Kosmetik ta'mir" : "Косметический ремонт";
-      default:
-        return locale === "uz" ? "O'rtacha" : "Без ремонта";
-    }
-  };
+
 
   return (
     <AnimatePresence>
@@ -432,7 +425,12 @@ export function PropertyDetailModal({
                         <span>{locale === "uz" ? "O‘lchamlari" : "Размеры"}</span>
                       </span>
                       <span className="text-base sm:text-lg font-extrabold text-brand-dark pt-1">
-                        {property.dimensions || (property.facade_m && property.depth_m ? `${property.facade_m} × ${property.depth_m} m` : property.facade_m ? `Fasad: ${property.facade_m} m` : "—")}
+                        {property.dimensions ||
+                          (property.facade_m && property.depth_m
+                            ? `${property.facade_m} × ${property.depth_m} ${locale === "uz" ? "m" : "м"}`
+                            : property.facade_m
+                            ? `${locale === "uz" ? "Fasad" : "Фасад"}: ${property.facade_m} ${locale === "uz" ? "m" : "м"}`
+                            : "—")}
                       </span>
                     </div>
 

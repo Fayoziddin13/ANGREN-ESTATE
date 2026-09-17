@@ -82,7 +82,7 @@ export function MobileBottomNav({ onSearchClick }: MobileBottomNavProps) {
             className="flex flex-col items-center gap-1 text-[11px] font-semibold text-gray-400 hover:text-gray-700 transition-colors"
           >
             <User className="h-5 w-5 stroke-2" />
-            <span>{user ? user.full_name?.split(" ")[0] || "Profil" : t.bottomNav.profile}</span>
+            <span>{user ? user.full_name?.split(" ")[0] || (locale === "uz" ? "Profil" : "Профиль") : t.bottomNav.profile}</span>
           </button>
         </nav>
       </div>
@@ -101,12 +101,12 @@ export function MobileBottomNav({ onSearchClick }: MobileBottomNavProps) {
               </div>
               <div className="min-w-0 flex-1">
                 <h4 className="font-extrabold text-brand-dark text-sm truncate">
-                  {user.full_name || "Foydalanuvchi"}
+                  {user.full_name || (locale === "uz" ? "Foydalanuvchi" : "Пользователь")}
                 </h4>
                 <p className="text-xs text-brand-muted truncate">{user.email}</p>
                 <div className="flex items-center gap-1 text-[11px] text-emerald-700 font-semibold mt-0.5">
                   <Sparkles className="h-3 w-3" />
-                  <span>Google bilan tasdiqlangan</span>
+                  <span>{locale === "uz" ? "Google bilan tasdiqlangan" : "Подтверждено через Google"}</span>
                 </div>
               </div>
             </div>

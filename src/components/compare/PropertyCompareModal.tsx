@@ -22,6 +22,13 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useCompare } from "@/lib/compareStore";
 import { formatPublishedDate } from "@/lib/dateFormat";
+import {
+  getPropertyTitle,
+  getPropertyAddress,
+  getPropertyDistrict,
+  getPropertyTypeLabel,
+  getRenovationLabel,
+} from "@/lib/propertyFormatters";
 
 interface PropertyCompareModalProps {
   isOpen: boolean;
@@ -46,23 +53,6 @@ export function PropertyCompareModal({
 
   const formatPriceValue = (p: Property) => {
     return formatPrice(p.price_uzs, locale);
-  };
-
-  const getPropTypeLabel = (type: string) => {
-    switch (type) {
-      case "apartment":
-        return locale === "uz" ? "Kvartira" : "Квартира";
-      case "house_yard":
-        return locale === "uz" ? "Hovli / Uy" : "Дом / Участок";
-      case "new_build":
-        return locale === "uz" ? "Yangi bino" : "Новостройка";
-      case "land":
-        return locale === "uz" ? "Yer uchastkasi" : "Земельный участок";
-      case "commercial":
-        return locale === "uz" ? "Tijorat ko‘chmas mulki" : "Коммерческая недвижимость";
-      default:
-        return locale === "uz" ? "Boshqa" : "Другое";
-    }
   };
 
   return (
@@ -157,7 +147,7 @@ export function PropertyCompareModal({
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                        {getPropTypeLabel(p.property_type)}
+                        {getPropertyTypeLabel(p.property_type, locale)}
                       </span>
                       <button
                         onClick={() => removeCompare(p.id)}
@@ -172,7 +162,7 @@ export function PropertyCompareModal({
                       {p.main_image || (p.photos && p.photos.length > 0) ? (
                         <Image
                           src={p.main_image || p.photos![0]}
-                          alt={p.title_uz}
+                          alt={getPropertyTitle(p, locale)}
                           fill
                           className="object-cover"
                           sizes="350px"
@@ -186,11 +176,11 @@ export function PropertyCompareModal({
 
                     <div>
                       <h4 className="font-extrabold text-slate-900 text-sm">
-                        {locale === "uz" ? p.title_uz : p.title_ru}
+                        {getPropertyTitle(p, locale)}
                       </h4>
                       <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
                         <MapPin className="h-3 w-3 text-slate-400" />
-                        <span>{locale === "uz" ? p.address_uz : p.address_ru}</span>
+                        <span>{getPropertyAddress(p, locale)}</span>
                       </p>
                     </div>
 
@@ -210,7 +200,7 @@ export function PropertyCompareModal({
                           {locale === "uz" ? "Maydon" : "Площадь"}
                         </span>
                         <span className="font-bold text-slate-800">
-                          {p.area_sqm} m² {p.area_sotikh ? `(${p.area_sotikh} sotix)` : ""}
+                          {p.area_sqm} {locale === "uz" ? "m²" : "м²"} {p.area_sotikh ? `(${p.area_sotikh} ${locale === "uz" ? "sotix" : "соток"})` : ""}
                         </span>
                       </div>
                       <div className="bg-white p-2.5 rounded-xl border border-slate-100">
@@ -218,7 +208,7 @@ export function PropertyCompareModal({
                           {locale === "uz" ? "Xonalar" : "Комнаты"}
                         </span>
                         <span className="font-bold text-slate-800">
-                          {p.rooms ? `${p.rooms} xona` : "-"}
+                          {p.rooms ? `${p.rooms} ${locale === "uz" ? "xona" : "комн."}` : "-"}
                         </span>
                       </div>
                       <div className="bg-white p-2.5 rounded-xl border border-slate-100">
@@ -234,7 +224,7 @@ export function PropertyCompareModal({
                           {locale === "uz" ? "Ta’mir" : "Ремонт"}
                         </span>
                         <span className="font-bold text-slate-800">
-                          {p.renovation ? p.renovation : "-"}
+                          {getRenovationLabel(p.renovation, locale)}
                         </span>
                       </div>
                     </div>
@@ -278,7 +268,7 @@ export function PropertyCompareModal({
                         {p.main_image || (p.photos && p.photos.length > 0) ? (
                           <Image
                             src={p.main_image || p.photos![0]}
-                            alt={p.title_uz}
+                            alt={getPropertyTitle(p, locale)}
                             fill
                             className="object-cover"
                             sizes="200px"
@@ -291,7 +281,7 @@ export function PropertyCompareModal({
                       </div>
 
                       <h4 className="text-xs font-black text-slate-900 line-clamp-2">
-                        {locale === "uz" ? p.title_uz : p.title_ru}
+                        {getPropertyTitle(p, locale)}
                       </h4>
                       <div>
                         <p className="text-sm font-extrabold text-[#16543C]">
@@ -340,7 +330,7 @@ export function PropertyCompareModal({
                     </div>
                     {comparedProperties.map((p) => (
                       <div key={p.id} className="p-3.5 border-l border-slate-100 font-semibold">
-                        {getPropTypeLabel(p.property_type)}
+                        {getPropertyTypeLabel(p.property_type, locale)}
                       </div>
                     ))}
                     {Array.from({ length: 3 - comparedProperties.length }).map((_, i) => (
@@ -379,7 +369,7 @@ export function PropertyCompareModal({
                     {comparedProperties.map((p) => (
                       <div key={p.id} className="p-3.5 border-l border-slate-100 font-semibold flex items-center gap-1.5">
                         <MapPin className="h-3.5 w-3.5 text-[#16543C] shrink-0" />
-                        <span>{p.district_name_uz || p.district}</span>
+                        <span>{getPropertyDistrict(p, locale)}</span>
                       </div>
                     ))}
                     {Array.from({ length: 3 - comparedProperties.length }).map((_, i) => (
@@ -394,7 +384,7 @@ export function PropertyCompareModal({
                     </div>
                     {comparedProperties.map((p) => (
                       <div key={p.id} className="p-3.5 border-l border-slate-100 font-bold">
-                        {p.area_sqm || p.area} m² {p.area_sotikh ? `(${p.area_sotikh} sotix)` : ""}
+                        {p.area_sqm || p.area} {locale === "uz" ? "m²" : "м²"} {p.area_sotikh ? `(${p.area_sotikh} ${locale === "uz" ? "sotix" : "соток"})` : ""}
                       </div>
                     ))}
                     {Array.from({ length: 3 - comparedProperties.length }).map((_, i) => (
@@ -439,13 +429,7 @@ export function PropertyCompareModal({
                     </div>
                     {comparedProperties.map((p) => (
                       <div key={p.id} className="p-3.5 border-l border-slate-100 font-semibold capitalize">
-                        {p.renovation === "euro"
-                          ? locale === "uz" ? "Yevro ta’mir" : "Евроремонт"
-                          : p.renovation === "designer"
-                          ? locale === "uz" ? "Dizaynerlik" : "Дизайнерский"
-                          : p.renovation === "cosmetic"
-                          ? locale === "uz" ? "Kosmetik" : "Косметический"
-                          : locale === "uz" ? "Ta’mirsiz" : "Без ремонта"}
+                        {getRenovationLabel(p.renovation, locale)}
                       </div>
                     ))}
                     {Array.from({ length: 3 - comparedProperties.length }).map((_, i) => (
@@ -485,7 +469,7 @@ export function PropertyCompareModal({
                         <div key={p.id} className="p-3.5 border-l border-slate-100 font-semibold">
                           {(p.amenities as any)?.dimensions ||
                             ((p.amenities as any)?.facade_m && (p.amenities as any)?.depth_m
-                              ? `${(p.amenities as any).facade_m} × ${(p.amenities as any).depth_m} m`
+                              ? `${(p.amenities as any).facade_m} × ${(p.amenities as any).depth_m} ${locale === "uz" ? "m" : "м"}`
                               : "-")}
                         </div>
                       ))}

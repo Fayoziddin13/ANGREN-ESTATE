@@ -20,6 +20,11 @@ import {
 import { useLanguage } from "@/context/LanguageContext";
 import { useProperties } from "@/lib/propertyStore";
 import { Property, PropertyStatus } from "@/lib/types";
+import {
+  getPropertyTitle,
+  getPropertyAddress,
+  getPropertyStatusLabel,
+} from "@/lib/propertyFormatters";
 
 const ANGREN_CENTER: [number, number] = [70.1436, 41.0167];
 
@@ -158,10 +163,11 @@ export default function AdminMapManagementPage() {
       else if (p.status === "rented") bgColor = "#2563EB";
       else if (p.status === "archived") bgColor = "#64748B";
 
+      const title = getPropertyTitle(p, locale);
       el.innerHTML = `
         <div style="background-color: ${bgColor};" class="text-white px-2.5 py-1 rounded-full shadow-lg border-2 border-white text-[11px] font-bold flex items-center gap-1.5 whitespace-nowrap">
           <span class="h-1.5 w-1.5 rounded-full bg-white animate-pulse"></span>
-          <span>${p.price_usd ? `$${p.price_usd.toLocaleString()}` : `${p.title_uz.slice(0, 12)}...`}</span>
+          <span>${p.price_usd ? `$${p.price_usd.toLocaleString()}` : `${title.slice(0, 12)}...`}</span>
         </div>
       `;
 
@@ -178,7 +184,7 @@ export default function AdminMapManagementPage() {
 
       markersRef.current[p.id] = marker;
     });
-  }, [properties, statusFilter]);
+  }, [properties, statusFilter, locale]);
 
   // Handle Location Update
   const handleSaveLocation = async () => {
@@ -186,7 +192,11 @@ export default function AdminMapManagementPage() {
     await updateProperty(selectedProperty.id, {
       coordinates: { lat: editLat, lng: editLng },
     });
-    showToast("Obyekt koordinatalari muvaffaqiyatli saqlandi!");
+    showToast(
+      locale === "uz"
+        ? "Obyekt koordinatalari muvaffaqiyatli saqlandi!"
+        : "Координаты объекта успешно сохранены!"
+    );
     setIsEditMode(false);
   };
 
@@ -197,7 +207,9 @@ export default function AdminMapManagementPage() {
   const filtered = properties.filter((p) => {
     const matchSearch =
       p.title_uz.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.address_uz.toLowerCase().includes(searchQuery.toLowerCase());
+      p.title_ru.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.address_uz.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.address_ru || "").toLowerCase().includes(searchQuery.toLowerCase());
     const matchStatus = statusFilter === "all" || p.status === statusFilter;
     return matchSearch && matchStatus;
   });
@@ -228,7 +240,7 @@ export default function AdminMapManagementPage() {
                   : "text-slate-600 hover:bg-slate-100"
               }`}
             >
-              Sxema (Map)
+              {locale === "uz" ? "Sxema" : "Схема"}
             </button>
             <button
               onClick={() => setMapMode("satellite")}
@@ -238,7 +250,7 @@ export default function AdminMapManagementPage() {
                   : "text-slate-600 hover:bg-slate-100"
               }`}
             >
-              Satellite
+              {locale === "uz" ? "Sun’iy yo‘ldosh" : "Спутник"}
             </button>
           </div>
 
@@ -246,7 +258,7 @@ export default function AdminMapManagementPage() {
           <button
             onClick={recenterAngren}
             className="p-2.5 rounded-2xl bg-white/95 backdrop-blur-md text-slate-700 shadow-elevated border border-slate-200 hover:bg-slate-50 transition-colors"
-            title="Angren markaziga qaytish"
+            title={locale === "uz" ? "Angren markaziga qaytish" : "К центру Ангрена"}
           >
             <Crosshair className="h-4 w-4 text-[#16543C]" />
           </button>
@@ -254,19 +266,21 @@ export default function AdminMapManagementPage() {
 
         {/* Legend Overlay at Bottom Left */}
         <div className="absolute bottom-6 left-4 z-10 bg-white/95 backdrop-blur-md rounded-2xl p-3 shadow-elevated border border-slate-200 text-[11px] font-bold space-y-1.5">
-          <div className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Statuslar</div>
+          <div className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">
+            {locale === "uz" ? "Statuslar" : "Статусы"}
+          </div>
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1.5 text-emerald-800">
-              <span className="h-2.5 w-2.5 rounded-full bg-[#16543C]" /> Nashr qilingan
+              <span className="h-2.5 w-2.5 rounded-full bg-[#16543C]" /> {locale === "uz" ? "Nashr qilingan" : "Опубликовано"}
             </span>
             <span className="flex items-center gap-1.5 text-amber-700">
-              <span className="h-2.5 w-2.5 rounded-full bg-[#D97706]" /> Qoralama
+              <span className="h-2.5 w-2.5 rounded-full bg-[#D97706]" /> {locale === "uz" ? "Qoralama" : "Черновик"}
             </span>
             <span className="flex items-center gap-1.5 text-red-700">
-              <span className="h-2.5 w-2.5 rounded-full bg-[#DC2626]" /> Sotildi
+              <span className="h-2.5 w-2.5 rounded-full bg-[#DC2626]" /> {locale === "uz" ? "Sotildi" : "Продано"}
             </span>
             <span className="flex items-center gap-1.5 text-blue-700">
-              <span className="h-2.5 w-2.5 rounded-full bg-[#2563EB]" /> Ijara
+              <span className="h-2.5 w-2.5 rounded-full bg-[#2563EB]" /> {locale === "uz" ? "Ijara" : "Аренда"}
             </span>
           </div>
         </div>
@@ -279,10 +293,10 @@ export default function AdminMapManagementPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-black text-slate-900 flex items-center gap-2">
               <Compass className="h-4 w-4 text-[#16543C]" />
-              <span>Xarita Boshqaruvi</span>
+              <span>{locale === "uz" ? "Xarita boshqaruvi" : "Управление картой"}</span>
             </h2>
             <span className="text-xs font-bold text-slate-600">
-              {filtered.length} ta obyekt
+              {locale === "uz" ? `${filtered.length} ta obyekt` : `Объектов: ${filtered.length}`}
             </span>
           </div>
 
@@ -293,24 +307,30 @@ export default function AdminMapManagementPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Obyektni qidirish..."
+              placeholder={locale === "uz" ? "Obyektni qidirish..." : "Поиск объекта..."}
               className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 bg-slate-50 outline-none focus:ring-2 focus:ring-[#16543C]"
             />
           </div>
 
           {/* Status Filter */}
           <div className="flex items-center gap-1 overflow-x-auto text-[11px] font-bold">
-            {["all", "published", "draft", "sold", "rented"].map((st) => (
+            {[
+              { key: "all", label: locale === "uz" ? "Barchasi" : "Все" },
+              { key: "published", label: locale === "uz" ? "Faol" : "Опубликовано" },
+              { key: "draft", label: locale === "uz" ? "Qoralama" : "Черновик" },
+              { key: "sold", label: locale === "uz" ? "Sotilgan" : "Продано" },
+              { key: "rented", label: locale === "uz" ? "Ijarada" : "Сдано" },
+            ].map((st) => (
               <button
-                key={st}
-                onClick={() => setStatusFilter(st)}
+                key={st.key}
+                onClick={() => setStatusFilter(st.key)}
                 className={`px-2 py-1 rounded-lg capitalize whitespace-nowrap ${
-                  statusFilter === st
+                  statusFilter === st.key
                     ? "bg-[#16543C] text-white"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
-                {st}
+                {st.label}
               </button>
             ))}
           </div>
@@ -321,33 +341,37 @@ export default function AdminMapManagementPage() {
           <div className="p-4 bg-emerald-50/40 border-b border-emerald-200/60 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800">
-                Tanlangan Obyekt
+                {locale === "uz" ? "Tanlangan obyekt" : "Выбранный объект"}
               </span>
               <button
                 onClick={() => setSelectedProperty(null)}
                 className="text-[11px] font-bold text-slate-500 hover:text-slate-900"
               >
-                Yopish
+                {locale === "uz" ? "Yopish" : "Закрыть"}
               </button>
             </div>
 
             <h3 className="font-extrabold text-xs text-slate-900 truncate">
-              {selectedProperty.title_uz}
+              {getPropertyTitle(selectedProperty, locale)}
             </h3>
-            <p className="text-[11px] text-slate-600 font-medium">{selectedProperty.address_uz}</p>
+            <p className="text-[11px] text-slate-600 font-medium">
+              {getPropertyAddress(selectedProperty, locale)}
+            </p>
 
             {/* Coordinates editor */}
             <div className="space-y-2 pt-2 border-t border-emerald-200/50">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-slate-700 flex items-center gap-1">
                   <MapPin className="h-3.5 w-3.5 text-[#16543C]" />
-                  <span>Koordinatalar</span>
+                  <span>{locale === "uz" ? "Koordinatalar" : "Координаты"}</span>
                 </span>
                 <button
                   onClick={() => setIsEditMode(!isEditMode)}
                   className="text-[11px] font-bold text-[#16543C] hover:underline"
                 >
-                  {isEditMode ? "Bekor qilish" : "Tahrirlash"}
+                  {isEditMode
+                    ? (locale === "uz" ? "Bekor qilish" : "Отмена")
+                    : (locale === "uz" ? "Tahrirlash" : "Редактировать")}
                 </button>
               </div>
 
@@ -379,7 +403,7 @@ export default function AdminMapManagementPage() {
                     onClick={handleSaveLocation}
                     className="w-full py-2 rounded-xl bg-[#16543C] text-white font-bold text-xs hover:bg-[#0E3324] transition-colors"
                   >
-                    Saqlash
+                    {locale === "uz" ? "Saqlash" : "Сохранить"}
                   </button>
                 </div>
               ) : (
@@ -391,7 +415,9 @@ export default function AdminMapManagementPage() {
           </div>
         ) : (
           <div className="p-4 bg-slate-50 text-center text-xs text-slate-500 font-medium">
-            Xaritadagi obyektni bosing yoki quyidagi ro‘yxatdan tanlang
+            {locale === "uz"
+              ? "Xaritadagi obyektni bosing yoki quyidagi ro‘yxatdan tanlang"
+              : "Нажмите на объект на карте или выберите из списка"}
           </div>
         )}
 
@@ -414,14 +440,20 @@ export default function AdminMapManagementPage() {
               }`}
             >
               <div className="min-w-0">
-                <h4 className="font-bold text-xs text-slate-800 truncate">{p.title_uz}</h4>
-                <p className="text-[11px] text-slate-500 font-medium truncate">{p.address_uz}</p>
+                <h4 className="font-bold text-xs text-slate-800 truncate">
+                  {getPropertyTitle(p, locale)}
+                </h4>
+                <p className="text-[11px] text-slate-500 font-medium truncate">
+                  {getPropertyAddress(p, locale)}
+                </p>
               </div>
               <div className="text-right shrink-0">
                 <div className="text-xs font-black text-[#16543C]">
                   ${p.price_usd?.toLocaleString()}
                 </div>
-                <span className="text-[10px] uppercase font-bold text-slate-500">{p.status}</span>
+                <span className="text-[10px] uppercase font-bold text-slate-500">
+                  {getPropertyStatusLabel(p.status, locale)}
+                </span>
               </div>
             </div>
           ))}

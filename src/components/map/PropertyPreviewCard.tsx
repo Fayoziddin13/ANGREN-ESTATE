@@ -10,6 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useFavorites } from "@/lib/favoriteStore";
 import { trackEvent } from "@/lib/analytics";
 import { formatPublishedDate } from "@/lib/dateFormat";
+import { getPropertyTitle, getPropertyAddress, getPropertyTypeLabel } from "@/lib/propertyFormatters";
 
 interface PropertyPreviewCardProps {
   property: Property;
@@ -29,8 +30,8 @@ export function PropertyPreviewCard({
   const { isFavorite, toggleFavorite } = useFavorites();
   const isFavorited = isFavorite(property.id);
 
-  const title = locale === "uz" ? property.title_uz : property.title_ru;
-  const address = locale === "uz" ? property.address_uz : property.address_ru;
+  const title = getPropertyTitle(property, locale);
+  const address = getPropertyAddress(property, locale);
   const isSale = property.transaction_type === "sale";
   const badgeText = isSale ? t.popular.saleBadge : t.popular.rentBadge;
 
@@ -46,23 +47,6 @@ export function PropertyPreviewCard({
   const totalFloors = property.floors ?? property.total_floors;
   const isHouse = property.property_type === "house_yard" || property.property_type === "land";
   const publishedDateStr = formatPublishedDate(property.published_at || property.created_at, locale, true);
-
-  const getPropertyTypeLabel = (type: string, loc: string) => {
-    switch (type) {
-      case "apartment":
-        return loc === "uz" ? "Kvartira" : "Квартира";
-      case "house_yard":
-        return loc === "uz" ? "Hovli / Uy" : "Дом / Участок";
-      case "new_build":
-        return loc === "uz" ? "Yangi bino" : "Новостройка";
-      case "land":
-        return loc === "uz" ? "Yer uchastkasi" : "Земельный участок";
-      case "commercial":
-        return loc === "uz" ? "Tijorat mulki" : "Коммерческая";
-      default:
-        return loc === "uz" ? "Ko‘chmas mulk" : "Недвижимость";
-    }
-  };
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -155,7 +139,7 @@ export function PropertyPreviewCard({
               ) : null}
               {property.dimensions || (property.facade_m && property.depth_m) ? (
                 <span className="text-gray-500 font-medium">
-                  {property.dimensions || `${property.facade_m} × ${property.depth_m} m`}
+                  {property.dimensions || `${property.facade_m} × ${property.depth_m} ${locale === "uz" ? "m" : "м"}`}
                 </span>
               ) : null}
             </div>
@@ -172,7 +156,7 @@ export function PropertyPreviewCard({
               </div>
               {property.dimensions || (property.facade_m && property.depth_m) ? (
                 <span className="text-gray-500 font-medium text-[11px]">
-                  {property.dimensions || `${property.facade_m} × ${property.depth_m} m`}
+                  {property.dimensions || `${property.facade_m} × ${property.depth_m} ${locale === "uz" ? "m" : "м"}`}
                 </span>
               ) : null}
               {property.rooms ? (

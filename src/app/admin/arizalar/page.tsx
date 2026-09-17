@@ -530,8 +530,8 @@ export default function AdminArizalarPage() {
               className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 bg-slate-50/50 text-xs font-semibold text-slate-800 focus:outline-hidden focus:border-[#16543C] focus:bg-white transition-all"
             >
               <option value="all">{locale === "uz" ? "Barcha bitimlar (Sotuv / Ijara)" : "Все сделки (Продажа / Аренда)"}</option>
-              <option value="sale">{locale === "uz" ? "Sotuv (Продажа)" : "Продажа"}</option>
-              <option value="rent">{locale === "uz" ? "Ijara (Аренда)" : "Аренда"}</option>
+              <option value="sale">{locale === "uz" ? "Sotuv" : "Продажа"}</option>
+              <option value="rent">{locale === "uz" ? "Ijara" : "Аренда"}</option>
             </select>
           </div>
 
@@ -965,8 +965,8 @@ export default function AdminArizalarPage() {
                         }`}
                       >
                         {selectedRequest.metadata?.deal_type === "rent"
-                          ? locale === "uz" ? "Ijara (Аренда)" : "Аренда"
-                          : locale === "uz" ? "Sotuv (Продажа)" : "Продажа"}
+                          ? locale === "uz" ? "Ijara" : "Аренда"
+                          : locale === "uz" ? "Sotuv" : "Продажа"}
                       </span>
                     </div>
                   </div>

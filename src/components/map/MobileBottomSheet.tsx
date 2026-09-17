@@ -11,6 +11,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useFavorites } from "@/lib/favoriteStore";
 import { trackEvent } from "@/lib/analytics";
 import { formatPublishedDate } from "@/lib/dateFormat";
+import { getPropertyTitle, getPropertyAddress, getPropertyTypeLabel } from "@/lib/propertyFormatters";
 
 interface MobileBottomSheetProps {
   property: Property | null;
@@ -53,8 +54,8 @@ export function MobileBottomSheet({
     );
   }
 
-  const title = locale === "uz" ? property.title_uz : property.title_ru;
-  const address = locale === "uz" ? property.address_uz : property.address_ru;
+  const title = getPropertyTitle(property, locale);
+  const address = getPropertyAddress(property, locale);
   const isSale = property.transaction_type === "sale";
   const badgeText = isSale ? t.popular.saleBadge : t.popular.rentBadge;
 
@@ -71,22 +72,6 @@ export function MobileBottomSheet({
   const isHouse = property.property_type === "house_yard" || property.property_type === "land";
   const publishedDateStr = formatPublishedDate(property.published_at || property.created_at, locale, true);
 
-  const getPropertyTypeLabel = (type: string, loc: string) => {
-    switch (type) {
-      case "apartment":
-        return loc === "uz" ? "Kvartira" : "Квартира";
-      case "house_yard":
-        return loc === "uz" ? "Hovli / Uy" : "Дом / Участок";
-      case "new_build":
-        return loc === "uz" ? "Yangi bino" : "Новостройка";
-      case "land":
-        return loc === "uz" ? "Yer uchastkasi" : "Земельный участок";
-      case "commercial":
-        return loc === "uz" ? "Tijorat mulki" : "Коммерческая";
-      default:
-        return loc === "uz" ? "Ko‘chmas mulk" : "Недвижимость";
-    }
-  };
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -134,7 +119,7 @@ export function MobileBottomSheet({
                 </span>
                 {isHouse && property.area_sotikh && (
                   <span className="rounded-lg bg-emerald-950/80 backdrop-blur-sm px-1.5 py-0.5 text-[9px] font-bold text-emerald-200 shadow-sm">
-                    {property.area_sotikh} сот.
+                    {property.area_sotikh} {locale === "uz" ? "sotix" : "сот."}
                   </span>
                 )}
               </div>

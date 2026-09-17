@@ -201,17 +201,18 @@ export function PropertyCatalogModal({
                   property.property_type === "house_yard" ||
                   property.property_type === "land";
 
-                const title = locale === "uz" ? property.title_uz : property.title_ru;
+                const title = locale === "uz" ? property.title_uz : (property.title_ru || property.title_uz);
                 const address =
-                  locale === "uz" ? property.address_uz : property.address_ru;
+                  locale === "uz" ? property.address_uz : (property.address_ru || property.address_uz);
 
+                const rentSuffix = locale === "uz" ? " / oy" : " / мес";
                 const priceDisplay = isSale
                   ? currency === "UZS"
                     ? `${property.price_uzs.toLocaleString("ru-RU")} UZS`
                     : `$${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")}`
                   : currency === "UZS"
-                  ? `${property.price_uzs.toLocaleString("ru-RU")} UZS / ой`
-                  : `$${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")} / мес`;
+                  ? `${property.price_uzs.toLocaleString("ru-RU")} UZS${rentSuffix}`
+                  : `$${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")}${rentSuffix}`;
 
                 const dateDisplay = formatPublishedDate(
                   property.published_at || property.created_at,
@@ -267,7 +268,7 @@ export function PropertyCatalogModal({
                                   key={b}
                                   className="rounded-xl bg-emerald-600 px-2 py-1 text-[10px] font-bold text-white shadow-sm"
                                 >
-                                  {locale === "uz" ? "Янги" : "Новинка"}
+                                  {locale === "uz" ? "Yangi" : "Новинка"}
                                 </span>
                               );
                             }
@@ -277,7 +278,7 @@ export function PropertyCatalogModal({
                                   key={b}
                                   className="rounded-xl bg-rose-600 px-2 py-1 text-[10px] font-bold text-white shadow-sm"
                                 >
-                                  ⚡ {locale === "uz" ? "Тезкор" : "Срочно"}
+                                  ⚡ {locale === "uz" ? "Tez sotiladi" : "Срочно"}
                                 </span>
                               );
                             }
@@ -287,17 +288,17 @@ export function PropertyCatalogModal({
                                   key={b}
                                   className="rounded-xl bg-blue-600 px-2 py-1 text-[10px] font-bold text-white shadow-sm"
                                 >
-                                  % {locale === "uz" ? "Супер нарх" : "Выгодно"}
+                                  % {locale === "uz" ? "Yaxshi taklif" : "Выгодно"}
                                 </span>
                               );
                             }
                             return null;
                           })}
-                        {isHouse && property.area_sotikh && (
+                        {isHouse && property.area_sotikh ? (
                           <span className="rounded-xl bg-white/90 backdrop-blur-md px-2 py-1 text-[10px] font-extrabold text-slate-800 shadow-sm">
-                            {property.area_sotikh} {locale === "uz" ? "сотих" : "соток"}
+                            {property.area_sotikh} {locale === "uz" ? "sotix" : "соток"}
                           </span>
-                        )}
+                        ) : null}
                       </div>
 
                       {/* Favorite Button */}

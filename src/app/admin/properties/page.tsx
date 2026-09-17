@@ -28,6 +28,14 @@ import {
 import { useLanguage } from "@/context/LanguageContext";
 import { useProperties } from "@/lib/propertyStore";
 import { Property, PropertyStatus } from "@/lib/types";
+import {
+  getPropertyTypeLabel,
+  getDealTypeLabel,
+  getPropertyStatusLabel,
+  getPropertyDistrict,
+  getPropertyAddress,
+  formatRooms,
+} from "@/lib/propertyFormatters";
 
 export default function AdminPropertiesPage() {
   const { locale } = useLanguage();
@@ -70,7 +78,8 @@ export default function AdminPropertiesPage() {
   const handleStatusChange = async (id: string, newStatus: PropertyStatus) => {
     setActionMenuOpenId(null);
     await updatePropertyStatus(id, newStatus);
-    showToast(locale === "uz" ? `Status yangilandi: ${newStatus}` : `Статус изменен: ${newStatus}`);
+    const label = getPropertyStatusLabel(newStatus, locale);
+    showToast(locale === "uz" ? `Status yangilandi: ${label}` : `Статус изменен: ${label}`);
   };
 
   // Filtered properties
@@ -250,11 +259,13 @@ export default function AdminPropertiesPage() {
                         </div>
                         <div className="min-w-0 max-w-xs">
                           <h4 className="font-bold text-slate-900 truncate">
-                            {locale === "uz" ? prop.title_uz : prop.title_ru}
+                            {locale === "uz" ? prop.title_uz : (prop.title_ru || prop.title_uz)}
                           </h4>
                           <p className="text-[11px] text-slate-500 font-medium truncate flex items-center gap-1 mt-0.5">
-                            <MapPin className="h-3 w-3 text-slate-400" />
-                            <span>{prop.district_name_uz}, {prop.address_uz}</span>
+                            <MapPin className="h-3 w-3 text-slate-400 shrink-0" />
+                            <span className="truncate">
+                              {getPropertyDistrict(prop, locale)}, {getPropertyAddress(prop, locale)}
+                            </span>
                           </p>
                         </div>
                       </div>
@@ -264,13 +275,13 @@ export default function AdminPropertiesPage() {
                     <td className="py-3.5 px-4">
                       <div className="space-y-1">
                         <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">
-                          {prop.property_type}
+                          {getPropertyTypeLabel(prop.property_type, locale)}
                         </span>
                         <div className="text-[11px] font-bold text-slate-600">
                           {prop.transaction_type === "sale" ? (
-                            <span className="text-emerald-800">Sotuv</span>
+                            <span className="text-emerald-800">{getDealTypeLabel("sale", locale)}</span>
                           ) : (
-                            <span className="text-blue-800">Ijara</span>
+                            <span className="text-blue-800">{getDealTypeLabel("rent", locale)}</span>
                           )}
                         </div>
                       </div>
@@ -308,10 +319,11 @@ export default function AdminPropertiesPage() {
                               try {
                                 const ok = await updatePropertyStatus(prop.id, newStatus);
                                 if (ok) {
+                                  const label = getPropertyStatusLabel(newStatus, locale);
                                   showToast(
                                     locale === "uz"
-                                      ? `Status yangilandi: ${newStatus}`
-                                      : `Статус обновлен: ${newStatus}`
+                                      ? `Status yangilandi: ${label}`
+                                      : `Статус обновлен: ${label}`
                                   );
                                 } else {
                                   showToast(
@@ -459,14 +471,14 @@ export default function AdminPropertiesPage() {
                             <span>{locale === "uz" ? "Tahrirlash" : "Редактировать"}</span>
                           </Link>
                           <div className="px-3 py-1 text-[10px] font-bold uppercase text-slate-500">
-                            Statusni o‘zgartirish
+                            {locale === "uz" ? "Statusni o‘zgartirish" : "Изменить статус"}
                           </div>
                           {prop.status !== "published" && (
                             <button
                               onClick={() => handleStatusChange(prop.id, "published")}
                               className="w-full text-left px-3 py-1.5 rounded-xl hover:bg-emerald-50 text-emerald-800 text-xs font-bold"
                             >
-                              ✓ Nashr qilish (Publish)
+                              ✓ {locale === "uz" ? "Nashr qilish" : "Опубликовать"}
                             </button>
                           )}
                           {prop.status !== "draft" && (
@@ -474,7 +486,7 @@ export default function AdminPropertiesPage() {
                               onClick={() => handleStatusChange(prop.id, "draft")}
                               className="w-full text-left px-3 py-1.5 rounded-xl hover:bg-slate-100 text-slate-700 text-xs font-medium"
                             >
-                              Qoralamaga o‘tkazish
+                              {locale === "uz" ? "Qoralamaga o‘tkazish" : "В черновик"}
                             </button>
                           )}
                           {prop.status !== "sold" && (
@@ -482,7 +494,7 @@ export default function AdminPropertiesPage() {
                               onClick={() => handleStatusChange(prop.id, "sold")}
                               className="w-full text-left px-3 py-1.5 rounded-xl hover:bg-red-50 text-red-700 text-xs font-medium"
                             >
-                              Sotildi deb belgilash
+                              {locale === "uz" ? "Sotildi deb belgilash" : "Отметить как продано"}
                             </button>
                           )}
                           {prop.status !== "rented" && (
@@ -490,7 +502,7 @@ export default function AdminPropertiesPage() {
                               onClick={() => handleStatusChange(prop.id, "rented")}
                               className="w-full text-left px-3 py-1.5 rounded-xl hover:bg-blue-50 text-blue-700 text-xs font-medium"
                             >
-                              Ijaraga berildi
+                              {locale === "uz" ? "Ijaraga berildi" : "Сдано в аренду"}
                             </button>
                           )}
                           {prop.status !== "archived" ? (
@@ -553,15 +565,15 @@ export default function AdminPropertiesPage() {
 
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="p-3 bg-slate-50 rounded-xl">
-                <span className="text-slate-600 font-bold">Narx:</span>
+                <span className="text-slate-600 font-bold">{locale === "uz" ? "Narx:" : "Цена:"}</span>
                 <div className="font-black text-slate-900 text-sm">
                   ${previewProperty.price_usd?.toLocaleString()}
                 </div>
               </div>
               <div className="p-3 bg-slate-50 rounded-xl">
-                <span className="text-slate-600 font-bold">Maydon:</span>
+                <span className="text-slate-600 font-bold">{locale === "uz" ? "Maydon:" : "Площадь:"}</span>
                 <div className="font-black text-slate-900 text-sm">
-                  {previewProperty.area_sqm} m² ({previewProperty.rooms || 3} xona)
+                  {previewProperty.area_sqm} m² ({formatRooms(previewProperty.rooms || 3, locale)})
                 </div>
               </div>
             </div>
@@ -575,7 +587,7 @@ export default function AdminPropertiesPage() {
                 onClick={() => setPreviewProperty(null)}
                 className="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs"
               >
-                Yopish
+                {locale === "uz" ? "Yopish" : "Закрыть"}
               </button>
             </div>
           </div>

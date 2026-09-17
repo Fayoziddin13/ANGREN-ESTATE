@@ -12,6 +12,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useFavorites } from "@/lib/favoriteStore";
 import { useCompare } from "@/lib/compareStore";
 import { formatPrice } from "@/lib/currency";
+import { getPropertyTitle, getPropertyAddress } from "@/lib/propertyFormatters";
 
 interface PropertyCardProps {
   property: Property;
@@ -27,8 +28,8 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
   const { isInCompare, toggleCompare } = useCompare();
   const isCompared = isInCompare(property.id);
 
-  const title = locale === "uz" ? property.title_uz : property.title_ru;
-  const address = locale === "uz" ? property.address_uz : property.address_ru;
+  const title = getPropertyTitle(property, locale);
+  const address = getPropertyAddress(property, locale);
   
   const isSale = property.transaction_type === "sale";
   const badgeText = isSale ? t.popular.saleBadge : t.popular.rentBadge;
@@ -119,7 +120,7 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
                     key={b}
                     className="rounded-lg sm:rounded-xl bg-rose-600 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold tracking-wide text-white shadow-sm flex items-center gap-0.5"
                   >
-                    ⚡ {locale === "uz" ? "Tezkor" : "Срочно"}
+                    ⚡ {locale === "uz" ? "Tez sotiladi" : "Срочно"}
                   </span>
                 );
               }
@@ -129,7 +130,7 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
                     key={b}
                     className="rounded-lg sm:rounded-xl bg-blue-600 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold tracking-wide text-white shadow-sm flex items-center gap-0.5"
                   >
-                    % {locale === "uz" ? "Super narx" : "Выгодно"}
+                    % {locale === "uz" ? "Yaxshi taklif" : "Выгодно"}
                   </span>
                 );
               }
@@ -244,7 +245,7 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
                 onViewDetails(property);
               }
             }}
-            aria-label="Batafsil ma'lumot"
+            aria-label={locale === "uz" ? "Batafsil ma'lumot" : "Подробнее"}
             className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-700 group-hover:bg-brand-primary group-hover:text-white transition-colors"
           >
             <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
