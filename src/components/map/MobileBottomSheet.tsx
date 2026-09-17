@@ -3,7 +3,23 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Heart, MapPin, Maximize2, Bed, Bath, Phone, Send, ArrowRight, Layers, Calendar } from "lucide-react";
+import {
+  X,
+  Heart,
+  MapPin,
+  Maximize2,
+  Bed,
+  Bath,
+  Phone,
+  Send,
+  ArrowRight,
+  Layers,
+  Calendar,
+  Box,
+  Navigation,
+  LocateFixed,
+  Map,
+} from "lucide-react";
 import { Property } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCurrency } from "@/context/CurrencyContext";
@@ -12,6 +28,7 @@ import { useFavorites } from "@/lib/favoriteStore";
 import { trackEvent } from "@/lib/analytics";
 import { formatPublishedDate } from "@/lib/dateFormat";
 import { getPropertyTitle, getPropertyAddress, getPropertyTypeLabel } from "@/lib/propertyFormatters";
+import { useMapDimension, useMapMode, MapMode } from "@/lib/mapStore";
 
 interface MobileBottomSheetProps {
   property: Property | null;
@@ -20,6 +37,8 @@ interface MobileBottomSheetProps {
   onViewDetails: (property: Property) => void;
   onSelectProperty?: (p: Property) => void;
   properties: Property[];
+  mapMode?: "standard" | "satellite";
+  onMapModeChange?: (mode: "standard" | "satellite") => void;
 }
 
 export function MobileBottomSheet({
@@ -29,26 +48,149 @@ export function MobileBottomSheet({
   onViewDetails,
   onSelectProperty,
   properties,
+  mapMode,
+  onMapModeChange,
 }: MobileBottomSheetProps) {
   const { locale, t } = useLanguage();
   const { currency, exchangeRate } = useCurrency();
   const { isFavorite, toggleFavorite } = useFavorites();
   const isFavorited = property ? isFavorite(property.id) : false;
 
+  const [mapDimension] = useMapDimension();
+  const [storedMode, setStoredMode] = useMapMode();
+  const activeMapMode: MapMode = mapMode || storedMode;
+
+  const handleToggle3D = () => {
+    window.dispatchEvent(new CustomEvent("angren_map_toggle_3d"));
+  };
+
+  const handleUserLocation = () => {
+    window.dispatchEvent(new CustomEvent("angren_map_user_location"));
+  };
+
+  const handleToggleMode = () => {
+    const nextMode: MapMode = activeMapMode === "satellite" ? "standard" : "satellite";
+    if (onMapModeChange) {
+      onMapModeChange(nextMode);
+    }
+    setStoredMode(nextMode);
+  };
+
+  const handleResetCenter = () => {
+    window.dispatchEvent(new CustomEvent("angren_map_reset_center"));
+  };
+
   if (!property) {
-    // Show compact floating pill when no marker is selected
+    // Mobile Map Green Control Panel (Section 7 & 8)
     return (
-      <div className="sm:hidden fixed bottom-20 left-4 right-4 z-30 pointer-events-auto">
-        <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-elevated border border-gray-100 p-3.5 flex items-center justify-between">
+      <div
+        data-testid="mobile-map-green-panel"
+        className="sm:hidden fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] left-4 right-4 z-30 pointer-events-auto bg-[#16543C] rounded-3xl p-3.5 shadow-2xl border border-emerald-700/40 backdrop-blur-xl"
+      >
+        {/* Title Header */}
+        <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
-            <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs font-bold text-gray-800">
-              {totalCount} {locale === "uz" ? "ta obyekt xaritada mavjud" : "объектов на карте"}
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+            <span className="text-xs font-extrabold text-white tracking-wide">
+              {locale === "uz" ? `${totalCount} ta obyekt xaritada` : `${totalCount} объектов на карте`}
             </span>
           </div>
-          <span className="text-[11px] text-[#16543C] font-extrabold flex items-center gap-1">
-            {locale === "uz" ? "Marker tanlang" : "Выберите маркер"}
-          </span>
+        </div>
+
+        {/* Thin Divider Line */}
+        <div className="h-[1px] bg-emerald-700/60 my-2.5" />
+
+        {/* 4 Vertical Buttons in Strict Order */}
+        <div className="flex flex-col gap-1.5">
+          {/* 1. 3D Toggle Button */}
+          <button
+            type="button"
+            data-testid="mobile-panel-toggle-3d"
+            onClick={handleToggle3D}
+            className="w-full bg-white hover:bg-slate-50 text-[#16543C] h-10 px-3.5 rounded-2xl flex items-center justify-between shadow-sm active:scale-[0.99] transition-all cursor-pointer"
+          >
+            <div className="flex items-center gap-2.5">
+              <Box className="h-4 w-4 text-[#16543C] shrink-0" />
+              <span className="text-xs font-bold text-gray-800">
+                {locale === "uz" ? "3D rejim" : "3D режим"}
+              </span>
+            </div>
+            <span
+              className={`text-[10px] font-black px-2 py-0.5 rounded-lg transition-colors ${
+                mapDimension === "3d"
+                  ? "bg-[#16543C] text-white shadow-xs"
+                  : "bg-slate-100 text-slate-500"
+              }`}
+            >
+              {mapDimension.toUpperCase()}
+            </span>
+          </button>
+
+          {/* 2. Geolocation Button */}
+          <button
+            type="button"
+            data-testid="mobile-panel-user-location"
+            onClick={handleUserLocation}
+            className="w-full bg-white hover:bg-slate-50 text-[#16543C] h-10 px-3.5 rounded-2xl flex items-center justify-between shadow-sm active:scale-[0.99] transition-all cursor-pointer"
+          >
+            <div className="flex items-center gap-2.5">
+              <Navigation className="h-4 w-4 text-[#16543C] shrink-0" />
+              <span className="text-xs font-bold text-gray-800">
+                {locale === "uz" ? "Mening joylashuvim" : "Моё местоположение"}
+              </span>
+            </div>
+            <span className="text-[10px] font-bold text-slate-400">GPS</span>
+          </button>
+
+          {/* 3. Sxema / Sputnik Toggle Button */}
+          <button
+            type="button"
+            data-testid="mobile-panel-toggle-mode"
+            onClick={handleToggleMode}
+            className="w-full bg-white hover:bg-slate-50 text-[#16543C] h-10 px-3.5 rounded-2xl flex items-center justify-between shadow-sm active:scale-[0.99] transition-all cursor-pointer"
+          >
+            <div className="flex items-center gap-2.5">
+              {activeMapMode === "satellite" ? (
+                <Layers className="h-4 w-4 text-[#16543C] shrink-0" />
+              ) : (
+                <Map className="h-4 w-4 text-[#16543C] shrink-0" />
+              )}
+              <span className="text-xs font-bold text-gray-800">
+                {activeMapMode === "satellite"
+                  ? locale === "uz"
+                    ? "Sputnik"
+                    : "Спутник"
+                  : locale === "uz"
+                  ? "Sxema"
+                  : "Схема"}
+              </span>
+            </div>
+            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-lg bg-emerald-50 text-[#16543C] border border-emerald-200/60">
+              {activeMapMode === "satellite"
+                ? locale === "uz"
+                  ? "Sputnik"
+                  : "Спутник"
+                : locale === "uz"
+                ? "Sxema"
+                : "Схема"}
+            </span>
+          </button>
+
+          {/* 4. Center Button */}
+          <button
+            type="button"
+            data-testid="mobile-panel-reset-center"
+            onClick={handleResetCenter}
+            className="w-full bg-white hover:bg-slate-50 text-[#16543C] h-10 px-3.5 rounded-2xl flex items-center justify-between shadow-sm active:scale-[0.99] transition-all cursor-pointer"
+          >
+            <div className="flex items-center gap-2.5">
+              <LocateFixed className="h-4 w-4 text-[#16543C] shrink-0" />
+              <span className="text-xs font-bold text-gray-800">
+                {locale === "uz" ? "Angren markazi" : "Центр Ангрена"}
+              </span>
+            </div>
+            <span className="text-[10px] font-bold text-slate-400">Angren</span>
+          </button>
         </div>
       </div>
     );

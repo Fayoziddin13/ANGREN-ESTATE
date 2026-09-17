@@ -8,7 +8,6 @@ import { PropertyPreviewCard } from "@/components/map/PropertyPreviewCard";
 import { PropertyDetailModal } from "@/components/property/PropertyDetailModal";
 import { MobileBottomSheet } from "@/components/map/MobileBottomSheet";
 import { MobileFilterSheet } from "@/components/map/MobileFilterSheet";
-import { MobileMapStyleSwitcher } from "@/components/map/MobileMapStyleSwitcher";
 import { MobileMapControls } from "@/components/map/MobileMapControls";
 import { CollapsiblePropertyList } from "@/components/map/CollapsiblePropertyList";
 import { PropertyCatalogModal } from "@/components/catalog/PropertyCatalogModal";
@@ -517,13 +516,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Mobile-Only Floating Map Style Switcher (Scroll-linked: hidden at top, visible on scroll) */}
-        <MobileMapStyleSwitcher
-          mapMode={mapMode}
-          onMapModeChange={setMapMode}
-          className={selectedProperty ? "hidden" : ""}
-        />
-
         {/* Desktop Floating Property Preview Card (Bottom Left) */}
         {selectedProperty && (
           <div className="hidden sm:block absolute bottom-6 left-6 z-20">
@@ -547,7 +539,7 @@ export default function HomePage() {
           onViewDetails={handleOpenDetails}
         />
 
-        {/* Mobile iOS-style Property Bottom Sheet */}
+        {/* Mobile iOS-style Property Bottom Sheet & Green Map Controls */}
         <MobileBottomSheet
           property={selectedProperty}
           totalCount={filteredProperties.length}
@@ -555,6 +547,8 @@ export default function HomePage() {
           onViewDetails={handleOpenDetails}
           properties={filteredProperties}
           onSelectProperty={setSelectedProperty}
+          mapMode={mapMode}
+          onMapModeChange={setMapMode}
         />
 
         {/* Mobile-Only Search & Filter Bottom Sheet */}

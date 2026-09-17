@@ -13,6 +13,7 @@ import { trackEvent } from "@/lib/analytics";
 import {
   getMapCamera,
   saveMapCamera,
+  setStoredMapDimension,
   DEFAULT_ANGREN_CENTER,
   DEFAULT_MAP_ZOOM,
   DEFAULT_MAP_PITCH_3D,
@@ -39,6 +40,7 @@ interface AngrenMapProps {
   onMapModeChange: (mode: "standard" | "satellite") => void;
   className?: string;
   focusDistrict?: string | null;
+  mobileControlsBottom?: string;
 }
 
 export const ANGREN_CENTER: [number, number] = DEFAULT_ANGREN_CENTER;
@@ -71,6 +73,7 @@ export function AngrenMap({
   onMapModeChange,
   className = "",
   focusDistrict,
+  mobileControlsBottom = "bottom-[calc(20.5rem+env(safe-area-inset-bottom))] sm:bottom-8",
 }: AngrenMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -742,6 +745,7 @@ export function AngrenMap({
     const nextDim: MapDimension = dimension === "3d" ? "2d" : "3d";
     const targetPitch = nextDim === "3d" ? DEFAULT_MAP_PITCH_3D : DEFAULT_MAP_PITCH_2D;
     setDimension(nextDim);
+    setStoredMapDimension(nextDim);
     map.easeTo({
       pitch: targetPitch,
       duration: 700,
@@ -767,6 +771,36 @@ export function AngrenMap({
     });
   };
 
+  // Listen for custom window events from Mobile Map Control Panel
+  useEffect(() => {
+    const handleToggle3DEvent = () => {
+      handleToggleDimension();
+    };
+    const handleUserLocationEvent = () => {
+      handleUserLocationClick();
+    };
+    const handleResetCenterEvent = () => {
+      handleResetCenter();
+    };
+    const handleDimensionChangeEvent = (e: any) => {
+      if (e?.detail === "2d" || e?.detail === "3d") {
+        setDimension(e.detail);
+      }
+    };
+
+    window.addEventListener("angren_map_toggle_3d", handleToggle3DEvent);
+    window.addEventListener("angren_map_user_location", handleUserLocationEvent);
+    window.addEventListener("angren_map_reset_center", handleResetCenterEvent);
+    window.addEventListener("angren_map_dimension_change", handleDimensionChangeEvent);
+
+    return () => {
+      window.removeEventListener("angren_map_toggle_3d", handleToggle3DEvent);
+      window.removeEventListener("angren_map_user_location", handleUserLocationEvent);
+      window.removeEventListener("angren_map_reset_center", handleResetCenterEvent);
+      window.removeEventListener("angren_map_dimension_change", handleDimensionChangeEvent);
+    };
+  }, [dimension, userLocation]);
+
   return (
     <div className={`relative w-full h-full overflow-hidden ${className}`}>
       <div
@@ -784,24 +818,24 @@ export function AngrenMap({
         </div>
       )}
 
-      {/* Floating Glass Navigation Controls: [ 3D / 2D ], [ Mening joylashuvim ], [ Reset Center ], [ + ], [ - ] */}
-      <div className="flex flex-col items-center gap-1.5 absolute bottom-24 sm:bottom-8 right-3 sm:right-5 z-20 pointer-events-auto">
-        {/* 2D / 3D Perspective Toggle Button */}
+      {/* Floating Glass Navigation Controls: On Mobile, only [+] [-] zoom buttons float here; 3D, SAT, Location, Center are in the bottom green panel */}
+      <div className={`flex flex-col items-center gap-1.5 absolute ${mobileControlsBottom} right-3 sm:right-5 z-20 pointer-events-auto`}>
+        {/* 2D / 3D Perspective Toggle Button (Desktop only) */}
         <button
           onClick={handleToggleDimension}
           data-testid="map-toggle-3d"
           title={locale === "uz" ? (dimension === "3d" ? "2D rejimga o'tish" : "3D perspektivaga o'tish") : (dimension === "3d" ? "Переключить в 2D" : "Включить 3D")}
-          className={`flex h-9 w-9 sm:h-10 sm:w-10 flex-col items-center justify-center rounded-2xl backdrop-blur-xl shadow-elevated border transition-all active:scale-95 ${
+          className={`hidden sm:flex sm:h-10 sm:w-10 flex-col items-center justify-center rounded-2xl backdrop-blur-xl shadow-elevated border transition-all active:scale-95 ${
             dimension === "3d"
               ? "bg-[#16543C] text-white border-[#16543C] ring-2 ring-[#34D399]/40"
               : "bg-white/90 text-gray-700 hover:text-[#16543C] border-white/80 hover:bg-white"
           }`}
         >
-          <Box className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          <span className="text-[8px] sm:text-[9px] font-black leading-none mt-0.5">{dimension.toUpperCase()}</span>
+          <Box className="h-4 w-4" />
+          <span className="text-[9px] font-black leading-none mt-0.5">{dimension.toUpperCase()}</span>
         </button>
 
-        {/* Sxema / Sputnik (Vector / Satellite) Layer Switcher */}
+        {/* Sxema / Sputnik (Vector / Satellite) Layer Switcher (Desktop only) */}
         <button
           onClick={() => onMapModeChange(mapMode === "satellite" ? "standard" : "satellite")}
           data-testid="map-toggle-layer"
@@ -814,60 +848,60 @@ export function AngrenMap({
               ? "Переключить на схему"
               : "Включить спутник"
           }
-          className={`flex h-9 w-9 sm:h-10 sm:w-10 flex-col items-center justify-center rounded-2xl backdrop-blur-xl shadow-elevated border transition-all active:scale-95 ${
+          className={`hidden sm:flex sm:h-10 sm:w-10 flex-col items-center justify-center rounded-2xl backdrop-blur-xl shadow-elevated border transition-all active:scale-95 ${
             mapMode === "satellite"
               ? "bg-blue-600 text-white border-blue-600 ring-2 ring-blue-400/40"
               : "bg-white/90 text-gray-700 hover:text-blue-600 border-white/80 hover:bg-white"
           }`}
         >
-          <Layers className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          <span className="text-[8px] sm:text-[9px] font-black leading-none mt-0.5">
+          <Layers className="h-4 w-4" />
+          <span className="text-[9px] font-black leading-none mt-0.5">
             {mapMode === "satellite" ? "SAT" : "MAP"}
           </span>
         </button>
 
-        {/* Mening joylashuvim (User Geolocation) Button */}
+        {/* Mening joylashuvim (User Geolocation) Button (Desktop only) */}
         <button
           onClick={handleUserLocationClick}
           disabled={geoLoading}
           data-testid="map-user-location"
           title={locale === "uz" ? "Mening joylashuvim" : "Моё местоположение"}
-          className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-2xl bg-white/90 backdrop-blur-xl text-gray-700 hover:text-blue-600 shadow-elevated border border-white/80 hover:bg-white transition-all active:scale-95"
+          className="hidden sm:flex sm:h-10 sm:w-10 items-center justify-center rounded-2xl bg-white/90 backdrop-blur-xl text-gray-700 hover:text-blue-600 shadow-elevated border border-white/80 hover:bg-white transition-all active:scale-95"
         >
           {geoLoading ? (
-            <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin text-blue-600" />
+            <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
           ) : (
-            <Navigation className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600" />
+            <Navigation className="h-4 w-4 text-blue-600" />
           )}
         </button>
 
-        {/* Reset Center Button */}
+        {/* Reset Center Button (Desktop only) */}
         <button
           onClick={handleResetCenter}
           data-testid="map-reset-center"
           title={locale === "uz" ? "Angren markaziga qaytish" : "Центр Ангрена"}
-          className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-2xl bg-white/90 backdrop-blur-xl text-gray-700 hover:text-[#16543C] shadow-elevated border border-white/80 hover:bg-white transition-all active:scale-95"
+          className="hidden sm:flex sm:h-10 sm:w-10 items-center justify-center rounded-2xl bg-white/90 backdrop-blur-xl text-gray-700 hover:text-[#16543C] shadow-elevated border border-white/80 hover:bg-white transition-all active:scale-95"
         >
-          <LocateFixed className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <LocateFixed className="h-4 w-4" />
         </button>
 
-        {/* Zoom Controls */}
-        <div className="flex flex-col rounded-2xl bg-white/90 backdrop-blur-xl shadow-elevated border border-white/80 overflow-hidden">
+        {/* Zoom Controls (Always visible on mobile & desktop) */}
+        <div className="flex flex-col rounded-2xl bg-white/95 backdrop-blur-xl shadow-elevated border border-white/80 overflow-hidden">
           <button
             onClick={handleZoomIn}
             data-testid="map-zoom-in"
-            className="flex h-8 w-9 sm:h-9 sm:w-10 items-center justify-center text-gray-700 hover:text-[#16543C] hover:bg-white transition-colors border-b border-gray-100 active:scale-95"
+            className="flex h-9 w-9 sm:h-9 sm:w-10 items-center justify-center text-gray-700 hover:text-[#16543C] hover:bg-white transition-colors border-b border-gray-100 active:scale-95"
             aria-label="Zoom In"
           >
-            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <Plus className="h-4 w-4" />
           </button>
           <button
             onClick={handleZoomOut}
             data-testid="map-zoom-out"
-            className="flex h-8 w-9 sm:h-9 sm:w-10 items-center justify-center text-gray-700 hover:text-[#16543C] hover:bg-white transition-colors active:scale-95"
+            className="flex h-9 w-9 sm:h-9 sm:w-10 items-center justify-center text-gray-700 hover:text-[#16543C] hover:bg-white transition-colors active:scale-95"
             aria-label="Zoom Out"
           >
-            <Minus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <Minus className="h-4 w-4" />
           </button>
         </div>
       </div>

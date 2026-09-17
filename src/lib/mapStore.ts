@@ -211,3 +211,32 @@ export function useMapMode(): [MapMode, (mode: MapMode) => void] {
 
   return [mode, updateMode];
 }
+
+function subscribeToMapDimension(callback: () => void) {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener(MAP_DIMENSION_EVENT, callback);
+  window.addEventListener("storage", callback);
+  return () => {
+    window.removeEventListener(MAP_DIMENSION_EVENT, callback);
+    window.removeEventListener("storage", callback);
+  };
+}
+
+function getDimensionClientSnapshot(): MapDimension {
+  return getStoredMapDimension();
+}
+
+function getDimensionServerSnapshot(): MapDimension {
+  return "3d";
+}
+
+export function useMapDimension(): [MapDimension, (dim: MapDimension) => void] {
+  const dim = useSyncExternalStore(subscribeToMapDimension, getDimensionClientSnapshot, getDimensionServerSnapshot);
+
+  const updateDim = useCallback((newDim: MapDimension) => {
+    setStoredMapDimension(newDim);
+  }, []);
+
+  return [dim, updateDim];
+}
+
