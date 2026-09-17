@@ -81,115 +81,81 @@ export function MobileBottomSheet({
   };
 
   if (!property) {
-    // Mobile Map Green Control Panel (Section 7 & 8)
+    // Ultra-compact Mobile Map Bottom Control Row
     return (
       <div
-        data-testid="mobile-map-green-panel"
-        className="sm:hidden fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] left-4 right-4 z-30 pointer-events-auto bg-[#16543C] rounded-3xl p-3.5 shadow-2xl border border-emerald-700/40 backdrop-blur-xl"
+        data-testid="mobile-map-control-row"
+        className="sm:hidden fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-3 right-3 z-30 pointer-events-auto flex items-center justify-between px-3 py-1.5 rounded-2xl bg-white/95 backdrop-blur-xl shadow-float border border-white/80"
       >
-        {/* Title Header */}
-        <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-            <span className="text-xs font-extrabold text-white tracking-wide">
-              {locale === "uz" ? `${totalCount} ta obyekt xaritada` : `${totalCount} объектов на карте`}
-            </span>
-          </div>
+        {/* Subtle compact object count badge on the left */}
+        <div
+          data-testid="mobile-object-count-badge"
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-50/90 border border-emerald-200/60 text-[#16543C] shrink-0"
+        >
+          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-xs font-black tracking-tight">{totalCount}</span>
         </div>
 
-        {/* Thin Divider Line */}
-        <div className="h-[1px] bg-emerald-700/60 my-2.5" />
-
-        {/* 4 Vertical Buttons in Strict Order */}
-        <div className="flex flex-col gap-1.5">
-          {/* 1. 3D Toggle Button */}
+        {/* 4 Icon-Only Controls on the right */}
+        <div className="flex items-center gap-2">
+          {/* 1. 3D (Icon only) */}
           <button
             type="button"
             data-testid="mobile-panel-toggle-3d"
             onClick={handleToggle3D}
-            className="w-full bg-white hover:bg-slate-50 text-[#16543C] h-10 px-3.5 rounded-2xl flex items-center justify-between shadow-sm active:scale-[0.99] transition-all cursor-pointer"
+            aria-label="3D"
+            title="3D"
+            className={`h-10 w-10 rounded-xl flex items-center justify-center transition-all active:scale-95 ${
+              mapDimension === "3d"
+                ? "bg-[#16543C] text-white shadow-sm ring-2 ring-emerald-500/30"
+                : "bg-slate-100/90 text-slate-700 hover:bg-slate-200/80"
+            }`}
           >
-            <div className="flex items-center gap-2.5">
-              <Box className="h-4 w-4 text-[#16543C] shrink-0" />
-              <span className="text-xs font-bold text-gray-800">
-                {locale === "uz" ? "3D rejim" : "3D режим"}
-              </span>
-            </div>
-            <span
-              className={`text-[10px] font-black px-2 py-0.5 rounded-lg transition-colors ${
-                mapDimension === "3d"
-                  ? "bg-[#16543C] text-white shadow-xs"
-                  : "bg-slate-100 text-slate-500"
-              }`}
-            >
-              {mapDimension.toUpperCase()}
-            </span>
+            <Box className="h-5 w-5" />
           </button>
 
-          {/* 2. Geolocation Button */}
+          {/* 2. Location (Icon only) */}
           <button
             type="button"
             data-testid="mobile-panel-user-location"
             onClick={handleUserLocation}
-            className="w-full bg-white hover:bg-slate-50 text-[#16543C] h-10 px-3.5 rounded-2xl flex items-center justify-between shadow-sm active:scale-[0.99] transition-all cursor-pointer"
+            aria-label={locale === "uz" ? "Joylashuv" : "Местоположение"}
+            title={locale === "uz" ? "Joylashuv" : "Местоположение"}
+            className="h-10 w-10 rounded-xl bg-slate-100/90 hover:bg-slate-200/80 text-[#16543C] flex items-center justify-center transition-all active:scale-95"
           >
-            <div className="flex items-center gap-2.5">
-              <Navigation className="h-4 w-4 text-[#16543C] shrink-0" />
-              <span className="text-xs font-bold text-gray-800">
-                {locale === "uz" ? "Mening joylashuvim" : "Моё местоположение"}
-              </span>
-            </div>
-            <span className="text-[10px] font-bold text-slate-400">GPS</span>
+            <Navigation className="h-5 w-5 text-[#16543C]" />
           </button>
 
-          {/* 3. Sxema / Sputnik Toggle Button */}
+          {/* 3. Map (Scheme ↔ Satellite single toggle, Icon only) */}
           <button
             type="button"
             data-testid="mobile-panel-toggle-mode"
             onClick={handleToggleMode}
-            className="w-full bg-white hover:bg-slate-50 text-[#16543C] h-10 px-3.5 rounded-2xl flex items-center justify-between shadow-sm active:scale-[0.99] transition-all cursor-pointer"
+            aria-label={locale === "uz" ? "Xarita" : "Карта"}
+            title={locale === "uz" ? "Xarita" : "Карта"}
+            className={`h-10 w-10 rounded-xl flex items-center justify-center transition-all active:scale-95 ${
+              activeMapMode === "satellite"
+                ? "bg-[#16543C] text-white shadow-sm ring-2 ring-emerald-500/30"
+                : "bg-slate-100/90 text-[#16543C] hover:bg-slate-200/80"
+            }`}
           >
-            <div className="flex items-center gap-2.5">
-              {activeMapMode === "satellite" ? (
-                <Layers className="h-4 w-4 text-[#16543C] shrink-0" />
-              ) : (
-                <Map className="h-4 w-4 text-[#16543C] shrink-0" />
-              )}
-              <span className="text-xs font-bold text-gray-800">
-                {activeMapMode === "satellite"
-                  ? locale === "uz"
-                    ? "Sputnik"
-                    : "Спутник"
-                  : locale === "uz"
-                  ? "Sxema"
-                  : "Схема"}
-              </span>
-            </div>
-            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-lg bg-emerald-50 text-[#16543C] border border-emerald-200/60">
-              {activeMapMode === "satellite"
-                ? locale === "uz"
-                  ? "Sputnik"
-                  : "Спутник"
-                : locale === "uz"
-                ? "Sxema"
-                : "Схема"}
-            </span>
+            {activeMapMode === "satellite" ? (
+              <Layers className="h-5 w-5" />
+            ) : (
+              <Map className="h-5 w-5 text-[#16543C]" />
+            )}
           </button>
 
-          {/* 4. Center Button */}
+          {/* 4. Center (Icon only) */}
           <button
             type="button"
             data-testid="mobile-panel-reset-center"
             onClick={handleResetCenter}
-            className="w-full bg-white hover:bg-slate-50 text-[#16543C] h-10 px-3.5 rounded-2xl flex items-center justify-between shadow-sm active:scale-[0.99] transition-all cursor-pointer"
+            aria-label={locale === "uz" ? "Markaz" : "Центр"}
+            title={locale === "uz" ? "Markaz" : "Центр"}
+            className="h-10 w-10 rounded-xl bg-slate-100/90 hover:bg-slate-200/80 text-[#16543C] flex items-center justify-center transition-all active:scale-95"
           >
-            <div className="flex items-center gap-2.5">
-              <LocateFixed className="h-4 w-4 text-[#16543C] shrink-0" />
-              <span className="text-xs font-bold text-gray-800">
-                {locale === "uz" ? "Angren markazi" : "Центр Ангрена"}
-              </span>
-            </div>
-            <span className="text-[10px] font-bold text-slate-400">Angren</span>
+            <LocateFixed className="h-5 w-5 text-[#16543C]" />
           </button>
         </div>
       </div>

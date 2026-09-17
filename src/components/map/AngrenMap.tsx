@@ -73,8 +73,12 @@ export function AngrenMap({
   onMapModeChange,
   className = "",
   focusDistrict,
-  mobileControlsBottom = "bottom-[calc(20.5rem+env(safe-area-inset-bottom))] sm:bottom-8",
+  mobileControlsBottom,
 }: AngrenMapProps) {
+  const defaultControlsBottom = selectedProperty
+    ? "bottom-[calc(19.5rem+env(safe-area-inset-bottom))] sm:bottom-8"
+    : "bottom-[calc(8.5rem+env(safe-area-inset-bottom))] sm:bottom-8";
+  const effectiveControlsBottom = mobileControlsBottom || defaultControlsBottom;
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<{ [id: string]: maplibregl.Marker }>({});
@@ -818,8 +822,8 @@ export function AngrenMap({
         </div>
       )}
 
-      {/* Floating Glass Navigation Controls: On Mobile, only [+] [-] zoom buttons float here; 3D, SAT, Location, Center are in the bottom green panel */}
-      <div className={`flex flex-col items-center gap-1.5 absolute ${mobileControlsBottom} right-3 sm:right-5 z-20 pointer-events-auto`}>
+      {/* Floating Glass Navigation Controls: On Mobile, only [+] [-] zoom buttons float here; 3D, SAT, Location, Center are in the bottom control row */}
+      <div className={`flex flex-col items-center gap-1.5 absolute ${effectiveControlsBottom} right-3 sm:right-5 z-20 pointer-events-auto`}>
         {/* 2D / 3D Perspective Toggle Button (Desktop only) */}
         <button
           onClick={handleToggleDimension}
