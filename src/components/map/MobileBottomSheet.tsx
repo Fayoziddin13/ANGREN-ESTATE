@@ -81,19 +81,19 @@ export function MobileBottomSheet({
   };
 
   if (!property) {
-    // Ultra-compact Mobile Map Bottom Control Row
+    // Ultra-compact Mobile Map Bottom Control Row (Green + White floating card with 12-14px gap above bottom nav)
     return (
       <div
         data-testid="mobile-map-control-row"
-        className="sm:hidden fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-3 right-3 z-30 pointer-events-auto flex items-center justify-between px-3 py-1.5 rounded-2xl bg-white/95 backdrop-blur-xl shadow-float border border-white/80"
+        className="sm:hidden fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] left-3 right-3 z-30 pointer-events-auto flex items-center justify-between px-3 py-1.5 rounded-2xl bg-[#16543C] shadow-elevated border border-emerald-700/60 backdrop-blur-xl"
       >
         {/* Subtle compact object count badge on the left */}
         <div
           data-testid="mobile-object-count-badge"
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-50/90 border border-emerald-200/60 text-[#16543C] shrink-0"
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/10 border border-white/15 text-white shrink-0"
         >
-          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-xs font-black tracking-tight">{totalCount}</span>
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-xs font-black tracking-tight text-white">{totalCount}</span>
         </div>
 
         {/* 4 Icon-Only Controls on the right */}
@@ -107,11 +107,11 @@ export function MobileBottomSheet({
             title="3D"
             className={`h-10 w-10 rounded-xl flex items-center justify-center transition-all active:scale-95 ${
               mapDimension === "3d"
-                ? "bg-[#16543C] text-white shadow-sm ring-2 ring-emerald-500/30"
-                : "bg-slate-100/90 text-slate-700 hover:bg-slate-200/80"
+                ? "bg-white/30 text-white shadow-sm ring-2 ring-white border border-white/40"
+                : "bg-white/10 hover:bg-white/15 active:bg-white/20 text-white border border-white/10"
             }`}
           >
-            <Box className="h-5 w-5" />
+            <Box className="h-5 w-5 text-white" />
           </button>
 
           {/* 2. Location (Icon only) */}
@@ -121,9 +121,9 @@ export function MobileBottomSheet({
             onClick={handleUserLocation}
             aria-label={locale === "uz" ? "Joylashuv" : "Местоположение"}
             title={locale === "uz" ? "Joylashuv" : "Местоположение"}
-            className="h-10 w-10 rounded-xl bg-slate-100/90 hover:bg-slate-200/80 text-[#16543C] flex items-center justify-center transition-all active:scale-95"
+            className="h-10 w-10 rounded-xl bg-white/10 hover:bg-white/15 active:bg-white/20 text-white border border-white/10 flex items-center justify-center transition-all active:scale-95"
           >
-            <Navigation className="h-5 w-5 text-[#16543C]" />
+            <Navigation className="h-5 w-5 text-white" />
           </button>
 
           {/* 3. Map (Scheme ↔ Satellite single toggle, Icon only) */}
@@ -135,14 +135,14 @@ export function MobileBottomSheet({
             title={locale === "uz" ? "Xarita" : "Карта"}
             className={`h-10 w-10 rounded-xl flex items-center justify-center transition-all active:scale-95 ${
               activeMapMode === "satellite"
-                ? "bg-[#16543C] text-white shadow-sm ring-2 ring-emerald-500/30"
-                : "bg-slate-100/90 text-[#16543C] hover:bg-slate-200/80"
+                ? "bg-white/30 text-white shadow-sm ring-2 ring-white border border-white/40"
+                : "bg-white/10 hover:bg-white/15 active:bg-white/20 text-white border border-white/10"
             }`}
           >
             {activeMapMode === "satellite" ? (
-              <Layers className="h-5 w-5" />
+              <Layers className="h-5 w-5 text-white" />
             ) : (
-              <Map className="h-5 w-5 text-[#16543C]" />
+              <Map className="h-5 w-5 text-white" />
             )}
           </button>
 
@@ -153,9 +153,9 @@ export function MobileBottomSheet({
             onClick={handleResetCenter}
             aria-label={locale === "uz" ? "Markaz" : "Центр"}
             title={locale === "uz" ? "Markaz" : "Центр"}
-            className="h-10 w-10 rounded-xl bg-slate-100/90 hover:bg-slate-200/80 text-[#16543C] flex items-center justify-center transition-all active:scale-95"
+            className="h-10 w-10 rounded-xl bg-white/10 hover:bg-white/15 active:bg-white/20 text-white border border-white/10 flex items-center justify-center transition-all active:scale-95"
           >
-            <LocateFixed className="h-5 w-5 text-[#16543C]" />
+            <LocateFixed className="h-5 w-5 text-white" />
           </button>
         </div>
       </div>

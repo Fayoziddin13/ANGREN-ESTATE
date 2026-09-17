@@ -77,7 +77,7 @@ export function AngrenMap({
 }: AngrenMapProps) {
   const defaultControlsBottom = selectedProperty
     ? "bottom-[calc(19.5rem+env(safe-area-inset-bottom))] sm:bottom-8"
-    : "bottom-[calc(8.5rem+env(safe-area-inset-bottom))] sm:bottom-8";
+    : "bottom-[calc(8.75rem+env(safe-area-inset-bottom))] sm:bottom-8";
   const effectiveControlsBottom = mobileControlsBottom || defaultControlsBottom;
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);

@@ -26,17 +26,17 @@ export function MobileBottomNav({ onSearchClick }: MobileBottomNavProps) {
 
   return (
     <>
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200/80 shadow-float">
-        <nav className="flex items-center justify-around px-4 pt-2.5 pb-6">
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#16543C] rounded-t-2xl shadow-[0_-4px_24px_rgba(0,0,0,0.18)] border-t border-emerald-700/50">
+        <nav className="flex items-center justify-around px-4 pt-2.5 pb-[max(0.85rem,env(safe-area-inset-bottom))]">
           {/* Tab 1: Home */}
           <Link
             href="/"
-            className={`flex flex-col items-center gap-1 text-[11px] font-semibold transition-colors ${
-              pathname === "/" ? "text-brand-primary font-bold" : "text-gray-400 hover:text-gray-700"
+            className={`flex flex-col items-center gap-1 text-[11px] text-white transition-opacity ${
+              pathname === "/" ? "font-black opacity-100" : "font-medium opacity-80 hover:opacity-100"
             }`}
           >
-            <Home className={`h-5 w-5 ${pathname === "/" ? "stroke-[2.5]" : "stroke-2"}`} />
-            <span>{t.bottomNav.home}</span>
+            <Home className={`h-5 w-5 text-white ${pathname === "/" ? "stroke-[2.5]" : "stroke-2"}`} />
+            <span className="text-white">{t.bottomNav.home}</span>
           </Link>
 
           {/* Tab 2: Qidiruv */}
@@ -48,23 +48,23 @@ export function MobileBottomNav({ onSearchClick }: MobileBottomNavProps) {
                 window.location.href = "/";
               }
             }}
-            className="flex flex-col items-center gap-1 text-[11px] font-semibold text-gray-400 hover:text-gray-700 transition-colors"
+            className="flex flex-col items-center gap-1 text-[11px] text-white font-medium opacity-80 hover:opacity-100 transition-opacity"
           >
-            <Search className="h-5 w-5 stroke-2" />
-            <span>{t.bottomNav.search}</span>
+            <Search className="h-5 w-5 stroke-2 text-white" />
+            <span className="text-white">{t.bottomNav.search}</span>
           </button>
 
           {/* Tab 3: Favorites */}
           <Link
             href="/favorites"
-            className={`relative flex flex-col items-center gap-1 text-[11px] font-semibold transition-colors ${
-              pathname === "/favorites" ? "text-brand-primary font-bold" : "text-gray-400 hover:text-gray-700"
+            className={`relative flex flex-col items-center gap-1 text-[11px] text-white transition-opacity ${
+              pathname === "/favorites" ? "font-black opacity-100" : "font-medium opacity-80 hover:opacity-100"
             }`}
           >
-            <Heart className={`h-5 w-5 ${pathname === "/favorites" ? "stroke-[2.5] fill-brand-primary/10 text-brand-primary" : "stroke-2"}`} />
-            <span>{t.bottomNav.favorites}</span>
+            <Heart className={`h-5 w-5 text-white ${pathname === "/favorites" ? "stroke-[2.5] fill-white/20" : "stroke-2"}`} />
+            <span className="text-white">{t.bottomNav.favorites}</span>
             {favoritesCount > 0 && (
-              <span className="absolute -top-1 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-extrabold text-white">
+              <span className="absolute -top-1 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[9px] font-black text-[#16543C] shadow-sm">
                 {favoritesCount}
               </span>
             )}
@@ -79,10 +79,10 @@ export function MobileBottomNav({ onSearchClick }: MobileBottomNavProps) {
                 setIsProfileOpen(true);
               }
             }}
-            className="flex flex-col items-center gap-1 text-[11px] font-semibold text-gray-400 hover:text-gray-700 transition-colors"
+            className="flex flex-col items-center gap-1 text-[11px] text-white font-medium opacity-80 hover:opacity-100 transition-opacity"
           >
-            <User className="h-5 w-5 stroke-2" />
-            <span>{user ? user.full_name?.split(" ")[0] || (locale === "uz" ? "Profil" : "Профиль") : t.bottomNav.profile}</span>
+            <User className="h-5 w-5 stroke-2 text-white" />
+            <span className="text-white">{user ? user.full_name?.split(" ")[0] || (locale === "uz" ? "Profil" : "Профиль") : t.bottomNav.profile}</span>
           </button>
         </nav>
       </div>
