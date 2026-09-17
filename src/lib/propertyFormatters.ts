@@ -25,7 +25,7 @@ export function getPropertyTypeLabel(
       case "house":
       case "hovli":
       case "cottage":
-        return "Дом / участок";
+        return "Дом";
       case "new_build":
       case "new_building":
       case "yangi_qurilish":
@@ -38,9 +38,11 @@ export function getPropertyTypeLabel(
       case "commercial":
       case "commercial_property":
       case "tijorat":
-        return "Коммерческое помещение";
+        return "Коммерческий объект";
       case "other":
-      case "boshqa":
+      case "noturar":
+      case "non_residential":
+        return "Нежилой объект";
       default:
         return "Другое";
     }
@@ -55,7 +57,7 @@ export function getPropertyTypeLabel(
     case "house":
     case "hovli":
     case "cottage":
-      return "Hovli / Kottej";
+      return "Hovli uy";
     case "new_build":
     case "new_building":
     case "yangi_qurilish":
@@ -64,13 +66,15 @@ export function getPropertyTypeLabel(
     case "land":
     case "yer":
     case "uchastka":
-      return "Yer maydoni";
+      return "Bo‘sh yer uchastkasi";
     case "commercial":
     case "commercial_property":
     case "tijorat":
-      return "Tijorat binosi";
+      return "Tijorat obyekti";
     case "other":
-    case "boshqa":
+    case "noturar":
+    case "non_residential":
+      return "Noturar obyekt";
     default:
       return "Boshqa";
   }
@@ -139,13 +143,21 @@ export function getBadgeLabel(
     switch (norm) {
       case "top":
         return "TOP";
+      case "arzon":
+      case "cheap":
+      case "nedorogo":
+        return "Недорого";
       case "tez_sotiladi":
       case "fast_sale":
       case "urgent":
-        return "Быстрая продажа";
-      case "yaxshi_taklif":
+        return "Срочно продать";
+      case "hamyonbop":
       case "good_deal":
-        return "Выгодная сделка";
+      case "yaxshi_taklif":
+        return "Выгодная цена";
+      case "narxi_tushirildi":
+      case "price_dropped":
+        return "Цена снижена";
       case "new":
       case "yangi":
         return "Новинка";
@@ -158,19 +170,47 @@ export function getBadgeLabel(
   switch (norm) {
     case "top":
       return "TOP";
+    case "arzon":
+    case "cheap":
+    case "nedorogo":
+      return "Arzon";
     case "tez_sotiladi":
     case "fast_sale":
     case "urgent":
-      return "Tez sotiladi";
-    case "yaxshi_taklif":
+      return "Tezda sotilishi kerak";
+    case "hamyonbop":
     case "good_deal":
-      return "Yaxshi taklif";
+    case "yaxshi_taklif":
+      return "Hamyonbop";
+    case "narxi_tushirildi":
+    case "price_dropped":
+      return "Narxi tushirildi";
     case "new":
     case "yangi":
       return "Yangi";
     default:
       return norm.toUpperCase();
   }
+}
+
+/**
+ * Check whether a property qualifies for the automatic "New" ("Yangi" / "Новинка") badge.
+ * Rule: Active for 3 days from published_at (or created_at).
+ * Not displayed in draft, sold, or rented status.
+ */
+export function isPropertyNew(property?: {
+  status?: string | null;
+  published_at?: string | null;
+  created_at?: string | null;
+}): boolean {
+  if (!property || property.status !== "published") return false;
+  const pubDateStr = property.published_at || property.created_at;
+  if (!pubDateStr) return false;
+  const pubTime = new Date(pubDateStr).getTime();
+  if (isNaN(pubTime)) return false;
+  const now = Date.now();
+  const diffDays = (now - pubTime) / (1000 * 60 * 60 * 24);
+  return diffDays >= 0 && diffDays <= 3;
 }
 
 export function formatArea(

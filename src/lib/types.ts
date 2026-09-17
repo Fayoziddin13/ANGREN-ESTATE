@@ -110,7 +110,14 @@ export interface Property {
   badges?: PropertyBadge[];
 }
 
-export type PropertyBadge = "new" | "top" | "tez_sotiladi" | "yaxshi_taklif";
+export type PropertyBadge =
+  | "top"
+  | "arzon"
+  | "tez_sotiladi"
+  | "hamyonbop"
+  | "narxi_tushirildi"
+  | "new"
+  | "yaxshi_taklif";
 
 export interface HududItem {
   id: string;

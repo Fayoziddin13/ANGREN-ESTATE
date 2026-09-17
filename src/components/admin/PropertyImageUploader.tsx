@@ -15,6 +15,8 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
+import { useLanguage } from "@/context/LanguageContext";
+
 export interface PropertyImageUploaderProps {
   images: string[];
   mainImage?: string;
@@ -34,6 +36,7 @@ export function PropertyImageUploader({
   onChangeMainImage,
   propertyId = "new",
 }: PropertyImageUploaderProps) {
+  const { locale } = useLanguage();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgressText, setUploadProgressText] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -258,11 +261,17 @@ export function PropertyImageUploader({
               {isUploading
                 ? uploadProgressText
                 : isDragging
-                ? "Rasmlarni shu yerga tashlang"
-                : "Rasmlarni yuklash uchun bosing yoki shu yerga tortib keling"}
+                ? locale === "uz"
+                  ? "Rasmlarni shu yerga tashlang"
+                  : "Перетащите фотографии сюда"
+                : locale === "uz"
+                ? "3:4 Vertikal rasmlarni yuklash uchun bosing yoki shu yerga tortib keling"
+                : "Нажмите или перетащите вертикальные фото (формат 3:4)"}
             </p>
             <p className="text-xs text-slate-500">
-              JPG, JPEG, PNG, WEBP formatlar • Har bir rasm maksimal {MAX_SIZE_MB}MB
+              {locale === "uz"
+                ? `3:4 vertikal (portrait) format • JPG, PNG, WEBP • Har bir rasm maks. ${MAX_SIZE_MB}MB`
+                : `3:4 вертикальный (портретный) формат • JPG, PNG, WEBP • До ${MAX_SIZE_MB}MB`}
             </p>
           </div>
 
@@ -270,7 +279,7 @@ export function PropertyImageUploader({
             <div className="pt-1">
               <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#16543C] text-white text-xs font-bold shadow-xs hover:bg-[#0E3324] transition-colors">
                 <Plus className="w-3.5 h-3.5" />
-                <span>Qurilmadan tanlash</span>
+                <span>{locale === "uz" ? "Qurilmadan tanlash" : "Выбрать на устройстве"}</span>
               </span>
             </div>
           )}
@@ -289,7 +298,7 @@ export function PropertyImageUploader({
             onClick={() => setErrorMessage(null)}
             className="text-red-500 hover:text-red-800 text-xs underline font-bold"
           >
-            Yopish
+            {locale === "uz" ? "Yopish" : "Закрыть"}
           </button>
         </div>
       )}
@@ -305,9 +314,9 @@ export function PropertyImageUploader({
       {/* Optional External URL Fallback Link */}
       <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
         <span className="font-medium">
-          Jami rasmlar:{" "}
-          <strong className="text-slate-800">{images.length} ta</strong>
-          {images.length > 0 && " (1-rasm asosiy muqova hisoblanadi)"}
+          {locale === "uz" ? "Jami rasmlar: " : "Всего фото: "}
+          <strong className="text-slate-800">{images.length} {locale === "uz" ? "ta" : "шт."}</strong>
+          {images.length > 0 && (locale === "uz" ? " (1-rasm asosiy muqova)" : " (1-е фото — главное)")}
         </span>
         <button
           type="button"
@@ -315,7 +324,7 @@ export function PropertyImageUploader({
           className="text-[#16543C] hover:underline font-bold flex items-center gap-1"
         >
           <Link2 className="w-3 h-3" />
-          <span>{showUrlFallback ? "URL kiritishni yopish" : "URL orqali qo'shish"}</span>
+          <span>{showUrlFallback ? (locale === "uz" ? "Yopish" : "Закрыть") : (locale === "uz" ? "URL orqali qo'shish" : "Добавить по URL")}</span>
         </button>
       </div>
 
@@ -326,7 +335,7 @@ export function PropertyImageUploader({
             type="url"
             value={fallbackUrl}
             onChange={(e) => setFallbackUrl(e.target.value)}
-            placeholder="https://images.unsplash.com/... yoki to'g'ridan-to'g'ri URL"
+            placeholder={locale === "uz" ? "https://... to'g'ridan-to'g'ri rasm havolasi" : "https://... прямая ссылка на изображение"}
             className="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white"
           />
           <button
@@ -334,72 +343,77 @@ export function PropertyImageUploader({
             onClick={handleAddExternalUrl}
             className="px-4 py-2 bg-[#16543C] text-white text-xs font-bold rounded-xl hover:bg-[#0E3324]"
           >
-            Qo‘shish
+            {locale === "uz" ? "Qo‘shish" : "Добавить"}
           </button>
         </div>
       )}
 
-      {/* Previews & Image Management Grid */}
+      {/* Previews & Image Management Grid (3:4 Vertical Aspect Ratio) */}
       {images.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5 pt-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5 pt-2">
           {images.map((url, idx) => {
             const isMain = url === activeMain || (idx === 0 && !mainImage);
 
             return (
               <div
                 key={idx}
-                className={`relative aspect-[4/3] rounded-2xl overflow-hidden group border transition-all ${
+                className={`relative aspect-[3/4] rounded-2xl overflow-hidden group border transition-all ${
                   isMain
-                    ? "border-[#16543C] ring-2 ring-[#16543C] shadow-sm"
+                    ? "border-[#16543C] ring-2 ring-[#16543C] shadow-md"
                     : "border-slate-200 hover:border-slate-300"
                 }`}
               >
                 <Image
                   src={url}
-                  alt={`Obyekt rasmi ${idx + 1}`}
+                  alt={`Photo ${idx + 1}`}
                   fill
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                   className="object-cover"
                 />
 
+                {/* 3:4 Vertical Indicator tag */}
+                <div className="absolute bottom-2 left-2 z-10 px-1.5 py-0.5 rounded-md bg-black/60 backdrop-blur-xs text-[9px] font-mono font-bold text-white pointer-events-none">
+                  3:4
+                </div>
+
                 {/* Main Badge / Indicator */}
                 {isMain ? (
                   <div className="absolute top-2 left-2 z-10 flex items-center gap-1 px-2.5 py-1 rounded-xl bg-[#16543C] text-white text-[10px] font-black tracking-wide shadow-md">
                     <Star className="w-3 h-3 fill-amber-300 text-amber-300" />
-                    <span>Asosiy rasm</span>
+                    <span>{locale === "uz" ? "Asosiy" : "Главное"}</span>
                   </div>
                 ) : (
                   <button
                     type="button"
                     onClick={() => handleSetMain(url)}
                     className="absolute top-2 left-2 z-10 flex items-center gap-1 px-2 py-1 rounded-xl bg-black/60 hover:bg-[#16543C] text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-all shadow-sm"
-                    title="Asosiy rasm qilish"
+                    title={locale === "uz" ? "Asosiy rasm qilish" : "Сделать главным"}
                   >
                     <Star className="w-3 h-3" />
-                    <span>Asosiy qilish</span>
+                    <span>{locale === "uz" ? "Asosiy" : "Главное"}</span>
                   </button>
                 )}
 
-                {/* Action Controls Overlay (Top Right: Delete, Bottom: Move arrows) */}
+                {/* Action Controls Overlay (Delete) */}
                 <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
                   <button
                     type="button"
                     onClick={() => handleRemove(idx)}
                     className="p-1.5 rounded-xl bg-red-600/90 text-white hover:bg-red-700 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
-                    title="Rasmni o'chirish"
+                    title={locale === "uz" ? "Rasmni o'chirish" : "Удалить фото"}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
                 {/* Sequence & Move Controls */}
-                <div className="absolute bottom-2 inset-x-2 z-10 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute bottom-2 right-2 z-10 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     type="button"
                     disabled={idx === 0}
                     onClick={() => handleMove(idx, "left")}
                     className="p-1 rounded-lg bg-black/60 text-white disabled:opacity-30 hover:bg-black/80 transition-all"
-                    title="Oldinga surish"
+                    title={locale === "uz" ? "Oldinga surish" : "Сдвинуть влево"}
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
                   </button>
@@ -413,7 +427,7 @@ export function PropertyImageUploader({
                     disabled={idx === images.length - 1}
                     onClick={() => handleMove(idx, "right")}
                     className="p-1 rounded-lg bg-black/60 text-white disabled:opacity-30 hover:bg-black/80 transition-all"
-                    title="Keyinga surish"
+                    title={locale === "uz" ? "Keyinga surish" : "Сдвинуть вправо"}
                   >
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>

@@ -44,6 +44,7 @@ import {
   PropertyStatus,
   Property,
   HududItem,
+  PropertyBadge,
 } from "@/lib/types";
 import {
   getPropertyTypeLabel,
@@ -114,10 +115,13 @@ export default function EditPropertyPage() {
   const [polygonCoords, setPolygonCoords] = useState<string>("");
   const [polygonPoints, setPolygonPoints] = useState<[number, number][]>([]);
 
-  // Badges state
-  const [isTop, setIsTop] = useState(false);
-  const [isFastSale, setIsFastSale] = useState(false);
-  const [isGoodDeal, setIsGoodDeal] = useState(false);
+  // Badges state (5 manual badges + 3-day automatic "new")
+  const [selectedBadges, setSelectedBadges] = useState<PropertyBadge[]>([]);
+  const toggleBadge = (badge: PropertyBadge) => {
+    setSelectedBadges((prev) =>
+      prev.includes(badge) ? prev.filter((b) => b !== badge) : [...prev, badge]
+    );
+  };
 
   // Hudud state
   const [hududId, setHududId] = useState("");
@@ -324,9 +328,15 @@ export default function EditPropertyPage() {
     if (found.contact_phone) setContactPhone(found.contact_phone);
     if (found.contact_telegram) setContactTelegram(found.contact_telegram);
     if (found.realtor_id) setSelectedRealtorId(found.realtor_id);
-    if (found.is_top !== undefined) setIsTop(Boolean(found.is_top));
-    if (found.is_fast_sale !== undefined) setIsFastSale(Boolean(found.is_fast_sale));
-    if (found.is_good_deal !== undefined) setIsGoodDeal(Boolean(found.is_good_deal));
+    if (found.badges && Array.isArray(found.badges)) {
+      setSelectedBadges(found.badges.filter((b) => b !== "new"));
+    } else {
+      const b: PropertyBadge[] = [];
+      if (found.is_top) b.push("top");
+      if (found.is_fast_sale) b.push("tez_sotiladi");
+      if (found.is_good_deal) b.push("hamyonbop");
+      setSelectedBadges(b);
+    }
     if (found.hudud_id) setHududId(found.hudud_id);
     setInitialDataLoaded(true);
   }, []);
@@ -418,14 +428,10 @@ export default function EditPropertyPage() {
           (propertyType === "house_yard" || propertyType === "land") && areaSotikh > 0
             ? Number(areaSotikh)
             : undefined,
-        is_top: isTop,
-        is_fast_sale: isFastSale,
-        is_good_deal: isGoodDeal,
-        badges: [
-          ...(isTop ? ["top" as const] : []),
-          ...(isFastSale ? ["tez_sotiladi" as const] : []),
-          ...(isGoodDeal ? ["yaxshi_taklif" as const] : []),
-        ],
+        is_top: selectedBadges.includes("top"),
+        is_fast_sale: selectedBadges.includes("tez_sotiladi"),
+        is_good_deal: selectedBadges.includes("hamyonbop") || selectedBadges.includes("arzon"),
+        badges: selectedBadges,
         rooms,
         floor,
         total_floors: totalFloors,
@@ -691,93 +697,44 @@ export default function EditPropertyPage() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {/* TOP Badge */}
-                <label
-                  className={`flex items-center justify-between p-3.5 rounded-2xl border cursor-pointer transition-all ${
-                    isTop
-                      ? "border-amber-400 bg-amber-50 text-amber-900 ring-2 ring-amber-400"
-                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-amber-500 text-white text-xs font-black shadow-sm">
-                      ★
-                    </span>
-                    <div>
-                      <span className="text-xs font-extrabold block">
-                        {locale === "uz" ? "TOP E’lon" : "ТОП объявление"}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                {[
+                  { id: "top" as PropertyBadge, labelUz: "TOP", labelRu: "ТОП", icon: "★", color: "amber" },
+                  { id: "arzon" as PropertyBadge, labelUz: "Arzon", labelRu: "Недорого", icon: "🏷️", color: "emerald" },
+                  { id: "tez_sotiladi" as PropertyBadge, labelUz: "Tezda sotilishi kerak", labelRu: "Срочно продать", icon: "⚡", color: "rose" },
+                  { id: "hamyonbop" as PropertyBadge, labelUz: "Hamyonbop", labelRu: "Выгодная цена", icon: "%", color: "blue" },
+                  { id: "narxi_tushirildi" as PropertyBadge, labelUz: "Narxi tushirildi", labelRu: "Цена снижена", icon: "📉", color: "purple" },
+                ].map((b) => {
+                  const active = selectedBadges.includes(b.id);
+                  return (
+                    <button
+                      key={b.id}
+                      type="button"
+                      onClick={() => toggleBadge(b.id)}
+                      className={`p-3 rounded-2xl border text-left flex flex-col justify-between transition-all ${
+                        active
+                          ? "border-[#16543C] bg-emerald-50/70 shadow-sm ring-2 ring-[#16543C]"
+                          : "border-slate-200 bg-white hover:bg-slate-50"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full mb-2">
+                        <span className="text-base">{b.icon}</span>
+                        <div
+                          className={`w-4 h-4 rounded flex items-center justify-center border text-[10px] font-bold ${
+                            active
+                              ? "bg-[#16543C] text-white border-[#16543C]"
+                              : "border-slate-300 bg-white"
+                          }`}
+                        >
+                          {active && "✓"}
+                        </div>
+                      </div>
+                      <span className="text-xs font-black text-slate-800 leading-tight">
+                        {locale === "uz" ? b.labelUz : b.labelRu}
                       </span>
-                      <span className="text-[10px] text-slate-500">
-                        {locale === "uz" ? "Katalogda yuqorida" : "Вверху каталога"}
-                      </span>
-                    </div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={isTop}
-                    onChange={(e) => setIsTop(e.target.checked)}
-                    className="h-4 w-4 rounded text-amber-600 focus:ring-amber-500"
-                  />
-                </label>
-
-                {/* Tez sotiladi Badge */}
-                <label
-                  className={`flex items-center justify-between p-3.5 rounded-2xl border cursor-pointer transition-all ${
-                    isFastSale
-                      ? "border-rose-400 bg-rose-50 text-rose-900 ring-2 ring-rose-400"
-                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-rose-500 text-white text-xs font-black shadow-sm">
-                      ⚡
-                    </span>
-                    <div>
-                      <span className="text-xs font-extrabold block">
-                        {locale === "uz" ? "Tez sotiladi" : "Быстрая продажа"}
-                      </span>
-                      <span className="text-[10px] text-slate-500">
-                        {locale === "uz" ? "Shoshilinch taklif" : "Срочное предложение"}
-                      </span>
-                    </div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={isFastSale}
-                    onChange={(e) => setIsFastSale(e.target.checked)}
-                    className="h-4 w-4 rounded text-rose-600 focus:ring-rose-500"
-                  />
-                </label>
-
-                {/* Yaxshi taklif Badge */}
-                <label
-                  className={`flex items-center justify-between p-3.5 rounded-2xl border cursor-pointer transition-all ${
-                    isGoodDeal
-                      ? "border-blue-400 bg-blue-50 text-blue-900 ring-2 ring-blue-400"
-                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-blue-600 text-white text-xs font-black shadow-sm">
-                      %
-                    </span>
-                    <div>
-                      <span className="text-xs font-extrabold block">
-                        {locale === "uz" ? "Yaxshi taklif" : "Выгодная сделка"}
-                      </span>
-                      <span className="text-[10px] text-slate-500">
-                        {locale === "uz" ? "Qulay narx" : "Выгодная цена"}
-                      </span>
-                    </div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={isGoodDeal}
-                    onChange={(e) => setIsGoodDeal(e.target.checked)}
-                    className="h-4 w-4 rounded text-blue-600 focus:ring-blue-500"
-                  />
-                </label>
+                    </button>
+                  );
+                })}
               </div>
 
               <div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-200/80 text-[11px] text-emerald-800 flex items-center gap-2">

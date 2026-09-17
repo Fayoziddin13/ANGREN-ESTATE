@@ -12,7 +12,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useFavorites } from "@/lib/favoriteStore";
 import { useCompare } from "@/lib/compareStore";
 import { formatPrice } from "@/lib/currency";
-import { getPropertyTitle, getPropertyAddress } from "@/lib/propertyFormatters";
+import { getPropertyTitle, getPropertyAddress, isPropertyNew } from "@/lib/propertyFormatters";
 
 interface PropertyCardProps {
   property: Property;
@@ -88,29 +88,35 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
         />
 
         {/* Transaction Badge and Marketing Badges (Top Left) */}
-        <div className="absolute top-2.5 sm:top-3.5 left-2.5 sm:left-3.5 z-10 flex flex-wrap gap-1 sm:gap-1.5 items-center max-w-[75%]">
-          <span className="rounded-lg sm:rounded-xl bg-brand-primary px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold tracking-wide text-white shadow-sm">
+        <div className="absolute top-2.5 sm:top-3.5 left-2.5 sm:left-3.5 z-10 flex flex-wrap gap-1 sm:gap-1.5 items-center max-w-[85%]">
+          <span className="rounded-lg sm:rounded-xl bg-[#16543C] px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold tracking-wide text-white shadow-sm">
             {badgeText}
           </span>
+          {/* Automatic "New" / "Новинка" Badge (3 days from publication) */}
+          {isPropertyNew(property) && (
+            <span className="rounded-lg sm:rounded-xl bg-emerald-600 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold tracking-wide text-white shadow-sm">
+              {locale === "uz" ? "Yangi" : "Новинка"}
+            </span>
+          )}
           {property.badges &&
-            property.badges.slice(0, 2).map((b) => {
+            property.badges.filter((b) => b !== "new").slice(0, 2).map((b) => {
               if (b === "top") {
                 return (
                   <span
                     key={b}
                     className="rounded-lg sm:rounded-xl bg-amber-500 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-black tracking-wide text-white shadow-sm flex items-center gap-1"
                   >
-                    ★ {locale === "uz" ? "TOP" : "ТОП"}
+                    ★ TOP
                   </span>
                 );
               }
-              if (b === "new") {
+              if (b === "arzon") {
                 return (
                   <span
                     key={b}
-                    className="rounded-lg sm:rounded-xl bg-emerald-600 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold tracking-wide text-white shadow-sm"
+                    className="rounded-lg sm:rounded-xl bg-teal-600 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold tracking-wide text-white shadow-sm"
                   >
-                    {locale === "uz" ? "Yangi" : "Новинка"}
+                    {locale === "uz" ? "Arzon" : "Недорого"}
                   </span>
                 );
               }
@@ -120,17 +126,27 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
                     key={b}
                     className="rounded-lg sm:rounded-xl bg-rose-600 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold tracking-wide text-white shadow-sm flex items-center gap-0.5"
                   >
-                    ⚡ {locale === "uz" ? "Tez sotiladi" : "Срочно"}
+                    ⚡ {locale === "uz" ? "Tezda sotilishi kerak" : "Срочно продать"}
                   </span>
                 );
               }
-              if (b === "yaxshi_taklif") {
+              if (b === "hamyonbop" || b === "yaxshi_taklif") {
                 return (
                   <span
                     key={b}
                     className="rounded-lg sm:rounded-xl bg-blue-600 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold tracking-wide text-white shadow-sm flex items-center gap-0.5"
                   >
-                    % {locale === "uz" ? "Yaxshi taklif" : "Выгодно"}
+                    % {locale === "uz" ? "Hamyonbop" : "Выгодная цена"}
+                  </span>
+                );
+              }
+              if (b === "narxi_tushirildi") {
+                return (
+                  <span
+                    key={b}
+                    className="rounded-lg sm:rounded-xl bg-purple-600 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold tracking-wide text-white shadow-sm flex items-center gap-0.5"
+                  >
+                    ↓ {locale === "uz" ? "Narxi tushirildi" : "Цена снижена"}
                   </span>
                 );
               }

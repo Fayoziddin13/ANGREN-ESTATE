@@ -35,6 +35,7 @@ import {
   Thermometer,
   Wifi,
   Scale,
+  Video,
 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -55,6 +56,9 @@ import {
   getPropertyAddress,
   getPropertyDistrict,
   getRenovationLabel,
+  getPropertyTypeLabel,
+  getBadgeLabel,
+  isPropertyNew,
 } from "@/lib/propertyFormatters";
 
 function DetailMapLoading() {
@@ -459,6 +463,42 @@ export default function PropertyDetailView({
               {/* Title & Key Info */}
               <div className="p-6 sm:p-8 rounded-3xl bg-white border border-gray-200/80 shadow-card space-y-6">
                 <div>
+                  {/* Badges and Category row */}
+                  <div className="flex flex-wrap items-center gap-1.5 mb-3">
+                    <span className="rounded-xl bg-[#16543C] px-3 py-1 text-xs font-bold tracking-wide text-white shadow-xs">
+                      {property.transaction_type === "sale" ? (locale === "uz" ? "Sotuv" : "Продажа") : (locale === "uz" ? "Ijara" : "Аренда")}
+                    </span>
+                    <span className="rounded-xl bg-slate-100 text-slate-700 px-3 py-1 text-xs font-bold border border-slate-200">
+                      {getPropertyTypeLabel(property.property_type, locale)}
+                    </span>
+                    {isPropertyNew(property) && (
+                      <span className="rounded-xl bg-emerald-600 px-3 py-1 text-xs font-bold text-white shadow-xs">
+                        {locale === "uz" ? "Yangi" : "Новинка"}
+                      </span>
+                    )}
+                    {property.badges &&
+                      property.badges.filter((b) => b !== "new").map((b) => (
+                        <span
+                          key={b}
+                          className={`rounded-xl px-3 py-1 text-xs font-bold text-white shadow-xs ${
+                            b === "top"
+                              ? "bg-amber-500"
+                              : b === "arzon"
+                              ? "bg-teal-600"
+                              : b === "tez_sotiladi"
+                              ? "bg-rose-600"
+                              : b === "hamyonbop" || b === "yaxshi_taklif"
+                              ? "bg-blue-600"
+                              : b === "narxi_tushirildi"
+                              ? "bg-purple-600"
+                              : "bg-slate-700"
+                          }`}
+                        >
+                          {getBadgeLabel(b, locale)}
+                        </span>
+                      ))}
+                  </div>
+
                   <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
                     <div className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
                       {priceDisplay}
@@ -563,6 +603,21 @@ export default function PropertyDetailView({
                     {description}
                   </p>
                 </div>
+
+                {/* Video Review Button / Block (Only if video_url is present) */}
+                {property.video_url && (
+                  <div className="pt-4 border-t border-gray-100">
+                    <a
+                      href={property.video_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-md shadow-rose-600/20 transition-all active:scale-98 cursor-pointer"
+                    >
+                      <Video className="w-5 h-5" />
+                      <span>{locale === "uz" ? "Video sharh" : "Видео обзор"}</span>
+                    </a>
+                  </div>
+                )}
               </div>
 
               {/* Utilities & Amenities */}
