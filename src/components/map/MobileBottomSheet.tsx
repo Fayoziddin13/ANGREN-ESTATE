@@ -85,19 +85,21 @@ export function MobileBottomSheet({
     return (
       <div
         data-testid="mobile-map-control-row"
-        className="sm:hidden fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] left-3 right-3 z-30 pointer-events-auto flex items-center justify-between px-3 py-1.5 rounded-2xl bg-[#16543C] shadow-elevated border border-emerald-700/60 backdrop-blur-xl"
+        className="sm:hidden fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] left-3 right-3 z-30 pointer-events-auto flex items-center justify-between gap-2 px-2.5 sm:px-3 py-1.5 rounded-2xl bg-[#16543C] shadow-elevated border border-emerald-700/60 backdrop-blur-xl"
       >
-        {/* Subtle compact object count badge on the left */}
+        {/* Object count badge with localized text on the left */}
         <div
           data-testid="mobile-object-count-badge"
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/10 border border-white/15 text-white shrink-0"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/10 border border-white/15 text-white shrink min-w-0"
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-xs font-black tracking-tight text-white">{totalCount}</span>
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+          <span className="text-[11px] sm:text-xs font-bold tracking-tight text-white whitespace-nowrap truncate">
+            {t.mapSection.objectsOnMap(totalCount)}
+          </span>
         </div>
 
         {/* 4 Icon-Only Controls on the right */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 shrink-0">
           {/* 1. 3D (Icon only) */}
           <button
             type="button"
