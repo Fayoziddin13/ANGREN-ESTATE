@@ -293,6 +293,39 @@ export function getPropertyDescription(
   return property.description_uz?.trim() || property.description_ru?.trim() || "";
 }
 
+export function getPropertyNote(
+  property?: {
+    note_uz?: string | null;
+    note_ru?: string | null;
+    additional_note_uz?: string | null;
+    additional_note_ru?: string | null;
+    amenities?: any;
+  } | null,
+  locale: Locale = "uz"
+): string {
+  if (!property) return "";
+  if (locale === "ru") {
+    return (
+      property.note_ru?.trim() ||
+      property.additional_note_ru?.trim() ||
+      (property.amenities as any)?.customNoteRu?.trim() ||
+      property.note_uz?.trim() ||
+      property.additional_note_uz?.trim() ||
+      (property.amenities as any)?.customNote?.trim() ||
+      ""
+    );
+  }
+  return (
+    property.note_uz?.trim() ||
+    property.additional_note_uz?.trim() ||
+    (property.amenities as any)?.customNoteUz?.trim() ||
+    property.note_ru?.trim() ||
+    property.additional_note_ru?.trim() ||
+    (property.amenities as any)?.customNote?.trim() ||
+    ""
+  );
+}
+
 export function getPropertyAddress(
   property: { address_uz?: string; address_ru?: string; district_name_uz?: string; district_name_ru?: string },
   locale: Locale = "uz"

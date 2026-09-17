@@ -44,6 +44,8 @@ export interface Property {
   title_ru: string;
   description_uz: string;
   description_ru: string;
+  note_uz?: string;
+  note_ru?: string;
   address_uz: string;
   address_ru: string;
   district_name_uz: string;

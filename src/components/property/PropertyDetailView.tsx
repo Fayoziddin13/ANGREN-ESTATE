@@ -53,6 +53,7 @@ import { formatPublishedDate } from "@/lib/dateFormat";
 import {
   getPropertyTitle,
   getPropertyDescription,
+  getPropertyNote,
   getPropertyAddress,
   getPropertyDistrict,
   getRenovationLabel,
@@ -603,6 +604,19 @@ export default function PropertyDetailView({
                     {description}
                   </p>
                 </div>
+
+                {/* Additional Note (Bilingual localized) */}
+                {getPropertyNote(property, locale) && (
+                  <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-1">
+                    <div className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                      <Info className="w-3.5 h-3.5 text-amber-700" />
+                      <span>{locale === "uz" ? "Qo‘shimcha eslatma" : "Дополнительная заметка"}</span>
+                    </div>
+                    <p className="text-xs text-amber-950 leading-relaxed">
+                      {getPropertyNote(property, locale)}
+                    </p>
+                  </div>
+                )}
 
                 {/* Video Review Button / Block (Only if video_url is present) */}
                 {property.video_url && (

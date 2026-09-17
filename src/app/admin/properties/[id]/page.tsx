@@ -102,6 +102,15 @@ export default function EditPropertyPage() {
   const [titleRu, setTitleRu] = useState("");
   const [descUz, setDescUz] = useState("");
   const [descRu, setDescRu] = useState("");
+  const [noteUz, setNoteUz] = useState("");
+  const [noteRu, setNoteRu] = useState("");
+  const [titleUzManual, setTitleUzManual] = useState(false);
+  const [titleRuManual, setTitleRuManual] = useState(false);
+  const [descUzManual, setDescUzManual] = useState(false);
+  const [descRuManual, setDescRuManual] = useState(false);
+  const [noteUzManual, setNoteUzManual] = useState(false);
+  const [noteRuManual, setNoteRuManual] = useState(false);
+  const [translatingField, setTranslatingField] = useState<string | null>(null);
   const [priceUzs, setPriceUzs] = useState(450000000);
   const [priceUsd, setPriceUsd] = useState(35000);
   const [currency, setCurrency] = useState<"UZS" | "USD">("USD");
@@ -135,6 +144,66 @@ export default function EditPropertyPage() {
     msg: string;
   } | null>(null);
 
+  // On-blur automatic translation for a single field
+  const handleFieldBlur = async (
+    field: "title" | "desc" | "note",
+    fromLang: "uz" | "ru"
+  ) => {
+    const toLang = fromLang === "uz" ? "ru" : "uz";
+    let sourceText = "";
+    let targetHasManualEdit = false;
+
+    if (field === "title") {
+      sourceText = fromLang === "uz" ? titleUz : titleRu;
+      targetHasManualEdit = toLang === "ru" ? titleRuManual : titleUzManual;
+    } else if (field === "desc") {
+      sourceText = fromLang === "uz" ? descUz : descRu;
+      targetHasManualEdit = toLang === "ru" ? descRuManual : descUzManual;
+    } else if (field === "note") {
+      sourceText = fromLang === "uz" ? noteUz : noteRu;
+      targetHasManualEdit = toLang === "ru" ? noteRuManual : noteUzManual;
+    }
+
+    // Translate on blur ONLY if source is non-empty AND target was not manually customized
+    if (!sourceText.trim() || targetHasManualEdit) {
+      return;
+    }
+
+    const fieldKey = `${field}_${fromLang}_${toLang}`;
+    setTranslatingField(fieldKey);
+
+    try {
+      const res = await fetch("/api/admin/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: sourceText,
+          from: fromLang,
+          to: toLang,
+        }),
+      });
+
+      const data = await res.json();
+      if (data?.success && data.translatedText) {
+        if (field === "title") {
+          if (toLang === "ru") setTitleRu(data.translatedText);
+          else setTitleUz(data.translatedText);
+        } else if (field === "desc") {
+          if (toLang === "ru") setDescRu(data.translatedText);
+          else setDescUz(data.translatedText);
+        } else if (field === "note") {
+          if (toLang === "ru") setNoteRu(data.translatedText);
+          else setNoteUz(data.translatedText);
+        }
+      }
+    } catch (err) {
+      console.error("Auto-translate on blur failed:", err);
+    } finally {
+      setTranslatingField(null);
+    }
+  };
+
+  // Explicit batch translation action button
   const handleAutoTranslate = async (direction: "uz_to_ru" | "ru_to_uz") => {
     setIsTranslating(true);
     setTranslationNotice(null);
@@ -143,42 +212,54 @@ export default function EditPropertyPage() {
       const to = direction === "uz_to_ru" ? "ru" : "uz";
       const sourceTitle = from === "uz" ? titleUz : titleRu;
       const sourceDesc = from === "uz" ? descUz : descRu;
+      const sourceNote = from === "uz" ? noteUz : noteRu;
 
-      if (!sourceTitle && !sourceDesc) {
+      if (!sourceTitle.trim() && !sourceDesc.trim() && !sourceNote.trim()) {
         setTranslationNotice({
           type: "info",
           msg:
             locale === "uz"
-              ? "Avval manba tilida sarlavha yoki tavsifni kiriting."
-              : "Сначала введите заголовок или описание на исходном языке.",
+              ? "Avval manba tilida sarlavha, tavsif yoki eslatmani kiriting."
+              : "Сначала введите заголовок, описание или заметку на исходном языке.",
         });
         setIsTranslating(false);
         return;
       }
 
+      const items = [];
+      if (sourceTitle.trim()) items.push({ key: "title", text: sourceTitle, from, to });
+      if (sourceDesc.trim()) items.push({ key: "desc", text: sourceDesc, from, to });
+      if (sourceNote.trim()) items.push({ key: "note", text: sourceNote, from, to });
+
       const res = await fetch("/api/admin/translate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: [
-            { key: "title", text: sourceTitle, from, to },
-            { key: "desc", text: sourceDesc, from, to },
-          ],
-        }),
+        body: JSON.stringify({ items }),
       });
 
       const data = await res.json();
+      let hasSuccess = false;
       if (data?.success && Array.isArray(data.results)) {
         for (const item of data.results) {
-          if (item.key === "title" && item.result?.translatedText) {
-            if (to === "ru") setTitleRu(item.result.translatedText);
-            else setTitleUz(item.result.translatedText);
-          }
-          if (item.key === "desc" && item.result?.translatedText) {
-            if (to === "ru") setDescRu(item.result.translatedText);
-            else setDescUz(item.result.translatedText);
+          if (item.result?.success && item.result?.translatedText) {
+            hasSuccess = true;
+            if (item.key === "title") {
+              if (to === "ru") setTitleRu(item.result.translatedText);
+              else setTitleUz(item.result.translatedText);
+            }
+            if (item.key === "desc") {
+              if (to === "ru") setDescRu(item.result.translatedText);
+              else setDescUz(item.result.translatedText);
+            }
+            if (item.key === "note") {
+              if (to === "ru") setNoteRu(item.result.translatedText);
+              else setNoteUz(item.result.translatedText);
+            }
           }
         }
+      }
+
+      if (hasSuccess) {
         setTranslationNotice({
           type: "success",
           msg:
@@ -281,6 +362,8 @@ export default function EditPropertyPage() {
     setTitleRu(found.title_ru || "");
     setDescUz(found.description_uz || "");
     setDescRu(found.description_ru || "");
+    setNoteUz(found.note_uz || (found.amenities as any)?.customNoteUz || (found.amenities as any)?.customNote || "");
+    setNoteRu(found.note_ru || (found.amenities as any)?.customNoteRu || "");
     setPriceUzs(found.price_uzs || 0);
     setPriceUsd(found.price_usd || Math.round((found.price_uzs || 0) / exchangeRate));
     setDistrict(found.district_name_uz || "Markaz");
@@ -412,6 +495,8 @@ export default function EditPropertyPage() {
         title_ru: titleRu || "Объект недвижимости в Ангрене",
         description_uz: descUz || "Angren shahrida joylashgan qulay ko‘chmas mulk.",
         description_ru: descRu || "Удобный объект недвижимости в городе Ангрен.",
+        note_uz: noteUz.trim() || undefined,
+        note_ru: noteRu.trim() || undefined,
         address_uz: addressUz || "Angren sh., Markaz",
         address_ru: addressRu || "г. Ангрен, Центр",
         district_name_uz: district,
@@ -868,27 +953,60 @@ export default function EditPropertyPage() {
                   </span>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">
-                    {locale === "uz" ? "Sarlavha (UZ)" : "Заголовок (UZ)"}
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-700">
+                      {locale === "uz" ? "Sarlavha (UZ)" : "Заголовок (UZ)"}
+                    </label>
+                    {translatingField === "title_ru_uz" && <span className="text-[10px] text-emerald-600 font-bold animate-pulse">Tarjima qilinmoqda...</span>}
+                  </div>
                   <input
                     type="text"
                     value={titleUz}
-                    onChange={(e) => setTitleUz(e.target.value)}
+                    onChange={(e) => {
+                      setTitleUz(e.target.value);
+                      setTitleUzManual(true);
+                    }}
+                    onBlur={() => handleFieldBlur("title", "uz")}
                     placeholder={locale === "uz" ? "Masalan: Shinam 3 xonali kvartira, 6-mavze" : "Например: Уютная 3-комнатная квартира, 6-й микрорайон"}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#16543C] outline-none text-xs font-semibold"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">
-                    {locale === "uz" ? "Batafsil tavsif (UZ)" : "Подробное описание (UZ)"}
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-700">
+                      {locale === "uz" ? "Batafsil tavsif (UZ)" : "Подробное описание (UZ)"}
+                    </label>
+                    {translatingField === "desc_ru_uz" && <span className="text-[10px] text-emerald-600 font-bold animate-pulse">Tarjima qilinmoqda...</span>}
+                  </div>
                   <textarea
                     rows={4}
                     value={descUz}
-                    onChange={(e) => setDescUz(e.target.value)}
+                    onChange={(e) => {
+                      setDescUz(e.target.value);
+                      setDescUzManual(true);
+                    }}
+                    onBlur={() => handleFieldBlur("desc", "uz")}
                     placeholder={locale === "uz" ? "Kvartira yoki uy haqida to‘liq ma’lumot..." : "Полная информация о квартире или доме..."}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#16543C] outline-none text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-700">
+                      {locale === "uz" ? "Qo‘shimcha eslatma (UZ)" : "Дополнительная заметка (UZ)"}
+                    </label>
+                    {translatingField === "note_ru_uz" && <span className="text-[10px] text-emerald-600 font-bold animate-pulse">Tarjima qilinmoqda...</span>}
+                  </div>
+                  <input
+                    type="text"
+                    value={noteUz}
+                    onChange={(e) => {
+                      setNoteUz(e.target.value);
+                      setNoteUzManual(true);
+                    }}
+                    onBlur={() => handleFieldBlur("note", "uz")}
+                    placeholder={locale === "uz" ? "Masalan: Ipotekaga berilmaydi, faqat naqd pulga" : "Например: Не под ипотеку, только наличный расчет"}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#16543C] outline-none text-xs"
                   />
                 </div>
               </div>
@@ -904,27 +1022,60 @@ export default function EditPropertyPage() {
                   </span>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">
-                    {locale === "uz" ? "Sarlavha (RU)" : "Заголовок (RU)"}
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-700">
+                      {locale === "uz" ? "Sarlavha (RU)" : "Заголовок (RU)"}
+                    </label>
+                    {translatingField === "title_uz_ru" && <span className="text-[10px] text-emerald-600 font-bold animate-pulse">Перевод...</span>}
+                  </div>
                   <input
                     type="text"
                     value={titleRu}
-                    onChange={(e) => setTitleRu(e.target.value)}
+                    onChange={(e) => {
+                      setTitleRu(e.target.value);
+                      setTitleRuManual(true);
+                    }}
+                    onBlur={() => handleFieldBlur("title", "ru")}
                     placeholder={locale === "uz" ? "Masalan: Shinam 3 xonali kvartira, 6-mavze" : "Например: Уютная 3-комнатная квартира, 6-й микрорайон"}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#16543C] outline-none text-xs font-semibold"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">
-                    {locale === "uz" ? "Obyekt tavsifi (RU)" : "Описание объекта (RU)"}
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-700">
+                      {locale === "uz" ? "Obyekt tavsifi (RU)" : "Описание объекта (RU)"}
+                    </label>
+                    {translatingField === "desc_uz_ru" && <span className="text-[10px] text-emerald-600 font-bold animate-pulse">Перевод...</span>}
+                  </div>
                   <textarea
                     rows={4}
                     value={descRu}
-                    onChange={(e) => setDescRu(e.target.value)}
+                    onChange={(e) => {
+                      setDescRu(e.target.value);
+                      setDescRuManual(true);
+                    }}
+                    onBlur={() => handleFieldBlur("desc", "ru")}
                     placeholder={locale === "uz" ? "Kvartira yoki uy haqida to‘liq ma’lumot..." : "Полная информация о квартире или доме..."}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#16543C] outline-none text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-700">
+                      {locale === "uz" ? "Qo‘shimcha eslatma (RU)" : "Дополнительная заметка (RU)"}
+                    </label>
+                    {translatingField === "note_uz_ru" && <span className="text-[10px] text-emerald-600 font-bold animate-pulse">Перевод...</span>}
+                  </div>
+                  <input
+                    type="text"
+                    value={noteRu}
+                    onChange={(e) => {
+                      setNoteRu(e.target.value);
+                      setNoteRuManual(true);
+                    }}
+                    onBlur={() => handleFieldBlur("note", "ru")}
+                    placeholder={locale === "uz" ? "Masalan: Ipotekaga berilmaydi, faqat naqd pulga" : "Например: Не под ипотеку, только наличный расчет"}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#16543C] outline-none text-xs"
                   />
                 </div>
               </div>
