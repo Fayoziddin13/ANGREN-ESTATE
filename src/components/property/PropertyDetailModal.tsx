@@ -129,7 +129,7 @@ export function PropertyDetailModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto overflow-x-hidden">
         {/* Backdrop with liquid glass blur */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -145,25 +145,26 @@ export function PropertyDetailModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ type: "spring", damping: 26, stiffness: 320 }}
-          className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-3xl bg-white/95 backdrop-blur-xl shadow-elevated border border-white/80 z-10 flex flex-col my-auto"
+          className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-3xl bg-white/95 backdrop-blur-xl shadow-elevated border border-white/80 z-10 flex flex-col my-auto min-w-0 mx-auto"
         >
           {/* Floating Top Close & Actions Bar */}
-          <div className="sticky top-0 z-30 flex items-center justify-between p-4 px-6 bg-white/80 backdrop-blur-md border-b border-gray-100">
-            <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1.5 rounded-full bg-brand-light px-3 py-1 text-xs font-bold text-brand-primary">
+          <div className="sticky top-0 z-30 flex items-center justify-between gap-2 p-3 sm:p-4 px-3 sm:px-6 bg-white/85 backdrop-blur-md border-b border-gray-100 min-w-0">
+            {/* Badges Container */}
+            <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5 min-w-0 flex-1">
+              <span className="flex items-center gap-1 sm:gap-1.5 rounded-full bg-brand-light px-2.5 sm:px-3 py-1 text-xs font-bold text-brand-primary shrink-0">
                 <ShieldCheck className="h-3.5 w-3.5" />
                 <span>{t.propertyDetail.verified}</span>
               </span>
-              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">
+              <span className="rounded-full bg-gray-100 px-2.5 sm:px-3 py-1 text-xs font-semibold text-gray-700 shrink-0">
                 {badgeText}
               </span>
               {isSold && (
-                <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">
+                <span className="rounded-full bg-red-100 px-2.5 sm:px-3 py-1 text-xs font-bold text-red-700 shrink-0">
                   {locale === "uz" ? "Sotilgan" : "Продано"}
                 </span>
               )}
               {isRented && (
-                <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
+                <span className="rounded-full bg-blue-100 px-2.5 sm:px-3 py-1 text-xs font-bold text-blue-700 shrink-0">
                   {locale === "uz" ? "Ijaraga berildi" : "Арендовано"}
                 </span>
               )}
@@ -173,7 +174,7 @@ export function PropertyDetailModal({
                     return (
                       <span
                         key={b}
-                        className="rounded-full bg-amber-500 px-3 py-1 text-xs font-black text-white shadow-xs flex items-center gap-1"
+                        className="rounded-full bg-amber-500 px-2.5 sm:px-3 py-1 text-xs font-black text-white shadow-xs flex items-center gap-1 shrink-0"
                       >
                         ★ {locale === "uz" ? "TOP E’lon" : "ТОП"}
                       </span>
@@ -183,7 +184,7 @@ export function PropertyDetailModal({
                     return (
                       <span
                         key={b}
-                        className="rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white shadow-xs"
+                        className="rounded-full bg-emerald-600 px-2.5 sm:px-3 py-1 text-xs font-bold text-white shadow-xs shrink-0"
                       >
                         {locale === "uz" ? "Yangi" : "Новинка"}
                       </span>
@@ -193,7 +194,7 @@ export function PropertyDetailModal({
                     return (
                       <span
                         key={b}
-                        className="rounded-full bg-rose-600 px-3 py-1 text-xs font-bold text-white shadow-xs flex items-center gap-1"
+                        className="rounded-full bg-rose-600 px-2.5 sm:px-3 py-1 text-xs font-bold text-white shadow-xs flex items-center gap-1 shrink-0"
                       >
                         ⚡ {locale === "uz" ? "Tez sotiladi" : "Быстрая продажа"}
                       </span>
@@ -203,7 +204,7 @@ export function PropertyDetailModal({
                     return (
                       <span
                         key={b}
-                        className="rounded-full bg-blue-600 px-3 py-1 text-xs font-bold text-white shadow-xs flex items-center gap-1"
+                        className="rounded-full bg-blue-600 px-2.5 sm:px-3 py-1 text-xs font-bold text-white shadow-xs flex items-center gap-1 shrink-0"
                       >
                         % {locale === "uz" ? "Yaxshi taklif" : "Выгодная сделка"}
                       </span>
@@ -213,7 +214,8 @@ export function PropertyDetailModal({
                 })}
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* Action Buttons */}
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               {/* Compare Button */}
               <button
                 type="button"
@@ -228,32 +230,32 @@ export function PropertyDetailModal({
                     );
                   }
                 }}
-                className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
+                className={`flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full transition-colors ${
                   isCompared
                     ? "bg-emerald-600 text-white shadow-xs"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
                 title={locale === "uz" ? "Solishtirish" : "Сравнить"}
               >
-                <Scale className="h-4 w-4" />
+                <Scale className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </button>
 
               {/* Share Button */}
               <button
                 onClick={handleShare}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
                 title={t.propertyDetail.share}
               >
-                {copied ? <Check className="h-4 w-4 text-brand-primary" /> : <Share2 className="h-4 w-4" />}
+                {copied ? <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-brand-primary" /> : <Share2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
               </button>
 
               {/* Favorite Button */}
               <button
                 onClick={handleFavoriteClick}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
               >
                 <Heart
-                  className={`h-4 w-4 ${
+                  className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${
                     isFavorited ? "fill-red-500 text-red-500" : "text-gray-600"
                   }`}
                 />
@@ -262,15 +264,15 @@ export function PropertyDetailModal({
               {/* Close Button */}
               <button
                 onClick={onClose}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
                 aria-label="Close"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </button>
             </div>
           </div>
 
-          <div className="p-4 sm:p-6 space-y-6">
+          <div className="p-3.5 sm:p-6 space-y-5 sm:space-y-6 min-w-0">
             {/* Gallery Section */}
             <div className="space-y-3">
               <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl bg-gray-100 shadow-sm">
@@ -285,7 +287,7 @@ export function PropertyDetailModal({
 
               {/* Thumbnail Bar */}
               {property.images.length > 1 && (
-                <div className="flex gap-2.5 overflow-x-auto pb-1">
+                <div className="flex gap-2.5 overflow-x-auto pb-1 min-w-0 no-scrollbar">
                   {property.images.map((img, idx) => (
                     <button
                       key={idx}
@@ -309,8 +311,8 @@ export function PropertyDetailModal({
             </div>
 
             {/* Price & Title Header */}
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-gray-100 pb-5">
-              <div className="space-y-1">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-gray-100 pb-5 min-w-0">
+              <div className="space-y-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-2xl sm:text-4xl font-black tracking-tight text-brand-dark">
                     {priceFormatted}
@@ -324,10 +326,10 @@ export function PropertyDetailModal({
                 <div className="text-xs font-semibold text-gray-400">
                   {secondaryPrice}
                 </div>
-                <h1 className="text-lg sm:text-2xl font-bold text-gray-900 pt-1">
+                <h1 className="text-lg sm:text-2xl font-bold text-gray-900 pt-1 break-words">
                   {title}
                 </h1>
-                <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-600">
+                <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-600 flex-wrap">
                   <MapPin className="h-4 w-4 text-brand-primary shrink-0" />
                   <span>{address}</span>
                   <span className="text-gray-300">•</span>
@@ -335,12 +337,12 @@ export function PropertyDetailModal({
                 </div>
               </div>
 
-              {/* Contact Call-to-Actions (Desktop) */}
-              <div className="flex items-center gap-2.5 pt-2 sm:pt-0">
+              {/* Contact Call-to-Actions */}
+              <div className="flex items-center gap-2 sm:gap-2.5 pt-2 sm:pt-0 flex-wrap sm:flex-nowrap shrink-0">
                 {isSoldOrRented ? (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span
-                      className={`px-3.5 py-2.5 rounded-2xl text-xs font-extrabold ${
+                      className={`px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-2xl text-xs font-extrabold ${
                         isSold ? "bg-red-100 text-red-800" : "bg-blue-100 text-blue-800"
                       }`}
                     >
@@ -354,7 +356,7 @@ export function PropertyDetailModal({
                     </span>
                     <button
                       onClick={onClose}
-                      className="px-4 py-2.5 rounded-2xl bg-[#16543C] text-white text-xs font-bold hover:bg-[#113F2D] transition-colors shadow-sm"
+                      className="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl bg-[#16543C] text-white text-xs font-bold hover:bg-[#113F2D] transition-colors shadow-sm"
                     >
                       {locale === "uz" ? "Boshqa obyektlar" : "Другие объекты"}
                     </button>
@@ -364,7 +366,7 @@ export function PropertyDetailModal({
                     <a
                       href={`tel:${property.contact_phone}`}
                       onClick={handleCallClick}
-                      className="flex items-center justify-center gap-2 rounded-2xl bg-brand-primary px-6 py-3.5 text-xs font-bold text-white shadow-card hover:bg-brand-primary-hover active:scale-[0.98] transition-all"
+                      className="flex items-center justify-center gap-2 rounded-2xl bg-brand-primary px-5 sm:px-6 py-3 sm:py-3.5 text-xs font-bold text-white shadow-card hover:bg-brand-primary-hover active:scale-[0.98] transition-all shrink-0"
                     >
                       <Phone className="h-4 w-4" />
                       <span>{t.propertyDetail.call}</span>
@@ -375,7 +377,7 @@ export function PropertyDetailModal({
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={handleTelegramClick}
-                        className="flex items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white px-5 py-3.5 text-xs font-bold text-gray-700 hover:bg-gray-50 active:scale-[0.98] transition-all shadow-sm"
+                        className="flex items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 sm:px-5 py-3 sm:py-3.5 text-xs font-bold text-gray-700 hover:bg-gray-50 active:scale-[0.98] transition-all shadow-sm shrink-0"
                       >
                         <Send className="h-4 w-4 text-brand-primary" />
                         <span>Telegram</span>
@@ -391,40 +393,40 @@ export function PropertyDetailModal({
               <h2 className="text-sm font-bold tracking-tight text-gray-800">
                 {t.propertyDetail.detailsTitle}
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
                 {property.property_type === "house_yard" || property.property_type === "land" ? (
                   <>
                     {/* Yer maydoni (Sotix) */}
-                    <div className="flex flex-col p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10">
+                    <div className="flex flex-col p-3 sm:p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10 min-w-0">
                       <span className="text-[11px] font-semibold text-gray-500 flex items-center gap-1">
-                        <Maximize2 className="h-3.5 w-3.5 text-brand-primary" />
-                        <span>{locale === "uz" ? "Yer maydoni" : "Площадь участка"}</span>
+                        <Maximize2 className="h-3.5 w-3.5 text-brand-primary shrink-0" />
+                        <span className="truncate">{locale === "uz" ? "Yer maydoni" : "Площадь участка"}</span>
                       </span>
-                      <span className="text-base sm:text-lg font-extrabold text-brand-dark pt-1">
+                      <span className="text-sm sm:text-lg font-extrabold text-brand-dark pt-1 truncate">
                         {property.area_sotikh ? `${property.area_sotikh} ${locale === "uz" ? "sotix" : "соток"}` : "—"}
                       </span>
                     </div>
 
                     {/* Uy maydoni (m²) */}
                     {property.property_type !== "land" && (
-                      <div className="flex flex-col p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10">
+                      <div className="flex flex-col p-3 sm:p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10 min-w-0">
                         <span className="text-[11px] font-semibold text-gray-500 flex items-center gap-1">
-                          <Building className="h-3.5 w-3.5 text-brand-primary" />
-                          <span>{locale === "uz" ? "Uy maydoni" : "Площадь дома"}</span>
+                          <Building className="h-3.5 w-3.5 text-brand-primary shrink-0" />
+                          <span className="truncate">{locale === "uz" ? "Uy maydoni" : "Площадь дома"}</span>
                         </span>
-                        <span className="text-base sm:text-lg font-extrabold text-brand-dark pt-1">
+                        <span className="text-sm sm:text-lg font-extrabold text-brand-dark pt-1 truncate">
                           {property.area_sqm} {t.common.sqm}
                         </span>
                       </div>
                     )}
 
                     {/* O'lchamlari / Fasad */}
-                    <div className="flex flex-col p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10">
+                    <div className="flex flex-col p-3 sm:p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10 min-w-0">
                       <span className="text-[11px] font-semibold text-gray-500 flex items-center gap-1">
-                        <Sparkles className="h-3.5 w-3.5 text-brand-primary" />
-                        <span>{locale === "uz" ? "O‘lchamlari" : "Размеры"}</span>
+                        <Sparkles className="h-3.5 w-3.5 text-brand-primary shrink-0" />
+                        <span className="truncate">{locale === "uz" ? "O‘lchamlari" : "Размеры"}</span>
                       </span>
-                      <span className="text-base sm:text-lg font-extrabold text-brand-dark pt-1">
+                      <span className="text-sm sm:text-lg font-extrabold text-brand-dark pt-1 truncate">
                         {property.dimensions ||
                           (property.facade_m && property.depth_m
                             ? `${property.facade_m} × ${property.depth_m} ${locale === "uz" ? "m" : "м"}`
@@ -436,12 +438,12 @@ export function PropertyDetailModal({
 
                     {/* Xonalar soni */}
                     {property.property_type !== "land" && (
-                      <div className="flex flex-col p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10">
+                      <div className="flex flex-col p-3 sm:p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10 min-w-0">
                         <span className="text-[11px] font-semibold text-gray-500 flex items-center gap-1">
-                          <Bed className="h-3.5 w-3.5 text-brand-primary" />
-                          <span>{t.propertyDetail.rooms}</span>
+                          <Bed className="h-3.5 w-3.5 text-brand-primary shrink-0" />
+                          <span className="truncate">{t.propertyDetail.rooms}</span>
                         </span>
-                        <span className="text-base sm:text-lg font-extrabold text-brand-dark pt-1">
+                        <span className="text-sm sm:text-lg font-extrabold text-brand-dark pt-1 truncate">
                           {property.rooms ? `${property.rooms} ${t.common.rooms}` : "—"}
                         </span>
                       </div>
@@ -450,12 +452,12 @@ export function PropertyDetailModal({
                 ) : (
                   <>
                     {/* Qavat / Jami qavat (Apartment Primary) */}
-                    <div className="flex flex-col p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10">
+                    <div className="flex flex-col p-3 sm:p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10 min-w-0">
                       <span className="text-[11px] font-semibold text-gray-500 flex items-center gap-1">
-                        <Building className="h-3.5 w-3.5 text-brand-primary" />
-                        <span>{t.propertyDetail.floor}</span>
+                        <Building className="h-3.5 w-3.5 text-brand-primary shrink-0" />
+                        <span className="truncate">{t.propertyDetail.floor}</span>
                       </span>
-                      <span className="text-base sm:text-lg font-extrabold text-brand-dark pt-1">
+                      <span className="text-sm sm:text-lg font-extrabold text-brand-dark pt-1 truncate">
                         {property.floor_number || property.floor
                           ? `${property.floor_number || property.floor} / ${property.total_floors || property.floors || property.floor_number || 1} ${locale === "uz" ? "qavat" : "эт."}`
                           : "1 / 1"}
@@ -463,34 +465,34 @@ export function PropertyDetailModal({
                     </div>
 
                     {/* Maydon (m²) */}
-                    <div className="flex flex-col p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10">
+                    <div className="flex flex-col p-3 sm:p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10 min-w-0">
                       <span className="text-[11px] font-semibold text-gray-500 flex items-center gap-1">
-                        <Maximize2 className="h-3.5 w-3.5 text-brand-primary" />
-                        <span>{t.propertyDetail.area}</span>
+                        <Maximize2 className="h-3.5 w-3.5 text-brand-primary shrink-0" />
+                        <span className="truncate">{t.propertyDetail.area}</span>
                       </span>
-                      <span className="text-base sm:text-lg font-extrabold text-brand-dark pt-1">
+                      <span className="text-sm sm:text-lg font-extrabold text-brand-dark pt-1 truncate">
                         {property.area_sqm} {t.common.sqm}
                       </span>
                     </div>
 
                     {/* Xonalar */}
-                    <div className="flex flex-col p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10">
+                    <div className="flex flex-col p-3 sm:p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10 min-w-0">
                       <span className="text-[11px] font-semibold text-gray-500 flex items-center gap-1">
-                        <Bed className="h-3.5 w-3.5 text-brand-primary" />
-                        <span>{t.propertyDetail.rooms}</span>
+                        <Bed className="h-3.5 w-3.5 text-brand-primary shrink-0" />
+                        <span className="truncate">{t.propertyDetail.rooms}</span>
                       </span>
-                      <span className="text-base sm:text-lg font-extrabold text-brand-dark pt-1">
+                      <span className="text-sm sm:text-lg font-extrabold text-brand-dark pt-1 truncate">
                         {property.rooms ? `${property.rooms} ${t.common.rooms}` : "—"}
                       </span>
                     </div>
 
                     {/* Sanuzel */}
-                    <div className="flex flex-col p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10">
+                    <div className="flex flex-col p-3 sm:p-3.5 rounded-2xl bg-brand-light/60 border border-brand-primary/10 min-w-0">
                       <span className="text-[11px] font-semibold text-gray-500 flex items-center gap-1">
-                        <Bath className="h-3.5 w-3.5 text-brand-primary" />
-                        <span>{t.propertyDetail.bathrooms}</span>
+                        <Bath className="h-3.5 w-3.5 text-brand-primary shrink-0" />
+                        <span className="truncate">{t.propertyDetail.bathrooms}</span>
                       </span>
-                      <span className="text-base sm:text-lg font-extrabold text-brand-dark pt-1">
+                      <span className="text-sm sm:text-lg font-extrabold text-brand-dark pt-1 truncate">
                         {property.bathrooms ? `${property.bathrooms} ${locale === "uz" ? "ta" : ""}`.trim() : (locale === "uz" ? "1 ta" : "1")}
                       </span>
                     </div>
@@ -500,21 +502,21 @@ export function PropertyDetailModal({
             </div>
 
             {/* Description */}
-            <div className="space-y-2">
+            <div className="space-y-2 min-w-0">
               <h2 className="text-sm font-bold tracking-tight text-gray-800">
                 {t.propertyDetail.description}
               </h2>
-              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed bg-gray-50/70 p-4 rounded-2xl border border-gray-100">
+              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed bg-gray-50/70 p-3.5 sm:p-4 rounded-2xl border border-gray-100 break-words">
                 {description}
               </p>
             </div>
 
             {/* 6 Core Communications (NO emojis, Professional Lucide Icons) */}
-            <div className="space-y-3">
+            <div className="space-y-3 min-w-0">
               <h2 className="text-sm font-bold tracking-tight text-gray-800">
                 {locale === "uz" ? "Kommunikatsiyalar" : "Коммуникации"}
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5">
                 {[
                   {
                     icon: Zap,
@@ -557,18 +559,18 @@ export function PropertyDetailModal({
                   return (
                     <div
                       key={idx}
-                      className={`flex items-center gap-2.5 p-3 rounded-2xl text-xs font-bold transition-all ${
+                      className={`flex items-center gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-2xl text-xs font-bold transition-all min-w-0 ${
                         item.active
                           ? "bg-emerald-50 text-[#16543C] border border-emerald-200/80 shadow-xs"
                           : "bg-gray-50 text-gray-400 border border-gray-100 opacity-60"
                       }`}
                     >
-                      <div className={`flex h-7 w-7 items-center justify-center rounded-xl shrink-0 ${
+                      <div className={`flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-xl shrink-0 ${
                         item.active ? "bg-[#16543C] text-white" : "bg-gray-200 text-gray-400"
                       }`}>
-                        <Icon className="h-4 w-4" />
+                        <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </div>
-                      <span>{locale === "uz" ? item.label : item.labelRu}</span>
+                      <span className="truncate">{locale === "uz" ? item.label : item.labelRu}</span>
                     </div>
                   );
                 })}
@@ -577,12 +579,12 @@ export function PropertyDetailModal({
                 {Array.isArray(property.utilities?.custom) && property.utilities.custom.map((c, i) => (
                   <div
                     key={`custom-${i}`}
-                    className="flex items-center gap-2.5 p-3 rounded-2xl bg-emerald-50 text-[#16543C] border border-emerald-200/80 shadow-xs text-xs font-bold"
+                    className="flex items-center gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-2xl bg-emerald-50 text-[#16543C] border border-emerald-200/80 shadow-xs text-xs font-bold min-w-0"
                   >
-                    <div className="flex h-7 w-7 items-center justify-center rounded-xl shrink-0 bg-[#16543C] text-white">
-                      <Check className="h-4 w-4 stroke-[2.5]" />
+                    <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-xl shrink-0 bg-[#16543C] text-white">
+                      <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4 stroke-[2.5]" />
                     </div>
-                    <span>{c}</span>
+                    <span className="truncate">{c}</span>
                   </div>
                 ))}
               </div>
@@ -591,7 +593,7 @@ export function PropertyDetailModal({
             {/* Infrastructure Around Property ("Atrofida" / "Рядом") */}
             {(property.latitude ?? property.coordinates?.lat) &&
               (property.longitude ?? property.coordinates?.lng) && (
-                <div className="pt-4 border-t border-gray-100">
+                <div className="pt-4 border-t border-gray-100 min-w-0">
                   <PropertyInfrastructureSection
                     latitude={property.latitude ?? property.coordinates.lat}
                     longitude={property.longitude ?? property.coordinates.lng}
@@ -600,30 +602,30 @@ export function PropertyDetailModal({
               )}
 
             {/* Realtor & Owner Contacts */}
-            <div className="p-4 rounded-2xl bg-brand-light/70 border border-brand-primary/15 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="h-11 w-11 rounded-2xl bg-[#16543C] text-white flex items-center justify-center font-black text-sm shrink-0 shadow-sm">
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-brand-light/70 border border-brand-primary/15 flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-2xl bg-[#16543C] text-white flex items-center justify-center font-black text-sm shrink-0 shadow-sm">
                   {property.realtor?.name?.charAt(0) || <User className="h-5 w-5" />}
                 </div>
-                <div>
-                  <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider truncate">
                     {locale === "uz" ? "Mas'ul rieltor" : "Ответственный риелтор"}
                   </p>
-                  <p className="text-sm font-extrabold text-gray-900">
+                  <p className="text-sm font-extrabold text-gray-900 truncate">
                     {property.realtor?.name || "Jasur Alimov"}
                   </p>
-                  <p className="text-xs text-emerald-700 font-semibold">
+                  <p className="text-xs text-emerald-700 font-semibold truncate">
                     {property.realtor?.phone || property.contact_phone}
                   </p>
                 </div>
               </div>
 
               {property.owner_phone && (
-                <div className="sm:border-l sm:border-gray-200/80 sm:pl-4">
-                  <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                <div className="sm:border-l sm:border-gray-200/80 sm:pl-4 min-w-0">
+                  <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider truncate">
                     {locale === "uz" ? "Mulkdor telefoni" : "Телефон собственника"}
                   </p>
-                  <p className="text-xs font-bold text-gray-800 pt-0.5">
+                  <p className="text-xs font-bold text-gray-800 pt-0.5 truncate">
                     {property.owner_phone}
                   </p>
                 </div>
@@ -631,7 +633,7 @@ export function PropertyDetailModal({
             </div>
 
             {/* Security & Authenticity Footnote */}
-            <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-200/60 flex items-center gap-3 text-xs text-gray-500">
+            <div className="p-3 sm:p-3.5 rounded-2xl bg-gray-50 border border-gray-200/60 flex items-center gap-2.5 sm:gap-3 text-xs text-gray-500 min-w-0">
               <ShieldCheck className="h-5 w-5 text-brand-primary shrink-0" />
               <span>
                 {locale === "uz" ? (

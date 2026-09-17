@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import {
@@ -91,7 +91,7 @@ export function PropertyInfrastructureSection({
       </div>
 
       {/* Grid of Infrastructure Category Badges */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
         {summaries.map((s) => {
           const isSelected = selectedCategory === s.category;
           return (
@@ -99,22 +99,22 @@ export function PropertyInfrastructureSection({
               key={s.category}
               type="button"
               onClick={() => setSelectedCategory(isSelected ? null : s.category)}
-              className={`p-3 rounded-2xl text-left border transition-all active:scale-[0.98] ${
+              className={`p-2.5 sm:p-3 rounded-2xl text-left border transition-all active:scale-[0.98] min-w-0 ${
                 isSelected
                   ? "bg-emerald-50 border-emerald-400/80 shadow-xs ring-1 ring-emerald-400/40"
                   : "bg-white hover:bg-slate-50 border-slate-100 shadow-xs"
               }`}
             >
-              <div className="flex items-center justify-between mb-1.5">
-                <div className="p-1.5 rounded-xl bg-slate-100/80">{getCategoryIcon(s.category)}</div>
-                <span className="text-[10px] font-extrabold text-[#16543C] bg-emerald-100/70 px-1.5 py-0.5 rounded-md">
+              <div className="flex items-center justify-between mb-1.5 min-w-0">
+                <div className="p-1.5 rounded-xl bg-slate-100/80 shrink-0">{getCategoryIcon(s.category)}</div>
+                <span className="text-[10px] font-extrabold text-[#16543C] bg-emerald-100/70 px-1.5 py-0.5 rounded-md shrink-0">
                   {s.closestDistance}
                 </span>
               </div>
               <div className="text-xs font-black text-slate-900 truncate">
                 {locale === "uz" ? s.labelUz : s.labelRu}
               </div>
-              <div className="text-[11px] text-slate-500 font-medium">
+              <div className="text-[10px] sm:text-[11px] text-slate-500 font-medium truncate">
                 {s.count} {locale === "uz" ? "ta maskan" : "объекта"}
               </div>
             </button>

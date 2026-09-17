@@ -164,14 +164,14 @@ export function FloatingSearchPanel({
 
   return (
     <div
-      className={`pointer-events-auto rounded-2xl bg-white/85 backdrop-blur-xl p-2.5 sm:p-3 shadow-elevated border border-white/80 transition-all ${className}`}
+      className={`pointer-events-auto w-fit max-w-full rounded-2xl bg-white/85 backdrop-blur-xl p-2 sm:p-2.5 xl:p-3 shadow-elevated border border-white/80 transition-all ${className}`}
     >
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 xl:gap-2.5 2xl:gap-3">
         {/* Transaction Pill Switcher: [ Barchasi | Sotuv | Ijara ] */}
         <div className="flex items-center rounded-xl bg-gray-100/90 p-1 shrink-0 border border-gray-200/50">
           <button
             onClick={() => onTransactionChange("all")}
-            className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+            className={`rounded-lg px-2.5 xl:px-3 py-1.5 text-xs font-bold transition-all ${
               transactionType === "all"
                 ? "bg-brand-primary text-white shadow-card"
                 : "text-gray-600 hover:text-gray-900"
@@ -181,7 +181,7 @@ export function FloatingSearchPanel({
           </button>
           <button
             onClick={() => onTransactionChange("sale")}
-            className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+            className={`rounded-lg px-2.5 xl:px-3 py-1.5 text-xs font-bold transition-all ${
               transactionType === "sale"
                 ? "bg-brand-primary text-white shadow-card"
                 : "text-gray-600 hover:text-gray-900"
@@ -191,7 +191,7 @@ export function FloatingSearchPanel({
           </button>
           <button
             onClick={() => onTransactionChange("rent")}
-            className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+            className={`rounded-lg px-2.5 xl:px-3 py-1.5 text-xs font-bold transition-all ${
               transactionType === "rent"
                 ? "bg-brand-primary text-white shadow-card"
                 : "text-gray-600 hover:text-gray-900"
@@ -202,12 +202,12 @@ export function FloatingSearchPanel({
         </div>
 
         {/* Separator on desktop */}
-        <div className="hidden sm:block h-6 w-[1px] bg-gray-200" />
+        <div className="hidden sm:block h-6 w-[1px] bg-gray-200 shrink-0" />
 
         {/* Text Search Input */}
         {onSearchQueryChange && (
-          <div className="relative flex-1 min-w-[120px] max-w-[170px]">
-            <div className="flex w-full items-center gap-1.5 rounded-xl border border-gray-200/80 bg-white/90 px-3 py-1.5 text-xs font-semibold text-gray-800 focus-within:border-brand-primary focus-within:ring-2 focus-within:ring-brand-primary/20 transition-all">
+          <div className="relative flex-1 min-w-[85px] sm:min-w-[100px] xl:min-w-[120px] 2xl:min-w-[140px] max-w-[160px]">
+            <div className="flex w-full items-center gap-1.5 rounded-xl border border-gray-200/80 bg-white/90 px-2.5 xl:px-3 py-1.5 text-xs font-semibold text-gray-800 focus-within:border-brand-primary focus-within:ring-2 focus-within:ring-brand-primary/20 transition-all">
               <Search className="h-3.5 w-3.5 text-brand-primary shrink-0" />
               <input
                 type="text"
@@ -230,21 +230,21 @@ export function FloatingSearchPanel({
         )}
 
         {/* Dropdown 1: District */}
-        <div className="relative flex-1 min-w-[100px] max-w-[140px]">
+        <div className="relative flex-1 min-w-[80px] sm:min-w-[90px] xl:min-w-[105px] 2xl:min-w-[125px] max-w-[140px]">
           <button
             onClick={() => {
               setDistrictOpen(!districtOpen);
               setTypeOpen(false);
               setPriceOpen(false);
             }}
-            className="flex w-full items-center justify-between gap-1.5 rounded-xl border border-gray-200/80 bg-white/90 px-3 py-2 text-xs font-semibold text-gray-800 hover:border-brand-primary/40 hover:bg-white transition-colors"
+            className="flex w-full items-center justify-between gap-1.5 rounded-xl border border-gray-200/80 bg-white/90 px-2 xl:px-2.5 py-1.5 xl:py-2 text-xs font-semibold text-gray-800 hover:border-brand-primary/40 hover:bg-white transition-colors"
           >
-            <div className="flex items-center gap-1.5 truncate">
+            <div className="flex items-center gap-1.5 truncate min-w-0">
               <MapPin className="h-3.5 w-3.5 text-brand-primary shrink-0" />
               <span className="truncate">{getDistrictLabel()}</span>
             </div>
             <ChevronDown
-              className={`h-3.5 w-3.5 text-gray-400 transition-transform ${
+              className={`h-3.5 w-3.5 text-gray-400 transition-transform shrink-0 ${
                 districtOpen ? "rotate-180" : ""
               }`}
             />
@@ -276,21 +276,21 @@ export function FloatingSearchPanel({
         </div>
 
         {/* Dropdown 2: Property Type */}
-        <div className="relative flex-1 min-w-[100px] max-w-[140px]">
+        <div className="relative flex-1 min-w-[80px] sm:min-w-[90px] xl:min-w-[105px] 2xl:min-w-[125px] max-w-[140px]">
           <button
             onClick={() => {
               setTypeOpen(!typeOpen);
               setDistrictOpen(false);
               setPriceOpen(false);
             }}
-            className="flex w-full items-center justify-between gap-1.5 rounded-xl border border-gray-200/80 bg-white/90 px-3 py-2 text-xs font-semibold text-gray-800 hover:border-brand-primary/40 hover:bg-white transition-colors"
+            className="flex w-full items-center justify-between gap-1.5 rounded-xl border border-gray-200/80 bg-white/90 px-2 xl:px-2.5 py-1.5 xl:py-2 text-xs font-semibold text-gray-800 hover:border-brand-primary/40 hover:bg-white transition-colors"
           >
-            <div className="flex items-center gap-1.5 truncate">
+            <div className="flex items-center gap-1.5 truncate min-w-0">
               <Home className="h-3.5 w-3.5 text-brand-primary shrink-0" />
               <span className="truncate">{getTypeLabel()}</span>
             </div>
             <ChevronDown
-              className={`h-3.5 w-3.5 text-gray-400 transition-transform ${
+              className={`h-3.5 w-3.5 text-gray-400 transition-transform shrink-0 ${
                 typeOpen ? "rotate-180" : ""
               }`}
             />
@@ -322,21 +322,21 @@ export function FloatingSearchPanel({
         </div>
 
         {/* Dropdown 3: Price */}
-        <div className="relative flex-1 min-w-[100px] max-w-[130px]">
+        <div className="relative flex-1 min-w-[75px] sm:min-w-[85px] xl:min-w-[95px] 2xl:min-w-[115px] max-w-[130px]">
           <button
             onClick={() => {
               setPriceOpen(!priceOpen);
               setDistrictOpen(false);
               setTypeOpen(false);
             }}
-            className="flex w-full items-center justify-between gap-1.5 rounded-xl border border-gray-200/80 bg-white/90 px-3 py-2 text-xs font-semibold text-gray-800 hover:border-brand-primary/40 hover:bg-white transition-colors"
+            className="flex w-full items-center justify-between gap-1.5 rounded-xl border border-gray-200/80 bg-white/90 px-2 xl:px-2.5 py-1.5 xl:py-2 text-xs font-semibold text-gray-800 hover:border-brand-primary/40 hover:bg-white transition-colors"
           >
-            <div className="flex items-center gap-1.5 truncate">
+            <div className="flex items-center gap-1.5 truncate min-w-0">
               <Coins className="h-3.5 w-3.5 text-brand-primary shrink-0" />
               <span className="truncate">{getPriceLabel()}</span>
             </div>
             <ChevronDown
-              className={`h-3.5 w-3.5 text-gray-400 transition-transform ${
+              className={`h-3.5 w-3.5 text-gray-400 transition-transform shrink-0 ${
                 priceOpen ? "rotate-180" : ""
               }`}
             />
@@ -418,7 +418,7 @@ export function FloatingSearchPanel({
         </div>
 
         {/* Action / Reset Button & Live Count Badge */}
-        <div className="flex items-center justify-between sm:justify-start gap-2 shrink-0 pt-1 sm:pt-0">
+        <div className="flex items-center justify-between sm:justify-start gap-1.5 xl:gap-2 shrink-0 pt-1 sm:pt-0">
           {/* Redundant on laptop screens since catalog switcher shows totalCount */}
           <div className="flex sm:hidden 2xl:flex items-center gap-1.5 rounded-xl bg-brand-light px-3 py-2 text-xs font-bold text-brand-primary">
             <span className="h-2 w-2 rounded-full bg-brand-primary animate-pulse" />
@@ -429,7 +429,7 @@ export function FloatingSearchPanel({
             <button
               onClick={() => setIsAdvancedModalOpen(true)}
               title={locale === "uz" ? "Kengaytirilgan filtrlar" : "Расширенные фильтры"}
-              className={`relative flex items-center gap-1.5 h-8 px-2.5 rounded-xl border transition-colors shadow-sm text-xs font-bold ${
+              className={`relative flex items-center gap-1 xl:gap-1.5 h-8 px-2 xl:px-2.5 rounded-xl border transition-colors shadow-sm text-xs font-bold ${
                 (advancedFilters.rooms !== "all" ||
                   advancedFilters.minArea !== "" ||
                   advancedFilters.maxArea !== "" ||
@@ -443,8 +443,8 @@ export function FloatingSearchPanel({
                   : "border-gray-200/80 bg-white/90 text-gray-700 hover:text-brand-primary hover:border-brand-primary/40 hover:bg-white"
               }`}
             >
-              <SlidersHorizontal className="h-3.5 w-3.5" />
-              <span className="hidden md:inline">{locale === "uz" ? "Filtrlar" : "Фильтры"}</span>
+              <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
+              <span className="hidden lg:inline">{locale === "uz" ? "Filtrlar" : "Фильтры"}</span>
               {(advancedFilters.rooms !== "all" ||
                 advancedFilters.minArea !== "" ||
                 advancedFilters.maxArea !== "" ||
@@ -474,16 +474,16 @@ export function FloatingSearchPanel({
             onClick={handleSaveCurrentSearch}
             disabled={isSavingSearch}
             title={locale === "uz" ? "Qidiruvni saqlash" : "Сохранить поиск"}
-            className="flex h-8 px-2.5 items-center gap-1.5 rounded-xl border border-gray-200/80 bg-white/90 text-gray-700 hover:text-brand-primary hover:border-brand-primary/40 hover:bg-white transition-colors shadow-sm text-xs font-bold"
+            className="flex h-8 px-2 xl:px-2.5 items-center gap-1 xl:gap-1.5 rounded-xl border border-gray-200/80 bg-white/90 text-gray-700 hover:text-brand-primary hover:border-brand-primary/40 hover:bg-white transition-colors shadow-sm text-xs font-bold"
           >
-            <Bookmark className="h-3.5 w-3.5 text-[#16543C]" />
-            <span className="hidden lg:inline">{locale === "uz" ? "Saqlash" : "Сохранить"}</span>
+            <Bookmark className="h-3.5 w-3.5 text-[#16543C] shrink-0" />
+            <span className="hidden 2xl:inline">{locale === "uz" ? "Saqlash" : "Сохранить"}</span>
           </button>
 
           <button
             onClick={onReset}
             title={t.filters.reset}
-            className="flex h-8 w-8 items-center justify-center rounded-xl border border-gray-200/80 bg-white/90 text-gray-600 hover:text-brand-primary hover:border-brand-primary/40 hover:bg-white transition-colors shadow-sm"
+            className="flex h-8 w-8 items-center justify-center rounded-xl border border-gray-200/80 bg-white/90 text-gray-600 hover:text-brand-primary hover:border-brand-primary/40 hover:bg-white transition-colors shadow-sm shrink-0"
           >
             <RotateCcw className="h-3.5 w-3.5" />
           </button>

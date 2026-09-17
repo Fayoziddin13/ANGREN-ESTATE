@@ -375,7 +375,7 @@ export default function BuyPage() {
         />
 
         {/* Desktop-Only Floating Search & Filter Panel (Top Left) */}
-        <div data-testid="desktop-search-panel" className="hidden sm:block absolute sm:top-4 sm:left-6 sm:right-auto z-20 max-w-2xl pointer-events-none">
+        <div data-testid="desktop-search-panel" className="hidden sm:block absolute sm:top-4 sm:left-6 sm:right-auto z-20 max-w-[calc(100vw-420px)] 2xl:max-w-6xl pointer-events-none">
           <FloatingSearchPanel
             searchQuery={searchQuery}
             onSearchQueryChange={setSearchQuery}
