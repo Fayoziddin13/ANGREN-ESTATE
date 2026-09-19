@@ -36,6 +36,8 @@ import {
   Wifi,
   Scale,
   Video,
+  Handshake,
+  UserCheck,
 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -501,8 +503,16 @@ export default function PropertyDetailView({
                   </div>
 
                   <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
-                    <div className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
-                      {priceDisplay}
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <div className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
+                        {priceDisplay}
+                      </div>
+                      {property.price_negotiable && (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold shadow-xs">
+                          <Handshake className="w-3.5 h-3.5 text-emerald-700" />
+                          <span>{locale === "uz" ? "Narxi kelishiladi" : "Цена договорная"}</span>
+                        </span>
+                      )}
                     </div>
                     <div className="text-sm font-semibold text-gray-500">{secondaryPrice}</div>
                   </div>
@@ -628,7 +638,7 @@ export default function PropertyDetailView({
                       className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-md shadow-rose-600/20 transition-all active:scale-98 cursor-pointer"
                     >
                       <Video className="w-5 h-5" />
-                      <span>{locale === "uz" ? "Video sharh" : "Видео обзор"}</span>
+                      <span>{locale === "uz" ? "Uy video obzori" : "Видеообзор дома"}</span>
                     </a>
                   </div>
                 )}
@@ -726,24 +736,53 @@ export default function PropertyDetailView({
                   </h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {[
-                      { label_uz: "Mebel", label_ru: "Мебель", active: property.amenities.furniture },
-                      { label_uz: "Avtoturargoh", label_ru: "Парковка", active: property.amenities.parking },
-                      { label_uz: "Lift", label_ru: "Лифт", active: property.amenities.elevator },
-                      { label_uz: "Konditsioner", label_ru: "Кондиционер", active: property.amenities.ac },
-                      { label_uz: "Internet / Wi-Fi", label_ru: "Интернет", active: property.amenities.internet },
-                      { label_uz: "Balkon / Terasa", label_ru: "Балкон", active: property.amenities.balcony },
-                    ].map((item, idx) => (
-                      <div
-                        key={idx}
-                        className={`flex items-center gap-2 text-xs font-semibold ${
-                          item.active ? "text-gray-800" : "text-gray-400 line-through opacity-60"
-                        }`}
-                      >
-                        <span className={`w-2 h-2 rounded-full ${item.active ? "bg-[#16543C]" : "bg-gray-300"}`} />
-                        <span>{locale === "uz" ? item.label_uz : item.label_ru}</span>
-                      </div>
-                    ))}
+                      { label_uz: "Yashil hudud", label_ru: "Зеленая зона", active: property.amenities?.green_zone },
+                      { label_uz: "Garaj", label_ru: "Гараж", active: property.amenities?.garage },
+                      { label_uz: "Molxona / Saroy", label_ru: "Сарай / хозпостройки", active: property.amenities?.barn },
+                      { label_uz: "Omborxona", label_ru: "Кладовая", active: property.amenities?.storage },
+                      { label_uz: "Basseyn", label_ru: "Бассейн", active: property.amenities?.pool },
+                      { label_uz: "Yozgi oshxona", label_ru: "Летняя кухня", active: property.amenities?.summer_kitchen },
+                      { label_uz: "Bog‘", label_ru: "Сад", active: property.amenities?.garden },
+                      { label_uz: "Mebel", label_ru: "Мебель", active: property.amenities?.furniture || property.furniture },
+                      { label_uz: "Avtoturargoh", label_ru: "Парковка", active: property.amenities?.parking || property.parking },
+                      { label_uz: "Lift", label_ru: "Лифт", active: property.amenities?.elevator },
+                      { label_uz: "Konditsioner", label_ru: "Кондиционер", active: property.amenities?.ac },
+                      { label_uz: "Internet / Wi-Fi", label_ru: "Интернет", active: property.amenities?.internet || property.utilities?.internet },
+                      { label_uz: "Balkon / Terasa", label_ru: "Балкон", active: property.amenities?.balcony },
+                    ]
+                      .filter((item) => property.property_type === "apartment" ? true : Boolean(item.active))
+                      .map((item, idx) => (
+                        <div
+                          key={idx}
+                          className={`flex items-center gap-2 text-xs font-semibold ${
+                            item.active ? "text-gray-800" : "text-gray-400 line-through opacity-60"
+                          }`}
+                        >
+                          <span className={`w-2 h-2 rounded-full ${item.active ? "bg-[#16543C]" : "bg-gray-300"}`} />
+                          <span>{locale === "uz" ? item.label_uz : item.label_ru}</span>
+                        </div>
+                      ))}
                   </div>
+
+                  {/* Custom property features if specified */}
+                  {Array.isArray(property.amenities?.property_features) && property.amenities.property_features.length > 0 && (
+                    <div className="pt-3.5 mt-3.5 border-t border-gray-100">
+                      <div className="text-xs font-bold text-gray-700 mb-2">
+                        {locale === "uz" ? "Qo‘shimcha obyektlar:" : "Дополнительные объекты:"}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {property.amenities.property_features.map((c, i) => (
+                          <span
+                            key={i}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 text-[#16543C] text-xs font-bold border border-emerald-100"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                            <span>{c}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -880,26 +919,18 @@ export default function PropertyDetailView({
                         className="w-full py-3.5 px-4 rounded-2xl border border-pink-200 bg-pink-50/60 hover:bg-pink-100 text-pink-700 text-sm font-bold shadow-sm flex items-center justify-center gap-2 transition-all active:scale-98"
                       >
                         <Instagram className="w-4 h-4 text-pink-600" />
-                        <span>{locale === "uz" ? "Instagram profil" : "Профиль Instagram"}</span>
+                        <span>Instagram</span>
                       </a>
                     )}
-                  </div>
-                )}
 
-                {user && (user.role === "admin" || (user as any).is_admin) && property.owner_phone && (
-                  <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-xs space-y-1">
-                    <div className="font-bold text-amber-900 flex items-center justify-between">
-                      <span>{locale === "uz" ? "🔒 Mulk egasi raqami" : "🔒 Номер владельца"}</span>
-                      <span className="text-[10px] text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md font-semibold">
-                        {locale === "uz" ? "Faqat admin" : "Только админ"}
-                      </span>
-                    </div>
-                    <a
-                      href={`tel:${property.owner_phone}`}
-                      className="inline-block font-mono font-black text-amber-950 text-sm hover:underline"
+                    {/* Realtor Profile Button */}
+                    <Link
+                      href="/kontaktlar#realtors"
+                      className="w-full py-3 px-4 rounded-2xl border border-gray-200 hover:border-[#16543C] bg-gray-50 hover:bg-emerald-50/50 text-gray-700 hover:text-[#16543C] text-sm font-bold shadow-xs flex items-center justify-center gap-2 transition-all active:scale-98"
                     >
-                      {property.owner_phone}
-                    </a>
+                      <UserCheck className="w-4 h-4 text-[#16543C]" />
+                      <span>{locale === "uz" ? "Rieltor profili" : "Профиль риелтора"}</span>
+                    </Link>
                   </div>
                 )}
 

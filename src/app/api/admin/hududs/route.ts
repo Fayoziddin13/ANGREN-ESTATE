@@ -161,6 +161,33 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ success: false, error: "ID_REQUIRED" }, { status: 400 });
     }
 
+    const PROTECTED_HUDUDS = ["markaz", "5-mavze", "6-mavze", "7-mavze", "dukent", "geolog", "yangiobod"];
+    if (PROTECTED_HUDUDS.includes(id.toLowerCase().trim())) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "PROTECTED_HUDUD",
+          message: "Ushbu asosiy shahar hududini o‘chirib bo‘lmaydi",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Safely reassign any property assigned to this hudud to "markaz"
+    try {
+      await supabaseAdmin
+        .from("properties")
+        .update({
+          district: "markaz",
+          district_name_uz: "Markaz",
+          district_name_ru: "Центр",
+          hudud_id: null,
+        })
+        .or(`district.eq.${id},district_name_uz.eq.${id},hudud_id.eq.${id}`);
+    } catch (reassignErr) {
+      console.warn("[Admin Hududs] Property reassignment warning:", reassignErr);
+    }
+
     await Promise.all([
       supabaseAdmin.from("districts").delete().eq("id", id),
       // Clean from app_settings

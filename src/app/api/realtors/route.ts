@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const metaMap = getRealtorsMeta();
+    const metaMap = await getRealtorsMeta();
 
     const mappedRealtors = (realtors || []).map((r) => {
       const extra = metaMap[r.id] || {};

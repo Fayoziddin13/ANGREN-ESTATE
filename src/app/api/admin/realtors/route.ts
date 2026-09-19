@@ -29,7 +29,9 @@ function sanitizeInstagramUrl(url: any): string | null {
   let fullUrl = trimmed;
   if (fullUrl.startsWith("@")) {
     fullUrl = `https://instagram.com/${fullUrl.slice(1)}`;
-  } else if (!fullUrl.startsWith("http://") && !fullUrl.startsWith("https://")) {
+  } else if (fullUrl.startsWith("http://")) {
+    fullUrl = `https://${fullUrl.slice(7)}`;
+  } else if (!fullUrl.startsWith("https://")) {
     fullUrl = `https://instagram.com/${fullUrl}`;
   }
   if (!fullUrl.startsWith("https://")) {
@@ -107,7 +109,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 4. Attach aggregated counts and location mapping
-    const metaMap = getRealtorsMeta();
+    const metaMap = await getRealtorsMeta();
     const enrichedRealtors = realtorList.map((r) => {
       const extra = metaMap[r.id] || {};
       const locText = (r.districts && Array.isArray(r.districts) && r.districts.length > 0)
@@ -261,7 +263,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (createdRealtor?.id) {
-      saveRealtorMeta(createdRealtor.id, {
+      await saveRealtorMeta(createdRealtor.id, {
         instagram_url: validatedInstagram,
         photo_url: resolvedPhoto,
       });

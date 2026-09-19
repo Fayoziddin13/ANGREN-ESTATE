@@ -83,6 +83,8 @@ export function mapRowToProperty(row: any): Property {
       title_ru: row.title_ru || "",
       description_uz: row.description_uz || "",
       description_ru: row.description_ru || "",
+      note_uz: row.note_uz || amens?.note_uz || amens?.customNote || undefined,
+      note_ru: row.note_ru || amens?.note_ru || undefined,
       address_uz: row.address_uz || row.address || "",
       address_ru: row.address_ru || row.address || "",
       district_name_uz: row.district_name_uz || row.district || "Markaz",
@@ -188,6 +190,8 @@ export function mapPropertyToDb(data: any): Record<string, any> {
   const baseAmenities =
     typeof data.amenities === "object" && data.amenities !== null ? { ...data.amenities } : {};
   if (data.owner_phone) baseAmenities.owner_phone = data.owner_phone;
+  if (data.note_uz) baseAmenities.note_uz = data.note_uz;
+  if (data.note_ru) baseAmenities.note_ru = data.note_ru;
   if (data.facade_m) baseAmenities.facade_m = Number(data.facade_m);
   if (data.depth_m) baseAmenities.depth_m = Number(data.depth_m);
   if (data.dimensions) {
@@ -200,6 +204,14 @@ export function mapPropertyToDb(data: any): Record<string, any> {
   if (data.is_good_deal !== undefined) baseAmenities.is_good_deal = Boolean(data.is_good_deal);
   if (data.hudud_id) baseAmenities.hudud_id = data.hudud_id;
   if (Array.isArray(data.badges)) baseAmenities.badges = data.badges;
+  if (data.amenities?.property_features) baseAmenities.property_features = data.amenities.property_features;
+  if (data.amenities?.green_zone !== undefined) baseAmenities.green_zone = Boolean(data.amenities.green_zone);
+  if (data.amenities?.garage !== undefined) baseAmenities.garage = Boolean(data.amenities.garage);
+  if (data.amenities?.barn !== undefined) baseAmenities.barn = Boolean(data.amenities.barn);
+  if (data.amenities?.storage !== undefined) baseAmenities.storage = Boolean(data.amenities.storage);
+  if (data.amenities?.pool !== undefined) baseAmenities.pool = Boolean(data.amenities.pool);
+  if (data.amenities?.summer_kitchen !== undefined) baseAmenities.summer_kitchen = Boolean(data.amenities.summer_kitchen);
+  if (data.amenities?.garden !== undefined) baseAmenities.garden = Boolean(data.amenities.garden);
 
   return {
     id: data.id,
@@ -305,6 +317,22 @@ async function writeCanonicalLocal(properties: Property[]): Promise<void> {
 // =============================================================================
 
 /**
+ * Strip confidential owner information before returning property to public consumers.
+ * Owner phone is strictly for admin reference and must never be exposed publicly.
+ */
+export function sanitizePublicProperty(property: Property): Property {
+  if (!property) return property;
+  const sanitized: Property = { ...property };
+  delete (sanitized as any).owner_phone;
+  if (sanitized.amenities && typeof sanitized.amenities === "object") {
+    const cleanAmenities = { ...sanitized.amenities };
+    delete (cleanAmenities as any).owner_phone;
+    sanitized.amenities = cleanAmenities;
+  }
+  return sanitized;
+}
+
+/**
  * Fetch all published properties.
  * Public rule: ONLY status === 'published' is returned.
  * Draft and archived properties are filtered out by Supabase RLS and query filters.
@@ -349,7 +377,7 @@ export async function getPublishedProperties(filters?: PropertyFilterParams): Pr
 
       const { data, error } = await query.order("created_at", { ascending: false });
       if (!error && data) {
-        return data.map(mapRowToProperty);
+        return data.map(mapRowToProperty).map(sanitizePublicProperty);
       }
       console.warn("[Supabase] getPublishedProperties error:", error?.message);
     } catch (err) {
@@ -359,8 +387,9 @@ export async function getPublishedProperties(filters?: PropertyFilterParams): Pr
 
   // Fallback if Supabase credentials are placeholders
   const all = await readCanonicalLocal();
-  return all.filter((property) => {
-    if (property.status !== "published") return false;
+  return all
+    .filter((property) => {
+      if (property.status !== "published") return false;
     const dealType = filters?.deal_type || filters?.transaction_type;
     if (dealType && dealType !== "all") {
       const pType = property.deal_type || property.transaction_type;
@@ -390,7 +419,8 @@ export async function getPublishedProperties(filters?: PropertyFilterParams): Pr
       if (!match) return false;
     }
     return true;
-  });
+  })
+    .map(sanitizePublicProperty);
 }
 
 /**

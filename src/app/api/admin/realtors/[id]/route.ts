@@ -47,7 +47,9 @@ function sanitizeInstagramUrl(url: any): string | null {
   let fullUrl = trimmed;
   if (fullUrl.startsWith("@")) {
     fullUrl = `https://instagram.com/${fullUrl.slice(1)}`;
-  } else if (!fullUrl.startsWith("http://") && !fullUrl.startsWith("https://")) {
+  } else if (fullUrl.startsWith("http://")) {
+    fullUrl = `https://${fullUrl.slice(7)}`;
+  } else if (!fullUrl.startsWith("https://")) {
     fullUrl = `https://instagram.com/${fullUrl}`;
   }
   if (!fullUrl.startsWith("https://")) {
@@ -112,7 +114,7 @@ export async function PATCH(
       try {
         validatedInstagram = sanitizeInstagramUrl(rawInsta);
         updates.instagram_url = validatedInstagram;
-        saveRealtorMeta(id, { instagram_url: validatedInstagram });
+        await saveRealtorMeta(id, { instagram_url: validatedInstagram });
       } catch (valErr: any) {
         return NextResponse.json({ success: false, error: valErr.message }, { status: 400 });
       }
@@ -164,7 +166,7 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
-    const extra = getRealtorsMeta()[id] || {};
+    const extra = (await getRealtorsMeta())[id] || {};
     const resPhoto = updates.photo_url !== undefined ? updates.photo_url : (updatedRealtor?.avatar_url || updatedRealtor?.photo_url || extra.photo_url || null);
     const resInsta = updates.instagram_url !== undefined ? updates.instagram_url : (updatedRealtor?.instagram_url || updatedRealtor?.instagram || extra.instagram_url || null);
     const locText = (updatedRealtor?.districts && Array.isArray(updatedRealtor.districts) && updatedRealtor.districts.length > 0)

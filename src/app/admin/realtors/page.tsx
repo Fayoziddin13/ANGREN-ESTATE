@@ -31,7 +31,7 @@ import {
   Power,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
-import { useRealtors } from "@/lib/realtorStore";
+import { useRealtors, formatInstagramUrl } from "@/lib/realtorStore";
 import { useProperties } from "@/lib/propertyStore";
 import { Realtor, Property } from "@/lib/types";
 
@@ -582,11 +582,11 @@ export default function AdminRealtorsPage() {
                         <span className="truncate font-medium">{realtor.telegram}</span>
                       </div>
                     )}
-                    {(realtor.instagram_url || realtor.instagram) && (
+                    {formatInstagramUrl(realtor.instagram_url || realtor.instagram) && (
                       <div className="flex items-center gap-1.5">
                         <Instagram className="h-3.5 w-3.5 text-pink-600 shrink-0" />
                         <a
-                          href={(realtor.instagram_url || realtor.instagram) || undefined}
+                          href={formatInstagramUrl(realtor.instagram_url || realtor.instagram)!}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="truncate text-pink-600 font-semibold hover:underline"
@@ -1042,8 +1042,8 @@ export default function AdminRealtorsPage() {
                 />
               </div>
 
-              {/* Phone & Telegram */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Phone, Telegram & Instagram */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <label className="font-bold text-slate-700">
                     {t.admin.realtorPhone} <span className="text-red-500">*</span>
@@ -1066,6 +1066,18 @@ export default function AdminRealtorsPage() {
                     value={formData.telegram}
                     onChange={(e) => setFormData({ ...formData, telegram: e.target.value })}
                     placeholder="@username"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#16543C] outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">
+                    {t.admin.realtorInstagram || "Instagram"}
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.instagram_url}
+                    onChange={(e) => setFormData({ ...formData, instagram_url: e.target.value })}
+                    placeholder="@username yoki URL"
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#16543C] outline-none"
                   />
                 </div>

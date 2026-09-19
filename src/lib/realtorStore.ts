@@ -17,6 +17,21 @@ export const defaultAdminContact: AdminContactInfo = {
 };
 
 /**
+ * Safely format Instagram handles or URLs into full HTTPS links.
+ * Handles @username, username, or full URLs.
+ */
+export function formatInstagramUrl(url?: string | null): string | null {
+  if (!url) return null;
+  const trimmed = String(url).trim();
+  if (!trimmed) return null;
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed.replace(/^http:\/\//, "https://");
+  }
+  const clean = trimmed.replace(/^@+/, "").replace(/^\/+/, "");
+  return clean ? `https://instagram.com/${clean}` : null;
+}
+
+/**
  * Modern Supabase-backed React Hook for Realtors.
  * Completely eliminates browser client storage and mock seeds as production data sources.
  * Connects directly to server-side APIs backed by canonical database records:

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPublishedProperties } from "@/lib/properties";
+import { getPublishedProperties, sanitizePublicProperty } from "@/lib/properties";
 import { TransactionType, PropertyType } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     const rooms = searchParams.get("rooms") ? Number(searchParams.get("rooms")) : undefined;
     const search_query = searchParams.get("search_query") || searchParams.get("q") || undefined;
 
-    const properties = await getPublishedProperties({
+    const rawProperties = await getPublishedProperties({
       transaction_type,
       deal_type: transaction_type,
       district,
@@ -32,6 +32,8 @@ export async function GET(request: NextRequest) {
       rooms,
       search_query,
     });
+
+    const properties = rawProperties.map(sanitizePublicProperty);
 
     return NextResponse.json({
       success: true,

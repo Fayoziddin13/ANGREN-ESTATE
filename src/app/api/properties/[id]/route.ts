@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPropertyById } from "@/lib/properties";
+import { getPropertyById, sanitizePublicProperty } from "@/lib/properties";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +29,7 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      property,
+      property: sanitizePublicProperty(property),
     });
   } catch (error) {
     console.error(`Error in /api/properties/${params?.id} GET:`, error);

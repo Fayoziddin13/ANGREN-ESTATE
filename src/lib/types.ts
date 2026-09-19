@@ -35,6 +35,15 @@ export interface PropertyAmenities {
   ac: boolean;
   balcony: boolean;
   internet: boolean;
+  green_zone?: boolean;
+  garage?: boolean;
+  barn?: boolean;
+  storage?: boolean;
+  pool?: boolean;
+  summer_kitchen?: boolean;
+  garden?: boolean;
+  property_features?: string[];
+  [key: string]: any;
 }
 
 export interface Property {

@@ -67,6 +67,9 @@ import {
   getPropertyStatusLabel,
   getRenovationLabel,
 } from "@/lib/propertyFormatters";
+import { getInfrastructureAround } from "@/lib/infrastructureService";
+
+const PROTECTED_HUDUDS = ["markaz", "5-mavze", "6-mavze", "7-mavze", "dukent", "geolog", "yangiobod"];
 
 const AdminLocationPicker = dynamic(
   () => import("@/components/admin/AdminLocationPicker").then((mod) => mod.AdminLocationPicker),
@@ -141,6 +144,17 @@ export default function AddPropertyPage() {
   ]);
   const [customSurroundings, setCustomSurroundings] = useState<string[]>([]);
   const [newSurroundingInput, setNewSurroundingInput] = useState("");
+
+  // Property-specific physical features
+  const [propertyFeatures, setPropertyFeatures] = useState<string[]>([
+    "Yashil hudud",
+    "Garaj",
+  ]);
+  const [newPropertyFeatureInput, setNewPropertyFeatureInput] = useState("");
+
+  // Hudud deletion confirmation state
+  const [hududToDelete, setHududToDelete] = useState<HududItem | null>(null);
+  const [isDeletingHudud, setIsDeletingHudud] = useState(false);
 
   // STEP 4: Dinamik Parametrlar
   // 4A Kvartira
@@ -231,6 +245,42 @@ export default function AddPropertyPage() {
     return null;
   }, [facadeM, depthM]);
 
+  // Live nearby infrastructure calculation based on map coordinates
+  const liveNearbyInfrastructure = useMemo(() => {
+    if (!lat || !lng) return [];
+    return getInfrastructureAround(lat, lng, 3000, locale);
+  }, [lat, lng, locale]);
+
+  // Delete custom hudud handler
+  const handleDeleteHudud = async (h: HududItem) => {
+    if (PROTECTED_HUDUDS.includes(h.id.toLowerCase().trim())) {
+      alert(locale === "uz" ? "Ushbu asosiy shahar hududini o‘chirib bo‘lmaydi." : "Этот основной район города нельзя удалить.");
+      return;
+    }
+    setIsDeletingHudud(true);
+    try {
+      const res = await fetch(`/api/admin/hududs?id=${encodeURIComponent(h.id)}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.success) {
+        setHududList((prev) => prev.filter((item) => item.id !== h.id));
+        if (hududId === h.id || district === h.name_uz) {
+          setHududId("markaz");
+          setDistrict("Markaz");
+        }
+        setHududToDelete(null);
+      } else {
+        alert(data.message || (locale === "uz" ? "Hududni o‘chirishda xatolik yuz berdi" : "Ошибка при удалении района"));
+      }
+    } catch (err: any) {
+      console.error("Delete hudud error:", err);
+      alert(err?.message || "Xatolik");
+    } finally {
+      setIsDeletingHudud(false);
+    }
+  };
+
   // Fetch hududs list on mount
   useEffect(() => {
     fetch("/api/hududs")
@@ -287,6 +337,7 @@ export default function AddPropertyPage() {
           hududId,
           surroundings,
           customSurroundings,
+          propertyFeatures,
           totalFloors,
           floor,
           rooms,
@@ -339,6 +390,7 @@ export default function AddPropertyPage() {
     hududId,
     surroundings,
     customSurroundings,
+    propertyFeatures,
     totalFloors,
     floor,
     rooms,
@@ -394,6 +446,7 @@ export default function AddPropertyPage() {
       if (d.hududId) setHududId(d.hududId);
       if (Array.isArray(d.surroundings)) setSurroundings(d.surroundings);
       if (Array.isArray(d.customSurroundings)) setCustomSurroundings(d.customSurroundings);
+      if (Array.isArray(d.propertyFeatures)) setPropertyFeatures(d.propertyFeatures);
       if (d.totalFloors) setTotalFloors(d.totalFloors);
       if (d.floor) setFloor(d.floor);
       if (d.rooms) setRooms(d.rooms);
@@ -796,6 +849,14 @@ export default function AddPropertyPage() {
           ac: hasAc,
           balcony: propertyType === "apartment",
           internet: utilities.internet,
+          green_zone: propertyFeatures.includes("Yashil hudud") || propertyFeatures.includes("Зеленая зона"),
+          garage: propertyFeatures.includes("Garaj") || propertyFeatures.includes("Гараж") || yardObjects.includes("Garaj") || yardObjects.includes("Гараж"),
+          barn: yardObjects.includes("Molxona") || yardObjects.includes("Сарай"),
+          storage: yardObjects.includes("Ombor") || yardObjects.includes("Кладовая"),
+          pool: yardObjects.includes("Basseyn") || yardObjects.includes("Бассейн"),
+          summer_kitchen: yardObjects.includes("Yozgi oshxona") || yardObjects.includes("Летняя кухня"),
+          garden: yardObjects.includes("Bog‘") || yardObjects.includes("Сад") || propertyFeatures.includes("Bog‘"),
+          property_features: propertyFeatures,
           ...((commercialFeatures.length > 0 ? { commercialFeatures } : {}) as any),
           ...((combinedInfrastructure.length > 0 ? { infrastructure: combinedInfrastructure } : {}) as any),
           ...((additionalNote ? { customNote: additionalNote } : {}) as any),
@@ -1473,32 +1534,83 @@ export default function AddPropertyPage() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                 {hududList.map((h) => {
                   const isSelected = hududId === h.id || district === h.name_uz;
+                  const isProtected = PROTECTED_HUDUDS.includes(h.id.toLowerCase().trim());
                   return (
-                    <button
+                    <div
                       key={h.id}
-                      type="button"
-                      onClick={() => {
-                        setHududId(h.id);
-                        setDistrict(h.name_uz);
-                        if (h.latitude && h.longitude) {
-                          setLat(h.latitude);
-                          setLng(h.longitude);
-                        }
-                      }}
-                      className={`p-2.5 rounded-xl border text-left transition-all ${
+                      className={`p-2.5 rounded-xl border flex items-center justify-between transition-all ${
                         isSelected
                           ? "border-[#16543C] bg-emerald-50 text-[#16543C] font-bold ring-1 ring-[#16543C]"
                           : "border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-medium"
                       }`}
                     >
-                      <div className="flex items-center justify-between">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setHududId(h.id);
+                          setDistrict(h.name_uz);
+                          if (h.latitude && h.longitude) {
+                            setLat(h.latitude);
+                            setLng(h.longitude);
+                          }
+                        }}
+                        className="flex-1 text-left truncate flex items-center justify-between mr-1"
+                      >
                         <span className="truncate">{locale === "uz" ? h.name_uz : h.name_ru}</span>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-[#16543C] shrink-0" />}
-                      </div>
-                    </button>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-[#16543C] shrink-0 ml-1" />}
+                      </button>
+                      {!isProtected && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setHududToDelete(h);
+                          }}
+                          title={locale === "uz" ? "Hududni o‘chirish" : "Удалить район"}
+                          className="p-1 rounded-lg hover:bg-rose-100 text-rose-500 hover:text-rose-700 transition-colors shrink-0"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
                   );
                 })}
               </div>
+
+              {/* Hudud deletion confirmation modal */}
+              {hududToDelete && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+                  <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
+                    <h3 className="text-base font-black text-slate-900">
+                      {locale === "uz" ? "Hududni o‘chirishni tasdiqlang" : "Подтвердите удаление района"}
+                    </h3>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      {locale === "uz"
+                        ? `«${hududToDelete.name_uz}» hududini o‘chirishni istaysizmi? Ushbu hududga biriktirilgan obyektlar xavfsiz tarzda «Markaz» hududiga o‘tkaziladi.`
+                        : `Вы уверены, что хотите удалить район «${hududToDelete.name_ru || hududToDelete.name_uz}»? Все объекты этого района будут безопасно переведены в район «Центр».`}
+                    </p>
+                    <div className="flex items-center justify-end gap-2 pt-2">
+                      <button
+                        type="button"
+                        disabled={isDeletingHudud}
+                        onClick={() => setHududToDelete(null)}
+                        className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all"
+                      >
+                        {locale === "uz" ? "Bekor qilish" : "Отмена"}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isDeletingHudud}
+                        onClick={() => handleDeleteHudud(hududToDelete)}
+                        className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all flex items-center gap-1.5"
+                      >
+                        {isDeletingHudud && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                        <span>{locale === "uz" ? "O‘chirish" : "Удалить"}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* 3.3 Xaritadan nuqta belgilash (Exact coordinates) */}
@@ -1527,12 +1639,163 @@ export default function AddPropertyPage() {
                   isLandOrYard={propertyType === "house_yard" || propertyType === "land"}
                 />
               </div>
+
+              {/* Automatic nearby infrastructure detection & calculation */}
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200/80 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black uppercase tracking-wider text-emerald-900 flex items-center gap-1.5">
+                    <Compass className="w-4 h-4 text-emerald-700" />
+                    <span>{locale === "uz" ? "Yaqin atrofdagi infratuzilma (Avtomatik)" : "Инфраструктура рядом (Автоматически)"}</span>
+                  </span>
+                  <span className="text-[11px] font-bold text-emerald-700">
+                    {liveNearbyInfrastructure.length} {locale === "uz" ? "yo‘nalish aniqlandi" : "категорий рядом"}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {liveNearbyInfrastructure.slice(0, 8).map((s) => (
+                    <div
+                      key={s.category}
+                      className="p-2 rounded-xl bg-white border border-emerald-100 text-xs shadow-2xs space-y-0.5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-extrabold text-slate-900 truncate">
+                          {locale === "uz" ? s.labelUz : s.labelRu}
+                        </span>
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                          {s.closestDistance}
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-slate-500">
+                        {s.count} {locale === "uz" ? "ta maskan" : "объекта"}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            {/* 3.4 & 3.5 Atrofdagi obyektlar (Infratuzilma) + Qo'shish */}
+            {/* 3.4 Mulk qulayliklari va Obyektlari (Property-specific features) */}
+            <div className="space-y-2 pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-black uppercase tracking-wider text-slate-700">
+                  {locale === "uz" ? "Mulk qulayliklari va obyektlari" : "Особенности и удобства объекта"}
+                </label>
+                <span className="text-[11px] text-slate-400">
+                  {locale === "uz" ? "Mulkning o‘ziga tegishli qulayliklar" : "Физически принадлежащие объекту"}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 pt-1">
+                {[
+                  { uz: "Yashil hudud", ru: "Зеленая зона" },
+                  { uz: "Garaj", ru: "Гараж" },
+                  { uz: "Molxona / Saroy", ru: "Сарай / хозпостройки" },
+                  { uz: "Omborxona", ru: "Кладовая" },
+                  { uz: "Basseyn", ru: "Бассейн" },
+                  { uz: "Yozgi oshxona", ru: "Летняя кухня" },
+                  { uz: "Bog‘", ru: "Сад" },
+                ].map((feat) => {
+                  const isChecked = propertyFeatures.includes(feat.uz);
+                  return (
+                    <button
+                      key={feat.uz}
+                      type="button"
+                      onClick={() => {
+                        if (isChecked) {
+                          setPropertyFeatures(propertyFeatures.filter((f) => f !== feat.uz));
+                        } else {
+                          setPropertyFeatures([...propertyFeatures, feat.uz]);
+                        }
+                      }}
+                      className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all ${
+                        isChecked
+                          ? "bg-emerald-50 border-[#16543C] text-[#16543C] font-bold"
+                          : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 text-xs"
+                      }`}
+                    >
+                      <span className="text-xs">{locale === "uz" ? feat.uz : feat.ru}</span>
+                      {isChecked ? (
+                        <CheckSquare className="w-4 h-4 text-[#16543C] shrink-0" />
+                      ) : (
+                        <Square className="w-4 h-4 text-slate-300 shrink-0" />
+                      )}
+                    </button>
+                  );
+                })}
+
+                {/* Custom property features */}
+                {propertyFeatures
+                  .filter(
+                    (f) =>
+                      ![
+                        "Yashil hudud",
+                        "Garaj",
+                        "Molxona / Saroy",
+                        "Omborxona",
+                        "Basseyn",
+                        "Yozgi oshxona",
+                        "Bog‘",
+                      ].includes(f)
+                  )
+                  .map((customFeat) => (
+                    <div
+                      key={customFeat}
+                      className="p-2.5 rounded-xl border bg-emerald-50 border-[#16543C] text-[#16543C] font-bold flex items-center justify-between text-xs"
+                    >
+                      <span className="truncate">{customFeat}</span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setPropertyFeatures(propertyFeatures.filter((f) => f !== customFeat))
+                        }
+                        className="text-red-500 hover:text-red-700 ml-1"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+              </div>
+
+              {/* Add custom feature input */}
+              <div className="flex items-center gap-2 pt-2">
+                <input
+                  type="text"
+                  value={newPropertyFeatureInput}
+                  onChange={(e) => setNewPropertyFeatureInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && newPropertyFeatureInput.trim()) {
+                      e.preventDefault();
+                      setPropertyFeatures([...propertyFeatures, newPropertyFeatureInput.trim()]);
+                      setNewPropertyFeatureInput("");
+                    }
+                  }}
+                  placeholder={
+                    locale === "uz"
+                      ? "Boshqa qulaylik qo‘shish (masalan: Sauna, Terasa)..."
+                      : "Добавить другое удобство (например: Сауна, Терраса)..."
+                  }
+                  className="flex-1 px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#16543C] outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (newPropertyFeatureInput.trim()) {
+                      setPropertyFeatures([...propertyFeatures, newPropertyFeatureInput.trim()]);
+                      setNewPropertyFeatureInput("");
+                    }
+                  }}
+                  className="px-3.5 py-2 rounded-xl bg-[#16543C] hover:bg-[#0E3324] text-white text-xs font-bold transition-colors flex items-center gap-1"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>{locale === "uz" ? "Qo‘shish" : "Добавить"}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 3.5 Atrofdagi shahar infratuzilmasi teglari */}
             <div className="space-y-2 pt-2 border-t border-slate-100">
               <label className="text-xs font-black uppercase tracking-wider text-slate-700">
-                {locale === "uz" ? "Atrofdagi obyektlar va Infratuzilma" : "Окружение и инфраструктура рядом"}
+                {locale === "uz" ? "Atrofdagi qo‘shimcha nishonlar" : "Дополнительные ориентиры окружения"}
               </label>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 pt-1">
@@ -1594,7 +1857,7 @@ export default function AddPropertyPage() {
                 ))}
               </div>
 
-              {/* 3.5 + Qo'shish */}
+              {/* + Qo'shish */}
               <div className="flex items-center gap-2 pt-2">
                 <input
                   type="text"
@@ -1607,7 +1870,7 @@ export default function AddPropertyPage() {
                       setNewSurroundingInput("");
                     }
                   }}
-                  placeholder={locale === "uz" ? "Boshqa obyekt qo‘shish (masalan: Basseyn, Bank, Masjid)..." : "Добавить другой объект (например: Бассейн, Банк, Мечеть)..."}
+                  placeholder={locale === "uz" ? "Boshqa obyekt qo‘shish (masalan: Bank, Masjid)..." : "Добавить другой объект (например: Банк, Мечеть)..."}
                   className="flex-1 px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#16543C] outline-none"
                 />
                 <button
@@ -1652,33 +1915,91 @@ export default function AddPropertyPage() {
             {/* 4A — KVARTIRA */}
             {propertyType === "apartment" && (
               <div className="space-y-5">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="space-y-1">
-                    <span className="text-[11px] font-bold text-slate-600">
-                      {locale === "uz" ? "Bino qavatlari soni *" : "Этажность здания *"}
+                {/* Qavatlar dinamik ko'rsatkichi (Badge) */}
+                <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-[#16543C]" />
+                    <span className="text-xs font-bold text-slate-800">
+                      {locale === "uz" ? "Tanlangan qavat holati:" : "Выбранный этаж:"}
                     </span>
-                    <input
-                      type="number"
-                      min={1}
-                      max={50}
-                      value={totalFloors}
-                      onChange={(e) => setTotalFloors(Number(e.target.value))}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold focus:ring-2 focus:ring-[#16543C] outline-none"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-[11px] font-bold text-slate-600">
-                      {locale === "uz" ? "Kvartira qavati *" : "Этаж квартиры *"}
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#16543C] text-white text-xs font-black">
+                      {floor} / {totalFloors} {locale === "uz" ? "- qavat" : "этаж"}
                     </span>
-                    <input
-                      type="number"
-                      min={1}
-                      max={totalFloors || 50}
-                      value={floor}
-                      onChange={(e) => setFloor(Number(e.target.value))}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold focus:ring-2 focus:ring-[#16543C] outline-none"
-                    />
                   </div>
+                  <span className="text-[11px] font-semibold text-emerald-800">
+                    {locale === "uz"
+                      ? `${totalFloors} qavatli binoning ${floor}-qavati`
+                      : `${floor}-й этаж из ${totalFloors} этажей`}
+                  </span>
+                </div>
+
+                {/* Range Slider 1: Bino qavatlari soni (1-25) */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-700">
+                      {locale === "uz" ? "Bino qavatlari soni (1 — 25) *" : "Этажность здания (1 — 25) *"}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-xs font-black text-[#16543C]">
+                        {totalFloors} {locale === "uz" ? "qavat" : "эт."}
+                      </span>
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    min={1}
+                    max={25}
+                    value={totalFloors}
+                    onChange={(e) => {
+                      const newTotal = Number(e.target.value);
+                      setTotalFloors(newTotal);
+                      if (floor > newTotal) {
+                        setFloor(newTotal);
+                      }
+                    }}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#16543C]"
+                  />
+                  <div className="flex justify-between text-[10px] font-bold text-slate-400 px-0.5">
+                    <span>1</span>
+                    <span>5</span>
+                    <span>9</span>
+                    <span>16</span>
+                    <span>25</span>
+                  </div>
+                </div>
+
+                {/* Range Slider 2: Kvartira qavati (1 — totalFloors) */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-700">
+                      {locale === "uz" ? `Kvartira qavati (1 — ${totalFloors}) *` : `Этаж квартиры (1 — ${totalFloors}) *`}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-xs font-black text-[#16543C]">
+                        {floor}-qavat
+                      </span>
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    min={1}
+                    max={Math.max(1, totalFloors)}
+                    value={floor}
+                    onChange={(e) => {
+                      const newFloor = Number(e.target.value);
+                      setFloor(Math.min(newFloor, totalFloors));
+                    }}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#16543C]"
+                  />
+                  <div className="flex justify-between text-[10px] font-bold text-slate-400 px-0.5">
+                    <span>1</span>
+                    <span>{Math.round(totalFloors / 2) || 1}</span>
+                    <span>{totalFloors}</span>
+                  </div>
+                </div>
+
+                {/* Xonalar soni va Maydon */}
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <span className="text-[11px] font-bold text-slate-600">
                       {locale === "uz" ? "Xonalar soni *" : "Количество комнат *"}
@@ -2326,14 +2647,14 @@ export default function AddPropertyPage() {
                 })()}
               </div>
 
-              {/* Mulk egasi telefoni (Faqat admin uchun alohida) */}
+              {/* Mulk egasi telefoni (Faqat admin uchun alohida, ixtiyoriy, maxfiy) */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-black uppercase tracking-wider text-amber-900">
-                    {locale === "uz" ? "Mulk egasi telefoni (Maxfiy) *" : "Телефон владельца (Конфиденциально) *"}
+                    {locale === "uz" ? "Mulk egasi telefoni (Maxfiy)" : "Телефон владельца (Конфиденциально)"}
                   </label>
                   <span className="text-[10px] bg-amber-100 text-amber-900 px-2 py-0.5 rounded font-bold">
-                    {locale === "uz" ? "Faqat Admin" : "Только Админ"}
+                    {locale === "uz" ? "Faqat Admin • Maxfiy" : "Только Админ • Скрыто"}
                   </span>
                 </div>
                 <input
@@ -2343,10 +2664,10 @@ export default function AddPropertyPage() {
                   placeholder="+998 90 000 00 00"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-amber-200 bg-amber-50/30 text-xs font-black text-amber-950 focus:ring-2 focus:ring-amber-500 outline-none"
                 />
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-amber-800 font-medium">
                   {locale === "uz"
-                    ? "Mulk egasi telefoni mijozlarga KO‘RINMAYDI. Mijozlar e’londagi Rieltor yoki agentlik raqamiga qo‘ng‘iroq qiladi."
-                    : "Номер владельца НЕ показывается клиентам. Клиенты звонят на номер назначенного риелтора."}
+                    ? "Mulk egasining raqami mijozlarga ko‘rsatilmaydi. Saytda faqat biriktirilgan rieltor kontaktlari ko‘rinadi."
+                    : "Номер владельца не показывается клиентам. На сайте отображаются только контакты риелтора."}
                 </p>
               </div>
             </div>

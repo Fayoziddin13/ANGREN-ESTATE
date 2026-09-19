@@ -26,7 +26,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { useLanguage } from "@/context/LanguageContext";
-import { useAdminContact, useRealtors } from "@/lib/realtorStore";
+import { useAdminContact, useRealtors, formatInstagramUrl } from "@/lib/realtorStore";
 import { detectDevice, detectTrafficSource } from "@/lib/leadClient";
 
 type DealType = "sale" | "rent";
@@ -321,69 +321,72 @@ export default function ContactsPage() {
 
             {isRealtorsLoaded && activeRealtors.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {activeRealtors.map((r) => (
-                  <div
-                    key={r.id}
-                    className="flex flex-col rounded-3xl bg-white/95 backdrop-blur-xl border border-gray-100 p-6 shadow-card hover:shadow-elevated transition-all duration-300 group"
-                  >
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="relative h-16 w-16 rounded-2xl overflow-hidden bg-brand-light flex items-center justify-center text-brand-primary font-black text-2xl shrink-0 shadow-sm border border-brand-border/40">
-                        {r.photo_url || r.avatar_url ? (
-                          <Image
-                            src={r.photo_url || r.avatar_url || ""}
-                            alt={r.name}
-                            fill
-                            className="object-cover"
-                          />
-                        ) : (
-                          <UserCheck className="h-8 w-8 text-brand-primary" />
+                {activeRealtors.map((r) => {
+                  const instagramUrl = formatInstagramUrl(r.instagram_url || r.instagram);
+                  return (
+                    <div
+                      key={r.id}
+                      className="flex flex-col rounded-3xl bg-white/95 backdrop-blur-xl border border-gray-100 p-6 shadow-card hover:shadow-elevated transition-all duration-300 group"
+                    >
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="relative h-16 w-16 rounded-2xl overflow-hidden bg-brand-light flex items-center justify-center text-brand-primary font-black text-2xl shrink-0 shadow-sm border border-brand-border/40">
+                          {r.photo_url || r.avatar_url ? (
+                            <Image
+                              src={r.photo_url || r.avatar_url || ""}
+                              alt={r.name}
+                              fill
+                              className="object-cover"
+                            />
+                          ) : (
+                            <UserCheck className="h-8 w-8 text-brand-primary" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="font-extrabold text-base text-brand-dark truncate">
+                            {r.name}
+                          </h3>
+                          <p className="text-xs text-brand-primary font-semibold truncate">
+                            {locale === "uz" ? r.specialization_uz : r.specialization_ru}
+                          </p>
+                          <span className="inline-block mt-1 rounded-md bg-brand-light px-2.5 py-0.5 text-[10px] font-bold text-brand-dark">
+                            {r.experience_years} {t.aboutPage.yearsExp}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className={`mt-auto grid ${instagramUrl ? "grid-cols-3 gap-1.5 sm:gap-2" : "grid-cols-2 gap-2"} pt-4 border-t border-gray-100`}>
+                        <a
+                          href={`tel:${r.phone}`}
+                          className="flex items-center justify-center gap-1 sm:gap-1.5 rounded-2xl bg-brand-primary px-2 sm:px-3 py-2.5 text-[11px] sm:text-xs font-bold text-white hover:bg-brand-primary-hover shadow-sm active:scale-95 transition-all min-w-0"
+                        >
+                          <Phone className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate">{t.aboutPage.callBtn}</span>
+                        </a>
+                        <a
+                          href={r.telegram.startsWith("http") ? r.telegram : `https://t.me/${r.telegram.replace(/^@+/, "")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-1 sm:gap-1.5 rounded-2xl border border-gray-200 bg-white px-2 sm:px-3 py-2.5 text-[11px] sm:text-xs font-bold text-brand-dark hover:bg-gray-50 shadow-sm active:scale-95 transition-all min-w-0"
+                        >
+                          <Send className="h-3.5 w-3.5 text-sky-600 shrink-0" />
+                          <span className="truncate">{t.aboutPage.telegramBtn}</span>
+                        </a>
+                        {instagramUrl && (
+                          <a
+                            href={instagramUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center gap-1 sm:gap-1.5 rounded-2xl border border-gray-200 bg-white px-2 sm:px-3 py-2.5 text-[11px] sm:text-xs font-bold text-brand-dark hover:bg-gray-50 shadow-sm active:scale-95 transition-all min-w-0"
+                            title="Instagram"
+                          >
+                            <Instagram className="h-3.5 w-3.5 text-pink-600 shrink-0" />
+                            <span className="truncate">{t.aboutPage.instagramBtn || "Instagram"}</span>
+                          </a>
                         )}
                       </div>
-                      <div className="min-w-0">
-                        <h3 className="font-extrabold text-base text-brand-dark truncate">
-                          {r.name}
-                        </h3>
-                        <p className="text-xs text-brand-primary font-semibold truncate">
-                          {locale === "uz" ? r.specialization_uz : r.specialization_ru}
-                        </p>
-                        <span className="inline-block mt-1 rounded-md bg-brand-light px-2.5 py-0.5 text-[10px] font-bold text-brand-dark">
-                          {r.experience_years} {t.aboutPage.yearsExp}
-                        </span>
-                      </div>
                     </div>
-
-                    <div className={`mt-auto grid ${r.instagram_url || r.instagram ? "grid-cols-3" : "grid-cols-2"} gap-2 pt-4 border-t border-gray-100`}>
-                      <a
-                        href={`tel:${r.phone}`}
-                        className="flex items-center justify-center gap-1.5 rounded-2xl bg-brand-primary px-3 py-2.5 text-xs font-bold text-white hover:bg-brand-primary-hover shadow-sm active:scale-95 transition-all"
-                      >
-                        <Phone className="h-3.5 w-3.5" />
-                        <span>{t.aboutPage.callBtn}</span>
-                      </a>
-                      <a
-                        href={r.telegram.startsWith("http") ? r.telegram : `https://t.me/${r.telegram.replace("@", "")}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center justify-center gap-1.5 rounded-2xl border border-gray-200 bg-white px-3 py-2.5 text-xs font-bold text-brand-dark hover:bg-gray-50 shadow-sm active:scale-95 transition-all"
-                      >
-                        <Send className="h-3.5 w-3.5 text-sky-600" />
-                        <span>{t.aboutPage.telegramBtn}</span>
-                      </a>
-                      {(r.instagram_url || r.instagram) && (
-                        <a
-                          href={(r.instagram_url || r.instagram) || undefined}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex items-center justify-center gap-1.5 rounded-2xl border border-pink-200 bg-pink-50/50 px-2.5 py-2.5 text-xs font-bold text-pink-700 hover:bg-pink-100 shadow-sm active:scale-95 transition-all"
-                          title="Instagram"
-                        >
-                          <Instagram className="h-3.5 w-3.5 text-pink-600" />
-                          <span>Instagram</span>
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               /* High-End Realtors Empty State (Zero Fake Data) */

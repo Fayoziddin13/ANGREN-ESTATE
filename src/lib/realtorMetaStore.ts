@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { supabaseAdmin } from "./supabaseServer";
 
 const META_FILE = path.join(process.cwd(), "data", "realtors_meta.json");
 
@@ -8,7 +9,7 @@ export interface RealtorExtraMeta {
   photo_url?: string | null;
 }
 
-export function getRealtorsMeta(): Record<string, RealtorExtraMeta> {
+export function getLocalRealtorsMeta(): Record<string, RealtorExtraMeta> {
   try {
     if (fs.existsSync(META_FILE)) {
       const raw = fs.readFileSync(META_FILE, "utf8");
@@ -20,9 +21,31 @@ export function getRealtorsMeta(): Record<string, RealtorExtraMeta> {
   return {};
 }
 
-export function saveRealtorMeta(id: string, meta: Partial<RealtorExtraMeta>): void {
+export async function getRealtorsMeta(): Promise<Record<string, RealtorExtraMeta>> {
+  const local = getLocalRealtorsMeta();
   try {
-    const all = getRealtorsMeta();
+    const { data, error } = await supabaseAdmin
+      .from("app_settings")
+      .select("value")
+      .eq("key", "realtors_meta")
+      .maybeSingle();
+
+    if (!error && data?.value && typeof data.value === "object") {
+      return { ...local, ...data.value };
+    }
+  } catch (err) {
+    console.warn("[realtorMetaStore] Remote read error, using local fallback:", err);
+  }
+  return local;
+}
+
+export function getRealtorsMetaSync(): Record<string, RealtorExtraMeta> {
+  return getLocalRealtorsMeta();
+}
+
+export async function saveRealtorMeta(id: string, meta: Partial<RealtorExtraMeta>): Promise<void> {
+  try {
+    const all = await getRealtorsMeta();
     const current = all[id] || {};
 
     if (meta.instagram_url !== undefined) {
@@ -42,11 +65,24 @@ export function saveRealtorMeta(id: string, meta: Partial<RealtorExtraMeta>): vo
     }
 
     all[id] = current;
-    const dir = path.dirname(META_FILE);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+
+    // 1. Save locally if filesystem allows
+    try {
+      const dir = path.dirname(META_FILE);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      fs.writeFileSync(META_FILE, JSON.stringify(all, null, 2), "utf8");
+    } catch (fsErr) {
+      console.warn("[realtorMetaStore] Local write ignored in serverless:", fsErr);
     }
-    fs.writeFileSync(META_FILE, JSON.stringify(all, null, 2), "utf8");
+
+    // 2. Persist in Supabase app_settings (key: realtors_meta)
+    await supabaseAdmin.from("app_settings").upsert({
+      key: "realtors_meta",
+      value: all,
+      updated_at: new Date().toISOString(),
+    });
   } catch (err) {
     console.error("[realtorMetaStore] Write error:", err);
   }
