@@ -47,6 +47,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useFavorites } from "@/lib/favoriteStore";
 import { useCompare } from "@/lib/compareStore";
 import { PropertyInfrastructureSection } from "./PropertyInfrastructureSection";
+import { PropertyGroupedFeaturesView } from "./PropertyGroupedFeaturesView";
 import { getPropertyRepository } from "@/lib/repository/propertyRepository";
 import { Property } from "@/lib/types";
 import { trackEvent } from "@/lib/analytics";
@@ -644,146 +645,9 @@ export default function PropertyDetailView({
                 )}
               </div>
 
-              {/* Utilities & Amenities */}
-              <div className="p-6 sm:p-8 rounded-3xl bg-white border border-gray-200/80 shadow-card space-y-6">
-                <div>
-                  <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-[#16543C]" />
-                    <span>{locale === "uz" ? "Kommunikatsiyalar" : "Коммуникации"}</span>
-                  </h3>
-                  <div data-testid="communications-grid" className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {[
-                      {
-                        icon: Zap,
-                        label_uz: "Elektr (Svet)",
-                        label_ru: "Электричество",
-                        active: property.utilities?.electricity ?? true,
-                      },
-                      {
-                        icon: Flame,
-                        label_uz: "Tabiiy gaz",
-                        label_ru: "Газ (Природный)",
-                        active: property.utilities?.gas ?? true,
-                      },
-                      {
-                        icon: Droplets,
-                        label_uz: "Ichimlik suvi (Sovuq suv)",
-                        label_ru: "Холодная вода",
-                        active: property.utilities?.cold_water ?? (property.utilities as any)?.water ?? true,
-                      },
-                      {
-                        icon: Thermometer,
-                        label_uz: "Issiq suv",
-                        label_ru: "Горячая вода",
-                        active: property.utilities?.hot_water ?? true,
-                      },
-                      {
-                        icon: Flame,
-                        label_uz: "Isitish tizimi (Otopleniye)",
-                        label_ru: "Отопление",
-                        active: property.utilities?.heating ?? true,
-                      },
-                      {
-                        icon: Wifi,
-                        label_uz: "Internet (Optika / Wi-Fi)",
-                        label_ru: "Интернет",
-                        active: property.utilities?.internet ?? true,
-                      },
-                    ].map((item, idx) => {
-                      const Icon = item.icon;
-                      return (
-                        <div
-                          key={idx}
-                          className={`flex items-center gap-2 text-xs font-semibold p-2 rounded-xl transition-colors ${
-                            item.active ? "text-gray-900 bg-emerald-50/70 border border-emerald-100" : "text-gray-400 opacity-60 bg-gray-50 border border-gray-100"
-                          }`}
-                        >
-                          <div className={`flex h-6 w-6 items-center justify-center rounded-lg shrink-0 ${
-                            item.active ? "bg-[#16543C] text-white" : "bg-gray-200 text-gray-400"
-                          }`}>
-                            <Icon className="w-3.5 h-3.5" />
-                          </div>
-                          <span>{locale === "uz" ? item.label_uz : item.label_ru}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Custom utilities tags if present */}
-                  {property.utilities?.custom && property.utilities.custom.length > 0 && (
-                    <div className="pt-3.5 mt-3.5 border-t border-gray-100">
-                      <div className="text-xs font-bold text-gray-700 mb-2">
-                        {locale === "uz" ? "Qo‘shimcha qulayliklar:" : "Дополнительные удобства:"}
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {property.utilities.custom.map((c, i) => (
-                          <span
-                            key={i}
-                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 text-[#16543C] text-xs font-bold border border-emerald-100"
-                          >
-                            <Check className="w-3.5 h-3.5" />
-                            <span>{c}</span>
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="pt-4 border-t border-gray-100">
-                  <h3 className="text-base font-bold text-gray-900 mb-3">
-                    {locale === "uz" ? "Qulayliklar va Jihozlar" : "Удобства и оснащение"}
-                  </h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {[
-                      { label_uz: "Yashil hudud", label_ru: "Зеленая зона", active: property.amenities?.green_zone },
-                      { label_uz: "Garaj", label_ru: "Гараж", active: property.amenities?.garage },
-                      { label_uz: "Molxona / Saroy", label_ru: "Сарай / хозпостройки", active: property.amenities?.barn },
-                      { label_uz: "Omborxona", label_ru: "Кладовая", active: property.amenities?.storage },
-                      { label_uz: "Basseyn", label_ru: "Бассейн", active: property.amenities?.pool },
-                      { label_uz: "Yozgi oshxona", label_ru: "Летняя кухня", active: property.amenities?.summer_kitchen },
-                      { label_uz: "Bog‘", label_ru: "Сад", active: property.amenities?.garden },
-                      { label_uz: "Mebel", label_ru: "Мебель", active: property.amenities?.furniture || property.furniture },
-                      { label_uz: "Avtoturargoh", label_ru: "Парковка", active: property.amenities?.parking || property.parking },
-                      { label_uz: "Lift", label_ru: "Лифт", active: property.amenities?.elevator },
-                      { label_uz: "Konditsioner", label_ru: "Кондиционер", active: property.amenities?.ac },
-                      { label_uz: "Internet / Wi-Fi", label_ru: "Интернет", active: property.amenities?.internet || property.utilities?.internet },
-                      { label_uz: "Balkon / Terasa", label_ru: "Балкон", active: property.amenities?.balcony },
-                    ]
-                      .filter((item) => property.property_type === "apartment" ? true : Boolean(item.active))
-                      .map((item, idx) => (
-                        <div
-                          key={idx}
-                          className={`flex items-center gap-2 text-xs font-semibold ${
-                            item.active ? "text-gray-800" : "text-gray-400 line-through opacity-60"
-                          }`}
-                        >
-                          <span className={`w-2 h-2 rounded-full ${item.active ? "bg-[#16543C]" : "bg-gray-300"}`} />
-                          <span>{locale === "uz" ? item.label_uz : item.label_ru}</span>
-                        </div>
-                      ))}
-                  </div>
-
-                  {/* Custom property features if specified */}
-                  {Array.isArray(property.amenities?.property_features) && property.amenities.property_features.length > 0 && (
-                    <div className="pt-3.5 mt-3.5 border-t border-gray-100">
-                      <div className="text-xs font-bold text-gray-700 mb-2">
-                        {locale === "uz" ? "Qo‘shimcha obyektlar:" : "Дополнительные объекты:"}
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {property.amenities.property_features.map((c, i) => (
-                          <span
-                            key={i}
-                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 text-[#16543C] text-xs font-bold border border-emerald-100"
-                          >
-                            <Check className="w-3.5 h-3.5" />
-                            <span>{c}</span>
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+              {/* Grouped Features (Communications, Extra Objects, Advantages) */}
+              <div className="p-6 sm:p-8 rounded-3xl bg-white border border-gray-200/80 shadow-card">
+                <PropertyGroupedFeaturesView property={property} />
               </div>
 
               {/* Location Mini-Map */}

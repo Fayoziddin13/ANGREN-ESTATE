@@ -45,6 +45,24 @@ import {
   Clock,
   Car,
   Wind,
+  Building,
+  Thermometer,
+  Wifi,
+  Archive,
+  Waves,
+  DoorClosed,
+  Pencil,
+  GraduationCap,
+  Cross,
+  ShoppingCart,
+  Bus,
+  Stethoscope,
+  CreditCard,
+  BookOpen,
+  Utensils,
+  Fuel,
+  Dumbbell,
+  Shield,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCurrency } from "@/context/CurrencyContext";
@@ -59,6 +77,7 @@ import {
   PropertyStatus,
   HududItem,
   PropertyBadge,
+  InfrastructureSummary,
 } from "@/lib/types";
 import {
   getPropertyTypeLabel,
@@ -67,7 +86,11 @@ import {
   getPropertyStatusLabel,
   getRenovationLabel,
 } from "@/lib/propertyFormatters";
-import { getInfrastructureAround } from "@/lib/infrastructureService";
+import {
+  getInfrastructureAround,
+  fetchNearbyInfrastructure,
+  MAX_INFRASTRUCTURE_RADIUS_METERS,
+} from "@/lib/infrastructureService";
 
 const PROTECTED_HUDUDS = ["markaz", "5-mavze", "6-mavze", "7-mavze", "dukent", "geolog", "yangiobod"];
 
@@ -137,24 +160,33 @@ export default function AddPropertyPage() {
   const [hududId, setHududId] = useState("");
   const [hududList, setHududList] = useState<HududItem[]>([]);
   const [isHududModalOpen, setIsHududModalOpen] = useState(false);
-  const [surroundings, setSurroundings] = useState<string[]>([
-    "Maktab",
-    "Do‘kon",
-    "Dorixona",
-  ]);
-  const [customSurroundings, setCustomSurroundings] = useState<string[]>([]);
-  const [newSurroundingInput, setNewSurroundingInput] = useState("");
 
-  // Property-specific physical features
-  const [propertyFeatures, setPropertyFeatures] = useState<string[]>([
+  // Extra Objects state (Qo‘shimcha obyektlar)
+  const [extraObjects, setExtraObjects] = useState<string[]>([
     "Yashil hudud",
     "Garaj",
   ]);
-  const [newPropertyFeatureInput, setNewPropertyFeatureInput] = useState("");
+  const [customExtraObjects, setCustomExtraObjects] = useState<string[]>([]);
+  const [newExtraObjectInput, setNewExtraObjectInput] = useState("");
 
-  // Hudud deletion confirmation state
+  // Advantages state (Afzalliklar)
+  const [hasParking, setHasParking] = useState<boolean>(true);
+  const [hasElevator, setHasElevator] = useState<boolean>(false);
+  const [customAdvantages, setCustomAdvantages] = useState<string[]>([]);
+  const [newAdvantageInput, setNewAdvantageInput] = useState("");
+
+  // Reusable unified property features list
+  const propertyFeatures = useMemo(
+    () => [...extraObjects, ...customExtraObjects],
+    [extraObjects, customExtraObjects]
+  );
+
+  // Hudud state
   const [hududToDelete, setHududToDelete] = useState<HududItem | null>(null);
   const [isDeletingHudud, setIsDeletingHudud] = useState(false);
+  const [editingHudud, setEditingHudud] = useState<HududItem | null>(null);
+  const [hududUsageCount, setHududUsageCount] = useState<number>(0);
+  const [isCheckingUsage, setIsCheckingUsage] = useState<boolean>(false);
 
   // STEP 4: Dinamik Parametrlar
   // 4A Kvartira
@@ -245,11 +277,57 @@ export default function AddPropertyPage() {
     return null;
   }, [facadeM, depthM]);
 
-  // Live nearby infrastructure calculation based on map coordinates
-  const liveNearbyInfrastructure = useMemo(() => {
-    if (!lat || !lng) return [];
-    return getInfrastructureAround(lat, lng, 3000, locale);
+  // Live nearby infrastructure calculation based on map coordinates (strict 1km)
+  const [liveNearbyInfrastructure, setLiveNearbyInfrastructure] = useState<InfrastructureSummary[]>([]);
+  const [isSearchingInfra, setIsSearchingInfra] = useState<boolean>(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (!lat || !lng) {
+      setLiveNearbyInfrastructure([]);
+      return;
+    }
+    // Instant initial 1km calculation
+    setLiveNearbyInfrastructure(getInfrastructureAround(lat, lng, MAX_INFRASTRUCTURE_RADIUS_METERS, locale));
+    setIsSearchingInfra(true);
+
+    fetchNearbyInfrastructure(lat, lng, locale)
+      .then((res) => {
+        if (isMounted && res && Array.isArray(res.summaries)) {
+          setLiveNearbyInfrastructure(res.summaries);
+        }
+      })
+      .catch((err) => {
+        console.warn("[Admin Step 3] Infrastructure search error:", err);
+      })
+      .finally(() => {
+        if (isMounted) setIsSearchingInfra(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [lat, lng, locale]);
+
+  // Prompt delete with usage check
+  const handlePromptDeleteHudud = async (h: HududItem) => {
+    if (PROTECTED_HUDUDS.includes(h.id.toLowerCase().trim())) {
+      alert(locale === "uz" ? "Ushbu asosiy shahar hududini o‘chirib bo‘lmaydi." : "Этот основной район города нельзя удалить.");
+      return;
+    }
+    setIsCheckingUsage(true);
+    try {
+      const res = await fetch(`/api/admin/hududs?check_usage=${encodeURIComponent(h.id)}`);
+      const data = await res.json();
+      setHududUsageCount(data.count || 0);
+      setHududToDelete(h);
+    } catch {
+      setHududUsageCount(0);
+      setHududToDelete(h);
+    } finally {
+      setIsCheckingUsage(false);
+    }
+  };
 
   // Delete custom hudud handler
   const handleDeleteHudud = async (h: HududItem) => {
@@ -335,8 +413,11 @@ export default function AddPropertyPage() {
           lat,
           lng,
           hududId,
-          surroundings,
-          customSurroundings,
+          extraObjects,
+          customExtraObjects,
+          hasParking,
+          hasElevator,
+          customAdvantages,
           propertyFeatures,
           totalFloors,
           floor,
@@ -388,8 +469,11 @@ export default function AddPropertyPage() {
     lat,
     lng,
     hududId,
-    surroundings,
-    customSurroundings,
+    extraObjects,
+    customExtraObjects,
+    hasParking,
+    hasElevator,
+    customAdvantages,
     propertyFeatures,
     totalFloors,
     floor,
@@ -444,9 +528,14 @@ export default function AddPropertyPage() {
       if (d.lat) setLat(d.lat);
       if (d.lng) setLng(d.lng);
       if (d.hududId) setHududId(d.hududId);
-      if (Array.isArray(d.surroundings)) setSurroundings(d.surroundings);
-      if (Array.isArray(d.customSurroundings)) setCustomSurroundings(d.customSurroundings);
-      if (Array.isArray(d.propertyFeatures)) setPropertyFeatures(d.propertyFeatures);
+      if (Array.isArray(d.extraObjects)) setExtraObjects(d.extraObjects);
+      if (Array.isArray(d.customExtraObjects)) setCustomExtraObjects(d.customExtraObjects);
+      if (d.hasParking !== undefined) setHasParking(d.hasParking);
+      if (d.hasElevator !== undefined) setHasElevator(d.hasElevator);
+      if (Array.isArray(d.customAdvantages)) setCustomAdvantages(d.customAdvantages);
+      if (Array.isArray(d.propertyFeatures) && !d.extraObjects) {
+        setExtraObjects(d.propertyFeatures);
+      }
       if (d.totalFloors) setTotalFloors(d.totalFloors);
       if (d.floor) setFloor(d.floor);
       if (d.rooms) setRooms(d.rooms);
@@ -785,11 +874,10 @@ export default function AddPropertyPage() {
         ? (areaSotikh * 100) || (calculatedFacadeArea?.sqm ?? 600)
         : areaSqm;
 
-    // Infrastructure list
-    const combinedInfrastructure = [
-      ...surroundings,
-      ...customSurroundings,
-    ];
+    // Auto-detected nearby infrastructure list (strict 1km)
+    const autoInfrastructure = liveNearbyInfrastructure.flatMap((s) =>
+      s.items.map((i) => (locale === "uz" ? i.nameUz : i.nameRu))
+    );
 
     try {
       const created = await addProperty({
@@ -836,29 +924,34 @@ export default function AddPropertyPage() {
         longitude: lng,
         polygon: polygonPoints.length > 0 ? polygonPoints : undefined,
         utilities: {
-          ...utilities,
-          custom: [
-            ...(utilities.custom || []),
-            ...(propertyType === "house_yard" ? yardObjects : []),
-          ],
+          gas: utilities.gas,
+          electricity: utilities.electricity,
+          cold_water: utilities.cold_water,
+          hot_water: utilities.hot_water,
+          heating: utilities.heating,
+          internet: utilities.internet,
+          custom: utilities.custom || [],
         },
         amenities: {
           furniture,
-          parking: true,
-          elevator: propertyType === "apartment" && floor > 4,
+          parking: hasParking,
+          elevator: hasElevator || (propertyType === "apartment" && floor > 4),
           ac: hasAc,
-          balcony: propertyType === "apartment",
+          balcony: extraObjects.includes("Balkon") || propertyType === "apartment",
           internet: utilities.internet,
-          green_zone: propertyFeatures.includes("Yashil hudud") || propertyFeatures.includes("Зеленая зона"),
-          garage: propertyFeatures.includes("Garaj") || propertyFeatures.includes("Гараж") || yardObjects.includes("Garaj") || yardObjects.includes("Гараж"),
-          barn: yardObjects.includes("Molxona") || yardObjects.includes("Сарай"),
-          storage: yardObjects.includes("Ombor") || yardObjects.includes("Кладовая"),
-          pool: yardObjects.includes("Basseyn") || yardObjects.includes("Бассейн"),
-          summer_kitchen: yardObjects.includes("Yozgi oshxona") || yardObjects.includes("Летняя кухня"),
-          garden: yardObjects.includes("Bog‘") || yardObjects.includes("Сад") || propertyFeatures.includes("Bog‘"),
-          property_features: propertyFeatures,
+          green_zone: extraObjects.includes("Yashil hudud"),
+          garage: extraObjects.includes("Garaj"),
+          barn: extraObjects.includes("Molxona"),
+          storage: extraObjects.includes("Ombor"),
+          pool: extraObjects.includes("Basseyn"),
+          summer_kitchen: extraObjects.includes("Yozgi oshxona") || extraObjects.includes("Qo‘shimcha bino"),
+          garden: extraObjects.includes("Bog‘"),
+          property_features: [...extraObjects, ...customExtraObjects],
+          yard_objects: extraObjects,
+          custom_extra_objects: customExtraObjects,
+          custom_advantages: customAdvantages,
           ...((commercialFeatures.length > 0 ? { commercialFeatures } : {}) as any),
-          ...((combinedInfrastructure.length > 0 ? { infrastructure: combinedInfrastructure } : {}) as any),
+          ...((autoInfrastructure.length > 0 ? { infrastructure: autoInfrastructure } : {}) as any),
           ...((additionalNote ? { customNote: additionalNote } : {}) as any),
         },
         badges: activeBadges,
@@ -1522,7 +1615,10 @@ export default function AddPropertyPage() {
                 {/* Variant B tugmasi */}
                 <button
                   type="button"
-                  onClick={() => setIsHududModalOpen(true)}
+                  onClick={() => {
+                    setEditingHudud(null);
+                    setIsHududModalOpen(true);
+                  }}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-[#16543C] border border-emerald-200 text-xs font-bold transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" />
@@ -1559,19 +1655,33 @@ export default function AddPropertyPage() {
                         <span className="truncate">{locale === "uz" ? h.name_uz : h.name_ru}</span>
                         {isSelected && <Check className="w-3.5 h-3.5 text-[#16543C] shrink-0 ml-1" />}
                       </button>
-                      {!isProtected && (
+                      <div className="flex items-center gap-1 shrink-0">
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setHududToDelete(h);
+                            setEditingHudud(h);
+                            setIsHududModalOpen(true);
                           }}
-                          title={locale === "uz" ? "Hududni o‘chirish" : "Удалить район"}
-                          className="p-1 rounded-lg hover:bg-rose-100 text-rose-500 hover:text-rose-700 transition-colors shrink-0"
+                          title={locale === "uz" ? "Hududni tahrirlash" : "Редактировать район"}
+                          className="p-1 rounded-lg hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Pencil className="w-3.5 h-3.5" />
                         </button>
-                      )}
+                        {!isProtected && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePromptDeleteHudud(h);
+                            }}
+                            title={locale === "uz" ? "Hududni o‘chirish" : "Удалить район"}
+                            className="p-1 rounded-lg hover:bg-rose-100 text-rose-500 hover:text-rose-700 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -1582,13 +1692,27 @@ export default function AddPropertyPage() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
                   <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
                     <h3 className="text-base font-black text-slate-900">
-                      {locale === "uz" ? "Hududni o‘chirishni tasdiqlang" : "Подтвердите удаление района"}
+                      {locale === "uz" ? "Hududni o‘chirishni tasdiqlaysizmi?" : "Вы действительно хотите удалить этот район?"}
                     </h3>
                     <p className="text-xs text-slate-600 leading-relaxed">
                       {locale === "uz"
-                        ? `«${hududToDelete.name_uz}» hududini o‘chirishni istaysizmi? Ushbu hududga biriktirilgan obyektlar xavfsiz tarzda «Markaz» hududiga o‘tkaziladi.`
-                        : `Вы уверены, что хотите удалить район «${hududToDelete.name_ru || hududToDelete.name_uz}»? Все объекты этого района будут безопасно переведены в район «Центр».`}
+                        ? `«${hududToDelete.name_uz}» hududini o‘chirishni tasdiqlaysizmi?`
+                        : `Вы действительно хотите удалить этот район «${hududToDelete.name_ru || hududToDelete.name_uz}»?`}
                     </p>
+                    {hududUsageCount > 0 && (
+                      <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-medium space-y-1">
+                        <div className="font-bold">
+                          {locale === "uz"
+                            ? "Bu hududga biriktirilgan obyektlar mavjud."
+                            : "К этому району привязаны объекты."}
+                        </div>
+                        <div>
+                          {locale === "uz"
+                            ? `${hududUsageCount} ta obyekt mavjud. Hudud o‘chirilganda obyektlar o‘chirilmaydi, ularning hududi bo‘shatiladi (hudud_id olib tashlanadi).`
+                            : `Привязано ${hududUsageCount} шт. При удалении района сами объекты НЕ удаляются, снимается только их привязка к району.`}
+                        </div>
+                      </div>
+                    )}
                     <div className="flex items-center justify-end gap-2 pt-2">
                       <button
                         type="button"
@@ -1640,252 +1764,93 @@ export default function AddPropertyPage() {
                 />
               </div>
 
-              {/* Automatic nearby infrastructure detection & calculation */}
-              <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200/80 space-y-2.5">
+              {/* Automatic nearby infrastructure detection & calculation (strict 1km) */}
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200/80 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black uppercase tracking-wider text-emerald-900 flex items-center gap-1.5">
                     <Compass className="w-4 h-4 text-emerald-700" />
-                    <span>{locale === "uz" ? "Yaqin atrofdagi infratuzilma (Avtomatik)" : "Инфраструктура рядом (Автоматически)"}</span>
+                    <span>{locale === "uz" ? "Yaqin infratuzilma" : "Ближайшая инфраструктура"}</span>
                   </span>
                   <span className="text-[11px] font-bold text-emerald-700">
-                    {liveNearbyInfrastructure.length} {locale === "uz" ? "yo‘nalish aniqlandi" : "категорий рядом"}
+                    {locale === "uz" ? "Maksimum 1 km" : "В радиусе 1 км"}
                   </span>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {liveNearbyInfrastructure.slice(0, 8).map((s) => (
-                    <div
-                      key={s.category}
-                      className="p-2 rounded-xl bg-white border border-emerald-100 text-xs shadow-2xs space-y-0.5"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-extrabold text-slate-900 truncate">
-                          {locale === "uz" ? s.labelUz : s.labelRu}
-                        </span>
-                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
-                          {s.closestDistance}
-                        </span>
-                      </div>
-                      <div className="text-[10px] text-slate-500">
-                        {s.count} {locale === "uz" ? "ta maskan" : "объекта"}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
 
-            {/* 3.4 Mulk qulayliklari va Obyektlari (Property-specific features) */}
-            <div className="space-y-2 pt-2 border-t border-slate-100">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-black uppercase tracking-wider text-slate-700">
-                  {locale === "uz" ? "Mulk qulayliklari va obyektlari" : "Особенности и удобства объекта"}
-                </label>
-                <span className="text-[11px] text-slate-400">
-                  {locale === "uz" ? "Mulkning o‘ziga tegishli qulayliklar" : "Физически принадлежащие объекту"}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 pt-1">
-                {[
-                  { uz: "Yashil hudud", ru: "Зеленая зона" },
-                  { uz: "Garaj", ru: "Гараж" },
-                  { uz: "Molxona / Saroy", ru: "Сарай / хозпостройки" },
-                  { uz: "Omborxona", ru: "Кладовая" },
-                  { uz: "Basseyn", ru: "Бассейн" },
-                  { uz: "Yozgi oshxona", ru: "Летняя кухня" },
-                  { uz: "Bog‘", ru: "Сад" },
-                ].map((feat) => {
-                  const isChecked = propertyFeatures.includes(feat.uz);
-                  return (
-                    <button
-                      key={feat.uz}
-                      type="button"
-                      onClick={() => {
-                        if (isChecked) {
-                          setPropertyFeatures(propertyFeatures.filter((f) => f !== feat.uz));
-                        } else {
-                          setPropertyFeatures([...propertyFeatures, feat.uz]);
-                        }
-                      }}
-                      className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all ${
-                        isChecked
-                          ? "bg-emerald-50 border-[#16543C] text-[#16543C] font-bold"
-                          : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 text-xs"
-                      }`}
-                    >
-                      <span className="text-xs">{locale === "uz" ? feat.uz : feat.ru}</span>
-                      {isChecked ? (
-                        <CheckSquare className="w-4 h-4 text-[#16543C] shrink-0" />
-                      ) : (
-                        <Square className="w-4 h-4 text-slate-300 shrink-0" />
-                      )}
-                    </button>
-                  );
-                })}
-
-                {/* Custom property features */}
-                {propertyFeatures
-                  .filter(
-                    (f) =>
-                      ![
-                        "Yashil hudud",
-                        "Garaj",
-                        "Molxona / Saroy",
-                        "Omborxona",
-                        "Basseyn",
-                        "Yozgi oshxona",
-                        "Bog‘",
-                      ].includes(f)
-                  )
-                  .map((customFeat) => (
-                    <div
-                      key={customFeat}
-                      className="p-2.5 rounded-xl border bg-emerald-50 border-[#16543C] text-[#16543C] font-bold flex items-center justify-between text-xs"
-                    >
-                      <span className="truncate">{customFeat}</span>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setPropertyFeatures(propertyFeatures.filter((f) => f !== customFeat))
-                        }
-                        className="text-red-500 hover:text-red-700 ml-1"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ))}
-              </div>
-
-              {/* Add custom feature input */}
-              <div className="flex items-center gap-2 pt-2">
-                <input
-                  type="text"
-                  value={newPropertyFeatureInput}
-                  onChange={(e) => setNewPropertyFeatureInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && newPropertyFeatureInput.trim()) {
-                      e.preventDefault();
-                      setPropertyFeatures([...propertyFeatures, newPropertyFeatureInput.trim()]);
-                      setNewPropertyFeatureInput("");
-                    }
-                  }}
-                  placeholder={
-                    locale === "uz"
-                      ? "Boshqa qulaylik qo‘shish (masalan: Sauna, Terasa)..."
-                      : "Добавить другое удобство (например: Сауна, Терраса)..."
-                  }
-                  className="flex-1 px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#16543C] outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (newPropertyFeatureInput.trim()) {
-                      setPropertyFeatures([...propertyFeatures, newPropertyFeatureInput.trim()]);
-                      setNewPropertyFeatureInput("");
-                    }
-                  }}
-                  className="px-3.5 py-2 rounded-xl bg-[#16543C] hover:bg-[#0E3324] text-white text-xs font-bold transition-colors flex items-center gap-1"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>{locale === "uz" ? "Qo‘shish" : "Добавить"}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* 3.5 Atrofdagi shahar infratuzilmasi teglari */}
-            <div className="space-y-2 pt-2 border-t border-slate-100">
-              <label className="text-xs font-black uppercase tracking-wider text-slate-700">
-                {locale === "uz" ? "Atrofdagi qo‘shimcha nishonlar" : "Дополнительные ориентиры окружения"}
-              </label>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 pt-1">
-                {[
-                  { uz: "Maktab", ru: "Школа" },
-                  { uz: "Do‘kon", ru: "Магазин" },
-                  { uz: "Shifoxona", ru: "Больница" },
-                  { uz: "Xavfsizlik xizmati", ru: "Безопасность" },
-                  { uz: "O‘quv markazlari", ru: "Учебные центры" },
-                  { uz: "Savdo markazlari", ru: "Торговые точки" },
-                  { uz: "Dorixona", ru: "Аптека" },
-                  { uz: "Bog‘cha", ru: "Детский сад" },
-                  { uz: "Park / Xiyobon", ru: "Парк" },
-                  { uz: "Avtobus bekati", ru: "Автобусная остановка" },
-                ].map((item) => {
-                  const isChecked = surroundings.includes(item.uz);
-                  return (
-                    <button
-                      key={item.uz}
-                      type="button"
-                      onClick={() => {
-                        if (isChecked) {
-                          setSurroundings(surroundings.filter((s) => s !== item.uz));
-                        } else {
-                          setSurroundings([...surroundings, item.uz]);
-                        }
-                      }}
-                      className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all ${
-                        isChecked
-                          ? "bg-emerald-50 border-[#16543C] text-[#16543C] font-bold"
-                          : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 text-xs"
-                      }`}
-                    >
-                      <span className="text-xs">{locale === "uz" ? item.uz : item.ru}</span>
-                      {isChecked ? (
-                        <CheckSquare className="w-4 h-4 text-[#16543C] shrink-0" />
-                      ) : (
-                        <Square className="w-4 h-4 text-slate-300 shrink-0" />
-                      )}
-                    </button>
-                  );
-                })}
-
-                {/* Custom items */}
-                {customSurroundings.map((item) => (
-                  <div
-                    key={item}
-                    className="p-2.5 rounded-xl border bg-emerald-50 border-[#16543C] text-[#16543C] font-bold flex items-center justify-between"
-                  >
-                    <span className="text-xs truncate">{item}</span>
-                    <button
-                      type="button"
-                      onClick={() => setCustomSurroundings(customSurroundings.filter((c) => c !== item))}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                {/* Loading indicator */}
+                {isSearchingInfra && (
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-emerald-200 text-xs font-bold text-emerald-800 animate-pulse">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />
+                    <span>
+                      {locale === "uz"
+                        ? "Atrofdagi infratuzilma aniqlanmoqda..."
+                        : "Определяем инфраструктуру рядом..."}
+                    </span>
                   </div>
-                ))}
-              </div>
+                )}
 
-              {/* + Qo'shish */}
-              <div className="flex items-center gap-2 pt-2">
-                <input
-                  type="text"
-                  value={newSurroundingInput}
-                  onChange={(e) => setNewSurroundingInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && newSurroundingInput.trim()) {
-                      e.preventDefault();
-                      setCustomSurroundings([...customSurroundings, newSurroundingInput.trim()]);
-                      setNewSurroundingInput("");
-                    }
-                  }}
-                  placeholder={locale === "uz" ? "Boshqa obyekt qo‘shish (masalan: Bank, Masjid)..." : "Добавить другой объект (например: Банк, Мечеть)..."}
-                  className="flex-1 px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#16543C] outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (newSurroundingInput.trim()) {
-                      setCustomSurroundings([...customSurroundings, newSurroundingInput.trim()]);
-                      setNewSurroundingInput("");
-                    }
-                  }}
-                  className="px-3.5 py-2 rounded-xl bg-[#16543C] hover:bg-[#0E3324] text-white text-xs font-bold transition-colors flex items-center gap-1"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>{locale === "uz" ? "Qo‘shish" : "Добавить"}</span>
-                </button>
+                {/* Empty State */}
+                {!isSearchingInfra && liveNearbyInfrastructure.length === 0 && (
+                  <div className="p-3 rounded-xl bg-white/80 border border-emerald-100 text-center text-xs font-semibold text-slate-500">
+                    {locale === "uz"
+                      ? "1 km radiusda infratuzilma topilmadi."
+                      : "В радиусе 1 км инфраструктура не найдена."}
+                  </div>
+                )}
+
+                {/* Categories count badges */}
+                {liveNearbyInfrastructure.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {liveNearbyInfrastructure.slice(0, 8).map((s) => (
+                      <div
+                        key={s.category}
+                        className="p-2 rounded-xl bg-white border border-emerald-100 text-xs shadow-2xs space-y-0.5"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-extrabold text-slate-900 truncate">
+                            {locale === "uz" ? s.labelUz : s.labelRu}
+                          </span>
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                            {s.closestDistance}
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-slate-500">
+                          {s.count} {locale === "uz" ? "ta maskan" : "объекта"}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Real nearby objects list */}
+                {liveNearbyInfrastructure.length > 0 && (
+                  <div className="space-y-1.5 pt-1">
+                    <div className="text-[11px] font-bold text-emerald-900">
+                      {locale === "uz" ? "1 km ichidagi aniq obyektlar:" : "Точные объекты в радиусе 1 км:"}
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-48 overflow-y-auto pr-1">
+                      {liveNearbyInfrastructure
+                        .flatMap((s) => s.items)
+                        .sort((a, b) => a.distanceMeters - b.distanceMeters)
+                        .slice(0, 12)
+                        .map((item) => (
+                          <div
+                            key={item.id}
+                            className="flex items-center justify-between p-2 rounded-lg bg-white border border-emerald-100/80 text-xs"
+                          >
+                            <div className="flex items-center gap-2 min-w-0 pr-1.5">
+                              <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                              <span className="font-semibold text-slate-800 truncate">
+                                {locale === "uz" ? item.nameUz : item.nameRu}
+                              </span>
+                            </div>
+                            <span className="font-black text-[#16543C] shrink-0 text-[11px] bg-emerald-50 px-1.5 py-0.5 rounded">
+                              {item.formattedDistance}
+                            </span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -2230,74 +2195,7 @@ export default function AddPropertyPage() {
                   </div>
                 )}
 
-                {/* Hovlida mavjud obyektlar */}
-                <div className="space-y-2 pt-2 border-t border-slate-100">
-                  <label className="text-xs font-black uppercase tracking-wider text-slate-700">
-                    {locale === "uz" ? "Hovlida mavjud obyektlar" : "Постройки на участке"}
-                  </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {[
-                      { uz: "Uy", ru: "Дом" },
-                      { uz: "Garaj", ru: "Гараж" },
-                      { uz: "Molxona", ru: "Сарай" },
-                      { uz: "Basseyn", ru: "Бассейн" },
-                      { uz: "Yozgi oshxona", ru: "Летняя кухня" },
-                      { uz: "Ombor", ru: "Кладовая" },
-                      { uz: "Sauna", ru: "Сауна / Баня" },
-                      { uz: "Bog‘", ru: "Сад" },
-                    ].map((item) => {
-                      const isChecked = yardObjects.includes(item.uz);
-                      return (
-                        <button
-                          key={item.uz}
-                          type="button"
-                          onClick={() => {
-                            if (isChecked) {
-                              setYardObjects(yardObjects.filter((y) => y !== item.uz));
-                            } else {
-                              setYardObjects([...yardObjects, item.uz]);
-                            }
-                          }}
-                          className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all ${
-                            isChecked
-                              ? "bg-emerald-50 border-[#16543C] text-[#16543C] font-bold"
-                              : "bg-slate-50 border-slate-200 text-slate-600 text-xs"
-                          }`}
-                        >
-                          <span className="text-xs">{locale === "uz" ? item.uz : item.ru}</span>
-                          {isChecked ? (
-                            <CheckSquare className="w-4 h-4 text-[#16543C]" />
-                          ) : (
-                            <Square className="w-4 h-4 text-slate-300" />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
 
-                  {/* + Custom yard object */}
-                  <div className="flex items-center gap-2 pt-1">
-                    <input
-                      type="text"
-                      value={customYardInput}
-                      onChange={(e) => setCustomYardInput(e.target.value)}
-                      placeholder={locale === "uz" ? "Boshqa hovli inshooti qo‘shish..." : "Добавить другую постройку..."}
-                      className="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (customYardInput.trim()) {
-                          setYardObjects([...yardObjects, customYardInput.trim()]);
-                          setCustomYardInput("");
-                        }
-                      }}
-                      className="px-3 py-2 bg-[#16543C] text-white text-xs font-bold rounded-xl"
-                    >
-                      {locale === "uz" ? "Qo‘shish" : "Добавить"}
-                    </button>
-                  </div>
-                </div>
               </div>
             )}
 
@@ -2463,18 +2361,37 @@ export default function AddPropertyPage() {
               </div>
             )}
 
-            {/* Barcha turlar uchun Umumiy Kommunikatsiyalar */}
-            <div className="space-y-2 pt-4 border-t border-slate-100">
-              <label className="text-xs font-black uppercase tracking-wider text-slate-700">
-                {locale === "uz" ? "Kommunal ta’minot (Kommunikatsiyalar)" : "Коммунальные сети и коммуникации"}
-              </label>
+            {/* ================================================================= */}
+            {/* 1. KOMMUNIKATSIYALAR / КОММУНИКАЦИИ */}
+            {/* ================================================================= */}
+            <div className="space-y-3 pt-5 border-t border-slate-100">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-[#16543C]" />
+                  <label className="text-xs font-black uppercase tracking-wider text-slate-800">
+                    {locale === "uz" ? "Kommunikatsiyalar" : "Коммуникации"}
+                  </label>
+                </div>
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-[#16543C]">
+                  {[
+                    utilities.gas,
+                    utilities.electricity,
+                    utilities.cold_water,
+                    utilities.hot_water,
+                    utilities.heating,
+                    utilities.internet,
+                  ].filter(Boolean).length} / 6
+                </span>
+              </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                 {[
-                  { key: "gas", uz: "Tabiiy gaz", ru: "Газ", icon: Flame },
-                  { key: "electricity", uz: "Elektr quvvati", ru: "Электричество", icon: Zap },
-                  { key: "cold_water", uz: "Ichimlik suvi", ru: "Водопровод", icon: Droplets },
-                  { key: "internet", uz: "Internet (Optika)", ru: "Интернет", icon: Globe },
+                  { key: "gas", uz: "Gaz", ru: "Газ", icon: Flame },
+                  { key: "electricity", uz: "Elektr", ru: "Электричество", icon: Zap },
+                  { key: "cold_water", uz: "Sovuq suv", ru: "Холодная вода", icon: Droplets },
+                  { key: "hot_water", uz: "Issiq suv", ru: "Горячая вода", icon: Thermometer },
+                  { key: "heating", uz: "Shahar isitish tizimi", ru: "Городское отопление", icon: Flame },
+                  { key: "internet", uz: "Internet / Wi-Fi", ru: "Интернет / Wi-Fi", icon: Wifi },
                 ].map((item) => {
                   const Icon = item.icon;
                   const isChecked = Boolean((utilities as any)[item.key]);
@@ -2488,20 +2405,277 @@ export default function AddPropertyPage() {
                           [item.key]: !isChecked,
                         }));
                       }}
-                      className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
+                      className={`p-3 rounded-2xl border flex items-center justify-between transition-all ${
                         isChecked
-                          ? "bg-emerald-50 border-[#16543C] text-[#16543C] font-bold"
-                          : "bg-slate-50 border-slate-200 text-slate-600 text-xs"
+                          ? "bg-emerald-50/80 border-[#16543C] text-[#16543C] font-bold shadow-2xs"
+                          : "bg-slate-50/70 border-slate-200 text-slate-600 text-xs"
                       }`}
                     >
-                      <div className="flex items-center gap-2">
-                        <Icon className="w-4 h-4" />
-                        <span className="text-xs">{locale === "uz" ? item.uz : item.ru}</span>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Icon className="w-4 h-4 shrink-0" />
+                        <span className="text-xs truncate">{locale === "uz" ? item.uz : item.ru}</span>
                       </div>
-                      {isChecked ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4 text-slate-300" />}
+                      {isChecked ? <CheckSquare className="w-4 h-4 text-[#16543C] shrink-0" /> : <Square className="w-4 h-4 text-slate-300 shrink-0" />}
                     </button>
                   );
                 })}
+              </div>
+            </div>
+
+            {/* ================================================================= */}
+            {/* 2. QO‘SHIMCHA OBYEKTLAR / ДОПОЛНИТЕЛЬНЫЕ ОБЪЕКТЫ */}
+            {/* ================================================================= */}
+            <div className="space-y-3 pt-5 border-t border-slate-100">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Building className="w-4 h-4 text-[#16543C]" />
+                  <label className="text-xs font-black uppercase tracking-wider text-slate-800">
+                    {locale === "uz" ? "Qo‘shimcha obyektlar" : "Дополнительные объекты"}
+                  </label>
+                </div>
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-[#16543C]">
+                  {extraObjects.length + customExtraObjects.length} {locale === "uz" ? "ta" : "ед."}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {[
+                  { uz: "Garaj", ru: "Гараж", icon: Warehouse },
+                  { uz: "Yashil hudud", ru: "Зелёная зона", icon: Trees },
+                  { uz: "Ombor", ru: "Склад", icon: Archive },
+                  { uz: "Molxona", ru: "Хлев / хозпостройка", icon: Home },
+                  { uz: "Basseyn", ru: "Бассейн", icon: Waves },
+                  { uz: "Qo‘shimcha bino", ru: "Дополнительное строение", icon: Building },
+                  { uz: "Balkon", ru: "Балкон", icon: DoorClosed },
+                  { uz: "Bog‘", ru: "Сад", icon: Trees },
+                ].map((item) => {
+                  const isChecked = extraObjects.includes(item.uz);
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={item.uz}
+                      type="button"
+                      onClick={() => {
+                        if (isChecked) {
+                          setExtraObjects(extraObjects.filter((o) => o !== item.uz));
+                        } else {
+                          setExtraObjects([...extraObjects, item.uz]);
+                        }
+                      }}
+                      className={`p-2.5 rounded-2xl border text-left flex items-center justify-between transition-all ${
+                        isChecked
+                          ? "bg-emerald-50/80 border-[#16543C] text-[#16543C] font-bold shadow-2xs"
+                          : "bg-slate-50/70 border-slate-200 text-slate-600 text-xs"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Icon className="w-4 h-4 shrink-0" />
+                        <span className="text-xs truncate">{locale === "uz" ? item.uz : item.ru}</span>
+                      </div>
+                      {isChecked ? <CheckSquare className="w-4 h-4 text-[#16543C] shrink-0" /> : <Square className="w-4 h-4 text-slate-300 shrink-0" />}
+                    </button>
+                  );
+                })}
+
+                {/* Custom extra objects */}
+                {customExtraObjects.map((customObj) => (
+                  <div
+                    key={customObj}
+                    className="p-2.5 rounded-2xl border bg-emerald-50/80 border-[#16543C] text-[#16543C] font-bold flex items-center justify-between text-xs"
+                  >
+                    <span className="truncate">{customObj}</span>
+                    <button
+                      type="button"
+                      onClick={() => setCustomExtraObjects(customExtraObjects.filter((o) => o !== customObj))}
+                      className="text-red-500 hover:text-red-700 ml-1 p-0.5"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add custom extra object */}
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="text"
+                  value={newExtraObjectInput}
+                  onChange={(e) => setNewExtraObjectInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && newExtraObjectInput.trim()) {
+                      e.preventDefault();
+                      setCustomExtraObjects([...customExtraObjects, newExtraObjectInput.trim()]);
+                      setNewExtraObjectInput("");
+                    }
+                  }}
+                  placeholder={locale === "uz" ? "Boshqa qo‘shimcha obyekt qo‘shish (masalan: Sauna, Terasa)..." : "Добавить другой объект (например: Сауна, Терраса)..."}
+                  className="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#16543C] outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (newExtraObjectInput.trim()) {
+                      setCustomExtraObjects([...customExtraObjects, newExtraObjectInput.trim()]);
+                      setNewExtraObjectInput("");
+                    }
+                  }}
+                  className="px-3.5 py-2 rounded-xl bg-[#16543C] hover:bg-[#0E3324] text-white text-xs font-bold transition-colors flex items-center gap-1"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>{locale === "uz" ? "Qo‘shish" : "Добавить"}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* ================================================================= */}
+            {/* 3. AFZALLIKLAR / ПРЕИМУЩЕСТВА */}
+            {/* ================================================================= */}
+            <div className="space-y-3 pt-5 border-t border-slate-100">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-[#16543C]" />
+                  <label className="text-xs font-black uppercase tracking-wider text-slate-800">
+                    {locale === "uz" ? "Afzalliklar" : "Преимущества"}
+                  </label>
+                </div>
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-[#16543C]">
+                  {[hasAc, furniture, hasParking, renovation === "euro", hasElevator].filter(Boolean).length + customAdvantages.length} {locale === "uz" ? "ta" : "ед."}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                {/* Konditsioner */}
+                <button
+                  type="button"
+                  onClick={() => setHasAc(!hasAc)}
+                  className={`p-3 rounded-2xl border flex items-center justify-between transition-all ${
+                    hasAc
+                      ? "bg-emerald-50/80 border-[#16543C] text-[#16543C] font-bold shadow-2xs"
+                      : "bg-slate-50/70 border-slate-200 text-slate-600 text-xs"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Wind className="w-4 h-4 text-sky-600 shrink-0" />
+                    <span className="text-xs truncate">{locale === "uz" ? "Konditsioner" : "Кондиционер"}</span>
+                  </div>
+                  {hasAc ? <CheckSquare className="w-4 h-4 text-[#16543C] shrink-0" /> : <Square className="w-4 h-4 text-slate-300 shrink-0" />}
+                </button>
+
+                {/* Mebel */}
+                <button
+                  type="button"
+                  onClick={() => setFurniture(!furniture)}
+                  className={`p-3 rounded-2xl border flex items-center justify-between transition-all ${
+                    furniture
+                      ? "bg-emerald-50/80 border-[#16543C] text-[#16543C] font-bold shadow-2xs"
+                      : "bg-slate-50/70 border-slate-200 text-slate-600 text-xs"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Home className="w-4 h-4 text-amber-800 shrink-0" />
+                    <span className="text-xs truncate">{locale === "uz" ? "Mebel" : "Мебель"}</span>
+                  </div>
+                  {furniture ? <CheckSquare className="w-4 h-4 text-[#16543C] shrink-0" /> : <Square className="w-4 h-4 text-slate-300 shrink-0" />}
+                </button>
+
+                {/* Avtoturargoh */}
+                <button
+                  type="button"
+                  onClick={() => setHasParking(!hasParking)}
+                  className={`p-3 rounded-2xl border flex items-center justify-between transition-all ${
+                    hasParking
+                      ? "bg-emerald-50/80 border-[#16543C] text-[#16543C] font-bold shadow-2xs"
+                      : "bg-slate-50/70 border-slate-200 text-slate-600 text-xs"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Car className="w-4 h-4 text-blue-600 shrink-0" />
+                    <span className="text-xs truncate">{locale === "uz" ? "Avtoturargoh" : "Парковка"}</span>
+                  </div>
+                  {hasParking ? <CheckSquare className="w-4 h-4 text-[#16543C] shrink-0" /> : <Square className="w-4 h-4 text-slate-300 shrink-0" />}
+                </button>
+
+                {/* Yangi ta’mir */}
+                <button
+                  type="button"
+                  onClick={() => setRenovation(renovation === "euro" ? "cosmetic" : "euro")}
+                  className={`p-3 rounded-2xl border flex items-center justify-between transition-all ${
+                    renovation === "euro"
+                      ? "bg-emerald-50/80 border-[#16543C] text-[#16543C] font-bold shadow-2xs"
+                      : "bg-slate-50/70 border-slate-200 text-slate-600 text-xs"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
+                    <span className="text-xs truncate">{locale === "uz" ? "Yangi ta’mir" : "Новый ремонт"}</span>
+                  </div>
+                  {renovation === "euro" ? <CheckSquare className="w-4 h-4 text-[#16543C] shrink-0" /> : <Square className="w-4 h-4 text-slate-300 shrink-0" />}
+                </button>
+
+                {/* Lift */}
+                <button
+                  type="button"
+                  onClick={() => setHasElevator(!hasElevator)}
+                  className={`p-3 rounded-2xl border flex items-center justify-between transition-all ${
+                    hasElevator
+                      ? "bg-emerald-50/80 border-[#16543C] text-[#16543C] font-bold shadow-2xs"
+                      : "bg-slate-50/70 border-slate-200 text-slate-600 text-xs"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Building2 className="w-4 h-4 text-indigo-600 shrink-0" />
+                    <span className="text-xs truncate">{locale === "uz" ? "Lift" : "Лифт"}</span>
+                  </div>
+                  {hasElevator ? <CheckSquare className="w-4 h-4 text-[#16543C] shrink-0" /> : <Square className="w-4 h-4 text-slate-300 shrink-0" />}
+                </button>
+
+                {/* Custom advantages */}
+                {customAdvantages.map((customAdv) => (
+                  <div
+                    key={customAdv}
+                    className="p-3 rounded-2xl border bg-emerald-50/80 border-[#16543C] text-[#16543C] font-bold flex items-center justify-between text-xs"
+                  >
+                    <span className="truncate">{customAdv}</span>
+                    <button
+                      type="button"
+                      onClick={() => setCustomAdvantages(customAdvantages.filter((a) => a !== customAdv))}
+                      className="text-red-500 hover:text-red-700 ml-1 p-0.5"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add custom advantage */}
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="text"
+                  value={newAdvantageInput}
+                  onChange={(e) => setNewAdvantageInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && newAdvantageInput.trim()) {
+                      e.preventDefault();
+                      setCustomAdvantages([...customAdvantages, newAdvantageInput.trim()]);
+                      setNewAdvantageInput("");
+                    }
+                  }}
+                  placeholder={locale === "uz" ? "Boshqa afzallik qo‘shish (masalan: Smart Home, Panoramik oyna)..." : "Добавить другое преимущество (например: Умный дом, Панорамные окна)..."}
+                  className="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#16543C] outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (newAdvantageInput.trim()) {
+                      setCustomAdvantages([...customAdvantages, newAdvantageInput.trim()]);
+                      setNewAdvantageInput("");
+                    }
+                  }}
+                  className="px-3.5 py-2 rounded-xl bg-[#16543C] hover:bg-[#0E3324] text-white text-xs font-bold transition-colors flex items-center gap-1"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>{locale === "uz" ? "Qo‘shish" : "Добавить"}</span>
+                </button>
               </div>
             </div>
           </div>
@@ -2893,19 +3067,30 @@ export default function AddPropertyPage() {
         </div>
       </div>
 
-      {/* Modal for Variant B: Drawing New Hudud Polygon */}
+      {/* Modal for Variant B: Drawing New Hudud Polygon or Editing existing */}
       {isHududModalOpen && (
         <HududPolygonDrawerModal
           isOpen={isHududModalOpen}
-          onClose={() => setIsHududModalOpen(false)}
-          onHududCreated={(newHudud) => {
-            setHududList((prev) => [newHudud, ...prev]);
-            setHududId(newHudud.id);
-            setDistrict(newHudud.name_uz);
-            if (newHudud.latitude && newHudud.longitude) {
-              setLat(newHudud.latitude);
-              setLng(newHudud.longitude);
+          editingHudud={editingHudud}
+          onClose={() => {
+            setIsHududModalOpen(false);
+            setEditingHudud(null);
+          }}
+          onHududCreated={(updatedHudud) => {
+            setHududList((prev) => {
+              const exists = prev.some((h) => h.id === updatedHudud.id);
+              if (exists) {
+                return prev.map((h) => (h.id === updatedHudud.id ? updatedHudud : h));
+              }
+              return [updatedHudud, ...prev];
+            });
+            setHududId(updatedHudud.id);
+            setDistrict(updatedHudud.name_uz);
+            if (updatedHudud.latitude && updatedHudud.longitude) {
+              setLat(updatedHudud.latitude);
+              setLng(updatedHudud.longitude);
             }
+            setEditingHudud(null);
           }}
         />
       )}

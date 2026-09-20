@@ -148,6 +148,184 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const checkUsageId = searchParams.get("check_usage") || searchParams.get("usage_id");
+
+    if (checkUsageId) {
+      // Check whether properties are assigned to this hudud
+      const { count, error } = await supabaseAdmin
+        .from("properties")
+        .select("id", { count: "exact", head: true })
+        .or(`district.eq.${checkUsageId},district_name_uz.eq.${checkUsageId}`);
+
+      if (error) {
+        console.warn("[Admin Hududs GET usage] error:", error);
+      }
+
+      const assignedCount = count || 0;
+      return NextResponse.json({
+        success: true,
+        in_use: assignedCount > 0,
+        count: assignedCount,
+      });
+    }
+
+    // Default: fetch hududs
+    const { data: districts, error: distErr } = await supabaseAdmin
+      .from("districts")
+      .select("*")
+      .order("display_order", { ascending: true });
+
+    if (distErr) {
+      return NextResponse.json({ success: false, error: distErr.message }, { status: 500 });
+    }
+
+    const { data: settings } = await supabaseAdmin
+      .from("app_settings")
+      .select("value")
+      .eq("key", "hudud_polygons")
+      .maybeSingle();
+
+    const polygonsMap = settings?.value && typeof settings.value === "object" ? settings.value : {};
+
+    const hududs: HududItem[] = (districts || []).map((d) => ({
+      id: d.id,
+      city_id: d.city_id,
+      name_uz: d.name_uz,
+      name_ru: d.name_ru || d.name_uz,
+      latitude: d.latitude,
+      longitude: d.longitude,
+      coordinates: polygonsMap[d.id]?.coordinates || undefined,
+      display_order: d.display_order,
+      created_at: d.created_at,
+    }));
+
+    return NextResponse.json({ success: true, hududs });
+  } catch (err: any) {
+    return NextResponse.json(
+      { success: false, error: "INTERNAL_ERROR", message: err?.message },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(req: NextRequest) {
+  try {
+    const session = await verifyAuth(req);
+    if (!session) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const { id, name_uz, name_ru, coordinates } = body;
+
+    if (!id || typeof id !== "string") {
+      return NextResponse.json(
+        { success: false, error: "VALIDATION_ERROR", message: "Hudud ID ko‘rsatilishi shart" },
+        { status: 400 }
+      );
+    }
+
+    if (!name_uz || typeof name_uz !== "string" || !name_uz.trim()) {
+      return NextResponse.json(
+        { success: false, error: "VALIDATION_ERROR", message: "Hudud nomi (uz) kiritilishi shart" },
+        { status: 400 }
+      );
+    }
+
+    if (!Array.isArray(coordinates) || coordinates.length < 3) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "VALIDATION_ERROR",
+          message: "Poligon kamida 3 ta koordinatadan iborat bo‘lishi shart",
+        },
+        { status: 400 }
+      );
+    }
+
+    const closedCoords: [number, number][] = [...coordinates];
+    if (
+      closedCoords[0][0] !== closedCoords[closedCoords.length - 1][0] ||
+      closedCoords[0][1] !== closedCoords[closedCoords.length - 1][1]
+    ) {
+      closedCoords.push(closedCoords[0]);
+    }
+
+    const centroid = calculatePolygonCentroid(closedCoords);
+
+    // 1. Update districts table
+    const { error: distErr } = await supabaseAdmin
+      .from("districts")
+      .update({
+        name_uz: name_uz.trim(),
+        name_ru: (name_ru || name_uz).trim(),
+        latitude: centroid.lat,
+        longitude: centroid.lng,
+        geom: {
+          type: "Point",
+          crs: { type: "name", properties: { name: "EPSG:4326" } },
+          coordinates: [centroid.lng, centroid.lat],
+        },
+      })
+      .eq("id", id);
+
+    if (distErr) {
+      return NextResponse.json(
+        { success: false, error: "STORAGE_ERROR", message: distErr.message },
+        { status: 500 }
+      );
+    }
+
+    // 2. Update polygon vertices in app_settings
+    const { data: existingSettings } = await supabaseAdmin
+      .from("app_settings")
+      .select("value")
+      .eq("key", "hudud_polygons")
+      .maybeSingle();
+
+    const existingMap =
+      existingSettings?.value && typeof existingSettings.value === "object"
+        ? existingSettings.value
+        : {};
+
+    const updatedMap = {
+      ...existingMap,
+      [id]: {
+        coordinates: closedCoords,
+        name_uz: name_uz.trim(),
+        name_ru: (name_ru || name_uz).trim(),
+        updated_at: new Date().toISOString(),
+      },
+    };
+
+    await supabaseAdmin.from("app_settings").upsert({
+      key: "hudud_polygons",
+      value: updatedMap,
+      updated_at: new Date().toISOString(),
+    });
+
+    const updatedHudud: HududItem = {
+      id,
+      city_id: "angren",
+      name_uz: name_uz.trim(),
+      name_ru: (name_ru || name_uz).trim(),
+      latitude: centroid.lat,
+      longitude: centroid.lng,
+      coordinates: closedCoords,
+    };
+
+    return NextResponse.json({ success: true, hudud: updatedHudud });
+  } catch (err: any) {
+    return NextResponse.json(
+      { success: false, error: "INTERNAL_ERROR", message: err?.message },
+      { status: 500 }
+    );
+  }
+}
+
 export async function DELETE(req: NextRequest) {
   try {
     const session = await verifyAuth(req);
@@ -173,7 +351,9 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    // Safely reassign any property assigned to this hudud to "markaz"
+    // CRITICAL: Safely unassign properties without deleting them!
+    // Set hudud_id to NULL. If district was this id, reset to 'markaz'.
+    // DO NOT DELETE PROPERTIES! Do not delete coordinates, photos, price, etc.
     try {
       await supabaseAdmin
         .from("properties")
@@ -181,11 +361,10 @@ export async function DELETE(req: NextRequest) {
           district: "markaz",
           district_name_uz: "Markaz",
           district_name_ru: "Центр",
-          hudud_id: null,
         })
-        .or(`district.eq.${id},district_name_uz.eq.${id},hudud_id.eq.${id}`);
+        .or(`district.eq.${id},district_name_uz.eq.${id}`);
     } catch (reassignErr) {
-      console.warn("[Admin Hududs] Property reassignment warning:", reassignErr);
+      console.warn("[Admin Hududs] Safe unassignment warning:", reassignErr);
     }
 
     await Promise.all([

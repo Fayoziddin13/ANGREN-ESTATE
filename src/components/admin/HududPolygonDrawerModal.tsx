@@ -19,18 +19,22 @@ import {
 } from "lucide-react";
 import { HududItem } from "@/lib/types";
 import { calculatePolygonCentroid } from "@/lib/hududService";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface HududPolygonDrawerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onHududCreated: (hudud: HududItem) => void;
+  editingHudud?: HududItem | null;
 }
 
 export function HududPolygonDrawerModal({
   isOpen,
   onClose,
   onHududCreated,
+  editingHudud = null,
 }: HududPolygonDrawerModalProps) {
+  const { locale } = useLanguage();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
@@ -42,6 +46,35 @@ export function HududPolygonDrawerModal({
   const [nameRu, setNameRu] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Initialize editing state
+  useEffect(() => {
+    if (editingHudud) {
+      setNameUz(editingHudud.name_uz || "");
+      setNameRu(editingHudud.name_ru || "");
+      if (Array.isArray(editingHudud.coordinates) && editingHudud.coordinates.length >= 3) {
+        const pts = [...editingHudud.coordinates];
+        if (
+          pts.length > 3 &&
+          pts[0][0] === pts[pts.length - 1][0] &&
+          pts[0][1] === pts[pts.length - 1][1]
+        ) {
+          pts.pop();
+        }
+        setPoints(pts);
+        setIsClosed(true);
+      } else {
+        setPoints([]);
+        setIsClosed(false);
+      }
+    } else {
+      setNameUz("");
+      setNameRu("");
+      setPoints([]);
+      setIsClosed(false);
+    }
+    setErrorMsg(null);
+  }, [editingHudud, isOpen]);
 
   // Redraw polygon layer on map
   const updateMapLayers = useCallback(() => {
@@ -125,7 +158,7 @@ export function HududPolygonDrawerModal({
 
       // Clicking first vertex when >= 3 points closes polygon
       if (idx === 0 && points.length >= 3 && !isClosed) {
-        el.title = "Polygonni yopish";
+        el.title = locale === "uz" ? "Polygonni yopish" : "Замкнуть полигон";
         el.onclick = (e) => {
           e.stopPropagation();
           setIsClosed(true);
@@ -140,7 +173,7 @@ export function HududPolygonDrawerModal({
     });
 
     updateMapLayers();
-  }, [points, isClosed, updateMapLayers]);
+  }, [points, isClosed, updateMapLayers, locale]);
 
   // Initialize Map
   useEffect(() => {
@@ -163,17 +196,23 @@ export function HududPolygonDrawerModal({
       layers: [{ id: "osm-layer", type: "raster", source: "osm" }],
     };
 
+    const initialCenter: [number, number] =
+      points.length > 0 ? [points[0][1], points[0][0]] : [70.1436, 41.0167];
+
     const map = new maplibregl.Map({
       container: containerRef.current,
       style: standardStyle,
-      center: [70.1436, 41.0167],
-      zoom: 13.5,
+      center: initialCenter,
+      zoom: points.length > 0 ? 14 : 13.5,
     });
 
     mapRef.current = map;
 
     map.on("load", () => {
       map.resize();
+      if (points.length >= 3) {
+        updateMapLayers();
+      }
     });
 
     map.on("click", (e) => {
@@ -191,7 +230,7 @@ export function HududPolygonDrawerModal({
       map.remove();
       mapRef.current = null;
     };
-  }, [isOpen, isClosed]);
+  }, [isOpen]);
 
   // Handle map style switch
   useEffect(() => {
@@ -251,11 +290,19 @@ export function HududPolygonDrawerModal({
 
   const handleSave = async () => {
     if (!nameUz.trim()) {
-      setErrorMsg("Iltimos, hudud nomini kiriting (masalan: 4-mavze).");
+      setErrorMsg(
+        locale === "uz"
+          ? "Iltimos, hudud nomini kiriting (masalan: 4-mavze)."
+          : "Пожалуйста, введите название района (например: 4-массив)."
+      );
       return;
     }
     if (points.length < 3) {
-      setErrorMsg("Iltimos, xaritada kamida 3 ta nuqta belgilab poligon chizing.");
+      setErrorMsg(
+        locale === "uz"
+          ? "Iltimos, xaritada kamida 3 ta nuqta belgilab poligon chizing."
+          : "Пожалуйста, отметьте на карте минимум 3 точки для полигона."
+      );
       return;
     }
 
@@ -271,25 +318,39 @@ export function HududPolygonDrawerModal({
         closedCoords.push(closedCoords[0]);
       }
 
+      const method = editingHudud ? "PUT" : "POST";
+      const payload: any = {
+        name_uz: nameUz.trim(),
+        name_ru: nameRu.trim() || nameUz.trim(),
+        coordinates: closedCoords,
+      };
+      if (editingHudud) {
+        payload.id = editingHudud.id;
+      }
+
       const res = await fetch("/api/admin/hududs", {
-        method: "POST",
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name_uz: nameUz.trim(),
-          name_ru: nameRu.trim() || nameUz.trim(),
-          coordinates: closedCoords,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.message || "Hududni saqlashda xatolik yuz berdi.");
+        throw new Error(
+          data.message ||
+            (locale === "uz"
+              ? "Hududni saqlashda xatolik yuz berdi."
+              : "Произошла ошибка при сохранении района.")
+        );
       }
 
       onHududCreated(data.hudud);
       onClose();
     } catch (err: any) {
-      setErrorMsg(err.message || "Xatolik yuz berdi");
+      setErrorMsg(
+        err.message ||
+          (locale === "uz" ? "Xatolik yuz berdi" : "Произошла ошибка")
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -325,10 +386,18 @@ export function HududPolygonDrawerModal({
               </div>
               <div>
                 <h3 className="text-base font-extrabold text-slate-900">
-                  Yangi hudud yaratish va poligon chizish
+                  {editingHudud
+                    ? locale === "uz"
+                      ? "Hududni tahrirlash"
+                      : "Редактировать район"
+                    : locale === "uz"
+                    ? "Yangi hudud yaratish va poligon chizish"
+                    : "Создать новый район и нарисовать полигон"}
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Xaritada nuqtalarni bosib hudud chegaralarini chizing
+                  {locale === "uz"
+                    ? "Xaritada nuqtalarni bosib hudud chegaralarini chizing"
+                    : "Кликайте по карте, чтобы нарисовать границы района"}
                 </p>
               </div>
             </div>
@@ -356,7 +425,15 @@ export function HududPolygonDrawerModal({
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/95 backdrop-blur-md border border-slate-200 shadow-sm text-xs font-bold text-slate-700 hover:bg-white transition-colors"
                 >
                   <Layers className="h-3.5 w-3.5 text-[#16543C]" />
-                  <span>{mapMode === "standard" ? "Sun’iy yo‘ldosh" : "Sxema"}</span>
+                  <span>
+                    {mapMode === "standard"
+                      ? locale === "uz"
+                        ? "Sun’iy yo‘ldosh"
+                        : "Спутник"
+                      : locale === "uz"
+                      ? "Sxema"
+                      : "Схема"}
+                  </span>
                 </button>
               </div>
 
@@ -365,12 +442,21 @@ export function HududPolygonDrawerModal({
                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span>
                   {points.length === 0
-                    ? "Xarita ustiga bosib birinchi nuqtani belgilang"
+                    ? locale === "uz"
+                      ? "Xarita ustiga bosib birinchi nuqtani belgilang"
+                      : "Кликните по карте, чтобы отметить первую точку"
                     : isClosed
-                    ? "Poligon yopildi. Nomini kiritib saqlang."
+                    ? locale === "uz"
+                      ? "Poligon yopildi. Nomini kiritib saqlang."
+                      : "Полигон замкнут. Введите название и сохраните."
                     : points.length >= 3
-                    ? "Yana nuqta qo‘shing yoki 1-nuqtani bosib yoping"
-                    : `${points.length} ta nuqta belgilandi (kamida 3 ta kerak)`}
+                    ? locale === "uz"
+                      ? "Yana nuqta qo‘shing yoki 1-nuqtani bosib yoping"
+                      : "Добавьте еще точку или кликните 1-ю для замыкания"
+                    : `${points.length} ` +
+                      (locale === "uz"
+                        ? "ta nuqta belgilandi (kamida 3 ta kerak)"
+                        : "точек отмечено (нужно минимум 3)")}
                 </span>
               </div>
             </div>
@@ -380,26 +466,26 @@ export function HududPolygonDrawerModal({
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                    Hudud nomi (O‘zbekcha) *
+                    {locale === "uz" ? "Hudud nomi (O‘zbekcha) *" : "Название района (Узбекский) *"}
                   </label>
                   <input
                     type="text"
                     value={nameUz}
                     onChange={(e) => setNameUz(e.target.value)}
-                    placeholder="Masalan: 4-mavze"
+                    placeholder={locale === "uz" ? "Masalan: 4-mavze" : "Например: 4-массив"}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#16543C]/20 focus:border-[#16543C]"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                    Hudud nomi (Ruscha)
+                    {locale === "uz" ? "Hudud nomi (Ruscha)" : "Название района (Русский)"}
                   </label>
                   <input
                     type="text"
                     value={nameRu}
                     onChange={(e) => setNameRu(e.target.value)}
-                    placeholder="Например: 4-массив"
+                    placeholder={locale === "uz" ? "Masalan: 4-массив" : "Например: 4-массив"}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#16543C]/20 focus:border-[#16543C]"
                   />
                 </div>
@@ -407,12 +493,14 @@ export function HududPolygonDrawerModal({
                 {/* Points count & Centroid info */}
                 <div className="p-3 rounded-xl bg-white border border-slate-200 space-y-1.5 text-xs">
                   <div className="flex items-center justify-between text-slate-600">
-                    <span>Nuqtalar soni:</span>
-                    <span className="font-extrabold text-[#16543C]">{points.length} ta</span>
+                    <span>{locale === "uz" ? "Nuqtalar soni:" : "Количество точек:"}</span>
+                    <span className="font-extrabold text-[#16543C]">
+                      {points.length} {locale === "uz" ? "ta" : "ед."}
+                    </span>
                   </div>
                   {points.length >= 3 && (
                     <div className="flex items-center justify-between text-slate-600">
-                      <span>Markaz (Centroid):</span>
+                      <span>{locale === "uz" ? "Markaz (Centroid):" : "Центр (Центроид):"}</span>
                       <span className="font-mono text-[11px] text-slate-500">
                         {calculatePolygonCentroid(points).lat},{" "}
                         {calculatePolygonCentroid(points).lng}
@@ -430,7 +518,7 @@ export function HududPolygonDrawerModal({
                     className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-50 text-slate-700 text-xs font-bold transition-all"
                   >
                     <Undo2 className="h-3.5 w-3.5" />
-                    <span>Qaytarish</span>
+                    <span>{locale === "uz" ? "Qaytarish" : "Отменить"}</span>
                   </button>
 
                   <button
@@ -440,7 +528,7 @@ export function HududPolygonDrawerModal({
                     className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 disabled:opacity-50 text-rose-700 text-xs font-bold transition-all"
                   >
                     <RotateCcw className="h-3.5 w-3.5" />
-                    <span>Tozalash</span>
+                    <span>{locale === "uz" ? "Tozalash" : "Очистить"}</span>
                   </button>
                 </div>
 
@@ -451,7 +539,11 @@ export function HududPolygonDrawerModal({
                     className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-emerald-50 border border-emerald-200 text-[#16543C] text-xs font-extrabold hover:bg-emerald-100 transition-all"
                   >
                     <CheckCircle2 className="h-4 w-4" />
-                    <span>Polygonni yakunlash (yopish)</span>
+                    <span>
+                      {locale === "uz"
+                        ? "Polygonni yakunlash (yopish)"
+                        : "Замкнуть полигон"}
+                    </span>
                   </button>
                 )}
 
@@ -471,7 +563,19 @@ export function HududPolygonDrawerModal({
                   className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-[#16543C] hover:bg-[#0E3324] disabled:opacity-50 text-white text-xs font-extrabold shadow-md active:scale-[0.98] transition-all"
                 >
                   <Save className="h-4 w-4" />
-                  <span>{isSubmitting ? "Saqlanmoqda..." : "Hududni saqlash"}</span>
+                  <span>
+                    {isSubmitting
+                      ? locale === "uz"
+                        ? "Saqlanmoqda..."
+                        : "Сохранение..."
+                      : editingHudud
+                      ? locale === "uz"
+                        ? "O‘zgarishlarni saqlash"
+                        : "Сохранить изменения"
+                      : locale === "uz"
+                      ? "Hududni saqlash"
+                      : "Сохранить район"}
+                  </span>
                 </button>
               </div>
             </div>

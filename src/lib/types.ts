@@ -543,7 +543,14 @@ export type POICategory =
   | "park"
   | "bus_stop"
   | "hospital"
-  | "atm";
+  | "atm"
+  | "bank"
+  | "education"
+  | "restaurant"
+  | "gas_station"
+  | "sport"
+  | "police"
+  | "other";
 
 export interface POIItem {
   id: string;
@@ -554,6 +561,7 @@ export interface POIItem {
   longitude: number;
   distanceMeters: number;
   formattedDistance: string;
+  source?: "OpenStreetMap" | "verified_fallback";
 }
 
 export interface InfrastructureSummary {

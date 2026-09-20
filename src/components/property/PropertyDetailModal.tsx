@@ -42,6 +42,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useFavorites } from "@/lib/favoriteStore";
 import { useCompare } from "@/lib/compareStore";
 import { PropertyInfrastructureSection } from "./PropertyInfrastructureSection";
+import { PropertyGroupedFeaturesView } from "./PropertyGroupedFeaturesView";
 import { recordPublicLead } from "@/lib/leadClient";
 import { trackEvent } from "@/lib/analytics";
 import {
@@ -643,76 +644,9 @@ export function PropertyDetailModal({
                 </div>
               )}
 
-            {/* 6. ADDITIONAL PROPERTY FEATURES / OBJECTS (Physically belonging to property) */}
-            <div className="space-y-3 min-w-0 pt-2 border-t border-gray-100">
-              <h2 className="text-xs font-black uppercase tracking-wider text-gray-500">
-                {locale === "uz" ? "Mulk qulayliklari va obyektlari" : "Особенности и удобства объекта"}
-              </h2>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5">
-                {[
-                  // House/Yard physical features
-                  { key: "green_zone", labelUz: "Yashil hudud", labelRu: "Зеленая зона", active: property.amenities?.green_zone },
-                  { key: "garage", labelUz: "Garaj", labelRu: "Гараж", active: property.amenities?.garage },
-                  { key: "barn", labelUz: "Molxona / Saroy", labelRu: "Сарай / хозпостройки", active: property.amenities?.barn },
-                  { key: "storage", labelUz: "Omborxona", labelRu: "Кладовая", active: property.amenities?.storage },
-                  { key: "pool", labelUz: "Basseyn", labelRu: "Бассейн", active: property.amenities?.pool },
-                  { key: "summer_kitchen", labelUz: "Yozgi oshxona", labelRu: "Летняя кухня", active: property.amenities?.summer_kitchen },
-                  { key: "garden", labelUz: "Bog‘", labelRu: "Сад", active: property.amenities?.garden },
-                  // Property amenities
-                  { key: "furniture", labelUz: "Mebel", labelRu: "Мебель", active: property.amenities?.furniture || property.furniture },
-                  { key: "parking", labelUz: "Avtoturargoh", labelRu: "Парковка", active: property.amenities?.parking || property.parking },
-                  { key: "balcony", labelUz: "Balkon", labelRu: "Балкон", active: property.amenities?.balcony },
-                  { key: "elevator", labelUz: "Lift", labelRu: "Лифт", active: property.amenities?.elevator },
-                  { key: "ac", labelUz: "Konditsioner", labelRu: "Кондиционер", active: property.amenities?.ac },
-                  { key: "internet", labelUz: "Internet / Wi-Fi", labelRu: "Интернет", active: property.amenities?.internet || property.utilities?.internet },
-                  // Core utilities
-                  { key: "electricity", labelUz: "Elektr (Svet)", labelRu: "Электричество", active: property.utilities?.electricity ?? true },
-                  { key: "gas", labelUz: "Tabiiy gaz", labelRu: "Газ", active: property.utilities?.gas ?? true },
-                  { key: "cold_water", labelUz: "Ichimlik suvi", labelRu: "Холодная вода", active: property.utilities?.cold_water ?? property.utilities?.water ?? true },
-                  { key: "heating", labelUz: "Isitish tizimi", labelRu: "Отопление", active: property.utilities?.heating ?? true },
-                ]
-                  .filter((item) => Boolean(item.active))
-                  .map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-100 text-xs font-bold text-[#16543C] min-w-0"
-                    >
-                      <div className="flex h-5 w-5 items-center justify-center rounded-lg bg-[#16543C] text-white shrink-0">
-                        <Check className="h-3 w-3 stroke-[2.5]" />
-                      </div>
-                      <span className="truncate">{locale === "uz" ? item.labelUz : item.labelRu}</span>
-                    </div>
-                  ))}
-
-                {/* Custom property features if specified */}
-                {Array.isArray(property.amenities?.property_features) &&
-                  property.amenities.property_features.map((c, i) => (
-                    <div
-                      key={`feat-${i}`}
-                      className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-100 text-xs font-bold text-[#16543C] min-w-0"
-                    >
-                      <div className="flex h-5 w-5 items-center justify-center rounded-lg bg-[#16543C] text-white shrink-0">
-                        <Check className="h-3 w-3 stroke-[2.5]" />
-                      </div>
-                      <span className="truncate">{c}</span>
-                    </div>
-                  ))}
-
-                {/* Custom utilities if specified */}
-                {Array.isArray(property.utilities?.custom) &&
-                  property.utilities.custom.map((c, i) => (
-                    <div
-                      key={`custom-${i}`}
-                      className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-100 text-xs font-bold text-[#16543C] min-w-0"
-                    >
-                      <div className="flex h-5 w-5 items-center justify-center rounded-lg bg-[#16543C] text-white shrink-0">
-                        <Check className="h-3 w-3 stroke-[2.5]" />
-                      </div>
-                      <span className="truncate">{c}</span>
-                    </div>
-                  ))}
-              </div>
+            {/* 6. GROUPED FEATURES (Communications / Extra Objects / Advantages) */}
+            <div className="pt-2 border-t border-gray-100 min-w-0">
+              <PropertyGroupedFeaturesView property={property} />
             </div>
 
             {/* 7. REALTOR CONTACT & 8. REALTOR PROFILE BUTTON (Confidential: NO owner phone!) */}
