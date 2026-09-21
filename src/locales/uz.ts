@@ -42,7 +42,7 @@ export const uz = {
   searchBar: {
     city: "Angren",
     propertyType: "Mulk turi",
-    price: "Narx (UZS)",
+    price: "Narx",
     searchBtn: "Qidirish",
     allTypes: "Barcha turlar",
     apartment: "Kvartira",

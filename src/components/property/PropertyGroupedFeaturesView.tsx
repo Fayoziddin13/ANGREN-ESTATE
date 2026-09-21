@@ -50,7 +50,7 @@ function getFeatureIcon(iconName: string) {
     case "Wifi":
       return <Wifi className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />;
     case "Warehouse":
-      return <Warehouse className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#16543C]" />;
+      return <Warehouse className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#0d3431]" />;
     case "Trees":
       return <Trees className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />;
     case "Archive":
@@ -72,18 +72,18 @@ function getFeatureIcon(iconName: string) {
     case "Sparkles":
       return <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />;
     default:
-      return <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#16543C]" />;
+      return <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#0d3431]" />;
   }
 }
 
 function getCategoryIcon(cat: FeatureCategory) {
   switch (cat) {
     case "communications":
-      return <Zap className="w-4 h-4 text-[#16543C]" />;
+      return <Zap className="w-4 h-4 text-[#0d3431]" />;
     case "extra_objects":
-      return <Building className="w-4 h-4 text-[#16543C]" />;
+      return <Building className="w-4 h-4 text-[#0d3431]" />;
     case "advantages":
-      return <Sparkles className="w-4 h-4 text-[#16543C]" />;
+      return <Sparkles className="w-4 h-4 text-[#0d3431]" />;
   }
 }
 
@@ -134,7 +134,7 @@ export function PropertyGroupedFeaturesView({
                   {title}
                 </h3>
               </div>
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-[#16543C]">
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#d9eedb]/50 text-[#0d3431]">
                 {items.length} {locale === "uz" ? "ta" : "ед."}
               </span>
             </div>

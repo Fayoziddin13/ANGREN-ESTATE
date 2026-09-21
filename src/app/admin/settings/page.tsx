@@ -121,7 +121,7 @@ export default function AdminSettingsPage() {
     <div className="p-3.5 sm:p-8 max-w-7xl mx-auto w-full space-y-6 pb-20">
       {/* Toast */}
       {toastMessage && (
-        <div className="fixed top-16 sm:top-6 right-4 sm:right-6 z-50 bg-[#16543C] border border-emerald-600 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-4">
+        <div className="fixed top-16 sm:top-6 right-4 sm:right-6 z-50 bg-[#0d3431] border border-emerald-600 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-4">
           <CheckCircle2 className="w-5 h-5 text-emerald-200 shrink-0" />
           <span className="text-xs sm:text-sm font-semibold">{toastMessage}</span>
         </div>
@@ -131,7 +131,7 @@ export default function AdminSettingsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2 sm:gap-3">
-            <Settings className="w-6 h-6 sm:w-7 sm:h-7 text-[#16543C] shrink-0" />
+            <Settings className="w-6 h-6 sm:w-7 sm:h-7 text-[#0d3431] shrink-0" />
             <span>{locale === "uz" ? "Platforma Sozlamalari" : "Настройки Платформы"}</span>
           </h1>
           <p className="text-slate-600 text-xs sm:text-sm mt-1 font-medium">
@@ -146,7 +146,7 @@ export default function AdminSettingsPage() {
             type="button"
             onClick={handleSaveSettings}
             disabled={isSaving}
-            className="flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 bg-[#16543C] hover:bg-[#0E3324] text-white rounded-xl font-bold text-xs sm:text-sm shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+            className="flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 bg-[#0d3431] hover:bg-[#19453c] text-white rounded-xl font-bold text-xs sm:text-sm shadow-sm hover:shadow-md transition-all disabled:opacity-50"
           >
             <Save className="w-4 h-4 shrink-0" />
             <span>
@@ -168,7 +168,7 @@ export default function AdminSettingsPage() {
           onClick={() => setActiveTab("general")}
           className={`pb-3 px-1 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${
             activeTab === "general"
-              ? "border-[#16543C] text-[#16543C]"
+              ? "border-[#0d3431] text-[#0d3431]"
               : "border-transparent text-slate-500 hover:text-slate-900"
           }`}
         >
@@ -180,7 +180,7 @@ export default function AdminSettingsPage() {
           onClick={() => setActiveTab("map")}
           className={`pb-3 px-1 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${
             activeTab === "map"
-              ? "border-[#16543C] text-[#16543C]"
+              ? "border-[#0d3431] text-[#0d3431]"
               : "border-transparent text-slate-500 hover:text-slate-900"
           }`}
         >
@@ -192,7 +192,7 @@ export default function AdminSettingsPage() {
           onClick={() => setActiveTab("contacts")}
           className={`pb-3 px-1 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${
             activeTab === "contacts"
-              ? "border-[#16543C] text-[#16543C]"
+              ? "border-[#0d3431] text-[#0d3431]"
               : "border-transparent text-slate-500 hover:text-slate-900"
           }`}
         >
@@ -204,7 +204,7 @@ export default function AdminSettingsPage() {
           onClick={() => setActiveTab("security")}
           className={`pb-3 px-1 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${
             activeTab === "security"
-              ? "border-[#16543C] text-[#16543C]"
+              ? "border-[#0d3431] text-[#0d3431]"
               : "border-transparent text-slate-500 hover:text-slate-900"
           }`}
         >
@@ -218,7 +218,7 @@ export default function AdminSettingsPage() {
         <form onSubmit={handleSaveSettings} className="space-y-6">
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
             <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <Sliders className="w-5 h-5 text-[#16543C]" />
+              <Sliders className="w-5 h-5 text-[#0d3431]" />
               {locale === "uz" ? "Umumiy Platforma Parametrlari" : "Общие параметры платформы"}
             </h2>
 
@@ -231,7 +231,7 @@ export default function AdminSettingsPage() {
                   type="text"
                   value={formData.site_name}
                   onChange={(e) => setFormData({ ...formData, site_name: e.target.value })}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
                 />
               </div>
 
@@ -243,7 +243,7 @@ export default function AdminSettingsPage() {
                   type="text"
                   value={formData.default_city}
                   onChange={(e) => setFormData({ ...formData, default_city: e.target.value })}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
                 />
               </div>
 
@@ -254,7 +254,7 @@ export default function AdminSettingsPage() {
                 <select
                   value={formData.default_currency}
                   onChange={(e) => setFormData({ ...formData, default_currency: e.target.value as any })}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
                 >
                   <option value="UZS">{locale === "uz" ? "UZS — O‘zbekiston so‘mi" : "UZS — Узбекский сум"}</option>
                   <option value="USD">{locale === "uz" ? "USD — AQSH dollari" : "USD — Доллар США"}</option>
@@ -268,7 +268,7 @@ export default function AdminSettingsPage() {
                 <select
                   value={formData.default_language}
                   onChange={(e) => setFormData({ ...formData, default_language: e.target.value as any })}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
                 >
                   <option value="uz">O‘zbekcha (Lotin)</option>
                   <option value="ru">Русский</option>
@@ -284,7 +284,7 @@ export default function AdminSettingsPage() {
         <form onSubmit={handleSaveSettings} className="space-y-6">
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
             <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-[#16543C]" />
+              <MapPin className="w-5 h-5 text-[#0d3431]" />
               {locale === "uz" ? "Xarita Boshlang‘ich Holati" : "Начальное состояние карты"}
             </h2>
 
@@ -298,7 +298,7 @@ export default function AdminSettingsPage() {
                   step="0.0001"
                   value={formData.map_center_lat}
                   onChange={(e) => setFormData({ ...formData, map_center_lat: parseFloat(e.target.value) || 41.012277 })}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C] font-mono"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431] font-mono"
                 />
               </div>
 
@@ -311,7 +311,7 @@ export default function AdminSettingsPage() {
                   step="0.0001"
                   value={formData.map_center_lng}
                   onChange={(e) => setFormData({ ...formData, map_center_lng: parseFloat(e.target.value) || 70.085182 })}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C] font-mono"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431] font-mono"
                 />
               </div>
 
@@ -325,7 +325,7 @@ export default function AdminSettingsPage() {
                   max={18}
                   value={formData.map_default_zoom}
                   onChange={(e) => setFormData({ ...formData, map_default_zoom: parseInt(e.target.value) || 13 })}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C] font-mono"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431] font-mono"
                 />
               </div>
             </div>
@@ -371,7 +371,7 @@ export default function AdminSettingsPage() {
         <form onSubmit={handleSaveSettings} className="space-y-6">
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
             <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <Phone className="w-5 h-5 text-[#16543C]" />
+              <Phone className="w-5 h-5 text-[#0d3431]" />
               {locale === "uz" ? "Aloqa Ma’lumotlari va Tarmoqlar" : "Контактные данные и соцсети"}
             </h2>
 
@@ -384,7 +384,7 @@ export default function AdminSettingsPage() {
                   type="text"
                   value={formData.admin_phone}
                   onChange={(e) => setFormData({ ...formData, admin_phone: e.target.value })}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
                 />
               </div>
 
@@ -396,7 +396,7 @@ export default function AdminSettingsPage() {
                   type="text"
                   value={formData.admin_telegram}
                   onChange={(e) => setFormData({ ...formData, admin_telegram: e.target.value })}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
                 />
               </div>
 
@@ -408,7 +408,7 @@ export default function AdminSettingsPage() {
                   type="email"
                   value={formData.admin_email}
                   onChange={(e) => setFormData({ ...formData, admin_email: e.target.value })}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
                 />
               </div>
 
@@ -420,7 +420,7 @@ export default function AdminSettingsPage() {
                   type="text"
                   value={formData.instagram}
                   onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
                 />
               </div>
             </div>
@@ -435,7 +435,7 @@ export default function AdminSettingsPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white p-5 rounded-2xl border border-emerald-200 shadow-xs">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-[#16543C]">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-[#0d3431]">
                   <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div>
@@ -485,7 +485,7 @@ export default function AdminSettingsPage() {
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
             <div>
               <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <KeyRound className="w-5 h-5 text-[#16543C]" />
+                <KeyRound className="w-5 h-5 text-[#0d3431]" />
                 {locale === "uz" ? "Admin Parolini O‘zgartirish" : "Смена пароля администратора"}
               </h2>
               <p className="text-xs text-slate-600 font-medium mt-1">
@@ -504,7 +504,7 @@ export default function AdminSettingsPage() {
 
             {passwordSuccess && (
               <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-semibold text-emerald-800 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-[#16543C]" />
+                <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-[#0d3431]" />
                 <span>{passwordSuccess}</span>
               </div>
             )}
@@ -521,7 +521,7 @@ export default function AdminSettingsPage() {
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     required
                     placeholder="••••••••••••"
-                    className="w-full bg-white border border-slate-300 rounded-xl pl-4 pr-11 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
+                    className="w-full bg-white border border-slate-300 rounded-xl pl-4 pr-11 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
                   />
                   <button
                     type="button"
@@ -543,7 +543,7 @@ export default function AdminSettingsPage() {
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
                   placeholder="••••••••••••"
-                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
                 />
               </div>
 
@@ -557,7 +557,7 @@ export default function AdminSettingsPage() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   placeholder="••••••••••••"
-                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
                 />
               </div>
 
@@ -565,7 +565,7 @@ export default function AdminSettingsPage() {
                 <button
                   type="submit"
                   disabled={passwordLoading}
-                  className="w-full py-3 px-5 bg-[#16543C] hover:bg-[#0E3324] disabled:opacity-50 text-white text-sm font-bold rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2"
+                  className="w-full py-3 px-5 bg-[#0d3431] hover:bg-[#19453c] disabled:opacity-50 text-white text-sm font-bold rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2"
                 >
                   <Lock className="w-4 h-4" />
                   {passwordLoading

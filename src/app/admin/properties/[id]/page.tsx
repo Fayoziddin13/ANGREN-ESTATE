@@ -88,7 +88,7 @@ const AdminLocationPicker = dynamic(
     ssr: false,
     loading: () => (
       <div className="w-full h-80 rounded-2xl bg-slate-100 flex flex-col items-center justify-center gap-2 text-xs font-semibold text-slate-400">
-        <div className="h-7 w-7 rounded-full border-2 border-[#16543C] border-t-transparent animate-spin" />
+        <div className="h-7 w-7 rounded-full border-2 border-[#0d3431] border-t-transparent animate-spin" />
         <span>Angren interaktiv xaritasi yuklanmoqda...</span>
       </div>
     ),
@@ -729,7 +729,7 @@ export default function EditPropertyPage() {
         </p>
         <Link
           href="/admin/properties"
-          className="inline-block px-4 py-2 rounded-xl bg-[#16543C] text-white text-xs font-bold"
+          className="inline-block px-4 py-2 rounded-xl bg-[#0d3431] text-white text-xs font-bold"
         >
           {locale === "uz" ? "Ro‘yxatga qaytish" : "Вернуться к списку"}
         </Link>
@@ -777,7 +777,7 @@ export default function EditPropertyPage() {
             type="button"
             onClick={() => handleUpdate("published")}
             disabled={isUpdating}
-            className="px-4 py-2 rounded-xl bg-[#16543C] text-white hover:bg-[#0E3324] font-bold text-xs shadow-md transition-colors flex items-center gap-1.5 disabled:opacity-50"
+            className="px-4 py-2 rounded-xl bg-[#0d3431] text-white hover:bg-[#0d3431] font-bold text-xs shadow-md transition-colors flex items-center gap-1.5 disabled:opacity-50"
           >
             <CheckCircle2 className="h-4 w-4" />
             <span>
@@ -813,7 +813,7 @@ export default function EditPropertyPage() {
             onClick={() => setActiveStep(step.num)}
             className={`p-2.5 rounded-2xl border transition-all ${
               activeStep === step.num
-                ? "bg-[#16543C] text-white border-[#16543C] shadow-sm"
+                ? "bg-[#0d3431] text-white border-[#0d3431] shadow-sm"
                 : activeStep > step.num
                 ? "bg-emerald-50 text-emerald-800 border-emerald-200"
                 : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
@@ -847,7 +847,7 @@ export default function EditPropertyPage() {
                   onClick={() => setTransactionType("sale")}
                   className={`p-3 rounded-2xl border text-xs font-bold transition-all ${
                     transactionType === "sale"
-                      ? "bg-emerald-50 text-[#16543C] border-[#16543C] ring-2 ring-[#16543C]/20"
+                      ? "bg-emerald-50 text-[#0d3431] border-[#0d3431] ring-2 ring-[#0d3431]/20"
                       : "border-slate-200 hover:bg-slate-50"
                   }`}
                 >
@@ -887,7 +887,7 @@ export default function EditPropertyPage() {
                     onClick={() => setPropertyType(type.key as PropertyType)}
                     className={`p-3 rounded-2xl border text-xs font-bold transition-all ${
                       propertyType === type.key
-                        ? "bg-[#16543C] text-white border-[#16543C] shadow-sm"
+                        ? "bg-[#0d3431] text-white border-[#0d3431] shadow-sm"
                         : "border-slate-200 hover:bg-slate-50 text-slate-700"
                     }`}
                   >
@@ -911,7 +911,7 @@ export default function EditPropertyPage() {
                     setPriceUsd(usd);
                     setPriceUzs(Math.round(usd * exchangeRate));
                   }}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#16543C] outline-none text-sm font-bold"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0d3431] outline-none text-sm font-bold"
                 />
               </div>
               <div className="space-y-1">
@@ -926,7 +926,7 @@ export default function EditPropertyPage() {
                     setPriceUzs(uzs);
                     setPriceUsd(Math.round(uzs / exchangeRate));
                   }}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#16543C] outline-none text-sm font-bold"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0d3431] outline-none text-sm font-bold"
                 />
               </div>
             </div>
@@ -960,7 +960,7 @@ export default function EditPropertyPage() {
                       onClick={() => toggleBadge(b.id)}
                       className={`p-3 rounded-2xl border text-left flex flex-col justify-between transition-all ${
                         active
-                          ? "border-[#16543C] bg-emerald-50/70 shadow-sm ring-2 ring-[#16543C]"
+                          ? "border-[#0d3431] bg-emerald-50/70 shadow-sm ring-2 ring-[#0d3431]"
                           : "border-slate-200 bg-white hover:bg-slate-50"
                       }`}
                     >
@@ -969,7 +969,7 @@ export default function EditPropertyPage() {
                         <div
                           className={`w-4 h-4 rounded flex items-center justify-center border text-[10px] font-bold ${
                             active
-                              ? "bg-[#16543C] text-white border-[#16543C]"
+                              ? "bg-[#0d3431] text-white border-[#0d3431]"
                               : "border-slate-300 bg-white"
                           }`}
                         >
@@ -1042,7 +1042,7 @@ export default function EditPropertyPage() {
             {/* Translation Action Toolbar */}
             <div className="flex flex-wrap items-center gap-2 p-3 bg-slate-50 rounded-2xl border border-slate-200">
               <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5 mr-1">
-                <Languages className="h-4 w-4 text-[#16543C]" />
+                <Languages className="h-4 w-4 text-[#0d3431]" />
                 {locale === "uz" ? "Avto-tarjima:" : "Авто-перевод:"}
               </span>
 
@@ -1050,10 +1050,10 @@ export default function EditPropertyPage() {
                 type="button"
                 disabled={isTranslating || (!titleUz.trim() && !descUz.trim())}
                 onClick={() => handleAutoTranslate("uz_to_ru")}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:border-[#16543C] text-slate-800 hover:text-[#16543C] text-xs font-bold transition-all disabled:opacity-40 disabled:hover:border-slate-300 shadow-sm"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:border-[#0d3431] text-slate-800 hover:text-[#0d3431] text-xs font-bold transition-all disabled:opacity-40 disabled:hover:border-slate-300 shadow-sm"
               >
                 {isTranslating ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin text-[#16543C]" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-[#0d3431]" />
                 ) : (
                   <Globe className="h-3.5 w-3.5 text-emerald-700" />
                 )}
@@ -1064,10 +1064,10 @@ export default function EditPropertyPage() {
                 type="button"
                 disabled={isTranslating || (!titleRu.trim() && !descRu.trim())}
                 onClick={() => handleAutoTranslate("ru_to_uz")}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:border-[#16543C] text-slate-800 hover:text-[#16543C] text-xs font-bold transition-all disabled:opacity-40 disabled:hover:border-slate-300 shadow-sm"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:border-[#0d3431] text-slate-800 hover:text-[#0d3431] text-xs font-bold transition-all disabled:opacity-40 disabled:hover:border-slate-300 shadow-sm"
               >
                 {isTranslating ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin text-[#16543C]" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-[#0d3431]" />
                 ) : (
                   <Globe className="h-3.5 w-3.5 text-blue-700" />
                 )}
@@ -1107,7 +1107,7 @@ export default function EditPropertyPage() {
               {/* UZ Language Card */}
               <div className="p-4 rounded-2xl border border-emerald-200 bg-emerald-50/20 space-y-3">
                 <div className="flex items-center justify-between pb-1 border-b border-emerald-100">
-                  <span className="text-xs font-extrabold text-[#16543C] flex items-center gap-1.5">
+                  <span className="text-xs font-extrabold text-[#0d3431] flex items-center gap-1.5">
                     🇺🇿 O‘zbekcha (Lotin)
                   </span>
                   <span className="text-[11px] text-slate-500 font-medium">
@@ -1130,7 +1130,7 @@ export default function EditPropertyPage() {
                     }}
                     onBlur={() => handleFieldBlur("title", "uz")}
                     placeholder={locale === "uz" ? "Masalan: Shinam 3 xonali kvartira, 6-mavze" : "Например: Уютная 3-комнатная квартира, 6-й микрорайон"}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#16543C] outline-none text-xs font-semibold"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#0d3431] outline-none text-xs font-semibold"
                   />
                 </div>
                 <div className="space-y-1">
@@ -1149,7 +1149,7 @@ export default function EditPropertyPage() {
                     }}
                     onBlur={() => handleFieldBlur("desc", "uz")}
                     placeholder={locale === "uz" ? "Kvartira yoki uy haqida to‘liq ma’lumot..." : "Полная информация о квартире или доме..."}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#16543C] outline-none text-xs"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#0d3431] outline-none text-xs"
                   />
                 </div>
                 <div className="space-y-1">
@@ -1168,7 +1168,7 @@ export default function EditPropertyPage() {
                     }}
                     onBlur={() => handleFieldBlur("note", "uz")}
                     placeholder={locale === "uz" ? "Masalan: Ipotekaga berilmaydi, faqat naqd pulga" : "Например: Не под ипотеку, только наличный расчет"}
-                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#16543C] outline-none text-xs"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#0d3431] outline-none text-xs"
                   />
                 </div>
               </div>
@@ -1199,7 +1199,7 @@ export default function EditPropertyPage() {
                     }}
                     onBlur={() => handleFieldBlur("title", "ru")}
                     placeholder={locale === "uz" ? "Masalan: Shinam 3 xonali kvartira, 6-mavze" : "Например: Уютная 3-комнатная квартира, 6-й микрорайон"}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#16543C] outline-none text-xs font-semibold"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#0d3431] outline-none text-xs font-semibold"
                   />
                 </div>
                 <div className="space-y-1">
@@ -1218,7 +1218,7 @@ export default function EditPropertyPage() {
                     }}
                     onBlur={() => handleFieldBlur("desc", "ru")}
                     placeholder={locale === "uz" ? "Kvartira yoki uy haqida to‘liq ma’lumot..." : "Полная информация о квартире или доме..."}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#16543C] outline-none text-xs"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#0d3431] outline-none text-xs"
                   />
                 </div>
                 <div className="space-y-1">
@@ -1237,7 +1237,7 @@ export default function EditPropertyPage() {
                     }}
                     onBlur={() => handleFieldBlur("note", "ru")}
                     placeholder={locale === "uz" ? "Masalan: Ipotekaga berilmaydi, faqat naqd pulga" : "Например: Не под ипотеку, только наличный расчет"}
-                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#16543C] outline-none text-xs"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#0d3431] outline-none text-xs"
                   />
                 </div>
               </div>
@@ -1263,14 +1263,14 @@ export default function EditPropertyPage() {
                   value={addressUz}
                   onChange={(e) => setAddressUz(e.target.value)}
                   placeholder={locale === "uz" ? "Mustaqillik shoh ko‘chasi, 12-uy" : "ул. Мустакиллик, д. 12"}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-[#16543C] outline-none"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-[#0d3431] outline-none"
                 />
                 <input
                   type="text"
                   value={addressRu}
                   onChange={(e) => setAddressRu(e.target.value)}
                   placeholder={locale === "uz" ? "Mustaqillik shoh ko‘chasi, 12-uy (RU)" : "ул. Мустакиллик, д. 12"}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-[#16543C] outline-none"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-[#0d3431] outline-none"
                 />
               </div>
             </div>
@@ -1287,7 +1287,7 @@ export default function EditPropertyPage() {
                     setEditingHudud(null);
                     setIsHududModalOpen(true);
                   }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-[#16543C] border border-emerald-200 text-xs font-bold transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-[#0d3431] border border-emerald-200 text-xs font-bold transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>{locale === "uz" ? "+ Yangi hudud chizish (Poligon)" : "+ Создать новый район (Полигон)"}</span>
@@ -1304,7 +1304,7 @@ export default function EditPropertyPage() {
                       key={h.id}
                       className={`p-2.5 rounded-xl border flex items-center justify-between transition-all ${
                         isSelected
-                          ? "border-[#16543C] bg-emerald-50 text-[#16543C] font-bold ring-1 ring-[#16543C]"
+                          ? "border-[#0d3431] bg-emerald-50 text-[#0d3431] font-bold ring-1 ring-[#0d3431]"
                           : "border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-medium"
                       }`}
                     >
@@ -1321,7 +1321,7 @@ export default function EditPropertyPage() {
                         className="flex-1 text-left truncate flex items-center justify-between mr-1"
                       >
                         <span className="truncate">{locale === "uz" ? h.name_uz : h.name_ru}</span>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-[#16543C] shrink-0 ml-1" />}
+                        {isSelected && <Check className="w-3.5 h-3.5 text-[#0d3431] shrink-0 ml-1" />}
                       </button>
                       <div className="relative shrink-0">
                         <button
@@ -1411,7 +1411,7 @@ export default function EditPropertyPage() {
                             }
                           }}
                           title={locale === "uz" ? "Manzilga qo‘shish uchun bosing" : "Нажмите, чтобы добавить в адрес"}
-                          className="px-2.5 py-1 rounded-lg bg-white border border-slate-200/90 text-xs font-semibold text-slate-700 hover:border-[#16543C] hover:text-[#16543C] hover:bg-emerald-50/50 shadow-xs transition-colors"
+                          className="px-2.5 py-1 rounded-lg bg-white border border-slate-200/90 text-xs font-semibold text-slate-700 hover:border-[#0d3431] hover:text-[#0d3431] hover:bg-emerald-50/50 shadow-xs transition-colors"
                         >
                           + {m}
                         </button>
@@ -1475,7 +1475,7 @@ export default function EditPropertyPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                  <MapPin className="h-4 w-4 text-[#16543C]" />
+                  <MapPin className="h-4 w-4 text-[#0d3431]" />
                   <span>{locale === "uz" ? "Xaritada nuqtani belgilash" : "Отметка на карте"}</span>
                 </label>
                 <span className="text-[11px] text-slate-500 font-medium">
@@ -1580,7 +1580,7 @@ export default function EditPropertyPage() {
                               {locale === "uz" ? item.nameUz : item.nameRu}
                             </span>
                           </div>
-                          <span className="font-black text-[#16543C] shrink-0 text-[11px] bg-emerald-50 px-1.5 py-0.5 rounded">
+                          <span className="font-black text-[#0d3431] shrink-0 text-[11px] bg-emerald-50 px-1.5 py-0.5 rounded">
                             {item.formattedDistance}
                           </span>
                         </div>
@@ -1594,7 +1594,7 @@ export default function EditPropertyPage() {
             {(propertyType === "house_yard" || propertyType === "land") && (
               <div className="p-3.5 rounded-2xl bg-emerald-50/50 border border-emerald-200 space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 font-bold text-xs text-[#16543C]">
+                  <div className="flex items-center gap-2 font-bold text-xs text-[#0d3431]">
                     <Layers className="h-3.5 w-3.5" />
                     <span>
                       {locale === "uz"
@@ -1793,11 +1793,11 @@ export default function EditPropertyPage() {
                   {/* Qavatlar dinamik ko'rsatkichi (Badge) */}
                   <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200 mb-3">
                     <div className="flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-[#16543C]" />
+                      <Building2 className="w-4 h-4 text-[#0d3431]" />
                       <span className="text-xs font-bold text-slate-800">
                         {locale === "uz" ? "Tanlangan qavat holati:" : "Выбранный этаж:"}
                       </span>
-                      <span className="px-2.5 py-0.5 rounded-full bg-[#16543C] text-white text-xs font-black">
+                      <span className="px-2.5 py-0.5 rounded-full bg-[#0d3431] text-white text-xs font-black">
                         {floor} / {totalFloors} {locale === "uz" ? "- qavat" : "этаж"}
                       </span>
                     </div>
@@ -1816,7 +1816,7 @@ export default function EditPropertyPage() {
                           {locale === "uz" ? "Bino qavatlari soni (1 — 25) *" : "Этажность здания (1 — 25) *"}
                         </span>
                         <div className="flex items-center gap-1.5">
-                          <span className="px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-xs font-black text-[#16543C]">
+                          <span className="px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-xs font-black text-[#0d3431]">
                             {totalFloors} {locale === "uz" ? "qavat" : "эт."}
                           </span>
                         </div>
@@ -1833,7 +1833,7 @@ export default function EditPropertyPage() {
                             setFloor(newTotal);
                           }
                         }}
-                        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#16543C]"
+                        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#0d3431]"
                       />
                       <div className="flex justify-between text-[10px] font-bold text-slate-400 px-0.5">
                         <span>1</span>
@@ -1851,7 +1851,7 @@ export default function EditPropertyPage() {
                           {locale === "uz" ? `Kvartira qavati (1 — ${totalFloors}) *` : `Этаж квартиры (1 — ${totalFloors}) *`}
                         </span>
                         <div className="flex items-center gap-1.5">
-                          <span className="px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-xs font-black text-[#16543C]">
+                          <span className="px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-xs font-black text-[#0d3431]">
                             {floor}-qavat
                           </span>
                         </div>
@@ -1865,7 +1865,7 @@ export default function EditPropertyPage() {
                           const newFloor = Number(e.target.value);
                           setFloor(Math.min(newFloor, totalFloors));
                         }}
-                        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#16543C]"
+                        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#0d3431]"
                       />
                       <div className="flex justify-between text-[10px] font-bold text-slate-400 px-0.5">
                         <span>1</span>
@@ -1884,12 +1884,12 @@ export default function EditPropertyPage() {
             <div className="space-y-3 pt-5 border-t border-slate-100">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-[#16543C]" />
+                  <Zap className="w-4 h-4 text-[#0d3431]" />
                   <label className="text-xs font-black uppercase tracking-wider text-slate-800">
                     {locale === "uz" ? "Kommunikatsiyalar" : "Коммуникации"}
                   </label>
                 </div>
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-[#16543C]">
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-[#0d3431]">
                   {[
                     utilities.gas,
                     utilities.electricity,
@@ -1924,7 +1924,7 @@ export default function EditPropertyPage() {
                       }}
                       className={`p-3 rounded-2xl border flex items-center justify-between transition-all ${
                         isChecked
-                          ? "bg-emerald-50/80 border-[#16543C] text-[#16543C] font-bold shadow-2xs"
+                          ? "bg-emerald-50/80 border-[#0d3431] text-[#0d3431] font-bold shadow-2xs"
                           : "bg-slate-50/70 border-slate-200 text-slate-600 text-xs"
                       }`}
                     >
@@ -1932,7 +1932,7 @@ export default function EditPropertyPage() {
                         <Icon className="w-4 h-4 shrink-0" />
                         <span className="text-xs truncate">{locale === "uz" ? item.uz : item.ru}</span>
                       </div>
-                      {isChecked ? <CheckSquare className="w-4 h-4 text-[#16543C] shrink-0" /> : <Square className="w-4 h-4 text-slate-300 shrink-0" />}
+                      {isChecked ? <CheckSquare className="w-4 h-4 text-[#0d3431] shrink-0" /> : <Square className="w-4 h-4 text-slate-300 shrink-0" />}
                     </button>
                   );
                 })}
@@ -1945,12 +1945,12 @@ export default function EditPropertyPage() {
             <div className="space-y-3 pt-5 border-t border-slate-100">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Building className="w-4 h-4 text-[#16543C]" />
+                  <Building className="w-4 h-4 text-[#0d3431]" />
                   <label className="text-xs font-black uppercase tracking-wider text-slate-800">
                     {locale === "uz" ? "Qo‘shimcha obyektlar" : "Дополнительные объекты"}
                   </label>
                 </div>
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-[#16543C]">
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-[#0d3431]">
                   {extraObjects.length + customExtraObjects.length} {locale === "uz" ? "ta" : "ед."}
                 </span>
               </div>
@@ -1981,7 +1981,7 @@ export default function EditPropertyPage() {
                       }}
                       className={`p-2.5 rounded-2xl border text-left flex items-center justify-between transition-all ${
                         isChecked
-                          ? "bg-emerald-50/80 border-[#16543C] text-[#16543C] font-bold shadow-2xs"
+                          ? "bg-emerald-50/80 border-[#0d3431] text-[#0d3431] font-bold shadow-2xs"
                           : "bg-slate-50/70 border-slate-200 text-slate-600 text-xs"
                       }`}
                     >
@@ -1989,7 +1989,7 @@ export default function EditPropertyPage() {
                         <Icon className="w-4 h-4 shrink-0" />
                         <span className="text-xs truncate">{locale === "uz" ? item.uz : item.ru}</span>
                       </div>
-                      {isChecked ? <CheckSquare className="w-4 h-4 text-[#16543C] shrink-0" /> : <Square className="w-4 h-4 text-slate-300 shrink-0" />}
+                      {isChecked ? <CheckSquare className="w-4 h-4 text-[#0d3431] shrink-0" /> : <Square className="w-4 h-4 text-slate-300 shrink-0" />}
                     </button>
                   );
                 })}
@@ -1998,7 +1998,7 @@ export default function EditPropertyPage() {
                 {customExtraObjects.map((customObj) => (
                   <div
                     key={customObj}
-                    className="p-2.5 rounded-2xl border bg-emerald-50/80 border-[#16543C] text-[#16543C] font-bold flex items-center justify-between text-xs"
+                    className="p-2.5 rounded-2xl border bg-emerald-50/80 border-[#0d3431] text-[#0d3431] font-bold flex items-center justify-between text-xs"
                   >
                     <span className="truncate">{customObj}</span>
                     <button
@@ -2026,7 +2026,7 @@ export default function EditPropertyPage() {
                     }
                   }}
                   placeholder={locale === "uz" ? "Boshqa qo‘shimcha obyekt qo‘shish (masalan: Sauna, Terasa)..." : "Добавить другой объект (например: Сауна, Терраса)..."}
-                  className="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#16543C] outline-none"
+                  className="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#0d3431] outline-none"
                 />
                 <button
                   type="button"
@@ -2036,7 +2036,7 @@ export default function EditPropertyPage() {
                       setNewExtraObjectInput("");
                     }
                   }}
-                  className="px-3.5 py-2 rounded-xl bg-[#16543C] hover:bg-[#0E3324] text-white text-xs font-bold transition-colors flex items-center gap-1"
+                  className="px-3.5 py-2 rounded-xl bg-[#0d3431] hover:bg-[#19453c] text-white text-xs font-bold transition-colors flex items-center gap-1"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>{locale === "uz" ? "Qo‘shish" : "Добавить"}</span>
@@ -2050,12 +2050,12 @@ export default function EditPropertyPage() {
             <div className="space-y-3 pt-5 border-t border-slate-100">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#16543C]" />
+                  <Sparkles className="w-4 h-4 text-[#0d3431]" />
                   <label className="text-xs font-black uppercase tracking-wider text-slate-800">
                     {locale === "uz" ? "Afzalliklar" : "Преимущества"}
                   </label>
                 </div>
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-[#16543C]">
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-[#0d3431]">
                   {[amenities.ac, amenities.furniture, amenities.parking, renovation === "euro", amenities.elevator].filter(Boolean).length + customAdvantages.length} {locale === "uz" ? "ta" : "ед."}
                 </span>
               </div>
@@ -2067,7 +2067,7 @@ export default function EditPropertyPage() {
                   onClick={() => setAmenities((prev) => ({ ...prev, ac: !prev.ac }))}
                   className={`p-3 rounded-2xl border flex items-center justify-between transition-all ${
                     amenities.ac
-                      ? "bg-emerald-50/80 border-[#16543C] text-[#16543C] font-bold shadow-2xs"
+                      ? "bg-emerald-50/80 border-[#0d3431] text-[#0d3431] font-bold shadow-2xs"
                       : "bg-slate-50/70 border-slate-200 text-slate-600 text-xs"
                   }`}
                 >
@@ -2075,7 +2075,7 @@ export default function EditPropertyPage() {
                     <Wind className="w-4 h-4 text-sky-600 shrink-0" />
                     <span className="text-xs truncate">{locale === "uz" ? "Konditsioner" : "Кондиционер"}</span>
                   </div>
-                  {amenities.ac ? <CheckSquare className="w-4 h-4 text-[#16543C] shrink-0" /> : <Square className="w-4 h-4 text-slate-300 shrink-0" />}
+                  {amenities.ac ? <CheckSquare className="w-4 h-4 text-[#0d3431] shrink-0" /> : <Square className="w-4 h-4 text-slate-300 shrink-0" />}
                 </button>
 
                 {/* Mebel */}
@@ -2084,7 +2084,7 @@ export default function EditPropertyPage() {
                   onClick={() => setAmenities((prev) => ({ ...prev, furniture: !prev.furniture }))}
                   className={`p-3 rounded-2xl border flex items-center justify-between transition-all ${
                     amenities.furniture
-                      ? "bg-emerald-50/80 border-[#16543C] text-[#16543C] font-bold shadow-2xs"
+                      ? "bg-emerald-50/80 border-[#0d3431] text-[#0d3431] font-bold shadow-2xs"
                       : "bg-slate-50/70 border-slate-200 text-slate-600 text-xs"
                   }`}
                 >
@@ -2092,7 +2092,7 @@ export default function EditPropertyPage() {
                     <Home className="w-4 h-4 text-amber-800 shrink-0" />
                     <span className="text-xs truncate">{locale === "uz" ? "Mebel" : "Мебель"}</span>
                   </div>
-                  {amenities.furniture ? <CheckSquare className="w-4 h-4 text-[#16543C] shrink-0" /> : <Square className="w-4 h-4 text-slate-300 shrink-0" />}
+                  {amenities.furniture ? <CheckSquare className="w-4 h-4 text-[#0d3431] shrink-0" /> : <Square className="w-4 h-4 text-slate-300 shrink-0" />}
                 </button>
 
                 {/* Avtoturargoh */}
@@ -2101,7 +2101,7 @@ export default function EditPropertyPage() {
                   onClick={() => setAmenities((prev) => ({ ...prev, parking: !prev.parking }))}
                   className={`p-3 rounded-2xl border flex items-center justify-between transition-all ${
                     amenities.parking
-                      ? "bg-emerald-50/80 border-[#16543C] text-[#16543C] font-bold shadow-2xs"
+                      ? "bg-emerald-50/80 border-[#0d3431] text-[#0d3431] font-bold shadow-2xs"
                       : "bg-slate-50/70 border-slate-200 text-slate-600 text-xs"
                   }`}
                 >
@@ -2109,7 +2109,7 @@ export default function EditPropertyPage() {
                     <Car className="w-4 h-4 text-blue-600 shrink-0" />
                     <span className="text-xs truncate">{locale === "uz" ? "Avtoturargoh" : "Парковка"}</span>
                   </div>
-                  {amenities.parking ? <CheckSquare className="w-4 h-4 text-[#16543C] shrink-0" /> : <Square className="w-4 h-4 text-slate-300 shrink-0" />}
+                  {amenities.parking ? <CheckSquare className="w-4 h-4 text-[#0d3431] shrink-0" /> : <Square className="w-4 h-4 text-slate-300 shrink-0" />}
                 </button>
 
                 {/* Yangi ta’mir */}
@@ -2118,7 +2118,7 @@ export default function EditPropertyPage() {
                   onClick={() => setRenovation(renovation === "euro" ? "cosmetic" : "euro")}
                   className={`p-3 rounded-2xl border flex items-center justify-between transition-all ${
                     renovation === "euro"
-                      ? "bg-emerald-50/80 border-[#16543C] text-[#16543C] font-bold shadow-2xs"
+                      ? "bg-emerald-50/80 border-[#0d3431] text-[#0d3431] font-bold shadow-2xs"
                       : "bg-slate-50/70 border-slate-200 text-slate-600 text-xs"
                   }`}
                 >
@@ -2126,7 +2126,7 @@ export default function EditPropertyPage() {
                     <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
                     <span className="text-xs truncate">{locale === "uz" ? "Yangi ta’mir" : "Новый ремонт"}</span>
                   </div>
-                  {renovation === "euro" ? <CheckSquare className="w-4 h-4 text-[#16543C] shrink-0" /> : <Square className="w-4 h-4 text-slate-300 shrink-0" />}
+                  {renovation === "euro" ? <CheckSquare className="w-4 h-4 text-[#0d3431] shrink-0" /> : <Square className="w-4 h-4 text-slate-300 shrink-0" />}
                 </button>
 
                 {/* Lift */}
@@ -2135,7 +2135,7 @@ export default function EditPropertyPage() {
                   onClick={() => setAmenities((prev) => ({ ...prev, elevator: !prev.elevator }))}
                   className={`p-3 rounded-2xl border flex items-center justify-between transition-all ${
                     amenities.elevator
-                      ? "bg-emerald-50/80 border-[#16543C] text-[#16543C] font-bold shadow-2xs"
+                      ? "bg-emerald-50/80 border-[#0d3431] text-[#0d3431] font-bold shadow-2xs"
                       : "bg-slate-50/70 border-slate-200 text-slate-600 text-xs"
                   }`}
                 >
@@ -2143,14 +2143,14 @@ export default function EditPropertyPage() {
                     <Building2 className="w-4 h-4 text-indigo-600 shrink-0" />
                     <span className="text-xs truncate">{locale === "uz" ? "Lift" : "Лифт"}</span>
                   </div>
-                  {amenities.elevator ? <CheckSquare className="w-4 h-4 text-[#16543C] shrink-0" /> : <Square className="w-4 h-4 text-slate-300 shrink-0" />}
+                  {amenities.elevator ? <CheckSquare className="w-4 h-4 text-[#0d3431] shrink-0" /> : <Square className="w-4 h-4 text-slate-300 shrink-0" />}
                 </button>
 
                 {/* Custom advantages */}
                 {customAdvantages.map((customAdv) => (
                   <div
                     key={customAdv}
-                    className="p-3 rounded-2xl border bg-emerald-50/80 border-[#16543C] text-[#16543C] font-bold flex items-center justify-between text-xs"
+                    className="p-3 rounded-2xl border bg-emerald-50/80 border-[#0d3431] text-[#0d3431] font-bold flex items-center justify-between text-xs"
                   >
                     <span className="truncate">{customAdv}</span>
                     <button
@@ -2178,7 +2178,7 @@ export default function EditPropertyPage() {
                     }
                   }}
                   placeholder={locale === "uz" ? "Boshqa afzallik qo‘shish (masalan: Smart Home, Panoramik oyna)..." : "Добавить другое преимущество (например: Умный дом, Панорамные окна)..."}
-                  className="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#16543C] outline-none"
+                  className="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#0d3431] outline-none"
                 />
                 <button
                   type="button"
@@ -2188,7 +2188,7 @@ export default function EditPropertyPage() {
                       setNewAdvantageInput("");
                     }
                   }}
-                  className="px-3.5 py-2 rounded-xl bg-[#16543C] hover:bg-[#0E3324] text-white text-xs font-bold transition-colors flex items-center gap-1"
+                  className="px-3.5 py-2 rounded-xl bg-[#0d3431] hover:bg-[#19453c] text-white text-xs font-bold transition-colors flex items-center gap-1"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>{locale === "uz" ? "Qo‘shish" : "Добавить"}</span>
@@ -2333,7 +2333,7 @@ export default function EditPropertyPage() {
               <button
                 type="button"
                 onClick={() => setActiveStep(activeStep + 1)}
-                className="px-5 py-2 rounded-xl bg-[#16543C] text-white font-bold text-xs hover:bg-[#0E3324] transition-colors flex items-center gap-1.5"
+                className="px-5 py-2 rounded-xl bg-[#0d3431] text-white font-bold text-xs hover:bg-[#0d3431] transition-colors flex items-center gap-1.5"
               >
                 <span>{locale === "uz" ? "Keyingisi" : "Далее"}</span>
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -2342,7 +2342,7 @@ export default function EditPropertyPage() {
               <button
                 type="button"
                 onClick={() => handleUpdate("published")}
-                className="px-5 py-2 rounded-xl bg-[#16543C] text-white font-bold text-xs hover:bg-[#0E3324] transition-colors flex items-center gap-1.5"
+                className="px-5 py-2 rounded-xl bg-[#0d3431] text-white font-bold text-xs hover:bg-[#0d3431] transition-colors flex items-center gap-1.5"
               >
                 <CheckCircle2 className="h-4 w-4" />
                 <span>{locale === "uz" ? "O‘zgarishlarni saqlash va nashr qilish" : "Сохранить изменения и опубликовать"}</span>

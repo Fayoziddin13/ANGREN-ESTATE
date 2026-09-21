@@ -128,7 +128,7 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row text-slate-800 antialiased font-sans">
       {/* Mobile Top Navigation */}
-      <div className="md:hidden sticky top-0 z-40 bg-[#0E3324] text-white px-4 py-3 flex items-center justify-between shadow-md border-b border-emerald-900">
+      <div className="md:hidden sticky top-0 z-40 bg-[#0d3431] text-white px-4 py-3 flex items-center justify-between shadow-md border-b border-white/10">
         <Link href="/admin" className="flex items-center gap-2.5">
           <div className="relative h-8 w-8 rounded-lg overflow-hidden shrink-0 border border-white/20">
             <Image src="/logo.png" alt="Logo" fill className="object-cover" />
@@ -163,7 +163,7 @@ export default function AdminLayout({
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[#0A261A] text-white px-3 py-4 space-y-1 border-b border-emerald-950 shadow-2xl z-30">
+        <div className="md:hidden bg-[#08201c] text-white px-3 py-4 space-y-1 border-b border-white/10 shadow-2xl z-30">
           <div className="px-3 py-1 text-[10px] uppercase tracking-wider font-extrabold text-emerald-400/60">
             {locale === "uz" ? "Menyu" : "Меню"}
           </div>
@@ -176,7 +176,7 @@ export default function AdminLayout({
                 onClick={() => setMobileMenuOpen(false)}
                 className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
                   item.active
-                    ? "bg-[#16543C] text-white font-bold"
+                    ? "bg-[#19453c] text-white font-bold"
                     : "text-emerald-100/70 hover:bg-white/10 hover:text-white"
                 }`}
               >
@@ -206,7 +206,7 @@ export default function AdminLayout({
       )}
 
       {/* Desktop Persistent Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 bg-[#0E3324] text-white shrink-0 border-r border-emerald-950 shadow-2xl min-h-screen sticky top-0 h-screen select-none">
+      <aside className="hidden md:flex flex-col w-64 bg-[#0d3431] text-white shrink-0 border-r border-white/10 shadow-2xl min-h-screen sticky top-0 h-screen select-none">
         {/* Brand Header */}
         <div className="p-4 border-b border-white/10 flex items-center justify-between">
           <Link href="/admin" className="flex items-center gap-3 group">
@@ -238,7 +238,7 @@ export default function AdminLayout({
                 href={item.href}
                 className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
                   item.active
-                    ? "bg-[#16543C] text-white shadow-sm border border-emerald-600/50 translate-x-1"
+                    ? "bg-[#19453c] text-white shadow-sm border border-emerald-600/40 translate-x-1 font-bold"
                     : "text-emerald-100 hover:bg-white/10 hover:text-white"
                 }`}
               >
@@ -254,7 +254,7 @@ export default function AdminLayout({
         </div>
 
         {/* Bottom Section: Language Switcher, Admin Profile, Logout */}
-        <div className="p-3 border-t border-white/10 space-y-2 bg-[#0A261A]/80">
+        <div className="p-3 border-t border-white/10 space-y-2 bg-[#08201c]/90">
           {/* Language Switch */}
           <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs">
             <span className="text-[11px] text-emerald-100 font-medium flex items-center gap-1.5">
@@ -285,7 +285,7 @@ export default function AdminLayout({
           {/* Admin User Profile & Logout */}
           <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
             <div className="flex items-center gap-2.5 overflow-hidden">
-              <div className="h-8 w-8 rounded-lg bg-emerald-700 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-inner">
+              <div className="h-8 w-8 rounded-lg bg-[#19453c] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-inner">
                 AD
               </div>
               <div className="overflow-hidden">
@@ -309,7 +309,7 @@ export default function AdminLayout({
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         {/* Desktop Top Header Bar */}
-        <div className="hidden md:flex items-center justify-between px-8 py-3.5 bg-white border-b border-slate-200 sticky top-0 z-20 shadow-xs">
+        <div className="hidden md:flex items-center justify-between px-8 py-3.5 bg-white border-b border-[#E8ECE9] sticky top-0 z-20 shadow-xs">
           <div className="flex items-center gap-2 text-xs text-slate-600 font-medium">
             <span>Admin</span>
             <ChevronRight className="h-3 w-3 text-slate-400" />
@@ -323,7 +323,7 @@ export default function AdminLayout({
               <button
                 onClick={() => setLocale("uz")}
                 className={`px-2 py-0.5 rounded-lg font-bold transition-colors ${
-                  locale === "uz" ? "bg-white text-emerald-700 shadow-xs" : "text-slate-500 hover:text-slate-800"
+                  locale === "uz" ? "bg-white text-[#0d3431] shadow-xs" : "text-slate-500 hover:text-slate-800"
                 }`}
               >
                 UZ
@@ -332,7 +332,7 @@ export default function AdminLayout({
               <button
                 onClick={() => setLocale("ru")}
                 className={`px-2 py-0.5 rounded-lg font-bold transition-colors ${
-                  locale === "ru" ? "bg-white text-emerald-700 shadow-xs" : "text-slate-500 hover:text-slate-800"
+                  locale === "ru" ? "bg-white text-[#0d3431] shadow-xs" : "text-slate-500 hover:text-slate-800"
                 }`}
               >
                 RU

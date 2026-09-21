@@ -293,7 +293,7 @@ export default function AdminArizalarPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-50 text-[#16543C] border border-emerald-100">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-50 text-[#0d3431] border border-emerald-100">
               <ClipboardList className="h-5 w-5" />
             </div>
             <div>
@@ -322,7 +322,7 @@ export default function AdminArizalarPage() {
 
           <Link
             href="/admin/properties/new"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#16543C] hover:bg-[#124230] text-white text-xs font-bold shadow-sm hover:shadow transition-all"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#0d3431] hover:bg-[#19453c] text-white text-xs font-bold shadow-sm hover:shadow transition-all"
           >
             <PlusCircle className="h-4 w-4" />
             <span>{locale === "uz" ? "Obyekt qo‘shish" : "Создать объект"}</span>
@@ -393,7 +393,7 @@ export default function AdminArizalarPage() {
           onClick={() => setStatusFilter("completed")}
           className={`cursor-pointer rounded-2xl p-4 border transition-all ${
             statusFilter === "completed"
-              ? "bg-[#16543C] text-white border-[#16543C] shadow-sm"
+              ? "bg-[#0d3431] text-white border-[#0d3431] shadow-sm"
               : "bg-emerald-50/50 text-emerald-900 border-emerald-200/70 hover:border-emerald-300"
           }`}
         >
@@ -474,7 +474,7 @@ export default function AdminArizalarPage() {
             onClick={() => setStatusFilter("completed")}
             className={`px-3.5 py-2 rounded-xl whitespace-nowrap transition-colors flex items-center gap-1.5 ${
               statusFilter === "completed"
-                ? "bg-[#16543C] text-white shadow-xs"
+                ? "bg-[#0d3431] text-white shadow-xs"
                 : "bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
             }`}
           >
@@ -510,7 +510,7 @@ export default function AdminArizalarPage() {
               }
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-slate-200 bg-slate-50/50 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-[#16543C] focus:bg-white transition-all"
+              className="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-slate-200 bg-slate-50/50 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-[#0d3431] focus:bg-white transition-all"
             />
             {searchQuery && (
               <button
@@ -527,7 +527,7 @@ export default function AdminArizalarPage() {
             <select
               value={dealFilter}
               onChange={(e) => setDealFilter(e.target.value as DealFilter)}
-              className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 bg-slate-50/50 text-xs font-semibold text-slate-800 focus:outline-hidden focus:border-[#16543C] focus:bg-white transition-all"
+              className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 bg-slate-50/50 text-xs font-semibold text-slate-800 focus:outline-hidden focus:border-[#0d3431] focus:bg-white transition-all"
             >
               <option value="all">{locale === "uz" ? "Barcha bitimlar (Sotuv / Ijara)" : "Все сделки (Продажа / Аренда)"}</option>
               <option value="sale">{locale === "uz" ? "Sotuv" : "Продажа"}</option>
@@ -540,7 +540,7 @@ export default function AdminArizalarPage() {
             <select
               value={propTypeFilter}
               onChange={(e) => setPropTypeFilter(e.target.value as PropTypeFilter)}
-              className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 bg-slate-50/50 text-xs font-semibold text-slate-800 focus:outline-hidden focus:border-[#16543C] focus:bg-white transition-all"
+              className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 bg-slate-50/50 text-xs font-semibold text-slate-800 focus:outline-hidden focus:border-[#0d3431] focus:bg-white transition-all"
             >
               <option value="all">{locale === "uz" ? "Barcha mulk turlari" : "Все типы объектов"}</option>
               <option value="kvartira">{locale === "uz" ? "Kvartira" : "Квартира"}</option>
@@ -557,7 +557,7 @@ export default function AdminArizalarPage() {
       {/* Main Listing Requests Table / Cards */}
       {isLoading ? (
         <div className="bg-white rounded-3xl p-12 border border-slate-200 text-center space-y-3">
-          <div className="h-8 w-8 rounded-full border-2 border-[#16543C] border-t-transparent animate-spin mx-auto" />
+          <div className="h-8 w-8 rounded-full border-2 border-[#0d3431] border-t-transparent animate-spin mx-auto" />
           <p className="text-xs font-bold text-slate-500">
             {locale === "uz" ? "Arizalar yuklanmoqda..." : "Загрузка заявок..."}
           </p>
@@ -575,7 +575,7 @@ export default function AdminArizalarPage() {
         </div>
       ) : filteredRequests.length === 0 ? (
         <div className="bg-white rounded-3xl p-12 border border-slate-200 text-center space-y-3 max-w-md mx-auto">
-          <div className="h-12 w-12 rounded-2xl bg-emerald-50 text-[#16543C] flex items-center justify-center mx-auto">
+          <div className="h-12 w-12 rounded-2xl bg-emerald-50 text-[#0d3431] flex items-center justify-center mx-auto">
             <ClipboardList className="h-6 w-6" />
           </div>
           <h3 className="text-base font-bold text-slate-800">
@@ -981,7 +981,7 @@ export default function AdminArizalarPage() {
                   <div className="sm:col-span-2">
                     <span className="text-xs text-slate-500">{locale === "uz" ? "Manzil va hudud" : "Адрес и локация"}:</span>
                     <div className="text-sm font-bold text-slate-900 flex items-center gap-1.5 mt-0.5">
-                      <MapPin className="h-4 w-4 text-[#16543C] shrink-0" />
+                      <MapPin className="h-4 w-4 text-[#0d3431] shrink-0" />
                       <span>{selectedRequest.metadata?.location || selectedRequest.property_title || "-"}</span>
                     </div>
                   </div>
@@ -1045,7 +1045,7 @@ export default function AdminArizalarPage() {
                     onClick={() => handleUpdateStatus(selectedRequest.id, "completed")}
                     className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 ${
                       selectedRequest.status === "completed" || selectedRequest.status === "closed"
-                        ? "bg-[#16543C] text-white border-[#16543C] shadow-xs"
+                        ? "bg-[#0d3431] text-white border-[#0d3431] shadow-xs"
                         : "bg-emerald-50/60 text-emerald-800 border-emerald-200 hover:bg-emerald-100"
                     }`}
                   >
@@ -1085,7 +1085,7 @@ export default function AdminArizalarPage() {
                       ? "Mijoz bilan suhbat natijasi, kelishilgan narx yoki qo‘shimcha izohni yozing..."
                       : "Результат звонка, согласованная цена или примечание..."
                   }
-                  className="w-full p-3 rounded-2xl border border-slate-200 bg-slate-50/50 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-[#16543C] focus:bg-white transition-all"
+                  className="w-full p-3 rounded-2xl border border-slate-200 bg-slate-50/50 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-[#0d3431] focus:bg-white transition-all"
                 />
                 <button
                   disabled={isSavingNotes}
@@ -1104,7 +1104,7 @@ export default function AdminArizalarPage() {
               {/* Section 5: Transition to Property Creation */}
               <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200/70 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="space-y-0.5">
-                  <div className="text-xs font-bold text-[#16543C]">
+                  <div className="text-xs font-bold text-[#0d3431]">
                     {locale === "uz" ? "E'lon yaratishga tayyormisiz?" : "Готовы создать объявление?"}
                   </div>
                   <div className="text-[11px] text-slate-600">
@@ -1116,7 +1116,7 @@ export default function AdminArizalarPage() {
 
                 <Link
                   href={`/admin/properties/new?deal_type=${selectedRequest.metadata?.deal_type || "sale"}&property_type=${selectedRequest.metadata?.property_type || "kvartira"}&location=${encodeURIComponent(selectedRequest.metadata?.location || "")}&title=${encodeURIComponent(selectedRequest.client_name ? `${selectedRequest.client_name} - ${selectedRequest.metadata?.location || ""}` : "")}&description=${encodeURIComponent(selectedRequest.message || selectedRequest.metadata?.description || "")}`}
-                  className="py-2.5 px-4 rounded-xl bg-[#16543C] hover:bg-[#124230] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all whitespace-nowrap"
+                  className="py-2.5 px-4 rounded-xl bg-[#0d3431] hover:bg-[#19453c] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all whitespace-nowrap"
                 >
                   <span>{locale === "uz" ? "Obyekt yaratish" : "Создать объект"}</span>
                   <ArrowRight className="h-3.5 w-3.5" />

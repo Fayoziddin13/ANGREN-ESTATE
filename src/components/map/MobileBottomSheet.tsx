@@ -85,7 +85,7 @@ export function MobileBottomSheet({
     return (
       <div
         data-testid="mobile-map-control-row"
-        className="sm:hidden fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] left-3 right-3 z-30 pointer-events-auto flex items-center justify-between gap-2 px-2.5 sm:px-3 py-1.5 rounded-2xl bg-[#16543C] shadow-elevated border border-emerald-700/60 backdrop-blur-xl"
+        className="sm:hidden fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] left-3 right-3 z-30 pointer-events-auto flex items-center justify-between gap-2 px-2.5 sm:px-3 py-1.5 rounded-2xl bg-[#0d3431] shadow-elevated border border-[#2c5b51]/60 backdrop-blur-xl"
       >
         {/* Object count badge with localized text on the left */}
         <div
@@ -169,19 +169,21 @@ export function MobileBottomSheet({
   const isSale = property.transaction_type === "sale";
   const badgeText = isSale ? t.popular.saleBadge : t.popular.rentBadge;
 
+  const uzsSuffix = locale === "uz" ? "so‘m" : "сум";
+  const monthSuffix = isSale ? "" : ` / ${t.common.month}`;
+
   const priceDisplay = isSale
     ? currency === "UZS"
-      ? `${property.price_uzs.toLocaleString("ru-RU")} UZS`
+      ? `${property.price_uzs.toLocaleString("ru-RU")} ${uzsSuffix}`
       : `$${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")}`
     : currency === "UZS"
-      ? `${property.price_uzs.toLocaleString("ru-RU")} UZS / ${t.common.month}`
-      : `$${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")} / ${t.common.month}`;
+      ? `${property.price_uzs.toLocaleString("ru-RU")} ${uzsSuffix}${monthSuffix}`
+      : `$${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")}${monthSuffix}`;
 
   const floorNum = property.floor_number ?? property.floor;
   const totalFloors = property.floors ?? property.total_floors;
   const isHouse = property.property_type === "house_yard" || property.property_type === "land";
   const publishedDateStr = formatPublishedDate(property.published_at || property.created_at, locale, true);
-
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -199,12 +201,12 @@ export function MobileBottomSheet({
       >
         {/* iOS Drag Handle Bar */}
         <div className="flex items-center justify-center pt-2.5 pb-1">
-          <div className="h-1.5 w-12 rounded-full bg-gray-300" />
+          <div className="h-1.5 w-10 rounded-full bg-gray-300" />
         </div>
 
         {/* Sheet Content */}
-        <div className="p-4 pt-1 space-y-2.5">
-          <div className="flex gap-3.5">
+        <div className="p-3.5 pt-1 space-y-2.5">
+          <div className="flex gap-3">
             {/* Property Thumbnail */}
             <div
               onClick={() => onViewDetails(property)}
@@ -218,17 +220,17 @@ export function MobileBottomSheet({
               />
               <div className="absolute top-1.5 left-1.5 flex items-center gap-1">
                 <span
-                  className={`rounded-lg px-1.5 py-0.5 text-[9px] font-black text-white shadow-sm ${
-                    isSale ? "bg-[#16543C]" : "bg-[#1D4ED8]"
+                  className={`rounded-lg px-1.5 py-0.5 text-[9px] font-bold text-white shadow-xs ${
+                    isSale ? "bg-[#0d3431]" : "bg-[#1D4ED8]"
                   }`}
                 >
                   {badgeText}
                 </span>
-                <span className="rounded-lg bg-black/60 backdrop-blur-sm px-1.5 py-0.5 text-[9px] font-bold text-white shadow-sm">
+                <span className="rounded-lg bg-black/60 backdrop-blur-sm px-1.5 py-0.5 text-[9px] font-semibold text-white shadow-xs">
                   {getPropertyTypeLabel(property.property_type, locale)}
                 </span>
                 {isHouse && property.area_sotikh && (
-                  <span className="rounded-lg bg-emerald-950/80 backdrop-blur-sm px-1.5 py-0.5 text-[9px] font-bold text-emerald-200 shadow-sm">
+                  <span className="rounded-lg bg-emerald-950/80 backdrop-blur-sm px-1.5 py-0.5 text-[9px] font-semibold text-emerald-200 shadow-xs">
                     {property.area_sotikh} {locale === "uz" ? "sotix" : "сот."}
                   </span>
                 )}
@@ -267,7 +269,7 @@ export function MobileBottomSheet({
                 {property.property_type === "land" ? (
                   <div className="flex items-center gap-2">
                     {property.area_sotikh ? (
-                      <span className="font-bold text-[#16543C]">{property.area_sotikh} {locale === "uz" ? "sotix" : "сот."}</span>
+                      <span className="font-bold text-[#0d3431]">{property.area_sotikh} {locale === "uz" ? "sotix" : "сот."}</span>
                     ) : null}
                     {property.dimensions || (property.facade_m && property.depth_m) ? (
                       <span className="text-gray-500 font-medium">
@@ -278,7 +280,7 @@ export function MobileBottomSheet({
                 ) : isHouse ? (
                   <div className="flex items-center gap-2">
                     {property.area_sotikh ? (
-                      <span className="font-bold text-[#16543C]">{property.area_sotikh} {locale === "uz" ? "sotix" : "сот."}</span>
+                      <span className="font-bold text-[#0d3431]">{property.area_sotikh} {locale === "uz" ? "sotix" : "сот."}</span>
                     ) : null}
                     <div className="flex items-center gap-1">
                       <Maximize2 className="h-3 w-3 text-gray-400" />
@@ -295,7 +297,7 @@ export function MobileBottomSheet({
                   <div className="flex items-center gap-2">
                     {floorNum ? (
                       <div className="flex items-center gap-1 font-bold text-gray-700">
-                        <Layers className="h-3 w-3 text-brand-primary" />
+                        <Layers className="h-3 w-3 text-[#19453c]" />
                         <span>{floorNum}{totalFloors ? `/${totalFloors}` : ""} {locale === "uz" ? "qavat" : "эт."}</span>
                       </div>
                     ) : null}
@@ -325,7 +327,7 @@ export function MobileBottomSheet({
           {/* "Batafsil ko'rish" Button */}
           <button
             onClick={() => onViewDetails(property)}
-            className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-brand-primary py-2 text-xs font-bold text-white shadow-card active:scale-[0.98] transition-all"
+            className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-[#0d3431] py-2 text-xs font-bold text-white shadow-card active:scale-[0.98] transition-all"
           >
             <span>{t.mapSection.viewDetails}</span>
             <ArrowRight className="h-3.5 w-3.5" />

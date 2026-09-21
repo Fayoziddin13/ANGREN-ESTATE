@@ -369,16 +369,16 @@ export default function BuyPage() {
       <Header activeTransactionType={transactionType} onTransactionTypeChange={setTransactionType} />
 
       {/* Sub-Header Section Banner */}
-      <div className="bg-[#134431] border-b border-emerald-800/40 py-2.5 px-4 sm:px-6">
+      <div className="bg-[#0d3431] border-b border-white/10 py-2.5 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-emerald-300" />
+            <Building2 className="h-4 w-4 text-[#8cb599]" />
             <h1 className="text-xs sm:text-sm font-bold text-white tracking-tight">
               {locale === "uz" ? "Angrenda ko‘chmas mulk sotib olish" : "Купить недвижимость в Ангрене"}
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-bold text-emerald-200">
+            <span className="text-[11px] font-bold text-[#d9eedb]">
               {filteredProperties.length} {locale === "uz" ? "ta sotuvdagi obyekt" : "объектов на продажу"}
             </span>
           </div>
@@ -462,7 +462,7 @@ export default function BuyPage() {
               onClick={() => setActiveView("map")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
                 activeView === "map"
-                  ? "bg-[#16543C] text-white shadow-card"
+                  ? "bg-[#0d3431] text-white shadow-card"
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/60"
               }`}
             >
@@ -475,7 +475,7 @@ export default function BuyPage() {
               onClick={() => setActiveView("catalog")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
                 activeView === "catalog"
-                  ? "bg-[#16543C] text-white shadow-card"
+                  ? "bg-[#0d3431] text-white shadow-card"
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/60"
               }`}
             >
@@ -484,8 +484,8 @@ export default function BuyPage() {
               <span
                 className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-full ${
                   activeView === "catalog"
-                    ? "bg-white text-[#16543C]"
-                    : "bg-emerald-100 text-[#16543C]"
+                    ? "bg-white text-[#0d3431]"
+                    : "bg-[#d9eedb] text-[#0d3431]"
                 }`}
               >
                 {filteredProperties.length}
@@ -500,7 +500,7 @@ export default function BuyPage() {
               onClick={() => setMapMode("standard")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 mapMode === "standard"
-                  ? "bg-[#16543C] text-white shadow-card"
+                  ? "bg-[#0d3431] text-white shadow-card"
                   : "text-gray-600 hover:text-gray-900 hover:bg-white/60"
               }`}
             >
@@ -512,7 +512,7 @@ export default function BuyPage() {
               onClick={() => setMapMode("satellite")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 mapMode === "satellite"
-                  ? "bg-[#16543C] text-white shadow-card"
+                  ? "bg-[#0d3431] text-white shadow-card"
                   : "text-gray-600 hover:text-gray-900 hover:bg-white/60"
               }`}
             >

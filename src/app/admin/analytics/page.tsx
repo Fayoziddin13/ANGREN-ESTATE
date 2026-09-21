@@ -144,7 +144,7 @@ export default function AdminAnalyticsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div>
           <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-            <BarChart3 className="w-7 h-7 text-[#16543C]" />
+            <BarChart3 className="w-7 h-7 text-[#0d3431]" />
             {locale === "uz" ? "Analitika Markazi" : "Центр Аналитики"}
           </h1>
           <p className="text-slate-600 text-xs sm:text-sm mt-1">
@@ -173,7 +173,7 @@ export default function AdminAnalyticsPage() {
                 onClick={() => setTimeRange(t.id)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                   timeRange === t.id
-                    ? "bg-[#16543C] text-white shadow-xs"
+                    ? "bg-[#0d3431] text-white shadow-xs"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                 }`}
               >
@@ -188,7 +188,7 @@ export default function AdminAnalyticsPage() {
             title={locale === "uz" ? "Yangilash" : "Обновить"}
             className="p-2 rounded-2xl bg-white border border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-all flex items-center justify-center disabled:opacity-50 shadow-xs"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-[#16543C]" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-[#0d3431]" : ""}`} />
           </button>
         </div>
       </div>

@@ -122,7 +122,7 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#071F15] via-[#0E3324] to-[#081C13] flex flex-col justify-between p-4 sm:p-8 text-white relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-[#051716] via-[#0d3431] to-[#08201c] flex flex-col justify-between p-4 sm:p-8 text-white relative overflow-hidden">
       <React.Suspense fallback={null}>
         <SearchParamWatcher
           onError={setErrorMessage}
@@ -132,7 +132,7 @@ export default function AdminLoginPage() {
       </React.Suspense>
 
       {/* Background Ambient Glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#8cb599]/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Top Bar: Brand & Language */}
       <div className="flex items-center justify-between max-w-5xl mx-auto w-full z-10">
@@ -144,7 +144,7 @@ export default function AdminLoginPage() {
             <div className="font-black text-sm tracking-tight text-white leading-none">
               ANGREN ESTATE
             </div>
-            <div className="text-[10px] font-bold text-emerald-300 uppercase tracking-wider mt-0.5">
+            <div className="text-[10px] font-bold text-[#8cb599] uppercase tracking-wider mt-0.5">
               Admin Control Center
             </div>
           </div>
@@ -155,7 +155,7 @@ export default function AdminLoginPage() {
           <button
             onClick={() => setLocale("uz")}
             className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors ${
-              locale === "uz" ? "bg-white/20 text-white" : "text-emerald-200/70 hover:text-white"
+              locale === "uz" ? "bg-white/20 text-white" : "text-[#d9eedb]/70 hover:text-white"
             }`}
           >
             UZ
@@ -163,7 +163,7 @@ export default function AdminLoginPage() {
           <button
             onClick={() => setLocale("ru")}
             className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors ${
-              locale === "ru" ? "bg-white/20 text-white" : "text-emerald-200/70 hover:text-white"
+              locale === "ru" ? "bg-white/20 text-white" : "text-[#d9eedb]/70 hover:text-white"
             }`}
           >
             RU
@@ -176,13 +176,13 @@ export default function AdminLoginPage() {
         <div className="bg-white/10 backdrop-blur-2xl border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
           {/* Card Header */}
           <div className="text-center space-y-2">
-            <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 mb-1">
+            <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-[#8cb599]/20 text-[#8cb599] border border-[#8cb599]/30 mb-1">
               <Lock className="h-6 w-6" />
             </div>
             <h1 className="text-2xl font-black text-white tracking-tight">
               {locale === "uz" ? "Boshqaruv tizimiga kirish" : "Панель администратора"}
             </h1>
-            <p className="text-xs text-emerald-200/70">
+            <p className="text-xs text-[#d9eedb]/70">
               {locale === "uz"
                 ? "Faqat vakolatli administratorlar uchun maxsus autentifikatsiya"
                 : "Вход только для авторизованных администраторов"}
@@ -208,8 +208,8 @@ export default function AdminLoginPage() {
 
           {/* Success Message */}
           {isSuccess && (
-            <div className="p-3.5 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-200 text-xs flex items-center gap-2.5">
-              <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+            <div className="p-3.5 rounded-2xl bg-[#8cb599]/20 border border-[#8cb599]/30 text-[#d9eedb] text-xs flex items-center gap-2.5">
+              <CheckCircle2 className="h-4 w-4 text-[#8cb599] shrink-0" />
               <span>{locale === "uz" ? "Kirish tasdiqlandi. Yuklanmoqda..." : "Успешный вход. Загрузка..."}</span>
             </div>
           )}
@@ -218,11 +218,11 @@ export default function AdminLoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Username / Email */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-emerald-100">
+              <label className="text-xs font-bold text-white/90">
                 {locale === "uz" ? "Administrator logini yoki Email" : "Логин или Email администратора"}
               </label>
               <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-300/70" />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8cb599]/70" />
                 <input
                   type="text"
                   required
@@ -231,18 +231,18 @@ export default function AdminLoginPage() {
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   placeholder="admin@angrenestate.uz"
-                  className="w-full pl-10 pr-4 py-3 rounded-2xl bg-black/25 border border-white/15 text-white placeholder:text-white/30 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-4 py-3 rounded-2xl bg-black/25 border border-white/15 text-white placeholder:text-white/30 text-xs focus:outline-none focus:ring-2 focus:ring-[#8cb599] focus:border-transparent transition-all"
                 />
               </div>
             </div>
 
             {/* Password */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-emerald-100">
+              <label className="text-xs font-bold text-white/90">
                 {locale === "uz" ? "Maxfiy parol" : "Пароль"}
               </label>
               <div className="relative">
-                <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-300/70" />
+                <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8cb599]/70" />
                 <input
                   type={showPassword ? "text" : "password"}
                   required
@@ -250,12 +250,12 @@ export default function AdminLoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full pl-10 pr-11 py-3 rounded-2xl bg-black/25 border border-white/15 text-white placeholder:text-white/30 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-11 py-3 rounded-2xl bg-black/25 border border-white/15 text-white placeholder:text-white/30 text-xs focus:outline-none focus:ring-2 focus:ring-[#8cb599] focus:border-transparent transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-300/70 hover:text-white transition-colors"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#8cb599]/70 hover:text-white transition-colors"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -264,17 +264,17 @@ export default function AdminLoginPage() {
 
             {/* Remember Me & 2FA Indicator */}
             <div className="flex items-center justify-between pt-1 text-xs">
-              <label className="flex items-center gap-2 text-emerald-200/80 cursor-pointer select-none">
+              <label className="flex items-center gap-2 text-[#d9eedb]/80 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 rounded bg-black/30 border-white/20 text-emerald-500 focus:ring-emerald-400 focus:ring-offset-0"
+                  className="h-4 w-4 rounded bg-black/30 border-white/20 text-[#19453c] focus:ring-[#8cb599] focus:ring-offset-0"
                 />
                 <span>{locale === "uz" ? "Eslab qolish (30 kun)" : "Запомнить меня (30 дней)"}</span>
               </label>
 
-              <div className="inline-flex items-center gap-1 text-[11px] text-emerald-300/60" title="2FA Ready">
+              <div className="inline-flex items-center gap-1 text-[11px] text-[#8cb599]/80" title="2FA Ready">
                 <Fingerprint className="h-3.5 w-3.5" />
                 <span>2FA Ready</span>
               </div>
@@ -284,7 +284,7 @@ export default function AdminLoginPage() {
             <button
               type="submit"
               disabled={isLoading || Boolean(lockoutSec) || isSuccess}
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-[#16543C] hover:from-emerald-400 hover:to-emerald-600 text-white font-extrabold text-xs shadow-lg shadow-emerald-950/50 hover:shadow-emerald-900/60 active:scale-[0.99] transition-all flex items-center justify-center gap-2 mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#19453c] to-[#0d3431] hover:from-[#2c5b51] hover:to-[#19453c] text-white font-extrabold text-xs shadow-lg shadow-black/40 active:scale-[0.99] transition-all flex items-center justify-center gap-2 mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <>
@@ -301,9 +301,9 @@ export default function AdminLoginPage() {
           </form>
 
           {/* Security Features Badge */}
-          <div className="pt-4 border-t border-white/10 flex items-center justify-center gap-4 text-[11px] text-emerald-300/70">
+          <div className="pt-4 border-t border-white/10 flex items-center justify-center gap-4 text-[11px] text-[#8cb599]/80">
             <span className="flex items-center gap-1.5">
-              <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+              <ShieldCheck className="h-3.5 w-3.5 text-[#8cb599]" />
               Server-side RBAC
             </span>
             <span>•</span>
@@ -318,7 +318,7 @@ export default function AdminLoginPage() {
       <div className="text-center z-10">
         <Link
           href="/"
-          className="text-xs text-emerald-200/60 hover:text-white transition-colors inline-flex items-center gap-1.5"
+          className="text-xs text-[#d9eedb]/70 hover:text-white transition-colors inline-flex items-center gap-1.5"
         >
           <span>← {locale === "uz" ? "Bosh sahifaga qaytish" : "Вернуться на главную"}</span>
         </Link>

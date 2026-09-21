@@ -39,10 +39,10 @@ export function MobileMapControls({
         role="button"
         tabIndex={0}
         aria-label={locale === "uz" ? "Qidiruv va filtrlarni ochish" : "Открыть поиск и фильтры"}
-        className="w-full flex items-center justify-between h-11 px-3.5 rounded-2xl bg-white/95 backdrop-blur-xl shadow-elevated border border-white/90 cursor-pointer active:scale-[0.99] transition-all"
+        className="w-full flex items-center justify-between h-10 px-3.5 rounded-2xl bg-white/95 backdrop-blur-xl shadow-elevated border border-white/90 cursor-pointer active:scale-[0.99] transition-all"
       >
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <Search className="h-4 w-4 text-[#16543C] shrink-0" />
+          <Search className="h-4 w-4 text-[#0d3431] shrink-0" />
           {searchQuery ? (
             <span className="text-xs font-bold text-slate-900 truncate">
               {searchQuery}
@@ -72,7 +72,7 @@ export function MobileMapControls({
           )}
 
           {activeFiltersCount > 0 ? (
-            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#16543C] text-white text-[10px] font-extrabold shadow-xs">
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#0d3431] text-white text-[10px] font-extrabold shadow-xs">
               <span>{activeFiltersCount}</span>
               <SlidersHorizontal className="h-2.5 w-2.5" />
             </span>
@@ -94,9 +94,9 @@ export function MobileMapControls({
           type="button"
           data-testid="mobile-view-map"
           onClick={() => onViewChange("map")}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-black transition-all ${
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
             activeView === "map"
-              ? "bg-[#16543C] text-white shadow-card"
+              ? "bg-[#0d3431] text-white shadow-card"
               : "text-slate-600 hover:text-slate-900 active:bg-slate-100/60"
           }`}
         >
@@ -108,19 +108,19 @@ export function MobileMapControls({
           type="button"
           data-testid="mobile-view-catalog"
           onClick={() => onViewChange("catalog")}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-black transition-all ${
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
             activeView === "catalog"
-              ? "bg-[#16543C] text-white shadow-card"
+              ? "bg-[#0d3431] text-white shadow-card"
               : "text-slate-600 hover:text-slate-900 active:bg-slate-100/60"
           }`}
         >
           <Layers className="h-3.5 w-3.5" />
           <span>{locale === "uz" ? "KATALOG" : "КАТАЛОГ"}</span>
           <span
-            className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-full ${
+            className={`text-[9.5px] font-extrabold px-1.5 py-0.2 rounded-full ${
               activeView === "catalog"
-                ? "bg-white text-[#16543C]"
-                : "bg-emerald-100 text-[#16543C]"
+                ? "bg-white text-[#0d3431]"
+                : "bg-emerald-100 text-[#0d3431]"
             }`}
           >
             {totalCount}

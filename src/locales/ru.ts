@@ -44,7 +44,7 @@ export const ru: Dictionary = {
   searchBar: {
     city: "Ангрен",
     propertyType: "Тип недвижимости",
-    price: "Цена (UZS)",
+    price: "Цена",
     searchBtn: "Найти",
     allTypes: "Все типы",
     apartment: "Квартира",

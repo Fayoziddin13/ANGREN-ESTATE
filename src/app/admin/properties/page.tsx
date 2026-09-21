@@ -111,8 +111,8 @@ export default function AdminPropertiesPage() {
     <div className="p-4 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#0E3324] text-white px-5 py-3 rounded-2xl shadow-xl border border-emerald-500/40 flex items-center gap-2.5 animate-bounce text-xs font-bold">
-          <Check className="h-4 w-4 text-emerald-400" />
+        <div className="fixed bottom-6 right-6 z-50 bg-[#0d3431] text-white px-5 py-3 rounded-2xl shadow-xl border border-[#8cb599]/40 flex items-center gap-2.5 animate-bounce text-xs font-bold">
+          <Check className="h-4 w-4 text-[#8cb599]" />
           <span>{toastMessage}</span>
         </div>
       )}
@@ -132,7 +132,7 @@ export default function AdminPropertiesPage() {
 
         <Link
           href="/admin/properties/new"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#16543C] text-white hover:bg-[#0E3324] font-bold text-xs transition-colors shadow-sm self-start sm:self-auto"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0d3431] text-white hover:bg-[#19453c] font-bold text-xs transition-colors shadow-sm self-start sm:self-auto"
         >
           <Plus className="h-4 w-4" />
           <span>{locale === "uz" ? "Yangi obyekt qo‘shish" : "Добавить объект"}</span>
@@ -156,7 +156,7 @@ export default function AdminPropertiesPage() {
             onClick={() => setSelectedStatus(tab.key)}
             className={`px-3.5 py-2 rounded-xl transition-all whitespace-nowrap flex items-center gap-2 ${
               selectedStatus === tab.key
-                ? "bg-[#16543C] text-white shadow-xs"
+                ? "bg-[#0d3431] text-white shadow-xs"
                 : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
             }`}
           >
@@ -182,7 +182,7 @@ export default function AdminPropertiesPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={locale === "uz" ? "Nomi, manzili, tumani yoki ID bo‘yicha qidirish..." : "Поиск по названию, адресу, району или ID..."}
-            className="w-full pl-10 pr-4 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#16543C] outline-none"
+            className="w-full pl-10 pr-4 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#0d3431] outline-none"
           />
         </div>
 
@@ -191,7 +191,7 @@ export default function AdminPropertiesPage() {
           <select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
-            className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#16543C] outline-none font-medium text-slate-700"
+            className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#0d3431] outline-none font-medium text-slate-700"
           >
             <option value="all">{locale === "uz" ? "Barcha turlar" : "Все типы"}</option>
             <option value="apartment">{locale === "uz" ? "Kvartira" : "Квартира"}</option>
@@ -207,7 +207,7 @@ export default function AdminPropertiesPage() {
           <select
             value={selectedTransaction}
             onChange={(e) => setSelectedTransaction(e.target.value)}
-            className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#16543C] outline-none font-medium text-slate-700"
+            className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#0d3431] outline-none font-medium text-slate-700"
           >
             <option value="all">{locale === "uz" ? "Barcha bitimlar" : "Все сделки"}</option>
             <option value="sale">{locale === "uz" ? "Sotuv" : "Продажа"}</option>
@@ -279,7 +279,7 @@ export default function AdminPropertiesPage() {
                         </span>
                         <div className="text-[11px] font-bold text-slate-600">
                           {prop.transaction_type === "sale" ? (
-                            <span className="text-emerald-800">{getDealTypeLabel("sale", locale)}</span>
+                            <span className="text-[#0d3431] font-bold">{getDealTypeLabel("sale", locale)}</span>
                           ) : (
                             <span className="text-blue-800">{getDealTypeLabel("rent", locale)}</span>
                           )}
@@ -336,9 +336,9 @@ export default function AdminPropertiesPage() {
                                 setUpdatingStatusId(null);
                               }
                             }}
-                            className={`cursor-pointer appearance-none pl-6 pr-6 py-1 rounded-full text-[11px] font-extrabold border shadow-xs transition-all outline-none focus:ring-2 focus:ring-[#16543C] ${
+                            className={`cursor-pointer appearance-none pl-6 pr-6 py-1 rounded-full text-[11px] font-extrabold border shadow-xs transition-all outline-none focus:ring-2 focus:ring-[#0d3431] ${
                               prop.status === "published"
-                                ? "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100"
+                                ? "bg-[#d9eedb]/60 text-[#0d3431] border-[#8cb599]/40 hover:bg-[#d9eedb]"
                                 : prop.status === "draft"
                                 ? "bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100"
                                 : prop.status === "sold"
@@ -348,7 +348,7 @@ export default function AdminPropertiesPage() {
                                 : "bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200"
                             }`}
                           >
-                            <option value="published" className="bg-white text-emerald-800 font-bold">
+                            <option value="published" className="bg-white text-[#0d3431] font-bold">
                               ● {locale === "uz" ? "Nashr qilingan" : "Опубликовано"}
                             </option>
                             <option value="draft" className="bg-white text-amber-800 font-bold">
@@ -369,7 +369,7 @@ export default function AdminPropertiesPage() {
                           <span
                             className={`absolute left-2.5 h-1.5 w-1.5 rounded-full pointer-events-none ${
                               prop.status === "published"
-                                ? "bg-emerald-600"
+                                ? "bg-[#19453c]"
                                 : prop.status === "draft"
                                 ? "bg-amber-600"
                                 : prop.status === "sold"
@@ -389,7 +389,7 @@ export default function AdminPropertiesPage() {
                     </td>
 
                     {/* Contact Clicks */}
-                    <td className="py-3.5 px-4 text-center font-bold text-emerald-700">
+                    <td className="py-3.5 px-4 text-center font-bold text-[#0d3431]">
                       {prop.contacts_count || 0}
                     </td>
 
@@ -426,7 +426,7 @@ export default function AdminPropertiesPage() {
                           <button
                             onClick={() => handleStatusChange(prop.id, "published")}
                             title={locale === "uz" ? "Qayta nashr qilish (Faollashtirish)" : "Опубликовать снова"}
-                            className="p-1.5 rounded-lg text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 transition-colors"
+                            className="p-1.5 rounded-lg text-[#0d3431] hover:text-[#19453c] hover:bg-[#d9eedb]/30 transition-colors"
                           >
                             <RotateCcw className="h-4 w-4" />
                           </button>
@@ -476,7 +476,7 @@ export default function AdminPropertiesPage() {
                           {prop.status !== "published" && (
                             <button
                               onClick={() => handleStatusChange(prop.id, "published")}
-                              className="w-full text-left px-3 py-1.5 rounded-xl hover:bg-emerald-50 text-emerald-800 text-xs font-bold"
+                              className="w-full text-left px-3 py-1.5 rounded-xl hover:bg-[#d9eedb]/40 text-[#0d3431] text-xs font-bold"
                             >
                               ✓ {locale === "uz" ? "Nashr qilish" : "Опубликовать"}
                             </button>
@@ -519,9 +519,9 @@ export default function AdminPropertiesPage() {
                           ) : (
                             <button
                               onClick={() => handleStatusChange(prop.id, "published")}
-                              className="w-full text-left px-3 py-1.5 rounded-xl hover:bg-emerald-50 text-emerald-800 text-xs font-semibold flex items-center gap-1.5 border-t border-slate-100 mt-1"
+                              className="w-full text-left px-3 py-1.5 rounded-xl hover:bg-[#d9eedb]/40 text-[#0d3431] text-xs font-semibold flex items-center gap-1.5 border-t border-slate-100 mt-1"
                             >
-                              <RotateCcw className="h-3.5 w-3.5 text-emerald-600" />
+                              <RotateCcw className="h-3.5 w-3.5 text-[#0d3431]" />
                               <span>{locale === "uz" ? "Qayta nashr qilish" : "Опубликовать снова"}</span>
                             </button>
                           )}

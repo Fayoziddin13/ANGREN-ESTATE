@@ -333,38 +333,38 @@ export function PropertyDetailModal({
             </div>
 
             {/* 1. TITLE & 2. PRICE HEADER */}
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-gray-100 pb-5 min-w-0">
-              <div className="space-y-1.5 min-w-0 flex-1">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-[#E8ECE9] pb-4 min-w-0">
+              <div className="space-y-1 min-w-0 flex-1">
                 {/* 1. Property Title */}
-                <h1 className="text-lg sm:text-2xl font-black text-gray-900 break-words leading-tight">
+                <h1 className="text-base sm:text-xl font-extrabold text-gray-900 break-words leading-snug">
                   {title}
                 </h1>
 
-                <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-600 flex-wrap">
-                  <MapPin className="h-4 w-4 text-brand-primary shrink-0" />
+                <div className="flex items-center gap-1.5 text-xs text-gray-600 flex-wrap">
+                  <MapPin className="h-3.5 w-3.5 text-[#0d3431] shrink-0" />
                   <span>{address}</span>
                   <span className="text-gray-300">•</span>
-                  <span className="font-semibold text-brand-primary">{district}</span>
+                  <span className="font-semibold text-[#19453c]">{district}</span>
                 </div>
 
                 {/* 2. Price & Negotiable Badge */}
-                <div className="flex flex-wrap items-center gap-2.5 pt-1">
-                  <span className="text-2xl sm:text-4xl font-black tracking-tight text-brand-dark">
+                <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                  <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#0d3431]">
                     {priceFormatted}
                   </span>
                   {!isSale && (
-                    <span className="text-sm font-semibold text-gray-500">
+                    <span className="text-xs font-semibold text-gray-500">
                       / {t.common.month}
                     </span>
                   )}
                   {property.price_negotiable && (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold shadow-xs">
-                      <Handshake className="w-3.5 h-3.5 text-emerald-700" />
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-[#d9eedb] border border-[#8cb599]/40 text-[#0d3431] text-xs font-bold shadow-xs">
+                      <Handshake className="w-3.5 h-3.5 text-[#19453c]" />
                       <span>{locale === "uz" ? "Narxi kelishiladi" : "Цена договорная"}</span>
                     </span>
                   )}
                 </div>
-                <div className="text-xs font-semibold text-gray-400">
+                <div className="text-[11px] font-semibold text-gray-400">
                   {secondaryPrice}
                 </div>
               </div>
@@ -374,7 +374,7 @@ export function PropertyDetailModal({
                 <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                   {isSoldOrRented ? (
                     <span
-                      className={`px-3 py-2 rounded-2xl text-xs font-extrabold ${
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold ${
                         isSold ? "bg-red-100 text-red-800" : "bg-blue-100 text-blue-800"
                       }`}
                     >
@@ -387,7 +387,7 @@ export function PropertyDetailModal({
                       <a
                         href={`tel:${property.realtor?.phone || property.contact_phone}`}
                         onClick={handleCallClick}
-                        className="flex items-center justify-center gap-2 rounded-2xl bg-brand-primary px-4 sm:px-5 py-2.5 text-xs font-bold text-white shadow-card hover:bg-brand-primary-hover active:scale-[0.98] transition-all shrink-0"
+                        className="flex items-center justify-center gap-1.5 rounded-xl bg-[#0d3431] px-4 py-2 text-xs font-bold text-white shadow-card hover:bg-[#19453c] active:scale-[0.98] transition-all shrink-0"
                       >
                         <Phone className="h-3.5 w-3.5" />
                         <span>{t.propertyDetail.call}</span>
@@ -398,9 +398,9 @@ export function PropertyDetailModal({
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={handleTelegramClick}
-                          className="flex items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white px-3.5 sm:px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-50 active:scale-[0.98] transition-all shadow-sm shrink-0"
+                          className="flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50 active:scale-[0.98] transition-all shadow-sm shrink-0"
                         >
-                          <Send className="h-3.5 w-3.5 text-brand-primary" />
+                          <Send className="h-3.5 w-3.5 text-[#0d3431]" />
                           <span>Telegram</span>
                         </a>
                       )}
@@ -662,10 +662,10 @@ export function PropertyDetailModal({
             </div>
 
             {/* 7. REALTOR CONTACT & 8. REALTOR PROFILE BUTTON (Confidential: NO owner phone!) */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-brand-light/70 border border-brand-primary/15 space-y-4 min-w-0">
+            <div className="p-4 sm:p-5 rounded-2xl bg-[#d9eedb]/40 border border-[#8cb599]/30 space-y-4 min-w-0">
               <div className="flex items-center justify-between gap-3 min-w-0 flex-wrap">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="relative h-12 w-12 rounded-2xl bg-[#16543C] text-white flex items-center justify-center font-black text-base shrink-0 shadow-sm overflow-hidden">
+                  <div className="relative h-12 w-12 rounded-2xl bg-[#0d3431] text-white flex items-center justify-center font-black text-base shrink-0 shadow-sm overflow-hidden">
                     {property.realtor && property.realtor.is_active && (property.realtor.photo_url || property.realtor.avatar_url) ? (
                       <Image
                         src={property.realtor.photo_url || property.realtor.avatar_url || ""}
@@ -686,7 +686,7 @@ export function PropertyDetailModal({
                     <p className="text-sm font-extrabold text-gray-900 truncate">
                       {property.realtor?.name || "ANGREN ESTATE Eksperti"}
                     </p>
-                    <p className="text-xs text-emerald-700 font-semibold truncate">
+                    <p className="text-xs text-[#0d3431] font-semibold truncate">
                       {property.realtor?.phone || property.contact_phone}
                     </p>
                   </div>
@@ -695,19 +695,19 @@ export function PropertyDetailModal({
                 {/* 8. Realtor Profile Button */}
                 <Link
                   href="/kontaktlar#realtors"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-gray-200 hover:border-[#16543C] text-xs font-bold text-gray-700 hover:text-[#16543C] shadow-xs transition-all active:scale-98 shrink-0"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-gray-200 hover:border-[#0d3431] text-xs font-bold text-gray-700 hover:text-[#0d3431] shadow-xs transition-all active:scale-98 shrink-0"
                 >
-                  <UserCheck className="w-3.5 h-3.5 text-[#16543C]" />
+                  <UserCheck className="w-3.5 h-3.5 text-[#0d3431]" />
                   <span>{locale === "uz" ? "Rieltor profili" : "Профиль риелтора"}</span>
                 </Link>
               </div>
 
               {/* Action Buttons: Call, Telegram, Instagram */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-brand-primary/10">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-[#8cb599]/20">
                 <a
                   href={`tel:${property.realtor?.phone || property.contact_phone}`}
                   onClick={handleCallClick}
-                  className="w-full py-2.5 px-3 rounded-xl bg-[#16543C] hover:bg-[#113F2D] text-white text-xs font-bold shadow-sm flex items-center justify-center gap-1.5 transition-all active:scale-98"
+                  className="w-full py-2.5 px-3 rounded-xl bg-[#0d3431] hover:bg-[#19453c] text-white text-xs font-bold shadow-sm flex items-center justify-center gap-1.5 transition-all active:scale-98"
                 >
                   <Phone className="w-3.5 h-3.5" />
                   <span>{locale === "uz" ? "Qo‘ng‘iroq" : "Позвонить"}</span>

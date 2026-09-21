@@ -118,7 +118,7 @@ export default function AdminUsersPage() {
         <div
           className={`fixed top-6 right-6 z-50 px-5 py-3 rounded-xl shadow-2xl flex items-center gap-2 backdrop-blur-md animate-in fade-in slide-in-from-top-4 border ${
             toast.type === "success"
-              ? "bg-[#0E3324] border-emerald-500/50 text-white font-bold text-xs"
+              ? "bg-[#0d3431] border-emerald-500/50 text-white font-bold text-xs"
               : "bg-red-900/90 border-red-500/50 text-white font-bold text-xs"
           }`}
         >
@@ -135,7 +135,7 @@ export default function AdminUsersPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div>
           <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-[#16543C]">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-[#0d3431]">
               <Users className="w-5 h-5" />
             </div>
             <span>{locale === "uz" ? "Foydalanuvchilar Boshqaruvi" : "Управление Пользователями"}</span>
@@ -155,12 +155,12 @@ export default function AdminUsersPage() {
             className="flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 text-xs font-bold rounded-xl border border-slate-200 transition-all shadow-xs disabled:opacity-50"
             title="Yangilash"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${loading ? "animate-spin text-[#16543C]" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${loading ? "animate-spin text-[#0d3431]" : ""}`} />
             <span>{locale === "uz" ? "Yangilash" : "Обновить"}</span>
           </button>
 
           <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
-            <ShieldCheck className="w-4 h-4 text-[#16543C]" />
+            <ShieldCheck className="w-4 h-4 text-[#0d3431]" />
             <span>{locale === "uz" ? "Google OAuth bilan himoyalangan" : "Защищено через Google OAuth"}</span>
           </div>
         </div>
@@ -173,7 +173,7 @@ export default function AdminUsersPage() {
             <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
               {locale === "uz" ? "Jami Ro‘yxatdan O‘tganlar" : "Всего зарегистрировано"}
             </span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-[#16543C]">
+            <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-[#0d3431]">
               <Users className="w-4 h-4" />
             </div>
           </div>
@@ -233,7 +233,7 @@ export default function AdminUsersPage() {
                 ? "Ism yoki email bo‘yicha qidiruv..."
                 : "Поиск по имени или email..."
             }
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C] transition-all"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431] transition-all"
           />
         </div>
 
@@ -242,7 +242,7 @@ export default function AdminUsersPage() {
             onClick={() => setStatusFilter("all")}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
               statusFilter === "all"
-                ? "bg-[#16543C] text-white shadow-xs"
+                ? "bg-[#0d3431] text-white shadow-xs"
                 : "text-slate-700 hover:text-slate-900 hover:bg-white"
             }`}
           >
@@ -290,7 +290,7 @@ export default function AdminUsersPage() {
               {loading ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-slate-500">
-                    <RefreshCw className="w-6 h-6 mx-auto animate-spin text-[#16543C] mb-2" />
+                    <RefreshCw className="w-6 h-6 mx-auto animate-spin text-[#0d3431] mb-2" />
                     <span className="text-xs font-bold">{locale === "uz" ? "Yuklanmoqda..." : "Загрузка..."}</span>
                   </td>
                 </tr>
@@ -322,7 +322,7 @@ export default function AdminUsersPage() {
                               className="object-cover"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-[#16543C] font-black text-sm bg-emerald-100">
+                            <div className="w-full h-full flex items-center justify-center text-[#0d3431] font-black text-sm bg-emerald-100">
                               {user.name.slice(0, 2).toUpperCase()}
                             </div>
                           )}
@@ -436,7 +436,7 @@ export default function AdminUsersPage() {
                       className="object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[#16543C] font-black bg-emerald-100">
+                    <div className="w-full h-full flex items-center justify-center text-[#0d3431] font-black bg-emerald-100">
                       {selectedUser.name.slice(0, 2).toUpperCase()}
                     </div>
                   )}
@@ -489,7 +489,7 @@ export default function AdminUsersPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-600 font-bold">{locale === "uz" ? "Rol:" : "Роль:"}</span>
-                  <span className="text-[#16543C] font-bold uppercase">{selectedUser.role}</span>
+                  <span className="text-[#0d3431] font-bold uppercase">{selectedUser.role}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-600 font-bold">{locale === "uz" ? "Ro‘yxatdan o‘tgan:" : "Дата регистрации:"}</span>
@@ -501,7 +501,7 @@ export default function AdminUsersPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-600 font-bold">{locale === "uz" ? "Avtorizatsiya turi:" : "Тип авторизации:"}</span>
-                  <span className="text-[#16543C] font-bold flex items-center gap-1">
+                  <span className="text-[#0d3431] font-bold flex items-center gap-1">
                     <Sparkles className="w-3 h-3 text-emerald-600" />
                     Google OAuth 2.0 / Supabase
                   </span>
@@ -516,7 +516,7 @@ export default function AdminUsersPage() {
                   className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-xs ${
                     selectedUser.status === "active"
                       ? "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
-                      : "bg-[#16543C] hover:bg-[#0E3324] text-white"
+                      : "bg-[#0d3431] hover:bg-[#19453c] text-white"
                   }`}
                 >
                   {selectedUser.status === "active" ? (

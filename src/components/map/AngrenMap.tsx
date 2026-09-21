@@ -292,7 +292,7 @@ export function AngrenMap({
           type: "fill",
           source: "property-polygon",
           paint: {
-            "fill-color": "#16543C",
+            "fill-color": "#0d3431",
             "fill-opacity": 0.25,
           },
         });
@@ -302,7 +302,7 @@ export function AngrenMap({
           type: "line",
           source: "property-polygon",
           paint: {
-            "line-color": "#16543C",
+            "line-color": "#0d3431",
             "line-width": 2.5,
             "line-opacity": 0.9,
           },
@@ -460,8 +460,8 @@ export function AngrenMap({
         "angren-cluster-badge cluster-marker-element cursor-pointer select-none transition-transform duration-200 hover:scale-110 active:scale-95";
 
       el.innerHTML = `
-        <div class="angren-cluster-inner flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#16543C] text-white font-extrabold text-xs shadow-xl border-2 border-white/95 backdrop-blur-md">
-          <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#34D399; box-shadow:0 0 6px #34D399;"></span>
+        <div class="angren-cluster-inner flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#0d3431] text-white font-extrabold text-xs shadow-xl border-2 border-white/95 backdrop-blur-md">
+          <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#8cb599; box-shadow:0 0 6px #8cb599;"></span>
           <span>${cluster.items.length} ${locale === "uz" ? "ta e'lon" : "объектов"}</span>
         </div>
       `;
@@ -499,15 +499,15 @@ export function AngrenMap({
 
       const bgColor = isSelected
         ? isSale
-          ? "#0E3324"
-          : "#1E3A8A"
+          ? "#0d3431"
+          : "#1e3a8a"
         : isSale
-        ? "#16543C"
-        : "#1D4ED8";
+        ? "#19453c"
+        : "#2563eb";
 
       const ringBorder = isSelected
         ? isSale
-          ? "ring-4 ring-[#34D399]/60 border-2 border-[#34D399]"
+          ? "ring-4 ring-[#8cb599]/60 border-2 border-[#8cb599]"
           : "ring-4 ring-[#38BDF8]/60 border-2 border-[#38BDF8]"
         : "border border-white/95";
 
@@ -832,8 +832,8 @@ export function AngrenMap({
           title={locale === "uz" ? (dimension === "3d" ? "2D rejimga o'tish" : "3D perspektivaga o'tish") : (dimension === "3d" ? "Переключить в 2D" : "Включить 3D")}
           className={`hidden sm:flex sm:h-10 sm:w-10 flex-col items-center justify-center rounded-2xl backdrop-blur-xl shadow-elevated border transition-all active:scale-95 ${
             dimension === "3d"
-              ? "bg-[#16543C] text-white border-[#16543C] ring-2 ring-[#34D399]/40"
-              : "bg-white/90 text-gray-700 hover:text-[#16543C] border-white/80 hover:bg-white"
+              ? "bg-[#0d3431] text-white border-[#0d3431] ring-2 ring-[#8cb599]/40"
+              : "bg-white/90 text-gray-700 hover:text-[#0d3431] border-white/80 hover:bg-white"
           }`}
         >
           <Box className="h-4 w-4" />
@@ -885,7 +885,7 @@ export function AngrenMap({
           onClick={handleResetCenter}
           data-testid="map-reset-center"
           title={locale === "uz" ? "Angren markaziga qaytish" : "Центр Ангрена"}
-          className="hidden sm:flex sm:h-10 sm:w-10 items-center justify-center rounded-2xl bg-white/90 backdrop-blur-xl text-gray-700 hover:text-[#16543C] shadow-elevated border border-white/80 hover:bg-white transition-all active:scale-95"
+          className="hidden sm:flex sm:h-10 sm:w-10 items-center justify-center rounded-2xl bg-white/90 backdrop-blur-xl text-gray-700 hover:text-[#0d3431] shadow-elevated border border-white/80 hover:bg-white transition-all active:scale-95"
         >
           <LocateFixed className="h-4 w-4" />
         </button>
@@ -895,7 +895,7 @@ export function AngrenMap({
           <button
             onClick={handleZoomIn}
             data-testid="map-zoom-in"
-            className="flex h-9 w-9 sm:h-9 sm:w-10 items-center justify-center text-gray-700 hover:text-[#16543C] hover:bg-white transition-colors border-b border-gray-100 active:scale-95"
+            className="flex h-9 w-9 sm:h-9 sm:w-10 items-center justify-center text-gray-700 hover:text-[#0d3431] hover:bg-white transition-colors border-b border-gray-100 active:scale-95"
             aria-label="Zoom In"
           >
             <Plus className="h-4 w-4" />
@@ -903,7 +903,7 @@ export function AngrenMap({
           <button
             onClick={handleZoomOut}
             data-testid="map-zoom-out"
-            className="flex h-9 w-9 sm:h-9 sm:w-10 items-center justify-center text-gray-700 hover:text-[#16543C] hover:bg-white transition-colors active:scale-95"
+            className="flex h-9 w-9 sm:h-9 sm:w-10 items-center justify-center text-gray-700 hover:text-[#0d3431] hover:bg-white transition-colors active:scale-95"
             aria-label="Zoom Out"
           >
             <Minus className="h-4 w-4" />

@@ -182,12 +182,12 @@ export function PropertyInfrastructureSection({
       {/* Section Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Compass className="h-4 w-4 sm:h-5 sm:w-5 text-[#16543C]" />
+          <Compass className="h-4 w-4 sm:h-5 sm:w-5 text-[#0d3431]" />
           <h3 className="text-sm sm:text-base font-black text-slate-900">
             {locale === "uz" ? "Yaqin infratuzilma" : "Ближайшая инфраструктура"}
           </h3>
           {totalCount > 0 && (
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-[#16543C]">
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#d9eedb] text-[#0d3431]">
               {totalCount} {locale === "uz" ? "ta maskan" : "объектов"}
             </span>
           )}
@@ -230,7 +230,7 @@ export function PropertyInfrastructureSection({
           return (
             <div
               key={s.category}
-              className="rounded-2xl border border-slate-200/80 bg-white overflow-hidden transition-all shadow-2xs hover:border-emerald-300"
+              className="rounded-2xl border border-slate-200/80 bg-white overflow-hidden transition-all shadow-2xs hover:border-[#8cb599]"
             >
               {/* Category Header Row: Icon, Category Name, Count */}
               <button
@@ -249,7 +249,7 @@ export function PropertyInfrastructureSection({
                     <span className="text-xs font-bold text-slate-400">
                       —
                     </span>
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-[#16543C] text-[11px] font-black shrink-0">
+                    <span className="px-2 py-0.5 rounded-full bg-[#d9eedb] text-[#0d3431] text-[11px] font-black shrink-0">
                       {s.count}
                     </span>
                   </div>
@@ -259,7 +259,7 @@ export function PropertyInfrastructureSection({
                   <span className="text-[11px] font-semibold text-slate-400 hidden sm:inline">
                     {locale === "uz" ? `Eng yaqini: ${s.closestDistance}` : `Ближайший: ${s.closestDistance}`}
                   </span>
-                  <div className={`p-1 rounded-lg text-slate-400 transition-transform duration-200 ${isOpen ? "rotate-180 text-emerald-700" : ""}`}>
+                  <div className={`p-1 rounded-lg text-slate-400 transition-transform duration-200 ${isOpen ? "rotate-180 text-[#19453c]" : ""}`}>
                     <ChevronDown className="w-4 h-4" />
                   </div>
                 </div>
@@ -286,7 +286,7 @@ export function PropertyInfrastructureSection({
                           </span>
                         </div>
                       </div>
-                      <span className="font-black text-[#16543C] shrink-0 text-xs bg-white px-2 py-0.5 rounded-md border border-slate-200/60 shadow-2xs">
+                      <span className="font-black text-[#0d3431] shrink-0 text-xs bg-white px-2 py-0.5 rounded-md border border-slate-200/60 shadow-2xs">
                         {item.formattedDistance}
                       </span>
                     </div>

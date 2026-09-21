@@ -6,6 +6,7 @@ import { X, MapPin, Maximize2, Bed, Bath, ArrowRight } from "lucide-react";
 import { Property } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCurrency } from "@/context/CurrencyContext";
+import { formatRooms } from "@/lib/propertyFormatters";
 
 interface CollapsiblePropertyListProps {
   isOpen: boolean;
@@ -56,13 +57,14 @@ export function CollapsiblePropertyList({
           const title = locale === "uz" ? p.title_uz : p.title_ru;
           const address = locale === "uz" ? p.address_uz : p.address_ru;
           const isSale = p.transaction_type === "sale";
+          const somLabel = locale === "uz" ? "so‘m" : "сум";
 
           const priceDisplay = isSale
             ? currency === "UZS"
-              ? `${p.price_uzs.toLocaleString("ru-RU")} UZS`
+              ? `${p.price_uzs.toLocaleString("ru-RU")} ${somLabel}`
               : `$${Math.round(p.price_uzs / exchangeRate).toLocaleString("ru-RU")}`
             : currency === "UZS"
-              ? `${p.price_uzs.toLocaleString("ru-RU")} UZS / ${t.common.month}`
+              ? `${p.price_uzs.toLocaleString("ru-RU")} ${somLabel} / ${t.common.month}`
               : `$${Math.round(p.price_uzs / exchangeRate).toLocaleString("ru-RU")} / ${t.common.month}`;
 
           return (
@@ -71,11 +73,11 @@ export function CollapsiblePropertyList({
               onClick={() => onSelectProperty(p)}
               className={`group flex gap-3 p-2.5 rounded-2xl cursor-pointer transition-all ${
                 isSelected
-                  ? "bg-brand-light/70 ring-2 ring-brand-primary"
-                  : "hover:bg-gray-50/80"
+                  ? "bg-[#d9eedb]/40 ring-1.5 ring-[#0d3431]"
+                  : "hover:bg-slate-50/80"
               }`}
             >
-              <div className="relative h-20 w-24 rounded-xl overflow-hidden bg-gray-100 shrink-0">
+              <div className="relative h-20 w-24 rounded-xl overflow-hidden bg-slate-100 shrink-0">
                 <Image
                   src={p.images[0]}
                   alt={title}
@@ -83,26 +85,26 @@ export function CollapsiblePropertyList({
                   sizes="100px"
                   className="object-cover"
                 />
-                <span className="absolute top-1 left-1 rounded-md bg-brand-primary px-1.5 py-0.5 text-[9px] font-bold text-white">
+                <span className="absolute top-1 left-1 rounded-md bg-[#0d3431] px-1.5 py-0.5 text-[9px] font-bold text-white shadow-xs">
                   {isSale ? t.popular.saleBadge : t.popular.rentBadge}
                 </span>
               </div>
 
               <div className="flex-1 flex flex-col justify-between min-w-0">
                 <div>
-                  <div className="text-xs font-extrabold text-brand-dark truncate">
+                  <div className="text-xs font-black text-[#0d3431] truncate">
                     {priceDisplay}
                   </div>
-                  <h3 className="text-xs font-semibold text-gray-800 truncate group-hover:text-brand-primary transition-colors">
+                  <h3 className="text-xs font-semibold text-slate-800 truncate group-hover:text-[#0d3431] transition-colors">
                     {title}
                   </h3>
-                  <p className="text-[10px] text-gray-500 truncate">{address}</p>
+                  <p className="text-[10px] text-slate-500 truncate">{address}</p>
                 </div>
 
                 <div className="flex items-center justify-between pt-1">
-                  <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                  <div className="flex items-center gap-2 text-[10px] text-slate-500">
                     <span>{p.area_sqm} m²</span>
-                    {p.rooms && <span>• {p.rooms} xona</span>}
+                    {p.rooms && <span>• {formatRooms(p.rooms, locale)}</span>}
                   </div>
 
                   <button
@@ -110,7 +112,7 @@ export function CollapsiblePropertyList({
                       e.stopPropagation();
                       onViewDetails(p);
                     }}
-                    className="flex items-center gap-1 text-[10px] font-bold text-brand-primary hover:underline"
+                    className="flex items-center gap-1 text-[10px] font-bold text-[#0d3431] hover:text-[#19453c] transition-colors"
                   >
                     <span>{t.propertyCard.details}</span>
                     <ArrowRight className="h-3 w-3" />

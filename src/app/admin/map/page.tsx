@@ -157,7 +157,7 @@ export default function AdminMapManagementPage() {
       const el = document.createElement("div");
       el.className = "cursor-pointer select-none transition-transform hover:scale-110";
 
-      let bgColor = "#16543C"; // published
+      let bgColor = "#0d3431"; // published
       if (p.status === "draft") bgColor = "#D97706";
       else if (p.status === "sold") bgColor = "#DC2626";
       else if (p.status === "rented") bgColor = "#2563EB";
@@ -218,7 +218,7 @@ export default function AdminMapManagementPage() {
     <div className="h-[calc(100vh-65px)] flex flex-col lg:flex-row overflow-hidden relative">
       {/* Toast */}
       {toastMessage && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0E3324] text-white px-5 py-2.5 rounded-2xl shadow-xl text-xs font-bold flex items-center gap-2 border border-emerald-500/40 animate-bounce">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0d3431] text-white px-5 py-2.5 rounded-2xl shadow-xl text-xs font-bold flex items-center gap-2 border border-emerald-500/40 animate-bounce">
           <CheckCircle className="h-4 w-4 text-emerald-400" />
           <span>{toastMessage}</span>
         </div>
@@ -236,7 +236,7 @@ export default function AdminMapManagementPage() {
               onClick={() => setMapMode("standard")}
               className={`px-3 py-1.5 rounded-xl transition-all ${
                 mapMode === "standard"
-                  ? "bg-[#16543C] text-white shadow-xs"
+                  ? "bg-[#0d3431] text-white shadow-xs"
                   : "text-slate-600 hover:bg-slate-100"
               }`}
             >
@@ -246,7 +246,7 @@ export default function AdminMapManagementPage() {
               onClick={() => setMapMode("satellite")}
               className={`px-3 py-1.5 rounded-xl transition-all ${
                 mapMode === "satellite"
-                  ? "bg-[#16543C] text-white shadow-xs"
+                  ? "bg-[#0d3431] text-white shadow-xs"
                   : "text-slate-600 hover:bg-slate-100"
               }`}
             >
@@ -260,7 +260,7 @@ export default function AdminMapManagementPage() {
             className="p-2.5 rounded-2xl bg-white/95 backdrop-blur-md text-slate-700 shadow-elevated border border-slate-200 hover:bg-slate-50 transition-colors"
             title={locale === "uz" ? "Angren markaziga qaytish" : "К центру Ангрена"}
           >
-            <Crosshair className="h-4 w-4 text-[#16543C]" />
+            <Crosshair className="h-4 w-4 text-[#0d3431]" />
           </button>
         </div>
 
@@ -271,7 +271,7 @@ export default function AdminMapManagementPage() {
           </div>
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1.5 text-emerald-800">
-              <span className="h-2.5 w-2.5 rounded-full bg-[#16543C]" /> {locale === "uz" ? "Nashr qilingan" : "Опубликовано"}
+              <span className="h-2.5 w-2.5 rounded-full bg-[#0d3431]" /> {locale === "uz" ? "Nashr qilingan" : "Опубликовано"}
             </span>
             <span className="flex items-center gap-1.5 text-amber-700">
               <span className="h-2.5 w-2.5 rounded-full bg-[#D97706]" /> {locale === "uz" ? "Qoralama" : "Черновик"}
@@ -292,7 +292,7 @@ export default function AdminMapManagementPage() {
         <div className="p-4 border-b border-slate-200 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-black text-slate-900 flex items-center gap-2">
-              <Compass className="h-4 w-4 text-[#16543C]" />
+              <Compass className="h-4 w-4 text-[#0d3431]" />
               <span>{locale === "uz" ? "Xarita boshqaruvi" : "Управление картой"}</span>
             </h2>
             <span className="text-xs font-bold text-slate-600">
@@ -308,7 +308,7 @@ export default function AdminMapManagementPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={locale === "uz" ? "Obyektni qidirish..." : "Поиск объекта..."}
-              className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 bg-slate-50 outline-none focus:ring-2 focus:ring-[#16543C]"
+              className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 bg-slate-50 outline-none focus:ring-2 focus:ring-[#0d3431]"
             />
           </div>
 
@@ -326,7 +326,7 @@ export default function AdminMapManagementPage() {
                 onClick={() => setStatusFilter(st.key)}
                 className={`px-2 py-1 rounded-lg capitalize whitespace-nowrap ${
                   statusFilter === st.key
-                    ? "bg-[#16543C] text-white"
+                    ? "bg-[#0d3431] text-white"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
@@ -362,12 +362,12 @@ export default function AdminMapManagementPage() {
             <div className="space-y-2 pt-2 border-t border-emerald-200/50">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-slate-700 flex items-center gap-1">
-                  <MapPin className="h-3.5 w-3.5 text-[#16543C]" />
+                  <MapPin className="h-3.5 w-3.5 text-[#0d3431]" />
                   <span>{locale === "uz" ? "Koordinatalar" : "Координаты"}</span>
                 </span>
                 <button
                   onClick={() => setIsEditMode(!isEditMode)}
-                  className="text-[11px] font-bold text-[#16543C] hover:underline"
+                  className="text-[11px] font-bold text-[#0d3431] hover:underline"
                 >
                   {isEditMode
                     ? (locale === "uz" ? "Bekor qilish" : "Отмена")
@@ -401,7 +401,7 @@ export default function AdminMapManagementPage() {
                   </div>
                   <button
                     onClick={handleSaveLocation}
-                    className="w-full py-2 rounded-xl bg-[#16543C] text-white font-bold text-xs hover:bg-[#0E3324] transition-colors"
+                    className="w-full py-2 rounded-xl bg-[#0d3431] text-white font-bold text-xs hover:bg-[#0d3431] transition-colors"
                   >
                     {locale === "uz" ? "Saqlash" : "Сохранить"}
                   </button>
@@ -436,7 +436,7 @@ export default function AdminMapManagementPage() {
                 });
               }}
               className={`p-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50 transition-colors ${
-                selectedProperty?.id === p.id ? "bg-emerald-50/70 border-l-4 border-[#16543C]" : ""
+                selectedProperty?.id === p.id ? "bg-emerald-50/70 border-l-4 border-[#0d3431]" : ""
               }`}
             >
               <div className="min-w-0">
@@ -448,7 +448,7 @@ export default function AdminMapManagementPage() {
                 </p>
               </div>
               <div className="text-right shrink-0">
-                <div className="text-xs font-black text-[#16543C]">
+                <div className="text-xs font-black text-[#0d3431]">
                   {p.price_usd
                     ? `$${p.price_usd.toLocaleString()}`
                     : `${(p.price_uzs / 1000000).toFixed(0)} ${locale === "uz" ? "mln so‘m" : "млн сум"}`}

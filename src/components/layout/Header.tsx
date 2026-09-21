@@ -169,19 +169,19 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
     <header
       className={`sticky top-0 z-40 w-full transition-all duration-300 ${
         isScrolled
-          ? "bg-[#134431]/95 backdrop-blur-xl shadow-elevated border-b border-emerald-900/50"
-          : "bg-[#16543C]/95 backdrop-blur-md shadow-md border-b border-white/10"
+          ? "bg-[#0d3431]/95 backdrop-blur-xl shadow-elevated border-b border-white/10"
+          : "bg-[#0d3431]/90 backdrop-blur-lg shadow-sm border-b border-white/10"
       }`}
     >
       {announcement?.is_active && (
         <div
           data-testid="cms-announcement-bar"
-          className={`w-full py-2 px-3 sm:px-6 text-xs sm:text-sm font-medium text-center flex items-center justify-center gap-2 border-b transition-colors ${
+          className={`w-full py-1.5 px-3 sm:px-6 text-xs sm:text-xs font-medium text-center flex items-center justify-center gap-2 border-b transition-colors ${
             announcement.type === "warning"
               ? "bg-amber-500 text-slate-950 border-amber-600 font-semibold"
               : announcement.type === "success"
               ? "bg-emerald-600 text-white border-emerald-700 font-semibold"
-              : "bg-emerald-950/90 text-emerald-100 border-emerald-800/60"
+              : "bg-[#08201c]/90 text-emerald-100 border-white/10"
           }`}
         >
           <span>{locale === "ru" ? announcement.text_ru : announcement.text_uz}</span>
@@ -195,7 +195,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
           )}
         </div>
       )}
-      <div className="mx-auto flex h-16 sm:h-20 w-full max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-15 sm:h-18 w-full max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8">
         {/* Left: Official Brand Logo & Name */}
         <Link
           href="/"
@@ -210,12 +210,12 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
           }}
           className="flex items-center gap-2.5 sm:gap-3 group shrink-0"
         >
-          <div className="flex h-9 w-9 sm:h-11 sm:w-11 rounded-xl overflow-hidden shadow-sm transition-transform duration-200 group-hover:scale-105 shrink-0 bg-brand-dark/20 items-center justify-center">
+          <div className="flex h-9 w-9 sm:h-10 sm:w-10 rounded-xl overflow-hidden shadow-sm transition-transform duration-200 group-hover:scale-105 shrink-0 bg-white/10 items-center justify-center border border-white/15">
             <Image
               src="/logo.png"
               alt="ANGREN ESTATE"
-              width={44}
-              height={44}
+              width={40}
+              height={40}
               className="h-full w-full object-contain rounded-xl"
               priority
             />
@@ -224,7 +224,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
             <span className="font-black tracking-tight text-sm sm:text-base leading-none text-white group-hover:text-emerald-200 transition-colors whitespace-nowrap">
               ANGREN ESTATE
             </span>
-            <span className="text-[10px] sm:text-[11px] font-medium text-emerald-200/70 tracking-wider uppercase mt-0.5">
+            <span className="text-[10px] sm:text-[10.5px] font-semibold text-emerald-200/75 tracking-wider uppercase mt-0.5">
               {locale === "ru" ? "Недвижимость" : "Ko‘chmas mulk"}
             </span>
           </div>
@@ -321,7 +321,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -6, scale: 0.96 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute right-0 mt-2 w-36 overflow-hidden rounded-2xl border border-white/15 bg-[#0E3324]/95 backdrop-blur-2xl p-1.5 shadow-float z-50"
+                  className="absolute right-0 mt-2 w-36 overflow-hidden rounded-2xl border border-white/15 bg-[#0d3431]/95 backdrop-blur-2xl p-1.5 shadow-float z-50"
                 >
                   <button
                     onClick={() => {
@@ -381,7 +381,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -6, scale: 0.96 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute right-0 mt-2 w-36 overflow-hidden rounded-2xl border border-white/15 bg-[#0E3324]/95 backdrop-blur-2xl p-1.5 shadow-float z-50"
+                  className="absolute right-0 mt-2 w-36 overflow-hidden rounded-2xl border border-white/15 bg-[#0d3431]/95 backdrop-blur-2xl p-1.5 shadow-float z-50"
                 >
                   <button
                     onClick={() => {
@@ -441,7 +441,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -6, scale: 0.96 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute right-0 mt-2 w-48 rounded-2xl border border-white/15 bg-[#0E3324]/95 backdrop-blur-2xl p-2 shadow-float z-50 text-white"
+                    className="absolute right-0 mt-2 w-48 rounded-2xl border border-white/15 bg-[#0d3431]/95 backdrop-blur-2xl p-2 shadow-float z-50 text-white"
                   >
                     <div className="px-3 py-2 border-b border-white/10 text-xs">
                       <p className="font-semibold text-white truncate">
@@ -584,7 +584,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
-            className="sm:hidden border-t border-white/10 bg-[#0E3324]/95 backdrop-blur-2xl px-4 pt-3 pb-6 space-y-3 shadow-float overflow-hidden"
+            className="sm:hidden border-t border-white/10 bg-[#0d3431]/95 backdrop-blur-2xl px-4 pt-3 pb-6 space-y-3 shadow-float overflow-hidden"
           >
             <nav className="flex flex-col space-y-1 text-sm font-semibold">
               {navItems.map((item) => {

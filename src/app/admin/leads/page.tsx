@@ -201,7 +201,7 @@ export default function AdminLeadsPage() {
     <div className="p-4 sm:p-8 max-w-7xl mx-auto w-full space-y-6 pb-12">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-6 right-6 z-50 bg-[#0E3324] border border-emerald-500/50 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-2.5 backdrop-blur-md animate-in fade-in slide-in-from-top-4 font-bold text-xs">
+        <div className="fixed top-6 right-6 z-50 bg-[#0d3431] border border-emerald-500/50 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-2.5 backdrop-blur-md animate-in fade-in slide-in-from-top-4 font-bold text-xs">
           <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
           <span>{toastMessage}</span>
         </div>
@@ -211,7 +211,7 @@ export default function AdminLeadsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div>
           <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-[#16543C]">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-[#0d3431]">
               <PhoneCall className="w-5 h-5" />
             </div>
             <span>{locale === "uz" ? "Murojaatlar va Lidlar" : "Заявки и Лиды"}</span>
@@ -229,7 +229,7 @@ export default function AdminLeadsPage() {
             className="flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 rounded-xl border border-slate-200 text-xs font-bold transition-colors shadow-xs"
             title={locale === "uz" ? "Yangilash" : "Обновить"}
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${isLoading ? "animate-spin text-[#16543C]" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${isLoading ? "animate-spin text-[#0d3431]" : ""}`} />
             <span>{locale === "uz" ? "Yangilash" : "Обновить"}</span>
           </button>
 
@@ -237,7 +237,7 @@ export default function AdminLeadsPage() {
             onClick={exportCSV}
             className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 rounded-xl border border-slate-200 text-xs font-bold transition-colors shadow-xs"
           >
-            <Download className="w-3.5 h-3.5 text-[#16543C]" />
+            <Download className="w-3.5 h-3.5 text-[#0d3431]" />
             <span>{locale === "uz" ? "CSV eksport" : "Экспорт в CSV"}</span>
           </button>
         </div>
@@ -251,7 +251,7 @@ export default function AdminLeadsPage() {
             <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
               {locale === "uz" ? "Jami Lidlar" : "Всего лидов"}
             </span>
-            <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center text-[#16543C]">
+            <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center text-[#0d3431]">
               <TrendingUp className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -345,11 +345,11 @@ export default function AdminLeadsPage() {
       {/* Banner for Arizalar */}
       <div className="bg-emerald-50/70 rounded-2xl p-4 border border-emerald-200/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#16543C] text-white shrink-0">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0d3431] text-white shrink-0">
             <ClipboardList className="h-5 w-5" />
           </div>
           <div>
-            <div className="text-xs font-bold text-[#16543C]">
+            <div className="text-xs font-bold text-[#0d3431]">
               {locale === "uz" ? "E'lon berish arizalari (Arizalar bo‘limi)" : "Заявки на размещение объявлений"}
             </div>
             <div className="text-[11px] text-slate-600">
@@ -361,7 +361,7 @@ export default function AdminLeadsPage() {
         </div>
         <Link
           href="/admin/arizalar"
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#16543C] hover:bg-[#124230] text-white text-xs font-bold transition-all shadow-xs shrink-0"
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0d3431] hover:bg-[#19453c] text-white text-xs font-bold transition-all shadow-xs shrink-0"
         >
           <span>{locale === "uz" ? "Arizalar bo‘limiga o‘tish" : "Перейти к заявкам"}</span>
           <ArrowRight className="h-3.5 w-3.5" />
@@ -382,7 +382,7 @@ export default function AdminLeadsPage() {
                 ? "Mijoz, telefon, mulk yoki izoh bo‘yicha qidiruv..."
                 : "Поиск по клиенту, телефону, объекту, заметке..."
             }
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C] transition-all"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431] transition-all"
           />
         </div>
 
@@ -394,7 +394,7 @@ export default function AdminLeadsPage() {
               onClick={() => setStatusFilter("all")}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
                 statusFilter === "all"
-                  ? "bg-[#16543C] text-white shadow-xs"
+                  ? "bg-[#0d3431] text-white shadow-xs"
                   : "text-slate-700 hover:text-slate-900 hover:bg-white"
               }`}
             >
@@ -456,7 +456,7 @@ export default function AdminLeadsPage() {
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value as ChannelFilter)}
-            className="bg-white border border-slate-200 text-slate-800 text-xs font-bold rounded-xl px-3 py-2 focus:outline-none focus:border-[#16543C]"
+            className="bg-white border border-slate-200 text-slate-800 text-xs font-bold rounded-xl px-3 py-2 focus:outline-none focus:border-[#0d3431]"
           >
             <option value="all">{locale === "uz" ? "Barcha kanallar" : "Все каналы"}</option>
             <option value="property_listing_request">
@@ -503,7 +503,7 @@ export default function AdminLeadsPage() {
               {isLoading && leads.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-16 text-center text-slate-500">
-                    <div className="w-8 h-8 rounded-full border-2 border-[#16543C] border-t-transparent animate-spin mx-auto mb-3" />
+                    <div className="w-8 h-8 rounded-full border-2 border-[#0d3431] border-t-transparent animate-spin mx-auto mb-3" />
                     <span className="text-sm font-semibold">
                       {locale === "uz" ? "Lidlar yuklanmoqda..." : "Загрузка заявок..."}
                     </span>
@@ -580,7 +580,7 @@ export default function AdminLeadsPage() {
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {isListingRequest(lead) ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
-                            <Home className="w-3 h-3 text-[#16543C]" />
+                            <Home className="w-3 h-3 text-[#0d3431]" />
                             <span>{locale === "uz" ? "E’lon berish" : "Размещение"}</span>
                           </span>
                         ) : lead.type === "phone" ? (
@@ -653,7 +653,7 @@ export default function AdminLeadsPage() {
                       <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => setSelectedLead(lead)}
-                          className="p-1.5 text-slate-600 hover:text-[#16543C] rounded-lg hover:bg-slate-100 transition-colors"
+                          className="p-1.5 text-slate-600 hover:text-[#0d3431] rounded-lg hover:bg-slate-100 transition-colors"
                           title={locale === "uz" ? "Batafsil ko‘rish" : "Подробнее"}
                         >
                           <ExternalLink className="w-4 h-4" />
@@ -675,7 +675,7 @@ export default function AdminLeadsPage() {
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-200 pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-[#16543C]">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-[#0d3431]">
                   <User className="w-5 h-5" />
                 </div>
                 <div>
@@ -705,7 +705,7 @@ export default function AdminLeadsPage() {
                   </div>
                   <a
                     href={`tel:${selectedLead.client_phone}`}
-                    className="px-3.5 py-1.5 bg-[#16543C] hover:bg-[#0E3324] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors shadow-xs"
+                    className="px-3.5 py-1.5 bg-[#0d3431] hover:bg-[#19453c] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors shadow-xs"
                   >
                     <PhoneCall className="w-3.5 h-3.5" />
                     <span>{locale === "uz" ? "Qo‘ng‘iroq qilish" : "Позвонить"}</span>
@@ -718,7 +718,7 @@ export default function AdminLeadsPage() {
                 <div className="bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200/80 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="text-xs font-black text-emerald-950 flex items-center gap-1.5 uppercase tracking-wide">
-                      <Home className="w-4 h-4 text-[#16543C]" />
+                      <Home className="w-4 h-4 text-[#0d3431]" />
                       <span>{locale === "uz" ? "E’lon berish arizasi ma’lumotlari" : "Данные заявки на размещение"}</span>
                     </div>
                     <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
@@ -806,7 +806,7 @@ export default function AdminLeadsPage() {
               {!isListingRequest(selectedLead) && selectedLead.property_title && (
                 <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2">
                   <div className="text-xs font-bold text-slate-600 flex items-center gap-1.5">
-                    <Building2 className="w-3.5 h-3.5 text-[#16543C]" />
+                    <Building2 className="w-3.5 h-3.5 text-[#0d3431]" />
                     <span>{locale === "uz" ? "Qiziqayotgan mulki" : "Интересующий объект"}</span>
                   </div>
                   <div className="text-sm font-bold text-slate-900">
@@ -817,7 +817,7 @@ export default function AdminLeadsPage() {
                       <Link
                         href={`/properties/${selectedLead.property_id}`}
                         target="_blank"
-                        className="text-[#16543C] hover:underline flex items-center gap-1"
+                        className="text-[#0d3431] hover:underline flex items-center gap-1"
                       >
                         <ExternalLink className="w-3 h-3" />
                         <span>{locale === "uz" ? "Saytda ko‘rish" : "Открыть на сайте"}</span>
@@ -839,7 +839,7 @@ export default function AdminLeadsPage() {
               {selectedLead.realtor && (
                 <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-100 border border-emerald-200 text-[#16543C] flex items-center justify-center font-bold text-xs">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-100 border border-emerald-200 text-[#0d3431] flex items-center justify-center font-bold text-xs">
                       {selectedLead.realtor.name.slice(0, 2).toUpperCase()}
                     </div>
                     <div>
@@ -877,7 +877,7 @@ export default function AdminLeadsPage() {
               {/* Internal Admin Notes */}
               <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-[#16543C] flex items-center gap-1.5">
+                  <label className="text-xs font-bold text-[#0d3431] flex items-center gap-1.5">
                     <FileText className="w-3.5 h-3.5" />
                     <span>{locale === "uz" ? "Admin izohi / Ichki eslatma" : "Заметка администратора"}</span>
                   </label>
@@ -894,13 +894,13 @@ export default function AdminLeadsPage() {
                       ? "Mijoz bilan kelishuvlar, qayta qo‘ng‘iroq vaqti yoki bekor qilish sababini yozing..."
                       : "Запишите результаты звонка, договоренности с клиентом или причину отмены..."
                   }
-                  className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C] transition-all"
+                  className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431] transition-all"
                 />
                 <div className="flex justify-end">
                   <button
                     onClick={handleSaveNotes}
                     disabled={isSavingNotes}
-                    className="px-3.5 py-1.5 bg-[#16543C] hover:bg-[#0E3324] disabled:opacity-50 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors shadow-xs"
+                    className="px-3.5 py-1.5 bg-[#0d3431] hover:bg-[#19453c] disabled:opacity-50 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors shadow-xs"
                   >
                     <Save className="w-3.5 h-3.5" />
                     <span>

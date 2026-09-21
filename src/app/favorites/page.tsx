@@ -32,18 +32,18 @@ export default function FavoritesPage() {
       <Header />
 
       {/* 2. Top Banner */}
-      <div className="bg-[#16543C] text-white py-8 sm:py-12 border-b border-emerald-900/40">
+      <div className="bg-[#0d3431] text-white py-8 sm:py-12 border-b border-white/10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1.5">
-              <div className="flex items-center gap-2 text-emerald-300 text-xs font-bold tracking-wider uppercase">
+              <div className="flex items-center gap-2 text-[#8cb599] text-xs font-bold tracking-wider uppercase">
                 <Heart className="h-4 w-4 fill-red-400 text-red-400" />
                 <span>{locale === "uz" ? "Saqlanganlar" : "Избранное"}</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
                 {locale === "uz" ? "Sizga ma’qul kelgan obyektlar" : "Сохранённые объекты недвижимости"}
               </h1>
-              <p className="text-xs sm:text-sm text-emerald-100/80">
+              <p className="text-xs sm:text-sm text-[#d9eedb]/90">
                 {locale === "uz"
                   ? "Angrendagi o‘zingizga yoqqan ko‘chmas mulklarni qulay tarzda solishtiring"
                   : "Сравнивайте понравившиеся объекты недвижимости в Ангрене"}
@@ -53,7 +53,7 @@ export default function FavoritesPage() {
             <div className="flex items-center gap-3">
               {user && (
                 <div className="px-4 py-2 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold text-white flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="h-2 w-2 rounded-full bg-[#8cb599] animate-pulse" />
                   <span>
                     {favoriteProperties.length} {locale === "uz" ? "ta e'lon" : "объектов"}
                   </span>
@@ -61,7 +61,7 @@ export default function FavoritesPage() {
               )}
               <Link
                 href="/"
-                className="flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-white text-[#16543C] hover:bg-emerald-50 text-xs font-bold shadow-md transition-all active:scale-95"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-white text-[#0d3431] hover:bg-[#d9eedb]/40 text-xs font-bold shadow-md transition-all active:scale-95"
               >
                 <span>{locale === "uz" ? "Xaritaga qaytish" : "На карту"}</span>
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -76,8 +76,8 @@ export default function FavoritesPage() {
         {!user ? (
           /* Unauthenticated State (Visitor Prompt) */
           <div className="max-w-md mx-auto text-center py-16 px-6 rounded-3xl bg-white border border-slate-100 shadow-card space-y-5">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-emerald-50 text-[#16543C] shadow-inner">
-              <Lock className="h-8 w-8 text-emerald-600" />
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-[#d9eedb]/40 text-[#0d3431] shadow-inner">
+              <Lock className="h-8 w-8 text-[#19453c]" />
             </div>
             <div className="space-y-2">
               <h2 className="text-lg sm:text-xl font-black text-slate-900">
@@ -94,7 +94,7 @@ export default function FavoritesPage() {
             <div className="pt-3">
               <button
                 onClick={openAuthModal}
-                className="w-full inline-flex items-center justify-center gap-3 rounded-2xl bg-[#16543C] px-6 py-3.5 text-xs font-extrabold text-white shadow-elevated hover:bg-[#113F2D] active:scale-[0.99] transition-all"
+                className="w-full inline-flex items-center justify-center gap-3 rounded-2xl bg-[#0d3431] px-6 py-3.5 text-xs font-extrabold text-white shadow-elevated hover:bg-[#19453c] active:scale-[0.99] transition-all"
               >
                 {/* Google 4-Color SVG Icon */}
                 <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
@@ -122,8 +122,8 @@ export default function FavoritesPage() {
         ) : favoriteProperties.length === 0 ? (
           /* Authenticated Empty State */
           <div className="max-w-md mx-auto text-center py-16 px-6 rounded-3xl bg-white border border-slate-100 shadow-card space-y-4">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-emerald-50 text-[#16543C] shadow-inner">
-              <Heart className="h-8 w-8 text-emerald-600" />
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-[#d9eedb]/40 text-[#0d3431] shadow-inner">
+              <Heart className="h-8 w-8 text-[#19453c]" />
             </div>
             <div className="space-y-2">
               <h2 className="text-lg sm:text-xl font-black text-slate-900">
@@ -138,7 +138,7 @@ export default function FavoritesPage() {
             <div className="pt-2">
               <Link
                 href="/"
-                className="inline-flex items-center gap-2 rounded-2xl bg-[#16543C] px-6 py-3 text-xs font-extrabold text-white shadow-elevated hover:bg-[#113F2D] active:scale-95 transition-all"
+                className="inline-flex items-center gap-2 rounded-2xl bg-[#0d3431] px-6 py-3 text-xs font-extrabold text-white shadow-elevated hover:bg-[#19453c] active:scale-95 transition-all"
               >
                 <Building2 className="h-4 w-4" />
                 <span>{locale === "uz" ? "Angren xaritasiga o‘tish" : "Перейти на карту Ангрена"}</span>

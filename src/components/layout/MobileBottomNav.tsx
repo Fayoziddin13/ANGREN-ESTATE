@@ -26,16 +26,16 @@ export function MobileBottomNav({ onSearchClick }: MobileBottomNavProps) {
 
   return (
     <>
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#16543C] rounded-t-2xl shadow-[0_-4px_24px_rgba(0,0,0,0.18)] border-t border-emerald-700/50">
-        <nav className="flex items-center justify-around px-4 pt-2.5 pb-[max(0.85rem,env(safe-area-inset-bottom))]">
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0d3431]/90 backdrop-blur-2xl rounded-t-2xl shadow-[0_-8px_32px_rgba(0,0,0,0.25)] border-t border-white/15">
+        <nav className="flex items-center justify-around px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           {/* Tab 1: Home */}
           <Link
             href="/"
-            className={`flex flex-col items-center gap-1 text-[11px] text-white transition-opacity ${
-              pathname === "/" ? "font-black opacity-100" : "font-medium opacity-80 hover:opacity-100"
+            className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl text-[10.5px] text-white transition-all ${
+              pathname === "/" ? "font-bold bg-white/10 opacity-100" : "font-medium opacity-75 hover:opacity-100"
             }`}
           >
-            <Home className={`h-5 w-5 text-white ${pathname === "/" ? "stroke-[2.5]" : "stroke-2"}`} />
+            <Home className={`h-4.5 w-4.5 text-white ${pathname === "/" ? "stroke-[2.2]" : "stroke-[1.75]"}`} />
             <span className="text-white">{t.bottomNav.home}</span>
           </Link>
 
@@ -48,23 +48,23 @@ export function MobileBottomNav({ onSearchClick }: MobileBottomNavProps) {
                 window.location.href = "/";
               }
             }}
-            className="flex flex-col items-center gap-1 text-[11px] text-white font-medium opacity-80 hover:opacity-100 transition-opacity"
+            className="flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl text-[10.5px] text-white font-medium opacity-75 hover:opacity-100 transition-all"
           >
-            <Search className="h-5 w-5 stroke-2 text-white" />
+            <Search className="h-4.5 w-4.5 stroke-[1.75] text-white" />
             <span className="text-white">{t.bottomNav.search}</span>
           </button>
 
           {/* Tab 3: Favorites */}
           <Link
             href="/favorites"
-            className={`relative flex flex-col items-center gap-1 text-[11px] text-white transition-opacity ${
-              pathname === "/favorites" ? "font-black opacity-100" : "font-medium opacity-80 hover:opacity-100"
+            className={`relative flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl text-[10.5px] text-white transition-all ${
+              pathname === "/favorites" ? "font-bold bg-white/10 opacity-100" : "font-medium opacity-75 hover:opacity-100"
             }`}
           >
-            <Heart className={`h-5 w-5 text-white ${pathname === "/favorites" ? "stroke-[2.5] fill-white/20" : "stroke-2"}`} />
+            <Heart className={`h-4.5 w-4.5 text-white ${pathname === "/favorites" ? "stroke-[2.2] fill-white/20" : "stroke-[1.75]"}`} />
             <span className="text-white">{t.bottomNav.favorites}</span>
             {favoritesCount > 0 && (
-              <span className="absolute -top-1 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[9px] font-black text-[#16543C] shadow-sm">
+              <span className="absolute -top-0.5 right-1.5 flex h-3.5 min-w-3.5 px-1 items-center justify-center rounded-full bg-white text-[9px] font-black text-[#0d3431] shadow-sm">
                 {favoritesCount}
               </span>
             )}
@@ -79,9 +79,9 @@ export function MobileBottomNav({ onSearchClick }: MobileBottomNavProps) {
                 setIsProfileOpen(true);
               }
             }}
-            className="flex flex-col items-center gap-1 text-[11px] text-white font-medium opacity-80 hover:opacity-100 transition-opacity"
+            className="flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl text-[10.5px] text-white font-medium opacity-75 hover:opacity-100 transition-all"
           >
-            <User className="h-5 w-5 stroke-2 text-white" />
+            <User className="h-4.5 w-4.5 stroke-[1.75] text-white" />
             <span className="text-white">{user ? user.full_name?.split(" ")[0] || (locale === "uz" ? "Profil" : "Профиль") : t.bottomNav.profile}</span>
           </button>
         </nav>
@@ -94,10 +94,10 @@ export function MobileBottomNav({ onSearchClick }: MobileBottomNavProps) {
           onClose={() => setIsProfileOpen(false)}
           title={locale === "uz" ? "Foydalanuvchi Profili" : "Профиль пользователя"}
         >
-          <div className="space-y-5 pt-2">
-            <div className="flex items-center gap-3.5 p-3 rounded-2xl bg-brand-canvas/60 border border-brand-border/60">
-              <div className="h-12 w-12 rounded-2xl bg-[#16543C] text-white flex items-center justify-center font-black text-lg shadow-sm">
-                {user.full_name?.charAt(0) || <User className="h-6 w-6" />}
+          <div className="space-y-4 pt-1">
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-[#F8FAF9] border border-[#E8ECE9]">
+              <div className="h-11 w-11 rounded-2xl bg-[#0d3431] text-white flex items-center justify-center font-bold text-base shadow-sm">
+                {user.full_name?.charAt(0) || <User className="h-5 w-5" />}
               </div>
               <div className="min-w-0 flex-1">
                 <h4 className="font-extrabold text-brand-dark text-sm truncate">

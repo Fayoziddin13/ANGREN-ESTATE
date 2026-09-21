@@ -121,7 +121,7 @@ export function AdvancedFiltersModal({
                 <span>{locale === "uz" ? `Narx oralig‘i (${currency})` : `Диапазон цен (${currency})`}</span>
               </label>
               <span className="text-[10px] text-gray-400 font-medium">
-                {currency === "USD" ? "$ USD" : "so‘m UZS"}
+                {currency === "USD" ? "$ USD" : (locale === "uz" ? "so‘m (UZS)" : "сум (UZS)")}
               </span>
             </div>
             <div className="grid grid-cols-2 gap-3">
