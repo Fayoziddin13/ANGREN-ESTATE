@@ -142,34 +142,34 @@ export default function ContactsPage() {
       <main className="flex-1 pb-16 sm:pb-24">
         {/* Hero Section */}
         <section className="relative overflow-hidden bg-white border-b border-gray-100 py-12 sm:py-16">
-          <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center space-y-4">
-            <div className="inline-flex items-center gap-2 rounded-full bg-brand-light px-4 py-1.5 text-xs font-extrabold text-brand-primary border border-brand-border/60">
-              <MessageSquare className="h-3.5 w-3.5 text-brand-primary" />
+          <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center space-y-3">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#d9eedb] px-3.5 py-1 text-xs font-bold text-[#0d3431] border border-[#8cb599]/40">
+              <MessageSquare className="h-3.5 w-3.5 text-[#19453c]" />
               <span>{t.contactsPage.badge}</span>
             </div>
 
-            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-brand-dark">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0d3431]">
               {t.contactsPage.title}
             </h1>
 
-            <p className="max-w-2xl mx-auto text-sm sm:text-base text-gray-600 leading-relaxed font-normal">
+            <p className="max-w-2xl mx-auto text-xs sm:text-sm text-gray-600 leading-relaxed font-normal">
               {t.contactsPage.subtitle}
             </p>
           </div>
         </section>
 
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16 space-y-16">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10 sm:py-14 space-y-12">
           {/* SECTION A: ANGREN ESTATE Administratsiyasi */}
-          <section className="space-y-6">
+          <section className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-primary text-white shadow-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#0d3431] text-white shadow-sm">
                 <Building2 className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-xl sm:text-2xl font-extrabold text-brand-dark">
+                <h2 className="text-lg sm:text-xl font-bold text-[#0d3431]">
                   {t.contactsPage.adminSectionTitle}
                 </h2>
-                <p className="text-xs sm:text-sm text-gray-500">
+                <p className="text-xs text-gray-500">
                   {t.contactsPage.adminSectionSubtitle}
                 </p>
               </div>
@@ -177,14 +177,14 @@ export default function ContactsPage() {
 
             {adminContact.is_configured ? (
               /* Configured Admin Contact Card */
-              <div className="rounded-3xl bg-white/95 backdrop-blur-xl p-6 sm:p-8 border border-gray-100 shadow-elevated grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="rounded-3xl bg-white/95 backdrop-blur-xl p-6 sm:p-8 border border-[#E8ECE9] shadow-elevated grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
                   {adminContact.name && (
                     <div>
-                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                        Mas'ul shaxs / Ответственное лицо
+                      <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                        {locale === "uz" ? "Mas'ul shaxs" : "Ответственное лицо"}
                       </span>
-                      <h3 className="text-lg font-extrabold text-brand-dark">
+                      <h3 className="text-base font-extrabold text-[#0d3431]">
                         {adminContact.name}
                       </h3>
                     </div>
@@ -304,16 +304,16 @@ export default function ContactsPage() {
           </section>
 
           {/* SECTION B: Hamkor Rieltorlar / Риелторы-партнёры */}
-          <section className="space-y-6">
+          <section className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-primary text-white shadow-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#0d3431] text-white shadow-sm">
                 <Users className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-xl sm:text-2xl font-extrabold text-brand-dark">
+                <h2 className="text-lg sm:text-xl font-bold text-[#0d3431]">
                   {t.contactsPage.realtorsSectionTitle}
                 </h2>
-                <p className="text-xs sm:text-sm text-gray-500">
+                <p className="text-xs text-gray-500">
                   {t.contactsPage.realtorsSectionSubtitle}
                 </p>
               </div>
@@ -326,10 +326,10 @@ export default function ContactsPage() {
                   return (
                     <div
                       key={r.id}
-                      className="flex flex-col rounded-3xl bg-white/95 backdrop-blur-xl border border-gray-100 p-6 shadow-card hover:shadow-elevated transition-all duration-300 group"
+                      className="flex flex-col rounded-3xl bg-white/95 backdrop-blur-xl border border-[#E8ECE9] p-6 shadow-card hover:shadow-elevated transition-all duration-300 group"
                     >
                       <div className="flex items-center gap-4 mb-4">
-                        <div className="relative h-16 w-16 rounded-2xl overflow-hidden bg-brand-light flex items-center justify-center text-brand-primary font-black text-2xl shrink-0 shadow-sm border border-brand-border/40">
+                        <div className="relative h-16 w-16 rounded-2xl overflow-hidden bg-[#d9eedb] flex items-center justify-center text-[#0d3431] font-black text-2xl shrink-0 shadow-sm border border-[#8cb599]/40">
                           {r.photo_url || r.avatar_url ? (
                             <Image
                               src={r.photo_url || r.avatar_url || ""}
@@ -338,17 +338,17 @@ export default function ContactsPage() {
                               className="object-cover"
                             />
                           ) : (
-                            <UserCheck className="h-8 w-8 text-brand-primary" />
+                            <UserCheck className="h-8 w-8 text-[#0d3431]" />
                           )}
                         </div>
                         <div className="min-w-0">
-                          <h3 className="font-extrabold text-base text-brand-dark truncate">
+                          <h3 className="font-extrabold text-base text-gray-900 truncate">
                             {r.name}
                           </h3>
-                          <p className="text-xs text-brand-primary font-semibold truncate">
+                          <p className="text-xs text-[#0d3431] font-semibold truncate">
                             {locale === "uz" ? r.specialization_uz : r.specialization_ru}
                           </p>
-                          <span className="inline-block mt-1 rounded-md bg-brand-light px-2.5 py-0.5 text-[10px] font-bold text-brand-dark">
+                          <span className="inline-block mt-1 rounded-md bg-[#d9eedb] px-2.5 py-0.5 text-[10px] font-bold text-[#0d3431]">
                             {r.experience_years} {t.aboutPage.yearsExp}
                           </span>
                         </div>
@@ -357,7 +357,7 @@ export default function ContactsPage() {
                       <div className={`mt-auto grid ${instagramUrl ? "grid-cols-3 gap-1.5 sm:gap-2" : "grid-cols-2 gap-2"} pt-4 border-t border-gray-100`}>
                         <a
                           href={`tel:${r.phone}`}
-                          className="flex items-center justify-center gap-1 sm:gap-1.5 rounded-2xl bg-brand-primary px-2 sm:px-3 py-2.5 text-[11px] sm:text-xs font-bold text-white hover:bg-brand-primary-hover shadow-sm active:scale-95 transition-all min-w-0"
+                          className="flex items-center justify-center gap-1 sm:gap-1.5 rounded-2xl bg-[#0d3431] px-2 sm:px-3 py-2.5 text-[11px] sm:text-xs font-bold text-white hover:bg-[#19453c] shadow-sm active:scale-95 transition-all min-w-0"
                         >
                           <Phone className="h-3.5 w-3.5 shrink-0" />
                           <span className="truncate">{t.aboutPage.callBtn}</span>
@@ -366,7 +366,7 @@ export default function ContactsPage() {
                           href={r.telegram.startsWith("http") ? r.telegram : `https://t.me/${r.telegram.replace(/^@+/, "")}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-1 sm:gap-1.5 rounded-2xl border border-gray-200 bg-white px-2 sm:px-3 py-2.5 text-[11px] sm:text-xs font-bold text-brand-dark hover:bg-gray-50 shadow-sm active:scale-95 transition-all min-w-0"
+                          className="flex items-center justify-center gap-1 sm:gap-1.5 rounded-2xl border border-gray-200 bg-white px-2 sm:px-3 py-2.5 text-[11px] sm:text-xs font-bold text-gray-800 hover:bg-gray-50 shadow-sm active:scale-95 transition-all min-w-0"
                         >
                           <Send className="h-3.5 w-3.5 text-sky-600 shrink-0" />
                           <span className="truncate">{t.aboutPage.telegramBtn}</span>
@@ -376,7 +376,7 @@ export default function ContactsPage() {
                             href={instagramUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center justify-center gap-1 sm:gap-1.5 rounded-2xl border border-gray-200 bg-white px-2 sm:px-3 py-2.5 text-[11px] sm:text-xs font-bold text-brand-dark hover:bg-gray-50 shadow-sm active:scale-95 transition-all min-w-0"
+                            className="flex items-center justify-center gap-1 sm:gap-1.5 rounded-2xl border border-gray-200 bg-white px-2 sm:px-3 py-2.5 text-[11px] sm:text-xs font-bold text-gray-800 hover:bg-gray-50 shadow-sm active:scale-95 transition-all min-w-0"
                             title="Instagram"
                           >
                             <Instagram className="h-3.5 w-3.5 text-pink-600 shrink-0" />
@@ -391,10 +391,10 @@ export default function ContactsPage() {
             ) : (
               /* High-End Realtors Empty State (Zero Fake Data) */
               <div className="rounded-3xl bg-white/90 backdrop-blur-md p-8 sm:p-12 border border-dashed border-gray-200 text-center max-w-xl mx-auto space-y-3 shadow-sm">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-light text-brand-primary shadow-sm">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#d9eedb] text-[#0d3431] shadow-sm">
                   <Users className="h-7 w-7" />
                 </div>
-                <h3 className="text-base sm:text-lg font-bold text-brand-dark">
+                <h3 className="text-base sm:text-lg font-bold text-gray-900">
                   {t.contactsPage.emptyRealtorsTitle}
                 </h3>
                 <p className="text-xs sm:text-sm text-gray-500 leading-relaxed">
@@ -402,7 +402,7 @@ export default function ContactsPage() {
                 </p>
                 <div className="pt-2">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1 text-xs font-medium text-gray-500 border border-gray-200/80 shadow-sm">
-                    <ShieldCheck className="h-3.5 w-3.5 text-brand-primary" />
+                    <ShieldCheck className="h-3.5 w-3.5 text-[#0d3431]" />
                     <span>ANGREN ESTATE Official Partners</span>
                   </span>
                 </div>
@@ -411,22 +411,22 @@ export default function ContactsPage() {
           </section>
 
           {/* SECTION C: ELON BERISH UCHUN ARIZA / ОСТАВИТЬ ЗАЯВКУ НА РАЗМЕЩЕНИЕ */}
-          <section className="space-y-6">
+          <section className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-primary text-white shadow-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#0d3431] text-white shadow-sm">
                 <Home className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-xl sm:text-2xl font-extrabold text-brand-dark">
+                <h2 className="text-lg sm:text-xl font-bold text-[#0d3431]">
                   {t.contactsPage.listingSectionTitle}
                 </h2>
-                <p className="text-xs sm:text-sm text-gray-500">
+                <p className="text-xs text-gray-500">
                   {t.contactsPage.listingSectionSubtitle}
                 </p>
               </div>
             </div>
 
-            <div className="rounded-3xl bg-white/95 backdrop-blur-xl border border-gray-100 p-6 sm:p-10 shadow-card max-w-2xl mx-auto">
+            <div className="rounded-3xl bg-white/95 backdrop-blur-xl border border-[#E8ECE9] p-6 sm:p-10 shadow-card max-w-2xl mx-auto">
               {submitSuccess ? (
                 <div className="py-8 text-center space-y-4">
                   <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 shadow-sm">
@@ -625,7 +625,7 @@ export default function ContactsPage() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full py-3.5 rounded-2xl bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold shadow-md shadow-brand-primary/20 flex items-center justify-center gap-2 transition-all active:scale-98 disabled:opacity-50"
+                    className="w-full py-3.5 rounded-2xl bg-[#0d3431] hover:bg-[#19453c] text-white text-xs font-bold shadow-md shadow-[#0d3431]/20 flex items-center justify-center gap-2 transition-all active:scale-98 disabled:opacity-50"
                   >
                     {isSubmitting ? (
                       <>

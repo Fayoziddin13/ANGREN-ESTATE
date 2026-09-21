@@ -159,7 +159,7 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
                 return (
                   <span
                     key={b}
-                    className="rounded-lg bg-emerald-700 px-2 py-0.5 text-[10px] sm:text-[11px] font-bold tracking-wide text-white shadow-xs flex items-center gap-1"
+                    className="rounded-lg bg-[#19453c] px-2 py-0.5 text-[10px] sm:text-[11px] font-bold tracking-wide text-white shadow-xs flex items-center gap-1"
                   >
                     <Percent className="w-3 h-3 shrink-0" />
                     <span>{locale === "uz" ? "Hamyonbop" : "Выгодно"}</span>
@@ -191,7 +191,7 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
             title={locale === "uz" ? "Solishtirishga qo‘shish" : "Добавить в сравнение"}
             className={`flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-full backdrop-blur-md shadow-sm hover:scale-110 active:scale-95 transition-all ${
               isCompared
-                ? "bg-emerald-600 text-white ring-2 ring-white/50"
+                ? "bg-[#0d3431] text-white ring-2 ring-white/50"
                 : "bg-black/40 text-white hover:bg-black/60"
             }`}
           >

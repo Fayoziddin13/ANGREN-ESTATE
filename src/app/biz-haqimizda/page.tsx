@@ -78,28 +78,28 @@ export default function AboutPage() {
             <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full bg-emerald-50 blur-2xl" />
           </div>
 
-          <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full bg-brand-light px-4 py-1.5 text-xs font-extrabold text-brand-primary border border-brand-border/60">
-              <ShieldCheck className="h-3.5 w-3.5 text-brand-primary" />
+          <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center space-y-4">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#d9eedb] px-3.5 py-1 text-xs font-bold text-[#0d3431] border border-[#8cb599]/40">
+              <ShieldCheck className="h-3.5 w-3.5 text-[#19453c]" />
               <span>{badgeText}</span>
             </div>
 
-            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-brand-dark leading-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0d3431] leading-tight">
               {headlineText}
             </h1>
 
-            <div className="max-w-3xl mx-auto space-y-4 text-base sm:text-lg text-gray-600 leading-relaxed font-normal">
+            <div className="max-w-3xl mx-auto space-y-3 text-xs sm:text-sm text-gray-600 leading-relaxed font-normal">
               <p>{p1Text}</p>
               <p>{p2Text}</p>
-              <p className="font-semibold text-brand-primary text-lg sm:text-xl">
+              <p className="font-bold text-[#19453c] text-sm sm:text-base">
                 {p3Text}
               </p>
             </div>
 
-            <div className="pt-4">
+            <div className="pt-2">
               <Link
                 href="/"
-                className="inline-flex items-center gap-2 rounded-2xl bg-brand-primary px-6 py-3.5 text-sm font-bold text-white shadow-card hover:bg-brand-primary-hover hover:shadow-elevated transition-all active:scale-95"
+                className="inline-flex items-center gap-2 rounded-2xl bg-[#0d3431] px-5 py-2.5 text-xs font-bold text-white shadow-card hover:bg-[#19453c] hover:shadow-elevated transition-all active:scale-95"
               >
                 <span>{t.aboutPage.goToMap}</span>
                 <ArrowRight className="h-4 w-4" />
@@ -109,12 +109,12 @@ export default function AboutPage() {
         </section>
 
         {/* 3. Visual Advantages Grid */}
-        <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-          <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-brand-dark">
+        <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+          <div className="text-center max-w-2xl mx-auto mb-10 space-y-1.5">
+            <h2 className="text-lg sm:text-xl font-bold text-[#0d3431]">
               {t.aboutPage.advantagesTitle}
             </h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-xs text-gray-500">
               {t.aboutPage.advantagesSubtitle}
             </p>
           </div>
@@ -129,15 +129,15 @@ export default function AboutPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.3, delay: idx * 0.06 }}
-                  className="rounded-3xl bg-white/90 backdrop-blur-md p-6 border border-gray-100/90 shadow-card hover:shadow-elevated hover:-translate-y-1 transition-all duration-200 group"
+                  className="rounded-3xl bg-white/90 backdrop-blur-md p-6 border border-[#E8ECE9] shadow-card hover:shadow-elevated hover:-translate-y-0.5 transition-all duration-200 group"
                 >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-light text-brand-primary group-hover:bg-brand-primary group-hover:text-white transition-colors mb-4 shadow-sm">
-                    <Icon className="h-6 w-6" />
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#d9eedb] text-[#0d3431] group-hover:bg-[#0d3431] group-hover:text-white transition-colors mb-3.5 shadow-sm">
+                    <Icon className="h-5 w-5" />
                   </div>
-                  <h3 className="text-base font-bold text-brand-dark mb-1.5">
+                  <h3 className="text-sm font-bold text-gray-900 mb-1">
                     {adv.title}
                   </h3>
-                  <p className="text-xs sm:text-sm text-gray-500 leading-relaxed">
+                  <p className="text-xs text-gray-500 leading-relaxed">
                     {adv.desc}
                   </p>
                 </motion.div>

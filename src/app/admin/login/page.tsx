@@ -137,8 +137,8 @@ export default function AdminLoginPage() {
       {/* Top Bar: Brand & Language */}
       <div className="flex items-center justify-between max-w-5xl mx-auto w-full z-10">
         <div className="flex items-center gap-3">
-          <div className="relative h-10 w-10 rounded-xl overflow-hidden shadow-lg border border-white/10">
-            <Image src="/logo.png" alt="ANGREN ESTATE" fill className="object-cover" />
+          <div className="relative h-9 w-9 shrink-0">
+            <Image src="/logo-emblem.png" alt="ANGREN ESTATE" fill className="object-contain" />
           </div>
           <div>
             <div className="font-black text-sm tracking-tight text-white leading-none">

@@ -169,14 +169,14 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
     <header
       className={`sticky top-0 z-40 w-full transition-all duration-300 ${
         isScrolled
-          ? "bg-[#0d3431]/95 backdrop-blur-xl shadow-elevated border-b border-white/10"
-          : "bg-[#0d3431]/90 backdrop-blur-lg shadow-sm border-b border-white/10"
+          ? "bg-[#0d3431]/95 backdrop-blur-2xl backdrop-saturate-150 shadow-elevated border-b border-white/10"
+          : "bg-[#0d3431]/90 backdrop-blur-xl backdrop-saturate-150 shadow-sm border-b border-white/10"
       }`}
     >
       {announcement?.is_active && (
         <div
           data-testid="cms-announcement-bar"
-          className={`w-full py-1.5 px-3 sm:px-6 text-xs sm:text-xs font-medium text-center flex items-center justify-center gap-2 border-b transition-colors ${
+          className={`w-full py-1 px-3 sm:px-6 text-[11px] sm:text-xs font-medium text-center flex items-center justify-center gap-2 border-b transition-colors ${
             announcement.type === "warning"
               ? "bg-amber-500 text-slate-950 border-amber-600 font-semibold"
               : announcement.type === "success"
@@ -195,8 +195,8 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
           )}
         </div>
       )}
-      <div className="mx-auto flex h-15 sm:h-18 w-full max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8">
-        {/* Left: Official Brand Logo & Name */}
+      <div className="mx-auto flex h-14 sm:h-16 w-full max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8">
+        {/* Left: Official Brand Logo & Name (Seamlessly Integrated, No Card) */}
         <Link
           href="/"
           onClick={(e) => {
@@ -210,13 +210,13 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
           }}
           className="flex items-center gap-2.5 sm:gap-3 group shrink-0"
         >
-          <div className="flex h-9 w-9 sm:h-10 sm:w-10 rounded-xl overflow-hidden shadow-sm transition-transform duration-200 group-hover:scale-105 shrink-0 bg-white/10 items-center justify-center border border-white/15">
+          <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105">
             <Image
-              src="/logo.png"
+              src="/logo-emblem.png"
               alt="ANGREN ESTATE"
-              width={40}
-              height={40}
-              className="h-full w-full object-contain rounded-xl"
+              width={36}
+              height={36}
+              className="h-full w-full object-contain filter drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)]"
               priority
             />
           </div>
@@ -394,7 +394,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                         : "text-white/80 hover:bg-white/10 hover:text-white"
                     }`}
                   >
-                    <span>UZS (So‘m)</span>
+                    <span>{locale === "ru" ? "UZS (Сум)" : "UZS (So‘m)"}</span>
                     {currency === "UZS" && (
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-sm" />
                     )}

@@ -130,8 +130,8 @@ export default function AdminLayout({
       {/* Mobile Top Navigation */}
       <div className="md:hidden sticky top-0 z-40 bg-[#0d3431] text-white px-4 py-3 flex items-center justify-between shadow-md border-b border-white/10">
         <Link href="/admin" className="flex items-center gap-2.5">
-          <div className="relative h-8 w-8 rounded-lg overflow-hidden shrink-0 border border-white/20">
-            <Image src="/logo.png" alt="Logo" fill className="object-cover" />
+          <div className="relative h-8 w-8 shrink-0">
+            <Image src="/logo-emblem.png" alt="Logo" fill className="object-contain" />
           </div>
           <div>
             <div className="text-xs font-black tracking-tight text-white leading-none">
@@ -210,8 +210,8 @@ export default function AdminLayout({
         {/* Brand Header */}
         <div className="p-4 border-b border-white/10 flex items-center justify-between">
           <Link href="/admin" className="flex items-center gap-3 group">
-            <div className="relative h-10 w-10 rounded-xl overflow-hidden shadow-md shrink-0 border border-white/15 group-hover:scale-105 transition-transform">
-              <Image src="/logo.png" alt="Logo" fill className="object-cover" priority />
+            <div className="relative h-9 w-9 shrink-0 group-hover:scale-105 transition-transform">
+              <Image src="/logo-emblem.png" alt="Logo" fill className="object-contain" priority />
             </div>
             <div>
               <div className="font-black text-sm tracking-tight text-white leading-none">

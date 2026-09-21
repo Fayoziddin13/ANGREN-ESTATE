@@ -14,12 +14,12 @@ export function AuthModal() {
     <Modal isOpen={isAuthModalOpen} onClose={closeAuthModal}>
       <div className="flex flex-col items-center text-center space-y-4">
         {/* Official Brand Logo */}
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl shadow-card border border-brand-border bg-brand-dark p-1 overflow-hidden">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl shadow-sm bg-[#0d3431] p-1.5 shrink-0">
           <Image
-            src="/logo.png"
+            src="/logo-emblem.png"
             alt="ANGREN ESTATE Logo"
-            width={48}
-            height={48}
+            width={44}
+            height={44}
             className="object-contain"
             priority
           />
