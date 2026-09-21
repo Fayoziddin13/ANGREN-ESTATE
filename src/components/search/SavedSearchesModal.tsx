@@ -67,7 +67,7 @@ export function SavedSearchesModal({
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#d9eedb]/50 text-[#0d3431]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#e5f0eb]/50 text-[#0c2e1f]">
                 <Bookmark className="h-5 w-5" />
               </div>
               <div>
@@ -97,7 +97,7 @@ export function SavedSearchesModal({
               onClick={() => setActiveTab("searches")}
               className={`pb-3 text-xs sm:text-sm font-bold transition-all relative ${
                 activeTab === "searches"
-                  ? "text-[#0d3431]"
+                  ? "text-[#0c2e1f]"
                   : "text-slate-400 hover:text-slate-600"
               }`}
             >
@@ -106,7 +106,7 @@ export function SavedSearchesModal({
                 {savedSearches.length}
               </span>
               {activeTab === "searches" && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0d3431] rounded-full" />
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0c2e1f] rounded-full" />
               )}
             </button>
 
@@ -114,18 +114,18 @@ export function SavedSearchesModal({
               onClick={() => setActiveTab("alerts")}
               className={`pb-3 text-xs sm:text-sm font-bold transition-all relative ${
                 activeTab === "alerts"
-                  ? "text-[#0d3431]"
+                  ? "text-[#0c2e1f]"
                   : "text-slate-400 hover:text-slate-600"
               }`}
             >
               <span>{locale === "uz" ? "Bildirishnomalar" : "Уведомления"}</span>
               {unreadNotificationsCount > 0 && (
-                <span className="ml-1.5 px-2 py-0.5 rounded-full text-[10px] bg-[#19453c] text-white font-extrabold">
+                <span className="ml-1.5 px-2 py-0.5 rounded-full text-[10px] bg-[#19573c] text-white font-extrabold">
                   {unreadNotificationsCount}
                 </span>
               )}
               {activeTab === "alerts" && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0d3431] rounded-full" />
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0c2e1f] rounded-full" />
               )}
             </button>
           </div>
@@ -192,7 +192,7 @@ export function SavedSearchesModal({
                             onApplySearch(search);
                             onClose();
                           }}
-                          className="px-3 py-1.5 rounded-xl bg-[#0d3431] text-white hover:bg-[#19453c] text-xs font-bold transition-all"
+                          className="px-3 py-1.5 rounded-xl bg-[#0c2e1f] text-white hover:bg-[#19573c] text-xs font-bold transition-all"
                         >
                           {locale === "uz" ? "Qo‘llash" : "Применить"}
                         </button>
@@ -249,13 +249,13 @@ export function SavedSearchesModal({
                     className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start justify-between gap-3 ${
                       notif.read
                         ? "bg-white border-slate-100 text-slate-600"
-                        : "bg-[#d9eedb]/40 border-[#8cb599]/30 text-slate-900 shadow-xs"
+                        : "bg-[#e5f0eb]/40 border-[#339e71]/30 text-slate-900 shadow-xs"
                     }`}
                   >
                     <div className="space-y-1 flex-1">
                       <div className="flex items-center gap-2">
                         {!notif.read && (
-                          <span className="h-2 w-2 rounded-full bg-[#19453c] shrink-0" />
+                          <span className="h-2 w-2 rounded-full bg-[#19573c] shrink-0" />
                         )}
                         <h4 className="text-xs font-black">
                           {locale === "uz" ? notif.titleUz : notif.titleRu}
@@ -272,7 +272,7 @@ export function SavedSearchesModal({
                       </span>
                     </div>
 
-                    <ExternalLink className="h-4 w-4 text-[#0d3431] shrink-0 mt-0.5" />
+                    <ExternalLink className="h-4 w-4 text-[#0c2e1f] shrink-0 mt-0.5" />
                   </div>
                 ))}
               </div>

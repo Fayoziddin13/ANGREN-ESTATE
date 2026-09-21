@@ -30,7 +30,7 @@ export function FloatingCompareBar({ onOpenCompare, className = "" }: FloatingCo
         <div className="flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-slate-900/95 text-white backdrop-blur-xl shadow-float border border-white/10">
           <div className="flex items-center gap-2">
             <div className="relative">
-              <Scale className="h-4 w-4 text-emerald-400" />
+              <Scale className="h-4 w-4 text-[#339e71]" />
               <span className="absolute -top-1 -right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-500 text-[9px] font-black text-white">
                 {count}
               </span>
@@ -43,7 +43,7 @@ export function FloatingCompareBar({ onOpenCompare, className = "" }: FloatingCo
           <button
             type="button"
             onClick={onOpenCompare}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black transition-all active:scale-95"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#19573c] hover:bg-[#206e4d] text-white text-xs font-black transition-all active:scale-95"
           >
             <span>{locale === "uz" ? "Ko‘rish" : "Открыть"}</span>
             <ArrowRight className="h-3 w-3" />

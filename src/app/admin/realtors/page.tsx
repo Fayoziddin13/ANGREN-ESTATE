@@ -365,8 +365,8 @@ export default function AdminRealtorsPage() {
     <div className="p-4 sm:p-8 max-w-6xl mx-auto w-full space-y-6">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#0d3431] text-white px-5 py-3 rounded-2xl shadow-xl border border-emerald-500/40 flex items-center gap-2.5 animate-bounce">
-          <CheckCircle className="h-4 w-4 text-emerald-400" />
+        <div className="fixed bottom-6 right-6 z-50 bg-[#0c2e1f] text-white px-5 py-3 rounded-2xl shadow-xl border border-[#19573c]/40 flex items-center gap-2.5 animate-bounce">
+          <CheckCircle className="h-4 w-4 text-[#339e71]" />
           <span className="text-xs font-bold">{toastMessage}</span>
         </div>
       )}
@@ -386,7 +386,7 @@ export default function AdminRealtorsPage() {
 
         <button
           onClick={handleOpenAddModal}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0d3431] text-white hover:bg-[#0d3431] font-bold text-xs transition-colors shadow-sm self-start sm:self-auto"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0c2e1f] text-white hover:bg-[#0c2e1f] font-bold text-xs transition-colors shadow-sm self-start sm:self-auto"
         >
           <Plus className="h-4 w-4" />
           <span>{t.admin.addRealtor}</span>
@@ -399,7 +399,7 @@ export default function AdminRealtorsPage() {
           onClick={() => setStatusFilter("all")}
           className={`px-3.5 py-2 rounded-xl transition-all whitespace-nowrap flex items-center gap-2 ${
             statusFilter === "all"
-              ? "bg-[#0d3431] text-white shadow-xs"
+              ? "bg-[#0c2e1f] text-white shadow-xs"
               : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
           }`}
         >
@@ -417,14 +417,14 @@ export default function AdminRealtorsPage() {
           onClick={() => setStatusFilter("active")}
           className={`px-3.5 py-2 rounded-xl transition-all whitespace-nowrap flex items-center gap-2 ${
             statusFilter === "active"
-              ? "bg-[#0d3431] text-white shadow-xs"
+              ? "bg-[#0c2e1f] text-white shadow-xs"
               : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
           }`}
         >
           <span>{locale === "uz" ? "Faol rieltorlar" : "Активные"}</span>
           <span
             className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-              statusFilter === "active" ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-800"
+              statusFilter === "active" ? "bg-white/20 text-white" : "bg-[#e5f0eb] text-[#0c2e1f]"
             }`}
           >
             {realtorCounts.active}
@@ -435,7 +435,7 @@ export default function AdminRealtorsPage() {
           onClick={() => setStatusFilter("inactive")}
           className={`px-3.5 py-2 rounded-xl transition-all whitespace-nowrap flex items-center gap-2 ${
             statusFilter === "inactive"
-              ? "bg-[#0d3431] text-white shadow-xs"
+              ? "bg-[#0c2e1f] text-white shadow-xs"
               : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
           }`}
         >
@@ -463,7 +463,7 @@ export default function AdminRealtorsPage() {
                 ? "Ism yoki mutaxassislik bo‘yicha qidirish..."
                 : "Поиск по имени или специализации..."
             }
-            className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#0d3431] focus:border-transparent transition-all"
+            className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#0c2e1f] focus:border-transparent transition-all"
           />
         </div>
       </div>
@@ -471,12 +471,12 @@ export default function AdminRealtorsPage() {
       {/* Realtors Grid or Empty State */}
       {!isLoaded ? (
         <div className="text-center py-16 text-slate-600 font-medium text-sm flex items-center justify-center gap-2">
-          <RefreshCw className="h-4 w-4 animate-spin text-[#0d3431]" />
+          <RefreshCw className="h-4 w-4 animate-spin text-[#0c2e1f]" />
           <span>{locale === "uz" ? "Yuklanmoqda..." : "Загрузка..."}</span>
         </div>
       ) : filteredRealtors.length === 0 ? (
         <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center space-y-4">
-          <div className="h-16 w-16 rounded-full bg-emerald-50 text-[#0d3431] flex items-center justify-center mx-auto">
+          <div className="h-16 w-16 rounded-full bg-[#e5f0eb]/60 text-[#0c2e1f] flex items-center justify-center mx-auto">
             <Users className="h-8 w-8" />
           </div>
           <div className="space-y-1 max-w-md mx-auto">
@@ -493,7 +493,7 @@ export default function AdminRealtorsPage() {
           </div>
           <button
             onClick={handleOpenAddModal}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0d3431] text-white hover:bg-[#0d3431] font-bold text-xs transition-colors shadow-sm"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0c2e1f] text-white hover:bg-[#0c2e1f] font-bold text-xs transition-colors shadow-sm"
           >
             <Plus className="h-3.5 w-3.5" />
             <span>{t.admin.addRealtor}</span>
@@ -527,7 +527,7 @@ export default function AdminRealtorsPage() {
                             className="object-cover"
                           />
                         ) : (
-                          <div className="h-full w-full flex items-center justify-center bg-emerald-50 text-[#0d3431] font-extrabold text-base">
+                          <div className="h-full w-full flex items-center justify-center bg-[#e5f0eb]/60 text-[#0c2e1f] font-extrabold text-base">
                             {realtor.name.charAt(0)}
                           </div>
                         )}
@@ -542,12 +542,12 @@ export default function AdminRealtorsPage() {
                               {locale === "uz" ? "Nofaol" : "Неактивен"}
                             </span>
                           ) : (
-                            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-[#e5f0eb] text-[#0c2e1f] border border-[#c2d3c9]">
                               {locale === "uz" ? "Faol" : "Активен"}
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-[#0d3431] font-semibold">{spec}</p>
+                        <p className="text-xs text-[#0c2e1f] font-semibold">{spec}</p>
                       </div>
                     </div>
 
@@ -556,14 +556,14 @@ export default function AdminRealtorsPage() {
                       onClick={() => handleToggleRealtorStatus(realtor)}
                       className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold transition-colors ${
                         realtor.is_active
-                          ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300"
+                          ? "bg-[#e5f0eb] text-[#0c2e1f] hover:bg-[#c2d3c9] border border-[#c2d3c9]"
                           : "bg-slate-200 text-slate-700 hover:bg-slate-300 border border-slate-300"
                       }`}
                       title={locale === "uz" ? "Holatni o‘zgartirish (Faol / Nofaol)" : "Сменить статус (Активен / Неактивен)"}
                     >
                       <span
                         className={`h-1.5 w-1.5 rounded-full ${
-                          realtor.is_active ? "bg-emerald-600" : "bg-slate-500"
+                          realtor.is_active ? "bg-[#19573c]" : "bg-slate-500"
                         }`}
                       />
                       <span>{realtor.is_active ? t.admin.statusActive : t.admin.statusHidden}</span>
@@ -612,14 +612,14 @@ export default function AdminRealtorsPage() {
                   <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
                     <button
                       onClick={() => openPropertiesModal(realtor)}
-                      className="flex items-center justify-between p-2 rounded-xl bg-emerald-50/70 hover:bg-emerald-100 border border-emerald-200 text-left transition-colors group"
+                      className="flex items-center justify-between p-2 rounded-xl bg-[#e5f0eb]/60/70 hover:bg-[#e5f0eb] border border-[#c2d3c9] text-left transition-colors group"
                       title={locale === "uz" ? "Biriktirilgan obyektlarni ko‘rish" : "Посмотреть прикреплённые объекты"}
                     >
                       <div className="flex items-center gap-1.5 text-slate-700 font-semibold text-[11px]">
-                        <Building2 className="h-3.5 w-3.5 text-[#0d3431]" />
+                        <Building2 className="h-3.5 w-3.5 text-[#0c2e1f]" />
                         <span>{locale === "uz" ? "Obyektlar:" : "Объекты:"}</span>
                       </div>
-                      <span className="font-extrabold text-xs text-[#0d3431] group-hover:underline">
+                      <span className="font-extrabold text-xs text-[#0c2e1f] group-hover:underline">
                         {propCount} {locale === "uz" ? "ta" : "шт"}
                       </span>
                     </button>
@@ -659,7 +659,7 @@ export default function AdminRealtorsPage() {
                       className={`inline-flex items-center justify-center gap-1 px-2.5 py-2 sm:py-1.5 rounded-xl text-xs font-bold transition-colors ${
                         realtor.is_active
                           ? "text-amber-800 bg-amber-100/80 hover:bg-amber-200 border border-amber-300"
-                          : "text-emerald-800 bg-emerald-100/80 hover:bg-emerald-200 border border-emerald-300"
+                          : "text-[#0c2e1f] bg-[#e5f0eb]/80 hover:bg-[#c2d3c9] border border-[#c2d3c9]"
                       }`}
                       title={
                         realtor.is_active
@@ -686,7 +686,7 @@ export default function AdminRealtorsPage() {
 
                     <button
                       onClick={() => handleOpenEditModal(realtor)}
-                      className="inline-flex items-center justify-center gap-1 px-2.5 py-2 sm:py-1.5 rounded-xl text-xs font-bold text-[#0d3431] bg-emerald-100/80 hover:bg-emerald-200 border border-emerald-300 transition-colors"
+                      className="inline-flex items-center justify-center gap-1 px-2.5 py-2 sm:py-1.5 rounded-xl text-xs font-bold text-[#0c2e1f] bg-[#e5f0eb]/80 hover:bg-[#c2d3c9] border border-[#c2d3c9] transition-colors"
                       title={t.admin.editRealtor}
                     >
                       <Edit2 className="h-3.5 w-3.5 shrink-0" />
@@ -722,7 +722,7 @@ export default function AdminRealtorsPage() {
             <div className="flex items-start justify-between pb-4 border-b border-slate-100">
               <div>
                 <h3 className="text-base sm:text-lg font-extrabold text-slate-900 flex items-center gap-2">
-                  <Building2 className="h-5 w-5 text-[#0d3431]" />
+                  <Building2 className="h-5 w-5 text-[#0c2e1f]" />
                   <span>
                     {locale === "uz" ? "Biriktirilgan obyektlar" : "Прикреплённые объекты"}
                   </span>
@@ -750,7 +750,7 @@ export default function AdminRealtorsPage() {
                 <select
                   value={selectedPropertyToAssign}
                   onChange={(e) => setSelectedPropertyToAssign(e.target.value)}
-                  className="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white font-medium focus:ring-2 focus:ring-[#0d3431] outline-none"
+                  className="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white font-medium focus:ring-2 focus:ring-[#0c2e1f] outline-none"
                 >
                   <option value="">
                     {locale === "uz" ? "-- Obyektni tanlang --" : "-- Выберите объект --"}
@@ -768,7 +768,7 @@ export default function AdminRealtorsPage() {
                 <button
                   disabled={!selectedPropertyToAssign || isAssigning}
                   onClick={handleAssignSelectedProperty}
-                  className="px-4 py-2 rounded-xl bg-[#0d3431] text-white text-xs font-bold hover:bg-[#0d3431] disabled:opacity-50 transition-colors shrink-0"
+                  className="px-4 py-2 rounded-xl bg-[#0c2e1f] text-white text-xs font-bold hover:bg-[#0c2e1f] disabled:opacity-50 transition-colors shrink-0"
                 >
                   {isAssigning ? "..." : locale === "uz" ? "Biriktirish" : "Прикрепить"}
                 </button>
@@ -787,7 +787,7 @@ export default function AdminRealtorsPage() {
 
               {loadingProperties ? (
                 <div className="py-8 text-center text-xs text-slate-600 font-medium flex items-center justify-center gap-2">
-                  <RefreshCw className="h-4 w-4 animate-spin text-[#0d3431]" />
+                  <RefreshCw className="h-4 w-4 animate-spin text-[#0c2e1f]" />
                   <span>{locale === "uz" ? "Yuklanmoqda..." : "Загрузка..."}</span>
                 </div>
               ) : assignedProperties.length === 0 ? (
@@ -826,14 +826,14 @@ export default function AdminRealtorsPage() {
                             {prop.district_name_uz || prop.district}, {prop.address_uz || prop.address_ru}
                           </p>
                           <div className="flex items-center gap-2 mt-0.5 text-[11px]">
-                            <span className="font-extrabold text-[#0d3431]">
+                            <span className="font-extrabold text-[#0c2e1f]">
                               ${(prop.price_usd || 0).toLocaleString()}
                             </span>
                             <span className="text-slate-300">•</span>
                             <span
                               className={`px-1.5 py-0.2 rounded text-[10px] font-bold uppercase ${
                                 prop.status === "published"
-                                  ? "bg-emerald-100 text-emerald-800"
+                                  ? "bg-[#e5f0eb] text-[#0c2e1f]"
                                   : prop.status === "draft"
                                   ? "bg-amber-100 text-amber-800"
                                   : "bg-slate-100 text-slate-600"
@@ -945,7 +945,7 @@ export default function AdminRealtorsPage() {
                             lead.contact_type === "telegram"
                               ? "bg-sky-100 text-sky-800"
                               : lead.contact_type === "call"
-                              ? "bg-emerald-100 text-emerald-800"
+                              ? "bg-[#e5f0eb] text-[#0c2e1f]"
                               : "bg-purple-100 text-purple-800"
                           }`}
                         >
@@ -962,7 +962,7 @@ export default function AdminRealtorsPage() {
                             : lead.status === "contacted"
                             ? "bg-blue-100 text-blue-800"
                             : lead.status === "closed"
-                            ? "bg-emerald-100 text-emerald-800"
+                            ? "bg-[#e5f0eb] text-[#0c2e1f]"
                             : "bg-slate-100 text-slate-600"
                         }`}
                       >
@@ -991,7 +991,7 @@ export default function AdminRealtorsPage() {
             <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
               <Link
                 href="/admin/leads"
-                className="text-xs font-bold text-[#0d3431] hover:underline flex items-center gap-1"
+                className="text-xs font-bold text-[#0c2e1f] hover:underline flex items-center gap-1"
               >
                 <span>{locale === "uz" ? "Barcha lidlar bo‘limiga o‘tish" : "Перейти ко всем лидам"}</span>
                 <ExternalLink className="h-3.5 w-3.5" />
@@ -1038,7 +1038,7 @@ export default function AdminRealtorsPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Masalan: Nodir Aliyev"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0d3431] focus:border-transparent outline-none"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0c2e1f] focus:border-transparent outline-none"
                 />
               </div>
 
@@ -1054,7 +1054,7 @@ export default function AdminRealtorsPage() {
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     placeholder="+998 90 123 45 67"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0d3431] outline-none"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0c2e1f] outline-none"
                   />
                 </div>
                 <div className="space-y-1">
@@ -1066,7 +1066,7 @@ export default function AdminRealtorsPage() {
                     value={formData.telegram}
                     onChange={(e) => setFormData({ ...formData, telegram: e.target.value })}
                     placeholder="@username"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0d3431] outline-none"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0c2e1f] outline-none"
                   />
                 </div>
                 <div className="space-y-1">
@@ -1078,7 +1078,7 @@ export default function AdminRealtorsPage() {
                     value={formData.instagram_url}
                     onChange={(e) => setFormData({ ...formData, instagram_url: e.target.value })}
                     placeholder="@username yoki URL"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0d3431] outline-none"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0c2e1f] outline-none"
                   />
                 </div>
               </div>
@@ -1100,7 +1100,7 @@ export default function AdminRealtorsPage() {
                         experience_years: parseInt(e.target.value) || 1,
                       })
                     }
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0d3431] outline-none"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0c2e1f] outline-none"
                   />
                 </div>
                 <div className="space-y-1 sm:col-span-2">
@@ -1112,7 +1112,7 @@ export default function AdminRealtorsPage() {
                     value={formData.districts_str}
                     onChange={(e) => setFormData({ ...formData, districts_str: e.target.value })}
                     placeholder="Markaz, 1/1, 2/3, 5/1"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0d3431] outline-none"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0c2e1f] outline-none"
                   />
                 </div>
               </div>
@@ -1130,7 +1130,7 @@ export default function AdminRealtorsPage() {
                       setFormData({ ...formData, specialization_uz: e.target.value })
                     }
                     placeholder="Kvartiralar va hovlilar"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0d3431] outline-none"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0c2e1f] outline-none"
                   />
                 </div>
                 <div className="space-y-1">
@@ -1144,7 +1144,7 @@ export default function AdminRealtorsPage() {
                       setFormData({ ...formData, specialization_ru: e.target.value })
                     }
                     placeholder="Квартиры и частные дома"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0d3431] outline-none"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0c2e1f] outline-none"
                   />
                 </div>
               </div>
@@ -1153,7 +1153,7 @@ export default function AdminRealtorsPage() {
               <div className="space-y-2 p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
                 <label className="font-bold text-slate-800 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
-                    <Camera className="h-4 w-4 text-[#0d3431]" />
+                    <Camera className="h-4 w-4 text-[#0c2e1f]" />
                     {locale === "uz" ? "Rieltor fotosurati" : "Фотография риелтора"}
                   </span>
                   <span className="text-[10px] text-slate-500 font-normal">
@@ -1170,7 +1170,7 @@ export default function AdminRealtorsPage() {
 
                 <div className="flex items-center gap-4">
                   {formData.photo_url || formData.avatar_url ? (
-                    <div className="relative h-16 w-16 rounded-2xl overflow-hidden bg-slate-200 border-2 border-emerald-500 shrink-0 shadow-sm">
+                    <div className="relative h-16 w-16 rounded-2xl overflow-hidden bg-slate-200 border-2 border-[#19573c] shrink-0 shadow-sm">
                       <Image
                         src={formData.photo_url || formData.avatar_url}
                         alt="Preview"
@@ -1179,14 +1179,14 @@ export default function AdminRealtorsPage() {
                       />
                     </div>
                   ) : (
-                    <div className="h-16 w-16 rounded-2xl bg-emerald-50 border-2 border-dashed border-emerald-300 flex items-center justify-center text-emerald-800 shrink-0 font-bold text-lg">
-                      {formData.name ? formData.name.charAt(0).toUpperCase() : <Camera className="h-6 w-6 text-[#0d3431]" />}
+                    <div className="h-16 w-16 rounded-2xl bg-[#e5f0eb]/60 border-2 border-dashed border-[#c2d3c9] flex items-center justify-center text-[#0c2e1f] shrink-0 font-bold text-lg">
+                      {formData.name ? formData.name.charAt(0).toUpperCase() : <Camera className="h-6 w-6 text-[#0c2e1f]" />}
                     </div>
                   )}
 
                   <div className="flex-1 space-y-1.5">
                     <div className="flex items-center gap-2">
-                      <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0d3431] hover:bg-[#19453c] text-white text-xs font-bold transition-colors shadow-sm">
+                      <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0c2e1f] hover:bg-[#19573c] text-white text-xs font-bold transition-colors shadow-sm">
                         <Upload className="h-3.5 w-3.5" />
                         <span>
                           {uploadingPhoto
@@ -1236,7 +1236,7 @@ export default function AdminRealtorsPage() {
                       })
                     }
                     placeholder={locale === "uz" ? "Yoki rasm URL havolasini kiriting (https://...)" : "Или вставьте прямую ссылку на фото (https://...)"}
-                    className="w-full px-3 py-1.5 text-xs rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#0d3431] outline-none"
+                    className="w-full px-3 py-1.5 text-xs rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#0c2e1f] outline-none"
                   />
                 </div>
               </div>
@@ -1253,7 +1253,7 @@ export default function AdminRealtorsPage() {
                     value={formData.instagram_url}
                     onChange={(e) => setFormData({ ...formData, instagram_url: e.target.value })}
                     placeholder="https://instagram.com/realtor_angren yoki @username"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0d3431] outline-none text-xs"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0c2e1f] outline-none text-xs"
                   />
                 </div>
                 <p className="text-[11px] text-slate-500">
@@ -1274,7 +1274,7 @@ export default function AdminRealtorsPage() {
                     value={formData.bio_uz}
                     onChange={(e) => setFormData({ ...formData, bio_uz: e.target.value })}
                     placeholder="Angren shahri bo‘yicha tajribali mutaxassis..."
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0d3431] outline-none resize-none"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0c2e1f] outline-none resize-none"
                   />
                 </div>
                 <div className="space-y-1">
@@ -1286,7 +1286,7 @@ export default function AdminRealtorsPage() {
                     value={formData.bio_ru}
                     onChange={(e) => setFormData({ ...formData, bio_ru: e.target.value })}
                     placeholder="Опытный специалист по городу Ангрен..."
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0d3431] outline-none resize-none"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0c2e1f] outline-none resize-none"
                   />
                 </div>
               </div>
@@ -1298,7 +1298,7 @@ export default function AdminRealtorsPage() {
                   id="realtor_active"
                   checked={formData.is_active}
                   onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                  className="h-4 w-4 text-[#0d3431] rounded border-slate-300 focus:ring-[#0d3431]"
+                  className="h-4 w-4 text-[#0c2e1f] rounded border-slate-300 focus:ring-[#0c2e1f]"
                 />
                 <label htmlFor="realtor_active" className="font-semibold text-slate-700">
                   {locale === "uz"
@@ -1318,7 +1318,7 @@ export default function AdminRealtorsPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-[#0d3431] hover:bg-[#19453c] text-white font-bold transition-colors shadow-sm"
+                  className="px-5 py-2 rounded-xl bg-[#0c2e1f] hover:bg-[#19573c] text-white font-bold transition-colors shadow-sm"
                 >
                   {locale === "uz" ? "Saqlash" : "Сохранить"}
                 </button>

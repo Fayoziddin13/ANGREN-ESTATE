@@ -84,7 +84,7 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
   return (
     <div
       onClick={handleCardClick}
-      className="group relative flex flex-col overflow-hidden rounded-2xl bg-white border border-[#E8ECE9] shadow-card hover:shadow-elevated transition-all duration-200 cursor-pointer"
+      className="group relative flex flex-col overflow-hidden rounded-2xl bg-white border border-[#e2e9e6] shadow-card hover:shadow-elevated transition-all duration-200 cursor-pointer"
     >
       
       {/* Property Image Container — 3:4 Vertical Aspect Ratio with Cover & Fullscreen Gallery Trigger */}
@@ -112,12 +112,12 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
 
         {/* Transaction Badge and Marketing Badges (Top Left) */}
         <div className="absolute top-2.5 left-2.5 z-10 flex flex-wrap gap-1 items-center max-w-[85%]">
-          <span className="rounded-lg bg-[#0d3431] px-2 py-0.5 text-[10px] sm:text-[11px] font-bold tracking-wide text-white shadow-xs">
+          <span className="rounded-lg bg-[#0c2e1f] px-2 py-0.5 text-[10px] sm:text-[11px] font-bold tracking-wide text-white shadow-xs">
             {badgeText}
           </span>
           {/* Automatic "New" / "Новинка" Badge (3 days from publication) */}
           {isPropertyNew(property) && (
-            <span className="rounded-lg bg-[#2c5b51] px-2 py-0.5 text-[10px] sm:text-[11px] font-bold tracking-wide text-white shadow-xs">
+            <span className="rounded-lg bg-[#206e4d] px-2 py-0.5 text-[10px] sm:text-[11px] font-bold tracking-wide text-white shadow-xs">
               {locale === "uz" ? "Yangi" : "Новинка"}
             </span>
           )}
@@ -138,7 +138,7 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
                 return (
                   <span
                     key={b}
-                    className="rounded-lg bg-[#2f6857] px-2 py-0.5 text-[10px] sm:text-[11px] font-bold tracking-wide text-white shadow-xs"
+                    className="rounded-lg bg-[#206e4d] px-2 py-0.5 text-[10px] sm:text-[11px] font-bold tracking-wide text-white shadow-xs"
                   >
                     {locale === "uz" ? "Arzon" : "Недорого"}
                   </span>
@@ -159,7 +159,7 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
                 return (
                   <span
                     key={b}
-                    className="rounded-lg bg-[#19453c] px-2 py-0.5 text-[10px] sm:text-[11px] font-bold tracking-wide text-white shadow-xs flex items-center gap-1"
+                    className="rounded-lg bg-[#19573c] px-2 py-0.5 text-[10px] sm:text-[11px] font-bold tracking-wide text-white shadow-xs flex items-center gap-1"
                   >
                     <Percent className="w-3 h-3 shrink-0" />
                     <span>{locale === "uz" ? "Hamyonbop" : "Выгодно"}</span>
@@ -191,7 +191,7 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
             title={locale === "uz" ? "Solishtirishga qo‘shish" : "Добавить в сравнение"}
             className={`flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-full backdrop-blur-md shadow-sm hover:scale-110 active:scale-95 transition-all ${
               isCompared
-                ? "bg-[#0d3431] text-white ring-2 ring-white/50"
+                ? "bg-[#0c2e1f] text-white ring-2 ring-white/50"
                 : "bg-black/40 text-white hover:bg-black/60"
             }`}
           >
@@ -219,7 +219,7 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
         
         <div className="space-y-1">
           {/* Price */}
-          <div className="text-sm sm:text-lg font-extrabold tracking-tight text-[#0d3431]">
+          <div className="text-sm sm:text-lg font-extrabold tracking-tight text-[#0c2e1f]">
             {priceDisplay}
           </div>
 
@@ -234,7 +234,7 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
             }}
             className="block focus:outline-none"
           >
-            <h3 className="text-xs sm:text-sm font-bold text-gray-900 line-clamp-1 group-hover:text-[#19453c] transition-colors">
+            <h3 className="text-xs sm:text-sm font-bold text-gray-900 line-clamp-1 group-hover:text-[#19573c] transition-colors">
               {title}
             </h3>
           </Link>
@@ -247,7 +247,7 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
         </div>
 
         {/* Specs & Action Row */}
-        <div className="mt-2.5 sm:mt-3 flex items-center justify-between border-t border-[#E8ECE9] pt-2 sm:pt-2.5 text-[10.5px] sm:text-xs font-semibold text-gray-600">
+        <div className="mt-2.5 sm:mt-3 flex items-center justify-between border-t border-[#e2e9e6] pt-2 sm:pt-2.5 text-[10.5px] sm:text-xs font-semibold text-gray-600">
           
           {/* Specs Icons */}
           <div className="flex items-center gap-2 sm:gap-3.5">
@@ -289,7 +289,7 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
               }
             }}
             aria-label={locale === "uz" ? "Batafsil ma'lumot" : "Подробнее"}
-            className="hidden sm:flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-700 group-hover:bg-[#0d3431] group-hover:text-white transition-colors"
+            className="hidden sm:flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-700 group-hover:bg-[#0c2e1f] group-hover:text-white transition-colors"
           >
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>

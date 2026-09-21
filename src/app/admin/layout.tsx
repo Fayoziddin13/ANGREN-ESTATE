@@ -128,16 +128,13 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row text-slate-800 antialiased font-sans">
       {/* Mobile Top Navigation */}
-      <div className="md:hidden sticky top-0 z-40 bg-[#0d3431] text-white px-4 py-3 flex items-center justify-between shadow-md border-b border-white/10">
-        <Link href="/admin" className="flex items-center gap-2.5">
-          <div className="relative h-8 w-8 shrink-0">
-            <Image src="/logo-emblem.png" alt="Logo" fill className="object-contain" />
+      <div className="md:hidden sticky top-0 z-40 bg-[#0c2e1f] text-white px-4 py-3 flex items-center justify-between shadow-md border-b border-white/10">
+        <Link href="/admin" className="flex items-center gap-2.5 group">
+          <div className="relative h-8 w-[40px] shrink-0">
+            <Image src="/logo-white.png" alt="ANGREN ESTATE" fill className="object-contain" priority />
           </div>
           <div>
-            <div className="text-xs font-black tracking-tight text-white leading-none">
-              ANGREN ESTATE
-            </div>
-            <div className="text-[10px] text-emerald-300 font-bold uppercase tracking-widest mt-0.5">
+            <div className="text-[10px] text-white/70 font-bold uppercase tracking-widest">
               Admin Panel
             </div>
           </div>
@@ -148,7 +145,7 @@ export default function AdminLayout({
             onClick={() => setLocale(locale === "uz" ? "ru" : "uz")}
             className="flex items-center gap-1 bg-white/10 text-white rounded-lg px-2.5 py-1 text-xs font-bold border border-white/20"
           >
-            <Globe className="h-3 w-3 text-emerald-300" />
+            <Globe className="h-3 w-3 text-[#339e71]" />
             <span>{locale.toUpperCase()}</span>
           </button>
           <button
@@ -163,8 +160,8 @@ export default function AdminLayout({
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[#08201c] text-white px-3 py-4 space-y-1 border-b border-white/10 shadow-2xl z-30">
-          <div className="px-3 py-1 text-[10px] uppercase tracking-wider font-extrabold text-emerald-400/60">
+        <div className="md:hidden bg-[#081e14] text-white px-3 py-4 space-y-1 border-b border-white/10 shadow-2xl z-30">
+          <div className="px-3 py-1 text-[10px] uppercase tracking-wider font-extrabold text-[#339e71]/60">
             {locale === "uz" ? "Menyu" : "Меню"}
           </div>
           {navItems.map((item) => {
@@ -176,11 +173,11 @@ export default function AdminLayout({
                 onClick={() => setMobileMenuOpen(false)}
                 className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
                   item.active
-                    ? "bg-[#19453c] text-white font-bold"
-                    : "text-emerald-100/70 hover:bg-white/10 hover:text-white"
+                    ? "bg-[#19573c] text-white font-bold"
+                    : "text-white/90/70 hover:bg-white/10 hover:text-white"
                 }`}
               >
-                <Icon className="h-4 w-4 text-emerald-300 shrink-0" />
+                <Icon className="h-4 w-4 text-[#339e71] shrink-0" />
                 <span>{item.label}</span>
               </Link>
             );
@@ -189,7 +186,7 @@ export default function AdminLayout({
             <Link
               href="/"
               target="_blank"
-              className="text-xs text-emerald-200 flex items-center gap-1 hover:text-white"
+              className="text-xs text-white/80 flex items-center gap-1 hover:text-white"
             >
               <span>{locale === "uz" ? "Saytni ko‘rish" : "Открыть сайт"}</span>
               <ExternalLink className="h-3 w-3" />
@@ -206,19 +203,16 @@ export default function AdminLayout({
       )}
 
       {/* Desktop Persistent Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 bg-[#0d3431] text-white shrink-0 border-r border-white/10 shadow-2xl min-h-screen sticky top-0 h-screen select-none">
+      <aside className="hidden md:flex flex-col w-64 bg-[#0c2e1f] text-white shrink-0 border-r border-white/10 shadow-2xl min-h-screen sticky top-0 h-screen select-none">
         {/* Brand Header */}
         <div className="p-4 border-b border-white/10 flex items-center justify-between">
           <Link href="/admin" className="flex items-center gap-3 group">
-            <div className="relative h-9 w-9 shrink-0 group-hover:scale-105 transition-transform">
-              <Image src="/logo-emblem.png" alt="Logo" fill className="object-contain" priority />
+            <div className="relative h-10 w-[50px] shrink-0 group-hover:scale-105 transition-transform">
+              <Image src="/logo-white.png" alt="ANGREN ESTATE" fill className="object-contain" priority />
             </div>
             <div>
-              <div className="font-black text-sm tracking-tight text-white leading-none">
-                ANGREN ESTATE
-              </div>
-              <div className="text-[10px] font-extrabold text-emerald-300 uppercase tracking-widest mt-1 flex items-center gap-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <div className="text-[10px] font-extrabold text-[#339e71] uppercase tracking-widest flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#339e71] animate-pulse" />
                 <span>{locale === "uz" ? "Boshqaruv markazi" : "Центр управления"}</span>
               </div>
             </div>
@@ -227,7 +221,7 @@ export default function AdminLayout({
 
         {/* Navigation Items (10 sections) */}
         <div className="flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scrollbar">
-          <div className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-200">
+          <div className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-white/50">
             {locale === "uz" ? "Boshqaruv bo‘limlari" : "Разделы управления"}
           </div>
           {navItems.map((item) => {
@@ -236,15 +230,15 @@ export default function AdminLayout({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all ${
                   item.active
-                    ? "bg-[#19453c] text-white shadow-sm border border-emerald-600/40 translate-x-1 font-bold"
-                    : "text-emerald-100 hover:bg-white/10 hover:text-white"
+                    ? "bg-[#19573c] text-white shadow-sm border border-white/15 translate-x-1 font-bold"
+                    : "text-white/80 hover:bg-white/10 hover:text-white"
                 }`}
               >
                 <Icon
                   className={`h-4 w-4 shrink-0 ${
-                    item.active ? "text-emerald-300" : "text-emerald-300"
+                    item.active ? "text-[#339e71]" : "text-white/60"
                   }`}
                 />
                 <span className="truncate">{item.label}</span>
@@ -254,10 +248,10 @@ export default function AdminLayout({
         </div>
 
         {/* Bottom Section: Language Switcher, Admin Profile, Logout */}
-        <div className="p-3 border-t border-white/10 space-y-2 bg-[#08201c]/90">
+        <div className="p-3 border-t border-white/10 space-y-2 bg-[#081e14]/90">
           {/* Language Switch */}
           <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs">
-            <span className="text-[11px] text-emerald-100 font-medium flex items-center gap-1.5">
+            <span className="text-[11px] text-white/90 font-medium flex items-center gap-1.5">
               <Globe className="h-3 w-3" />
               {locale === "uz" ? "Til" : "Язык"}
             </span>
@@ -265,7 +259,7 @@ export default function AdminLayout({
               <button
                 onClick={() => setLocale("uz")}
                 className={`px-2 py-0.5 rounded text-[11px] font-bold transition-colors ${
-                  locale === "uz" ? "bg-white/20 text-white" : "text-emerald-200 hover:text-white"
+                  locale === "uz" ? "bg-white/20 text-white" : "text-white/80 hover:text-white"
                 }`}
               >
                 UZ
@@ -274,7 +268,7 @@ export default function AdminLayout({
               <button
                 onClick={() => setLocale("ru")}
                 className={`px-2 py-0.5 rounded text-[11px] font-bold transition-colors ${
-                  locale === "ru" ? "bg-white/20 text-white" : "text-emerald-200 hover:text-white"
+                  locale === "ru" ? "bg-white/20 text-white" : "text-white/80 hover:text-white"
                 }`}
               >
                 RU
@@ -285,12 +279,12 @@ export default function AdminLayout({
           {/* Admin User Profile & Logout */}
           <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
             <div className="flex items-center gap-2.5 overflow-hidden">
-              <div className="h-8 w-8 rounded-lg bg-[#19453c] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-inner">
+              <div className="h-8 w-8 rounded-lg bg-[#19573c] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-inner">
                 AD
               </div>
               <div className="overflow-hidden">
                 <div className="text-xs font-bold text-white truncate">Administrator</div>
-                <div className="text-[10px] text-emerald-200 truncate">admin@angrenestate.uz</div>
+                <div className="text-[10px] text-white/80 truncate">admin@angrenestate.uz</div>
               </div>
             </div>
 
@@ -298,7 +292,7 @@ export default function AdminLayout({
               onClick={handleLogout}
               disabled={isLoggingOut}
               title={locale === "uz" ? "Tizimdan chiqish" : "Выйти из системы"}
-              className="p-1.5 rounded-lg text-emerald-200 hover:text-red-400 hover:bg-white/10 transition-colors shrink-0"
+              className="p-1.5 rounded-lg text-white/80 hover:text-red-400 hover:bg-white/10 transition-colors shrink-0"
             >
               <LogOut className="h-4 w-4" />
             </button>
@@ -309,7 +303,7 @@ export default function AdminLayout({
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         {/* Desktop Top Header Bar */}
-        <div className="hidden md:flex items-center justify-between px-8 py-3.5 bg-white border-b border-[#E8ECE9] sticky top-0 z-20 shadow-xs">
+        <div className="hidden md:flex items-center justify-between px-8 py-3.5 bg-white border-b border-[#e2e9e6] sticky top-0 z-20 shadow-xs">
           <div className="flex items-center gap-2 text-xs text-slate-600 font-medium">
             <span>Admin</span>
             <ChevronRight className="h-3 w-3 text-slate-400" />
@@ -323,7 +317,7 @@ export default function AdminLayout({
               <button
                 onClick={() => setLocale("uz")}
                 className={`px-2 py-0.5 rounded-lg font-bold transition-colors ${
-                  locale === "uz" ? "bg-white text-[#0d3431] shadow-xs" : "text-slate-500 hover:text-slate-800"
+                  locale === "uz" ? "bg-white text-[#0c2e1f] shadow-xs" : "text-slate-500 hover:text-slate-800"
                 }`}
               >
                 UZ
@@ -332,7 +326,7 @@ export default function AdminLayout({
               <button
                 onClick={() => setLocale("ru")}
                 className={`px-2 py-0.5 rounded-lg font-bold transition-colors ${
-                  locale === "ru" ? "bg-white text-[#0d3431] shadow-xs" : "text-slate-500 hover:text-slate-800"
+                  locale === "ru" ? "bg-white text-[#0c2e1f] shadow-xs" : "text-slate-500 hover:text-slate-800"
                 }`}
               >
                 RU

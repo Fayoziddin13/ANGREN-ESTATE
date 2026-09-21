@@ -217,7 +217,7 @@ export function MobileFilterSheet({
                 <h3 className="text-base font-extrabold text-slate-900">
                   {locale === "uz" ? "Qidiruv va filtrlar" : "Поиск и фильтры"}
                 </h3>
-                <span className="px-2.5 py-0.5 rounded-full bg-[#d9eedb]/50 border border-[#8cb599]/40 text-[#0d3431] text-xs font-bold">
+                <span className="px-2.5 py-0.5 rounded-full bg-[#e5f0eb]/50 border border-[#339e71]/40 text-[#0c2e1f] text-xs font-bold">
                   {totalCount} {locale === "uz" ? "obyekt" : "объектов"}
                 </span>
               </div>
@@ -246,7 +246,7 @@ export function MobileFilterSheet({
                     onClick={() => onTransactionChange("all")}
                     className={`py-2 rounded-xl text-xs font-bold transition-all ${
                       transactionType === "all"
-                        ? "bg-[#0d3431] text-white shadow-sm"
+                        ? "bg-[#0c2e1f] text-white shadow-sm"
                         : "text-slate-600 hover:text-slate-900"
                     }`}
                   >
@@ -258,7 +258,7 @@ export function MobileFilterSheet({
                     onClick={() => onTransactionChange("sale")}
                     className={`py-2 rounded-xl text-xs font-bold transition-all ${
                       transactionType === "sale"
-                        ? "bg-[#0d3431] text-white shadow-sm"
+                        ? "bg-[#0c2e1f] text-white shadow-sm"
                         : "text-slate-600 hover:text-slate-900"
                     }`}
                   >
@@ -270,7 +270,7 @@ export function MobileFilterSheet({
                     onClick={() => onTransactionChange("rent")}
                     className={`py-2 rounded-xl text-xs font-bold transition-all ${
                       transactionType === "rent"
-                        ? "bg-[#0d3431] text-white shadow-sm"
+                        ? "bg-[#0c2e1f] text-white shadow-sm"
                         : "text-slate-600 hover:text-slate-900"
                     }`}
                   >
@@ -284,8 +284,8 @@ export function MobileFilterSheet({
                 <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                   {locale === "uz" ? "Kalit so‘z bo‘yicha qidirish" : "Поиск по ключевым словам"}
                 </label>
-                <div className="flex w-full items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50/80 px-3.5 py-2.5 text-xs font-semibold text-slate-900 focus-within:border-[#19453c] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#19453c]/20 transition-all">
-                  <Search className="h-4 w-4 text-[#0d3431] shrink-0" />
+                <div className="flex w-full items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50/80 px-3.5 py-2.5 text-xs font-semibold text-slate-900 focus-within:border-[#19573c] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#19573c]/20 transition-all">
+                  <Search className="h-4 w-4 text-[#0c2e1f] shrink-0" />
                   <input
                     type="text"
                     data-testid="mobile-filter-search-input"
@@ -324,10 +324,10 @@ export function MobileFilterSheet({
                       setTypeOpen(false);
                       setPriceOpen(false);
                     }}
-                    className="flex w-full items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-800 hover:border-[#19453c]/40 transition-colors shadow-sm"
+                    className="flex w-full items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-800 hover:border-[#19573c]/40 transition-colors shadow-sm"
                   >
                     <div className="flex items-center gap-2 truncate">
-                      <MapPin className="h-4 w-4 text-[#0d3431] shrink-0" />
+                      <MapPin className="h-4 w-4 text-[#0c2e1f] shrink-0" />
                       <span className="truncate">{getDistrictLabel()}</span>
                     </div>
                     <ChevronDown
@@ -349,13 +349,13 @@ export function MobileFilterSheet({
                           }}
                           className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold ${
                             selectedDistrict === d.key
-                              ? "bg-[#d9eedb]/50 text-[#0d3431] font-bold"
+                              ? "bg-[#e5f0eb]/50 text-[#0c2e1f] font-bold"
                               : "text-slate-700 hover:bg-slate-50"
                           }`}
                         >
                           <span>{d.label}</span>
                           {selectedDistrict === d.key && (
-                            <Check className="h-4 w-4 text-[#0d3431]" />
+                            <Check className="h-4 w-4 text-[#0c2e1f]" />
                           )}
                         </button>
                       ))}
@@ -378,10 +378,10 @@ export function MobileFilterSheet({
                       setDistrictOpen(false);
                       setPriceOpen(false);
                     }}
-                    className="flex w-full items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-800 hover:border-[#19453c]/40 transition-colors shadow-sm"
+                    className="flex w-full items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-800 hover:border-[#19573c]/40 transition-colors shadow-sm"
                   >
                     <div className="flex items-center gap-2 truncate">
-                      <Home className="h-4 w-4 text-[#0d3431] shrink-0" />
+                      <Home className="h-4 w-4 text-[#0c2e1f] shrink-0" />
                       <span className="truncate">{getTypeLabel()}</span>
                     </div>
                     <ChevronDown
@@ -403,13 +403,13 @@ export function MobileFilterSheet({
                           }}
                           className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold ${
                             selectedType === pt.key
-                              ? "bg-[#d9eedb]/50 text-[#0d3431] font-bold"
+                              ? "bg-[#e5f0eb]/50 text-[#0c2e1f] font-bold"
                               : "text-slate-700 hover:bg-slate-50"
                           }`}
                         >
                           <span>{pt.label}</span>
                           {selectedType === pt.key && (
-                            <Check className="h-4 w-4 text-[#0d3431]" />
+                            <Check className="h-4 w-4 text-[#0c2e1f]" />
                           )}
                         </button>
                       ))}
@@ -432,10 +432,10 @@ export function MobileFilterSheet({
                       setDistrictOpen(false);
                       setTypeOpen(false);
                     }}
-                    className="flex w-full items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-800 hover:border-[#19453c]/40 transition-colors shadow-sm"
+                    className="flex w-full items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-800 hover:border-[#19573c]/40 transition-colors shadow-sm"
                   >
                     <div className="flex items-center gap-2 truncate">
-                      <Coins className="h-4 w-4 text-[#0d3431] shrink-0" />
+                      <Coins className="h-4 w-4 text-[#0c2e1f] shrink-0" />
                       <span className="truncate">{getPriceLabel()}</span>
                     </div>
                     <ChevronDown
@@ -458,13 +458,13 @@ export function MobileFilterSheet({
                           }}
                           className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold ${
                             priceFilter === po.key && !advancedFilters.minPrice && !advancedFilters.maxPrice
-                              ? "bg-[#d9eedb]/50 text-[#0d3431] font-bold"
+                              ? "bg-[#e5f0eb]/50 text-[#0c2e1f] font-bold"
                               : "text-slate-700 hover:bg-slate-50"
                           }`}
                         >
                           <span>{po.label}</span>
                           {priceFilter === po.key && !advancedFilters.minPrice && !advancedFilters.maxPrice && (
-                            <Check className="h-4 w-4 text-[#0d3431]" />
+                            <Check className="h-4 w-4 text-[#0c2e1f]" />
                           )}
                         </button>
                       ))}
@@ -491,7 +491,7 @@ export function MobileFilterSheet({
                               onPriceFilterChange("custom");
                               onAdvancedFiltersChange({ ...advancedFilters, minPrice: inUzs });
                             }}
-                            className="w-full px-2.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#19453c]"
+                            className="w-full px-2.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#19573c]"
                           />
                           <input
                             type="number"
@@ -509,7 +509,7 @@ export function MobileFilterSheet({
                               onPriceFilterChange("custom");
                               onAdvancedFiltersChange({ ...advancedFilters, maxPrice: inUzs });
                             }}
-                            className="w-full px-2.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#19453c]"
+                            className="w-full px-2.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#19573c]"
                           />
                         </div>
                       </div>
@@ -526,18 +526,18 @@ export function MobileFilterSheet({
                   onClick={() => setIsAdvancedModalOpen(true)}
                   className={`w-full flex items-center justify-between rounded-2xl px-4 py-3 text-xs font-bold border transition-all ${
                     activeAdvancedCount > 0
-                      ? "bg-[#d9eedb]/50 border-[#8cb599] text-[#0d3431]"
+                      ? "bg-[#e5f0eb]/50 border-[#339e71] text-[#0c2e1f]"
                       : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <SlidersHorizontal className="h-4 w-4 text-[#0d3431]" />
+                    <SlidersHorizontal className="h-4 w-4 text-[#0c2e1f]" />
                     <span>
                       {locale === "uz" ? "Kengaytirilgan filtrlar" : "Расширенные фильтры"}
                     </span>
                   </div>
                   {activeAdvancedCount > 0 ? (
-                    <span className="flex h-5 px-2 items-center justify-center rounded-full bg-[#0d3431] text-[10px] text-white font-extrabold">
+                    <span className="flex h-5 px-2 items-center justify-center rounded-full bg-[#0c2e1f] text-[10px] text-white font-extrabold">
                       {activeAdvancedCount}
                     </span>
                   ) : (
@@ -553,7 +553,7 @@ export function MobileFilterSheet({
                 type="button"
                 onClick={handleSaveCurrentSearch}
                 disabled={isSavingSearch}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-2xl border border-[#8cb599]/60 bg-[#d9eedb]/40 text-[#0d3431] text-xs font-bold hover:bg-[#d9eedb]/70 transition-all active:scale-[0.98]"
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-2xl border border-[#339e71]/60 bg-[#e5f0eb]/40 text-[#0c2e1f] text-xs font-bold hover:bg-[#e5f0eb]/70 transition-all active:scale-[0.98]"
               >
                 <Bookmark className="h-4 w-4" />
                 <span>{locale === "uz" ? "Ushbu qidiruvni saqlash" : "Сохранить параметры поиска"}</span>
@@ -577,7 +577,7 @@ export function MobileFilterSheet({
                 type="button"
                 data-testid="mobile-filter-apply-btn"
                 onClick={onClose}
-                className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-2xl bg-[#0d3431] hover:bg-[#19453c] text-white text-xs font-extrabold shadow-md active:scale-[0.98] transition-all"
+                className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-2xl bg-[#0c2e1f] hover:bg-[#19573c] text-white text-xs font-extrabold shadow-md active:scale-[0.98] transition-all"
               >
                 <span>
                   {locale === "uz" ? "Natijalarni ko‘rish" : "Показать результаты"}

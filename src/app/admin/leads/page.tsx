@@ -161,7 +161,7 @@ export default function AdminLeadsPage() {
         return "bg-blue-100 text-blue-900 border-blue-300";
       case "completed":
       case "closed":
-        return "bg-emerald-100 text-emerald-900 border-emerald-300";
+        return "bg-[#e5f0eb] text-[#0c2e1f] border-[#c2d3c9]";
       case "cancelled":
         return "bg-slate-100 text-slate-800 border-slate-300";
       default:
@@ -201,8 +201,8 @@ export default function AdminLeadsPage() {
     <div className="p-4 sm:p-8 max-w-7xl mx-auto w-full space-y-6 pb-12">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-6 right-6 z-50 bg-[#0d3431] border border-emerald-500/50 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-2.5 backdrop-blur-md animate-in fade-in slide-in-from-top-4 font-bold text-xs">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+        <div className="fixed top-6 right-6 z-50 bg-[#0c2e1f] border border-[#19573c]/50 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-2.5 backdrop-blur-md animate-in fade-in slide-in-from-top-4 font-bold text-xs">
+          <CheckCircle2 className="w-4 h-4 text-[#339e71] shrink-0" />
           <span>{toastMessage}</span>
         </div>
       )}
@@ -211,7 +211,7 @@ export default function AdminLeadsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div>
           <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-[#0d3431]">
+            <div className="w-10 h-10 rounded-2xl bg-[#e5f0eb] border border-[#c2d3c9] flex items-center justify-center text-[#0c2e1f]">
               <PhoneCall className="w-5 h-5" />
             </div>
             <span>{locale === "uz" ? "Murojaatlar va Lidlar" : "Заявки и Лиды"}</span>
@@ -229,7 +229,7 @@ export default function AdminLeadsPage() {
             className="flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 rounded-xl border border-slate-200 text-xs font-bold transition-colors shadow-xs"
             title={locale === "uz" ? "Yangilash" : "Обновить"}
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${isLoading ? "animate-spin text-[#0d3431]" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${isLoading ? "animate-spin text-[#0c2e1f]" : ""}`} />
             <span>{locale === "uz" ? "Yangilash" : "Обновить"}</span>
           </button>
 
@@ -237,7 +237,7 @@ export default function AdminLeadsPage() {
             onClick={exportCSV}
             className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 rounded-xl border border-slate-200 text-xs font-bold transition-colors shadow-xs"
           >
-            <Download className="w-3.5 h-3.5 text-[#0d3431]" />
+            <Download className="w-3.5 h-3.5 text-[#0c2e1f]" />
             <span>{locale === "uz" ? "CSV eksport" : "Экспорт в CSV"}</span>
           </button>
         </div>
@@ -251,7 +251,7 @@ export default function AdminLeadsPage() {
             <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
               {locale === "uz" ? "Jami Lidlar" : "Всего лидов"}
             </span>
-            <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center text-[#0d3431]">
+            <div className="w-7 h-7 rounded-lg bg-[#e5f0eb] flex items-center justify-center text-[#0c2e1f]">
               <TrendingUp className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -312,15 +312,15 @@ export default function AdminLeadsPage() {
         {/* Completed */}
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs relative overflow-hidden space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-[#19573c] uppercase tracking-wider">
               {locale === "uz" ? "Yakunlandi" : "Завершено"}
             </span>
-            <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700">
+            <div className="w-7 h-7 rounded-lg bg-[#e5f0eb] flex items-center justify-center text-[#19573c]">
               <CheckCircle2 className="w-3.5 h-3.5" />
             </div>
           </div>
-          <div className="text-2xl font-black text-emerald-800 mt-2">{stats.completed}</div>
-          <div className="text-[11px] text-emerald-700 mt-0.5 font-semibold">
+          <div className="text-2xl font-black text-[#0c2e1f] mt-2">{stats.completed}</div>
+          <div className="text-[11px] text-[#19573c] mt-0.5 font-semibold">
             {locale === "uz" ? "Muvaffaqiyatli" : "Успешные сделки"}
           </div>
         </div>
@@ -343,13 +343,13 @@ export default function AdminLeadsPage() {
       </div>
 
       {/* Banner for Arizalar */}
-      <div className="bg-emerald-50/70 rounded-2xl p-4 border border-emerald-200/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-xs">
+      <div className="bg-[#e5f0eb]/60/70 rounded-2xl p-4 border border-[#c2d3c9]/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0d3431] text-white shrink-0">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0c2e1f] text-white shrink-0">
             <ClipboardList className="h-5 w-5" />
           </div>
           <div>
-            <div className="text-xs font-bold text-[#0d3431]">
+            <div className="text-xs font-bold text-[#0c2e1f]">
               {locale === "uz" ? "E'lon berish arizalari (Arizalar bo‘limi)" : "Заявки на размещение объявлений"}
             </div>
             <div className="text-[11px] text-slate-600">
@@ -361,7 +361,7 @@ export default function AdminLeadsPage() {
         </div>
         <Link
           href="/admin/arizalar"
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0d3431] hover:bg-[#19453c] text-white text-xs font-bold transition-all shadow-xs shrink-0"
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0c2e1f] hover:bg-[#19573c] text-white text-xs font-bold transition-all shadow-xs shrink-0"
         >
           <span>{locale === "uz" ? "Arizalar bo‘limiga o‘tish" : "Перейти к заявкам"}</span>
           <ArrowRight className="h-3.5 w-3.5" />
@@ -382,7 +382,7 @@ export default function AdminLeadsPage() {
                 ? "Mijoz, telefon, mulk yoki izoh bo‘yicha qidiruv..."
                 : "Поиск по клиенту, телефону, объекту, заметке..."
             }
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431] transition-all"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f] transition-all"
           />
         </div>
 
@@ -394,7 +394,7 @@ export default function AdminLeadsPage() {
               onClick={() => setStatusFilter("all")}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
                 statusFilter === "all"
-                  ? "bg-[#0d3431] text-white shadow-xs"
+                  ? "bg-[#0c2e1f] text-white shadow-xs"
                   : "text-slate-700 hover:text-slate-900 hover:bg-white"
               }`}
             >
@@ -434,7 +434,7 @@ export default function AdminLeadsPage() {
               onClick={() => setStatusFilter("completed")}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
                 statusFilter === "completed"
-                  ? "bg-emerald-700 text-white shadow-xs"
+                  ? "bg-[#19573c] text-white shadow-xs"
                   : "text-slate-700 hover:text-slate-900 hover:bg-white"
               }`}
             >
@@ -456,7 +456,7 @@ export default function AdminLeadsPage() {
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value as ChannelFilter)}
-            className="bg-white border border-slate-200 text-slate-800 text-xs font-bold rounded-xl px-3 py-2 focus:outline-none focus:border-[#0d3431]"
+            className="bg-white border border-slate-200 text-slate-800 text-xs font-bold rounded-xl px-3 py-2 focus:outline-none focus:border-[#0c2e1f]"
           >
             <option value="all">{locale === "uz" ? "Barcha kanallar" : "Все каналы"}</option>
             <option value="property_listing_request">
@@ -503,7 +503,7 @@ export default function AdminLeadsPage() {
               {isLoading && leads.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-16 text-center text-slate-500">
-                    <div className="w-8 h-8 rounded-full border-2 border-[#0d3431] border-t-transparent animate-spin mx-auto mb-3" />
+                    <div className="w-8 h-8 rounded-full border-2 border-[#0c2e1f] border-t-transparent animate-spin mx-auto mb-3" />
                     <span className="text-sm font-semibold">
                       {locale === "uz" ? "Lidlar yuklanmoqda..." : "Загрузка заявок..."}
                     </span>
@@ -537,16 +537,16 @@ export default function AdminLeadsPage() {
                           {lead.client_name ? lead.client_name.slice(0, 2).toUpperCase() : "KL"}
                         </div>
                         <div>
-                          <div className="font-bold text-slate-900 group-hover:text-emerald-800 transition-colors">
+                          <div className="font-bold text-slate-900 group-hover:text-[#0c2e1f] transition-colors">
                             {lead.client_name || (locale === "uz" ? "Noma’lum mijoz" : "Неизвестный клиент")}
                           </div>
                           {lead.client_phone ? (
                             <a
                               href={`tel:${lead.client_phone}`}
                               onClick={(e) => e.stopPropagation()}
-                              className="text-xs text-slate-600 hover:text-emerald-800 transition-colors flex items-center gap-1 mt-0.5 font-mono font-medium"
+                              className="text-xs text-slate-600 hover:text-[#0c2e1f] transition-colors flex items-center gap-1 mt-0.5 font-mono font-medium"
                             >
-                              <PhoneCall className="w-3 h-3 text-emerald-700" />
+                              <PhoneCall className="w-3 h-3 text-[#19573c]" />
                               <span>{lead.client_phone}</span>
                             </a>
                           ) : (
@@ -564,7 +564,7 @@ export default function AdminLeadsPage() {
                         {lead.property_title || (locale === "uz" ? "Umumiy so‘rov" : "Общий запрос")}
                       </div>
                       {lead.notes ? (
-                        <div className="text-xs text-emerald-800 truncate flex items-center gap-1 mt-0.5">
+                        <div className="text-xs text-[#0c2e1f] truncate flex items-center gap-1 mt-0.5">
                           <FileText className="w-3 h-3 shrink-0" />
                           <span className="italic">"{lead.notes}"</span>
                         </div>
@@ -579,8 +579,8 @@ export default function AdminLeadsPage() {
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {isListingRequest(lead) ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
-                            <Home className="w-3 h-3 text-[#0d3431]" />
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#e5f0eb] text-[#0c2e1f] border border-[#c2d3c9]">
+                            <Home className="w-3 h-3 text-[#0c2e1f]" />
                             <span>{locale === "uz" ? "E’lon berish" : "Размещение"}</span>
                           </span>
                         ) : lead.type === "phone" ? (
@@ -653,7 +653,7 @@ export default function AdminLeadsPage() {
                       <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => setSelectedLead(lead)}
-                          className="p-1.5 text-slate-600 hover:text-[#0d3431] rounded-lg hover:bg-slate-100 transition-colors"
+                          className="p-1.5 text-slate-600 hover:text-[#0c2e1f] rounded-lg hover:bg-slate-100 transition-colors"
                           title={locale === "uz" ? "Batafsil ko‘rish" : "Подробнее"}
                         >
                           <ExternalLink className="w-4 h-4" />
@@ -675,7 +675,7 @@ export default function AdminLeadsPage() {
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-200 pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-[#0d3431]">
+                <div className="w-10 h-10 rounded-2xl bg-[#e5f0eb] border border-[#c2d3c9] flex items-center justify-center text-[#0c2e1f]">
                   <User className="w-5 h-5" />
                 </div>
                 <div>
@@ -705,7 +705,7 @@ export default function AdminLeadsPage() {
                   </div>
                   <a
                     href={`tel:${selectedLead.client_phone}`}
-                    className="px-3.5 py-1.5 bg-[#0d3431] hover:bg-[#19453c] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors shadow-xs"
+                    className="px-3.5 py-1.5 bg-[#0c2e1f] hover:bg-[#19573c] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors shadow-xs"
                   >
                     <PhoneCall className="w-3.5 h-3.5" />
                     <span>{locale === "uz" ? "Qo‘ng‘iroq qilish" : "Позвонить"}</span>
@@ -715,26 +715,26 @@ export default function AdminLeadsPage() {
 
               {/* Listing Request Specific Details */}
               {isListingRequest(selectedLead) && (
-                <div className="bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200/80 space-y-3">
+                <div className="bg-[#e5f0eb]/60/70 p-4 rounded-2xl border border-[#c2d3c9]/80 space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className="text-xs font-black text-emerald-950 flex items-center gap-1.5 uppercase tracking-wide">
-                      <Home className="w-4 h-4 text-[#0d3431]" />
+                    <div className="text-xs font-black text-[#0c2e1f] flex items-center gap-1.5 uppercase tracking-wide">
+                      <Home className="w-4 h-4 text-[#0c2e1f]" />
                       <span>{locale === "uz" ? "E’lon berish arizasi ma’lumotlari" : "Данные заявки на размещение"}</span>
                     </div>
-                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
+                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#e5f0eb] text-[#0c2e1f] border border-[#c2d3c9]">
                       {locale === "uz" ? "Yangi ariza" : "Новая заявка"}
                     </span>
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
-                    <div className="bg-white p-2.5 rounded-xl border border-emerald-100">
+                    <div className="bg-white p-2.5 rounded-xl border border-[#e2e9e6]">
                       <div className="text-[10px] font-bold text-slate-500 uppercase">{locale === "uz" ? "Bitim turi" : "Тип сделки"}</div>
                       <div className="text-xs font-black text-slate-900 mt-0.5">
                         {selectedLead.metadata?.deal_type === "rent" || (selectedLead.metadata?.deal_type as string) === "ijara" ? (locale === "uz" ? "Ijara" : "Аренда") : (locale === "uz" ? "Sotuv" : "Продажа")}
                       </div>
                     </div>
 
-                    <div className="bg-white p-2.5 rounded-xl border border-emerald-100">
+                    <div className="bg-white p-2.5 rounded-xl border border-[#e2e9e6]">
                       <div className="text-[10px] font-bold text-slate-500 uppercase">{locale === "uz" ? "Mulk turi" : "Тип недвижимости"}</div>
                       <div className="text-xs font-black text-slate-900 mt-0.5">
                         {(() => {
@@ -773,7 +773,7 @@ export default function AdminLeadsPage() {
                       </div>
                     </div>
 
-                    <div className="bg-white p-2.5 rounded-xl border border-emerald-100 col-span-2 sm:col-span-1">
+                    <div className="bg-white p-2.5 rounded-xl border border-[#e2e9e6] col-span-2 sm:col-span-1">
                       <div className="text-[10px] font-bold text-slate-500 uppercase">{locale === "uz" ? "Aloqa usuli" : "Способ связи"}</div>
                       <div className="text-xs font-black text-slate-900 mt-0.5">
                         {selectedLead.metadata?.preferred_channel === "telegram" ? "Telegram" : (locale === "uz" ? "Telefon" : "Телефон")}
@@ -782,8 +782,8 @@ export default function AdminLeadsPage() {
                   </div>
 
                   {selectedLead.metadata?.location && (
-                    <div className="bg-white p-3 rounded-xl border border-emerald-100 flex items-start gap-2">
-                      <MapPin className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+                    <div className="bg-white p-3 rounded-xl border border-[#e2e9e6] flex items-start gap-2">
+                      <MapPin className="w-4 h-4 text-[#19573c] shrink-0 mt-0.5" />
                       <div>
                         <div className="text-[10px] font-bold text-slate-500 uppercase">{locale === "uz" ? "Manzil va hudud" : "Адрес и район"}</div>
                         <div className="text-xs font-bold text-slate-900 mt-0.5">{selectedLead.metadata.location}</div>
@@ -792,7 +792,7 @@ export default function AdminLeadsPage() {
                   )}
 
                   {(selectedLead.metadata?.description || selectedLead.message) && (
-                    <div className="bg-white p-3 rounded-xl border border-emerald-100 space-y-1">
+                    <div className="bg-white p-3 rounded-xl border border-[#e2e9e6] space-y-1">
                       <div className="text-[10px] font-bold text-slate-500 uppercase">{locale === "uz" ? "Obyekt haqida qisqacha" : "Кратко об объекте"}</div>
                       <div className="text-xs font-medium text-slate-800 whitespace-pre-wrap leading-relaxed">
                         {selectedLead.metadata?.description || selectedLead.message}
@@ -806,7 +806,7 @@ export default function AdminLeadsPage() {
               {!isListingRequest(selectedLead) && selectedLead.property_title && (
                 <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2">
                   <div className="text-xs font-bold text-slate-600 flex items-center gap-1.5">
-                    <Building2 className="w-3.5 h-3.5 text-[#0d3431]" />
+                    <Building2 className="w-3.5 h-3.5 text-[#0c2e1f]" />
                     <span>{locale === "uz" ? "Qiziqayotgan mulki" : "Интересующий объект"}</span>
                   </div>
                   <div className="text-sm font-bold text-slate-900">
@@ -817,7 +817,7 @@ export default function AdminLeadsPage() {
                       <Link
                         href={`/properties/${selectedLead.property_id}`}
                         target="_blank"
-                        className="text-[#0d3431] hover:underline flex items-center gap-1"
+                        className="text-[#0c2e1f] hover:underline flex items-center gap-1"
                       >
                         <ExternalLink className="w-3 h-3" />
                         <span>{locale === "uz" ? "Saytda ko‘rish" : "Открыть на сайте"}</span>
@@ -839,7 +839,7 @@ export default function AdminLeadsPage() {
               {selectedLead.realtor && (
                 <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-100 border border-emerald-200 text-[#0d3431] flex items-center justify-center font-bold text-xs">
+                    <div className="w-8 h-8 rounded-lg bg-[#e5f0eb] border border-[#c2d3c9] text-[#0c2e1f] flex items-center justify-center font-bold text-xs">
                       {selectedLead.realtor.name.slice(0, 2).toUpperCase()}
                     </div>
                     <div>
@@ -877,7 +877,7 @@ export default function AdminLeadsPage() {
               {/* Internal Admin Notes */}
               <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-[#0d3431] flex items-center gap-1.5">
+                  <label className="text-xs font-bold text-[#0c2e1f] flex items-center gap-1.5">
                     <FileText className="w-3.5 h-3.5" />
                     <span>{locale === "uz" ? "Admin izohi / Ichki eslatma" : "Заметка администратора"}</span>
                   </label>
@@ -894,13 +894,13 @@ export default function AdminLeadsPage() {
                       ? "Mijoz bilan kelishuvlar, qayta qo‘ng‘iroq vaqti yoki bekor qilish sababini yozing..."
                       : "Запишите результаты звонка, договоренности с клиентом или причину отмены..."
                   }
-                  className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431] transition-all"
+                  className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f] transition-all"
                 />
                 <div className="flex justify-end">
                   <button
                     onClick={handleSaveNotes}
                     disabled={isSavingNotes}
-                    className="px-3.5 py-1.5 bg-[#0d3431] hover:bg-[#19453c] disabled:opacity-50 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors shadow-xs"
+                    className="px-3.5 py-1.5 bg-[#0c2e1f] hover:bg-[#19573c] disabled:opacity-50 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors shadow-xs"
                   >
                     <Save className="w-3.5 h-3.5" />
                     <span>
@@ -968,7 +968,7 @@ export default function AdminLeadsPage() {
                     onClick={() => handleStatusChange(selectedLead.id, "completed")}
                     className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
                       selectedLead.status === "completed" || selectedLead.status === "closed"
-                        ? "bg-emerald-700 text-white border-emerald-700 shadow-xs"
+                        ? "bg-[#19573c] text-white border-[#0c2e1f] shadow-xs"
                         : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
                     }`}
                   >

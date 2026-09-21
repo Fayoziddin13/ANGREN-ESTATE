@@ -169,8 +169,8 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
     <header
       className={`sticky top-0 z-40 w-full transition-all duration-300 ${
         isScrolled
-          ? "bg-[#0d3431]/95 backdrop-blur-2xl backdrop-saturate-150 shadow-elevated border-b border-white/10"
-          : "bg-[#0d3431]/90 backdrop-blur-xl backdrop-saturate-150 shadow-sm border-b border-white/10"
+          ? "bg-[#0c2e1f]/95 backdrop-blur-2xl backdrop-saturate-150 shadow-elevated border-b border-white/10"
+          : "bg-[#0c2e1f]/90 backdrop-blur-xl backdrop-saturate-150 shadow-sm border-b border-white/10"
       }`}
     >
       {announcement?.is_active && (
@@ -180,8 +180,8 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
             announcement.type === "warning"
               ? "bg-amber-500 text-slate-950 border-amber-600 font-semibold"
               : announcement.type === "success"
-              ? "bg-emerald-600 text-white border-emerald-700 font-semibold"
-              : "bg-[#08201c]/90 text-emerald-100 border-white/10"
+              ? "bg-[#19573c] text-white border-[#0c2e1f] font-semibold"
+              : "bg-[#081e14]/90 text-white/90 border-white/10"
           }`}
         >
           <span>{locale === "ru" ? announcement.text_ru : announcement.text_uz}</span>
@@ -196,7 +196,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
         </div>
       )}
       <div className="mx-auto flex h-14 sm:h-16 w-full max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8">
-        {/* Left: Official Brand Logo & Name (Seamlessly Integrated, No Card) */}
+        {/* Left: Official Canonical Brand Logo (Fully visible architectural mark + ANGREN + ESTATE) */}
         <Link
           href="/"
           onClick={(e) => {
@@ -208,25 +208,18 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
               }
             }
           }}
-          className="flex items-center gap-2.5 sm:gap-3 group shrink-0"
+          className="flex items-center group shrink-0 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
+          title="ANGREN ESTATE"
         >
-          <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105">
+          <div className="relative h-10 sm:h-11 w-[51px] sm:w-[56px] flex items-center justify-center shrink-0">
             <Image
-              src="/logo-emblem.png"
+              src="/logo-white.png"
               alt="ANGREN ESTATE"
-              width={36}
-              height={36}
-              className="h-full w-full object-contain filter drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)]"
+              width={56}
+              height={44}
+              className="h-full w-full object-contain filter drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
               priority
             />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-black tracking-tight text-sm sm:text-base leading-none text-white group-hover:text-emerald-200 transition-colors whitespace-nowrap">
-              ANGREN ESTATE
-            </span>
-            <span className="text-[10px] sm:text-[10.5px] font-semibold text-emerald-200/75 tracking-wider uppercase mt-0.5">
-              {locale === "ru" ? "Недвижимость" : "Ko‘chmas mulk"}
-            </span>
           </div>
         </Link>
 
@@ -249,7 +242,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                   className={`h-4 w-4 transition-transform duration-200 group-hover:-translate-y-0.5 ${
                     item.active
                       ? "text-white"
-                      : "text-emerald-200/80 group-hover:text-white"
+                      : "text-white/70 group-hover:text-white"
                   }`}
                 />
                 <span className="transition-transform duration-200 group-hover:-translate-y-0.5">
@@ -278,8 +271,8 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
               className="flex items-center gap-1.5 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-white/20 hover:border-white/30 transition-all active:scale-95"
               title={locale === "uz" ? "Obyektlarni solishtirish" : "Сравнение объектов"}
             >
-              <Scale className="h-3.5 w-3.5 text-emerald-300" />
-              <span className="h-4 min-w-4 px-1 rounded-full bg-emerald-500 text-[10px] font-black flex items-center justify-center text-white">
+              <Scale className="h-3.5 w-3.5 text-[#339e71]" />
+              <span className="h-4 min-w-4 px-1 rounded-full bg-[#339e71] text-[10px] font-black flex items-center justify-center text-white">
                 {compareCount}
               </span>
             </button>
@@ -291,9 +284,9 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
             className="relative flex items-center gap-1.5 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-white/20 hover:border-white/30 transition-all active:scale-95"
             title={locale === "uz" ? "Saqlangan qidiruvlar va bildirishnomalar" : "Сохранённые поиски и уведомления"}
           >
-            <Bookmark className="h-3.5 w-3.5 text-emerald-200" />
+            <Bookmark className="h-3.5 w-3.5 text-white/80" />
             {unreadNotificationsCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4 min-w-4 px-1 rounded-full bg-emerald-400 text-slate-900 text-[9px] font-black items-center justify-center shadow-xs">
+              <span className="absolute -top-1 -right-1 flex h-4 min-w-4 px-1 rounded-full bg-[#339e71] text-slate-900 text-[9px] font-black items-center justify-center shadow-xs">
                 {unreadNotificationsCount}
               </span>
             )}
@@ -305,10 +298,10 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
               onClick={() => setLangDropdownOpen(!langDropdownOpen)}
               className="flex items-center gap-1.5 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-white/20 hover:border-white/30 transition-all active:scale-95"
             >
-              <Globe className="h-3.5 w-3.5 text-emerald-200" />
+              <Globe className="h-3.5 w-3.5 text-white/80" />
               <span>{locale.toUpperCase()}</span>
               <ChevronDown
-                className={`h-3 w-3 text-emerald-200/80 transition-transform duration-200 ${
+                className={`h-3 w-3 text-white/70 transition-transform duration-200 ${
                   langDropdownOpen ? "rotate-180" : ""
                 }`}
               />
@@ -321,7 +314,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -6, scale: 0.96 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute right-0 mt-2 w-36 overflow-hidden rounded-2xl border border-white/15 bg-[#0d3431]/95 backdrop-blur-2xl p-1.5 shadow-float z-50"
+                  className="absolute right-0 mt-2 w-36 overflow-hidden rounded-2xl border border-white/15 bg-[#0c2e1f]/95 backdrop-blur-2xl p-1.5 shadow-float z-50"
                 >
                   <button
                     onClick={() => {
@@ -336,7 +329,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                   >
                     <span>Русский</span>
                     {locale === "ru" && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-sm" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#339e71] shadow-sm" />
                     )}
                   </button>
                   <button
@@ -352,7 +345,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                   >
                     <span>O‘zbekcha</span>
                     {locale === "uz" && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-sm" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#339e71] shadow-sm" />
                     )}
                   </button>
                 </motion.div>
@@ -368,7 +361,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
             >
               <span>{currency}</span>
               <ChevronDown
-                className={`h-3 w-3 text-emerald-200/80 transition-transform duration-200 ${
+                className={`h-3 w-3 text-white/70 transition-transform duration-200 ${
                   currDropdownOpen ? "rotate-180" : ""
                 }`}
               />
@@ -381,7 +374,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -6, scale: 0.96 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute right-0 mt-2 w-36 overflow-hidden rounded-2xl border border-white/15 bg-[#0d3431]/95 backdrop-blur-2xl p-1.5 shadow-float z-50"
+                  className="absolute right-0 mt-2 w-36 overflow-hidden rounded-2xl border border-white/15 bg-[#0c2e1f]/95 backdrop-blur-2xl p-1.5 shadow-float z-50"
                 >
                   <button
                     onClick={() => {
@@ -396,7 +389,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                   >
                     <span>{locale === "ru" ? "UZS (Сум)" : "UZS (So‘m)"}</span>
                     {currency === "UZS" && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-sm" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#339e71] shadow-sm" />
                     )}
                   </button>
                   <button
@@ -412,7 +405,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                   >
                     <span>USD ($)</span>
                     {currency === "USD" && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-sm" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#339e71] shadow-sm" />
                     )}
                   </button>
                 </motion.div>
@@ -431,7 +424,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                   {user.full_name?.charAt(0) || <User className="h-3.5 w-3.5" />}
                 </div>
                 <span className="max-w-[110px] truncate">{user.full_name || user.email}</span>
-                <ChevronDown className="h-3 w-3 text-emerald-200/80" />
+                <ChevronDown className="h-3 w-3 text-white/70" />
               </button>
 
               <AnimatePresence>
@@ -441,18 +434,18 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -6, scale: 0.96 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute right-0 mt-2 w-48 rounded-2xl border border-white/15 bg-[#0d3431]/95 backdrop-blur-2xl p-2 shadow-float z-50 text-white"
+                    className="absolute right-0 mt-2 w-48 rounded-2xl border border-white/15 bg-[#0c2e1f]/95 backdrop-blur-2xl p-2 shadow-float z-50 text-white"
                   >
                     <div className="px-3 py-2 border-b border-white/10 text-xs">
                       <p className="font-semibold text-white truncate">
                         {user.full_name || "Foydalanuvchi"}
                       </p>
-                      <p className="text-emerald-200/70 truncate">{user.email}</p>
+                      <p className="text-white/70 truncate">{user.email}</p>
                     </div>
                     <Link
                       href="/favorites"
                       onClick={() => setUserDropdownOpen(false)}
-                      className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-medium text-emerald-100 hover:bg-white/10 hover:text-white transition-colors mt-1"
+                      className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-medium text-white/90 hover:bg-white/10 hover:text-white transition-colors mt-1"
                     >
                       <div className="flex items-center gap-2">
                         <Heart className="h-3.5 w-3.5 text-pink-400 fill-pink-400/20" />
@@ -471,14 +464,14 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                         setUserDropdownOpen(false);
                         window.dispatchEvent(new Event("angren_open_saved_searches"));
                       }}
-                      className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-medium text-emerald-100 hover:bg-white/10 hover:text-white transition-colors"
+                      className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-medium text-white/90 hover:bg-white/10 hover:text-white transition-colors"
                     >
                       <div className="flex items-center gap-2">
-                        <Bookmark className="h-3.5 w-3.5 text-emerald-300" />
+                        <Bookmark className="h-3.5 w-3.5 text-[#339e71]" />
                         <span>{locale === "uz" ? "Saqlangan qidiruvlar" : "Поиски"}</span>
                       </div>
                       {unreadNotificationsCount > 0 && (
-                        <span className="px-1.5 py-0.5 rounded-full bg-emerald-500 text-[10px] font-extrabold text-white">
+                        <span className="px-1.5 py-0.5 rounded-full bg-[#339e71] text-[10px] font-extrabold text-white">
                           {unreadNotificationsCount}
                         </span>
                       )}
@@ -490,14 +483,14 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                         setUserDropdownOpen(false);
                         window.dispatchEvent(new Event("angren_open_compare"));
                       }}
-                      className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-medium text-emerald-100 hover:bg-white/10 hover:text-white transition-colors"
+                      className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-medium text-white/90 hover:bg-white/10 hover:text-white transition-colors"
                     >
                       <div className="flex items-center gap-2">
-                        <Scale className="h-3.5 w-3.5 text-emerald-300" />
+                        <Scale className="h-3.5 w-3.5 text-[#339e71]" />
                         <span>{locale === "uz" ? "Solishtirish" : "Сравнение"}</span>
                       </div>
                       {compareCount > 0 && (
-                        <span className="px-1.5 py-0.5 rounded-full bg-emerald-500 text-[10px] font-extrabold text-white">
+                        <span className="px-1.5 py-0.5 rounded-full bg-[#339e71] text-[10px] font-extrabold text-white">
                           {compareCount}
                         </span>
                       )}
@@ -507,7 +500,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                         handleLogout();
                         setUserDropdownOpen(false);
                       }}
-                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-emerald-200 hover:bg-white/10 hover:text-red-400 transition-colors mt-0.5"
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-white/80 hover:bg-white/10 hover:text-red-400 transition-colors mt-0.5"
                     >
                       <LogOut className="h-3.5 w-3.5" />
                       <span>{t.navigation.signOut}</span>
@@ -519,7 +512,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
           ) : (
             <button
               onClick={openAuthModal}
-              className="flex items-center gap-2 rounded-2xl bg-white text-brand-dark px-4 py-2 text-xs font-extrabold shadow-sm hover:bg-emerald-50 hover:shadow-card hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all"
+              className="flex items-center gap-2 rounded-2xl bg-white text-brand-dark px-4 py-2 text-xs font-extrabold shadow-sm hover:bg-[#e5f0eb]/60 hover:shadow-card hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all"
             >
               {/* Google 4-Color SVG Icon */}
               <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
@@ -552,9 +545,9 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
             onClick={() => setLocale(locale === "ru" ? "uz" : "ru")}
             className="flex items-center gap-1 rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm active:scale-95 transition-all"
           >
-            <Globe className="h-3 w-3 text-emerald-200" />
+            <Globe className="h-3 w-3 text-white/80" />
             <span>{locale.toUpperCase()}</span>
-            <ChevronDown className="h-2.5 w-2.5 text-emerald-200/80" />
+            <ChevronDown className="h-2.5 w-2.5 text-white/70" />
           </button>
 
           {/* Mobile Currency Button */}
@@ -584,7 +577,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
-            className="sm:hidden border-t border-white/10 bg-[#0d3431]/95 backdrop-blur-2xl px-4 pt-3 pb-6 space-y-3 shadow-float overflow-hidden"
+            className="sm:hidden border-t border-white/10 bg-[#0c2e1f]/95 backdrop-blur-2xl px-4 pt-3 pb-6 space-y-3 shadow-float overflow-hidden"
           >
             <nav className="flex flex-col space-y-1 text-sm font-semibold">
               {navItems.map((item) => {
@@ -603,7 +596,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                         : "text-white/80 hover:bg-white/10 hover:text-white"
                     }`}
                   >
-                    <Icon className="h-4 w-4 text-emerald-300 shrink-0" />
+                    <Icon className="h-4 w-4 text-[#339e71] shrink-0" />
                     <span>{item.label}</span>
                   </Link>
                 );
@@ -630,7 +623,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                   <Link
                     href="/favorites"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium text-emerald-100 transition-colors"
+                    className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium text-white/90 transition-colors"
                   >
                     <div className="flex items-center gap-2">
                       <Heart className="h-3.5 w-3.5 text-pink-400 fill-pink-400/20" />
@@ -649,14 +642,14 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                       setMobileMenuOpen(false);
                       window.dispatchEvent(new Event("angren_open_saved_searches"));
                     }}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium text-emerald-100 transition-colors"
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium text-white/90 transition-colors"
                   >
                     <div className="flex items-center gap-2">
-                      <Bookmark className="h-3.5 w-3.5 text-emerald-300" />
+                      <Bookmark className="h-3.5 w-3.5 text-[#339e71]" />
                       <span>{locale === "uz" ? "Saqlangan qidiruvlar" : "Сохранённые поиски"}</span>
                     </div>
                     {unreadNotificationsCount > 0 && (
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-400 text-slate-900 text-[10px] font-black">
+                      <span className="px-2 py-0.5 rounded-full bg-[#339e71] text-slate-900 text-[10px] font-black">
                         {unreadNotificationsCount}
                       </span>
                     )}
@@ -668,14 +661,14 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                       setMobileMenuOpen(false);
                       window.dispatchEvent(new Event("angren_open_compare"));
                     }}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium text-emerald-100 transition-colors"
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium text-white/90 transition-colors"
                   >
                     <div className="flex items-center gap-2">
-                      <Scale className="h-3.5 w-3.5 text-emerald-300" />
+                      <Scale className="h-3.5 w-3.5 text-[#339e71]" />
                       <span>{locale === "uz" ? "Solishtirish" : "Сравнение"}</span>
                     </div>
                     {compareCount > 0 && (
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-black">
+                      <span className="px-2 py-0.5 rounded-full bg-[#339e71] text-white text-[10px] font-black">
                         {compareCount}
                       </span>
                     )}

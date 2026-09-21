@@ -369,16 +369,16 @@ export default function RentPage() {
       <Header activeTransactionType={transactionType} onTransactionTypeChange={setTransactionType} />
 
       {/* Sub-Header Section Banner */}
-      <div className="bg-[#0d3431] border-b border-white/10 py-2.5 px-4 sm:px-6">
+      <div className="bg-[#0c2e1f] border-b border-white/10 py-2.5 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <KeyRound className="h-4 w-4 text-[#8cb599]" />
+            <KeyRound className="h-4 w-4 text-[#339e71]" />
             <h1 className="text-xs sm:text-sm font-bold text-white tracking-tight">
               {locale === "uz" ? "Angrenda ijara" : "Аренда недвижимости в Ангрене"}
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-bold text-[#d9eedb]">
+            <span className="text-[11px] font-bold text-[#e5f0eb]">
               {filteredProperties.length} {locale === "uz" ? "ta ijara obyekti" : "объектов в аренду"}
             </span>
           </div>
@@ -462,7 +462,7 @@ export default function RentPage() {
               onClick={() => setActiveView("map")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
                 activeView === "map"
-                  ? "bg-[#0d3431] text-white shadow-card"
+                  ? "bg-[#0c2e1f] text-white shadow-card"
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/60"
               }`}
             >
@@ -475,7 +475,7 @@ export default function RentPage() {
               onClick={() => setActiveView("catalog")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
                 activeView === "catalog"
-                  ? "bg-[#0d3431] text-white shadow-card"
+                  ? "bg-[#0c2e1f] text-white shadow-card"
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/60"
               }`}
             >
@@ -484,8 +484,8 @@ export default function RentPage() {
               <span
                 className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-full ${
                   activeView === "catalog"
-                    ? "bg-white text-[#0d3431]"
-                    : "bg-[#d9eedb] text-[#0d3431]"
+                    ? "bg-white text-[#0c2e1f]"
+                    : "bg-[#e5f0eb] text-[#0c2e1f]"
                 }`}
               >
                 {filteredProperties.length}
@@ -500,7 +500,7 @@ export default function RentPage() {
               onClick={() => setMapMode("standard")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 mapMode === "standard"
-                  ? "bg-[#0d3431] text-white shadow-card"
+                  ? "bg-[#0c2e1f] text-white shadow-card"
                   : "text-gray-600 hover:text-gray-900 hover:bg-white/60"
               }`}
             >
@@ -512,7 +512,7 @@ export default function RentPage() {
               onClick={() => setMapMode("satellite")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 mapMode === "satellite"
-                  ? "bg-[#0d3431] text-white shadow-card"
+                  ? "bg-[#0c2e1f] text-white shadow-card"
                   : "text-gray-600 hover:text-gray-900 hover:bg-white/60"
               }`}
             >

@@ -173,7 +173,7 @@ export function FloatingSearchPanel({
             onClick={() => onTransactionChange("all")}
             className={`h-7 rounded-lg px-2.5 xl:px-3 text-[11.5px] font-bold transition-all ${
               transactionType === "all"
-                ? "bg-[#0d3431] text-white shadow-card"
+                ? "bg-[#0c2e1f] text-white shadow-card"
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
@@ -183,7 +183,7 @@ export function FloatingSearchPanel({
             onClick={() => onTransactionChange("sale")}
             className={`h-7 rounded-lg px-2.5 xl:px-3 text-[11.5px] font-bold transition-all ${
               transactionType === "sale"
-                ? "bg-[#0d3431] text-white shadow-card"
+                ? "bg-[#0c2e1f] text-white shadow-card"
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
@@ -193,7 +193,7 @@ export function FloatingSearchPanel({
             onClick={() => onTransactionChange("rent")}
             className={`h-7 rounded-lg px-2.5 xl:px-3 text-[11.5px] font-bold transition-all ${
               transactionType === "rent"
-                ? "bg-[#0d3431] text-white shadow-card"
+                ? "bg-[#0c2e1f] text-white shadow-card"
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
@@ -207,8 +207,8 @@ export function FloatingSearchPanel({
         {/* Text Search Input */}
         {onSearchQueryChange && (
           <div className="relative flex-1 min-w-[85px] sm:min-w-[100px] xl:min-w-[120px] 2xl:min-w-[140px] max-w-[160px]">
-            <div className="flex h-9 w-full items-center gap-1.5 rounded-xl border border-gray-200/80 bg-white/90 px-2.5 xl:px-3 text-xs font-semibold text-gray-800 focus-within:border-[#19453c] focus-within:ring-2 focus-within:ring-[#19453c]/20 transition-all">
-              <Search className="h-3.5 w-3.5 text-[#0d3431] shrink-0" />
+            <div className="flex h-9 w-full items-center gap-1.5 rounded-xl border border-gray-200/80 bg-white/90 px-2.5 xl:px-3 text-xs font-semibold text-gray-800 focus-within:border-[#19573c] focus-within:ring-2 focus-within:ring-[#19573c]/20 transition-all">
+              <Search className="h-3.5 w-3.5 text-[#0c2e1f] shrink-0" />
               <input
                 type="text"
                 value={searchQuery}
@@ -237,10 +237,10 @@ export function FloatingSearchPanel({
               setTypeOpen(false);
               setPriceOpen(false);
             }}
-            className="flex h-9 w-full items-center justify-between gap-1.5 rounded-xl border border-gray-200/80 bg-white/90 px-2 xl:px-2.5 text-[11.5px] font-semibold text-gray-800 hover:border-[#19453c]/40 hover:bg-white transition-colors"
+            className="flex h-9 w-full items-center justify-between gap-1.5 rounded-xl border border-gray-200/80 bg-white/90 px-2 xl:px-2.5 text-[11.5px] font-semibold text-gray-800 hover:border-[#19573c]/40 hover:bg-white transition-colors"
           >
             <div className="flex items-center gap-1.5 truncate min-w-0">
-              <MapPin className="h-3.5 w-3.5 text-[#0d3431] shrink-0" />
+              <MapPin className="h-3.5 w-3.5 text-[#0c2e1f] shrink-0" />
               <span className="truncate">{getDistrictLabel()}</span>
             </div>
             <ChevronDown
@@ -283,10 +283,10 @@ export function FloatingSearchPanel({
               setDistrictOpen(false);
               setPriceOpen(false);
             }}
-            className="flex h-9 w-full items-center justify-between gap-1.5 rounded-xl border border-gray-200/80 bg-white/90 px-2 xl:px-2.5 text-[11.5px] font-semibold text-gray-800 hover:border-[#19453c]/40 hover:bg-white transition-colors"
+            className="flex h-9 w-full items-center justify-between gap-1.5 rounded-xl border border-gray-200/80 bg-white/90 px-2 xl:px-2.5 text-[11.5px] font-semibold text-gray-800 hover:border-[#19573c]/40 hover:bg-white transition-colors"
           >
             <div className="flex items-center gap-1.5 truncate min-w-0">
-              <Home className="h-3.5 w-3.5 text-[#0d3431] shrink-0" />
+              <Home className="h-3.5 w-3.5 text-[#0c2e1f] shrink-0" />
               <span className="truncate">{getTypeLabel()}</span>
             </div>
             <ChevronDown
@@ -329,10 +329,10 @@ export function FloatingSearchPanel({
               setDistrictOpen(false);
               setTypeOpen(false);
             }}
-            className="flex h-9 w-full items-center justify-between gap-1.5 rounded-xl border border-gray-200/80 bg-white/90 px-2 xl:px-2.5 text-[11.5px] font-semibold text-gray-800 hover:border-[#19453c]/40 hover:bg-white transition-colors"
+            className="flex h-9 w-full items-center justify-between gap-1.5 rounded-xl border border-gray-200/80 bg-white/90 px-2 xl:px-2.5 text-[11.5px] font-semibold text-gray-800 hover:border-[#19573c]/40 hover:bg-white transition-colors"
           >
             <div className="flex items-center gap-1.5 truncate min-w-0">
-              <Coins className="h-3.5 w-3.5 text-[#0d3431] shrink-0" />
+              <Coins className="h-3.5 w-3.5 text-[#0c2e1f] shrink-0" />
               <span className="truncate">{getPriceLabel()}</span>
             </div>
             <ChevronDown
@@ -420,8 +420,8 @@ export function FloatingSearchPanel({
         {/* Action / Reset Button & Live Count Badge */}
         <div className="flex items-center justify-between sm:justify-start gap-1.5 xl:gap-2 shrink-0 pt-1 sm:pt-0">
           {/* Redundant on laptop screens since catalog switcher shows totalCount */}
-          <div className="flex sm:hidden 2xl:flex items-center gap-1.5 rounded-xl bg-[#d9eedb] px-3 h-9 text-xs font-bold text-[#0d3431]">
-            <span className="h-2 w-2 rounded-full bg-[#0d3431] animate-pulse" />
+          <div className="flex sm:hidden 2xl:flex items-center gap-1.5 rounded-xl bg-[#e5f0eb] px-3 h-9 text-xs font-bold text-[#0c2e1f]">
+            <span className="h-2 w-2 rounded-full bg-[#0c2e1f] animate-pulse" />
             <span>{totalCount} {locale === "uz" ? "obyekt" : "объектов"}</span>
           </div>
 
@@ -439,8 +439,8 @@ export function FloatingSearchPanel({
                   advancedFilters.furniture !== "all" ||
                   Object.values(advancedFilters.utilities || {}).some(Boolean) ||
                   Object.values(advancedFilters.amenities || {}).some(Boolean))
-                  ? "border-[#19453c] bg-[#d9eedb] text-[#0d3431]"
-                  : "border-gray-200/80 bg-white/90 text-gray-700 hover:text-[#19453c] hover:border-[#19453c]/40 hover:bg-white"
+                  ? "border-[#19573c] bg-[#e5f0eb] text-[#0c2e1f]"
+                  : "border-gray-200/80 bg-white/90 text-gray-700 hover:text-[#19573c] hover:border-[#19573c]/40 hover:bg-white"
               }`}
             >
               <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
@@ -454,7 +454,7 @@ export function FloatingSearchPanel({
                 advancedFilters.furniture !== "all" ||
                 Object.values(advancedFilters.utilities || {}).some(Boolean) ||
                 Object.values(advancedFilters.amenities || {}).some(Boolean)) && (
-                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[#0d3431] px-1 text-[10px] font-extrabold text-white">
+                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[#0c2e1f] px-1 text-[10px] font-extrabold text-white">
                   {[
                     advancedFilters.rooms !== "all",
                     advancedFilters.minArea !== "" || advancedFilters.maxArea !== "",
@@ -474,16 +474,16 @@ export function FloatingSearchPanel({
             onClick={handleSaveCurrentSearch}
             disabled={isSavingSearch}
             title={locale === "uz" ? "Qidiruvni saqlash" : "Сохранить поиск"}
-            className="flex h-9 px-2.5 items-center gap-1 xl:gap-1.5 rounded-xl border border-gray-200/80 bg-white/90 text-gray-700 hover:text-[#19453c] hover:border-[#19453c]/40 hover:bg-white transition-colors shadow-sm text-xs font-bold"
+            className="flex h-9 px-2.5 items-center gap-1 xl:gap-1.5 rounded-xl border border-gray-200/80 bg-white/90 text-gray-700 hover:text-[#19573c] hover:border-[#19573c]/40 hover:bg-white transition-colors shadow-sm text-xs font-bold"
           >
-            <Bookmark className="h-3.5 w-3.5 text-[#0d3431] shrink-0" />
+            <Bookmark className="h-3.5 w-3.5 text-[#0c2e1f] shrink-0" />
             <span className="hidden 2xl:inline">{locale === "uz" ? "Saqlash" : "Сохранить"}</span>
           </button>
 
           <button
             onClick={onReset}
             title={t.filters.reset}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200/80 bg-white/90 text-gray-600 hover:text-[#19453c] hover:border-[#19453c]/40 hover:bg-white transition-colors shadow-sm shrink-0"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200/80 bg-white/90 text-gray-600 hover:text-[#19573c] hover:border-[#19573c]/40 hover:bg-white transition-colors shadow-sm shrink-0"
           >
             <RotateCcw className="h-3.5 w-3.5" />
           </button>

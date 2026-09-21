@@ -482,7 +482,7 @@ export default function HomePage() {
               onClick={() => setActiveView("map")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
                 activeView === "map"
-                  ? "bg-[#0d3431] text-white shadow-card"
+                  ? "bg-[#0c2e1f] text-white shadow-card"
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/60"
               }`}
             >
@@ -495,7 +495,7 @@ export default function HomePage() {
               onClick={() => setActiveView("catalog")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
                 activeView === "catalog"
-                  ? "bg-[#0d3431] text-white shadow-card"
+                  ? "bg-[#0c2e1f] text-white shadow-card"
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/60"
               }`}
             >
@@ -504,8 +504,8 @@ export default function HomePage() {
               <span
                 className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-full ${
                   activeView === "catalog"
-                    ? "bg-white text-[#0d3431]"
-                    : "bg-[#d9eedb] text-[#0d3431]"
+                    ? "bg-white text-[#0c2e1f]"
+                    : "bg-[#e5f0eb] text-[#0c2e1f]"
                 }`}
               >
                 {filteredProperties.length}
@@ -520,7 +520,7 @@ export default function HomePage() {
               onClick={() => setMapMode("standard")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 mapMode === "standard"
-                  ? "bg-[#0d3431] text-white shadow-card"
+                  ? "bg-[#0c2e1f] text-white shadow-card"
                   : "text-gray-600 hover:text-gray-900 hover:bg-white/60"
               }`}
             >
@@ -532,7 +532,7 @@ export default function HomePage() {
               onClick={() => setMapMode("satellite")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 mapMode === "satellite"
-                  ? "bg-[#0d3431] text-white shadow-card"
+                  ? "bg-[#0c2e1f] text-white shadow-card"
                   : "text-gray-600 hover:text-gray-900 hover:bg-white/60"
               }`}
             >

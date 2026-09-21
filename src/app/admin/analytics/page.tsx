@@ -144,7 +144,7 @@ export default function AdminAnalyticsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div>
           <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-            <BarChart3 className="w-7 h-7 text-[#0d3431]" />
+            <BarChart3 className="w-7 h-7 text-[#0c2e1f]" />
             {locale === "uz" ? "Analitika Markazi" : "Центр Аналитики"}
           </h1>
           <p className="text-slate-600 text-xs sm:text-sm mt-1">
@@ -173,7 +173,7 @@ export default function AdminAnalyticsPage() {
                 onClick={() => setTimeRange(t.id)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                   timeRange === t.id
-                    ? "bg-[#0d3431] text-white shadow-xs"
+                    ? "bg-[#0c2e1f] text-white shadow-xs"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                 }`}
               >
@@ -188,7 +188,7 @@ export default function AdminAnalyticsPage() {
             title={locale === "uz" ? "Yangilash" : "Обновить"}
             className="p-2 rounded-2xl bg-white border border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-all flex items-center justify-center disabled:opacity-50 shadow-xs"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-[#0d3431]" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-[#0c2e1f]" : ""}`} />
           </button>
         </div>
       </div>
@@ -222,10 +222,10 @@ export default function AdminAnalyticsPage() {
             <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
               {locale === "uz" ? "Tashriflar" : "Посещения"}
             </span>
-            <Eye className="w-4 h-4 text-emerald-400" />
+            <Eye className="w-4 h-4 text-[#339e71]" />
           </div>
           <div className="text-3xl font-black text-white mt-2">{kpis.total_visits.toLocaleString()}</div>
-          <div className="flex items-center gap-1 text-xs text-emerald-400 mt-1 font-semibold">
+          <div className="flex items-center gap-1 text-xs text-[#339e71] mt-1 font-semibold">
             <TrendingUp className="w-3.5 h-3.5" />
             <span>Haqiqiy faollik</span>
           </div>
@@ -277,7 +277,7 @@ export default function AdminAnalyticsPage() {
           onClick={() => setActiveTab("demand")}
           className={`pb-3 px-1 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap font-bold ${
             activeTab === "demand"
-              ? "border-emerald-400 text-emerald-400"
+              ? "border-[#339e71] text-[#339e71]"
               : "border-transparent text-slate-300 hover:text-white"
           }`}
         >
@@ -289,7 +289,7 @@ export default function AdminAnalyticsPage() {
           onClick={() => setActiveTab("supply")}
           className={`pb-3 px-1 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap font-bold ${
             activeTab === "supply"
-              ? "border-emerald-400 text-emerald-400"
+              ? "border-[#339e71] text-[#339e71]"
               : "border-transparent text-slate-300 hover:text-white"
           }`}
         >
@@ -301,7 +301,7 @@ export default function AdminAnalyticsPage() {
           onClick={() => setActiveTab("outcomes")}
           className={`pb-3 px-1 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap font-bold ${
             activeTab === "outcomes"
-              ? "border-emerald-400 text-emerald-400"
+              ? "border-[#339e71] text-[#339e71]"
               : "border-transparent text-slate-300 hover:text-white"
           }`}
         >
@@ -313,7 +313,7 @@ export default function AdminAnalyticsPage() {
           onClick={() => setActiveTab("traffic")}
           className={`pb-3 px-1 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap font-bold ${
             activeTab === "traffic"
-              ? "border-emerald-400 text-emerald-400"
+              ? "border-[#339e71] text-[#339e71]"
               : "border-transparent text-slate-300 hover:text-white"
           }`}
         >
@@ -325,8 +325,8 @@ export default function AdminAnalyticsPage() {
       {/* TAB 1: DEMAND */}
       {activeTab === "demand" && (
         <div className="space-y-6">
-          <div className="p-4 bg-slate-900/90 border border-emerald-500/40 rounded-2xl flex items-start gap-3 text-xs text-slate-200">
-            <HelpCircle className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+          <div className="p-4 bg-slate-900/90 border border-[#19573c]/40 rounded-2xl flex items-start gap-3 text-xs text-slate-200">
+            <HelpCircle className="w-4 h-4 text-[#339e71] flex-shrink-0 mt-0.5" />
             <div>
               <span className="font-bold text-white">
                 {locale === "uz" ? "Talab analitikasi metodologiyasi: " : "Методология аналитики спроса: "}
@@ -341,7 +341,7 @@ export default function AdminAnalyticsPage() {
             {/* Property Types Demand */}
             <div className="bg-slate-900/80 backdrop-blur-md p-6 rounded-3xl border border-slate-700/80 shadow-md">
               <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-                <PieChart className="w-5 h-5 text-emerald-400" />
+                <PieChart className="w-5 h-5 text-[#339e71]" />
                 {locale === "uz" ? "Mulk turlari bo‘yicha talab" : "Спрос по типам недвижимости"}
               </h3>
               <div className="space-y-4">
@@ -350,7 +350,7 @@ export default function AdminAnalyticsPage() {
                     <div className="flex items-center justify-between text-xs font-semibold">
                       <span className="text-slate-200">{locale === "uz" ? item.type_uz : item.type_ru}</span>
                       <div className="flex items-center gap-2">
-                        <span className="text-emerald-400 font-bold">
+                        <span className="text-[#339e71] font-bold">
                           {item.views} {locale === "uz" ? "ta ko‘rish" : "просмотров"}
                         </span>
                         <span className="text-white font-mono font-bold">{item.percentage}%</span>
@@ -370,7 +370,7 @@ export default function AdminAnalyticsPage() {
             {/* Quick Summary Card */}
             <div className="bg-slate-900/80 backdrop-blur-md p-6 rounded-3xl border border-slate-700/80 shadow-md">
               <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-emerald-400" />
+                <BarChart3 className="w-5 h-5 text-[#339e71]" />
                 {locale === "uz" ? "Qidiruv va Interaktivlik" : "Поиск и интерактивность"}
               </h3>
               <div className="space-y-4">
@@ -378,7 +378,7 @@ export default function AdminAnalyticsPage() {
                   <span className="text-xs text-slate-200 font-medium">
                     {locale === "uz" ? "Bajarilgan qidiruvlar & filtrlar" : "Выполненные поиски и фильтры"}
                   </span>
-                  <span className="text-lg font-bold font-mono text-emerald-400">{kpis.searches_executed}</span>
+                  <span className="text-lg font-bold font-mono text-[#339e71]">{kpis.searches_executed}</span>
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-700/80 flex items-center justify-between">
                   <span className="text-xs text-slate-200 font-medium">
@@ -419,14 +419,14 @@ export default function AdminAnalyticsPage() {
                       <td className="py-3.5 px-4 font-bold text-white">
                         {locale === "uz" ? d.name_uz : d.name_ru}
                       </td>
-                      <td className="py-3.5 px-4 font-mono font-bold text-emerald-400">
+                      <td className="py-3.5 px-4 font-mono font-bold text-[#339e71]">
                         {d.views.toLocaleString()}
                       </td>
                       <td className="py-3.5 px-4 font-mono text-slate-200">
                         {d.searches.toLocaleString()}
                       </td>
                       <td className="py-3.5 px-4">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-[#339e71] border border-[#19573c]/30">
                           {locale === "uz" ? d.ratio : d.ratio_ru}
                         </span>
                       </td>
@@ -459,7 +459,7 @@ export default function AdminAnalyticsPage() {
               <h3 className="text-base font-bold text-white">
                 {locale === "uz" ? "Tumanlar bo‘yicha taklif va o‘rtacha narxlar" : "Предложение и средние цены по районам"}
               </h3>
-              <span className="text-xs text-emerald-400 font-bold font-mono">
+              <span className="text-xs text-[#339e71] font-bold font-mono">
                 {outcomes.active_supply} {locale === "uz" ? "faol e'lon" : "активных объявлений"}
               </span>
             </div>
@@ -482,7 +482,7 @@ export default function AdminAnalyticsPage() {
                       <td className="py-3.5 px-4 font-mono font-bold text-white">
                         {d.supply_count} {locale === "uz" ? "ta obyekt" : "объектов"}
                       </td>
-                      <td className="py-3.5 px-4 font-mono font-bold text-emerald-400">
+                      <td className="py-3.5 px-4 font-mono font-bold text-[#339e71]">
                         {d.avg_price_sqm}
                       </td>
                       <td className="py-3.5 px-4">
@@ -510,8 +510,8 @@ export default function AdminAnalyticsPage() {
       {/* TAB 3: OUTCOMES */}
       {activeTab === "outcomes" && (
         <div className="space-y-6">
-          <div className="p-4 bg-emerald-950/20 border border-emerald-500/20 rounded-2xl flex items-start gap-3 text-xs text-slate-300">
-            <HelpCircle className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+          <div className="p-4 bg-[#0c2e1f]/20 border border-[#19573c]/20 rounded-2xl flex items-start gap-3 text-xs text-slate-300">
+            <HelpCircle className="w-4 h-4 text-[#339e71] flex-shrink-0 mt-0.5" />
             <div>
               <span className="font-semibold text-white">
                 {locale === "uz" ? "Natijalar (Outcomes) qat’iy qoidasi: " : "Строгое правило результатов: "}
@@ -527,7 +527,7 @@ export default function AdminAnalyticsPage() {
               <div className="text-xs text-slate-300 uppercase font-semibold">
                 {locale === "uz" ? "Yopilgan Bitimlar" : "Закрытые сделки"}
               </div>
-              <div className="text-3xl font-extrabold text-emerald-400 mt-2">
+              <div className="text-3xl font-extrabold text-[#339e71] mt-2">
                 {outcomes.closed_deals}
               </div>
               <div className="text-xs text-slate-300 mt-1">
@@ -603,7 +603,7 @@ export default function AdminAnalyticsPage() {
                       <td className="py-3.5 px-4 font-bold text-white">
                         {locale === "uz" ? d.name_uz : d.name_ru}
                       </td>
-                      <td className="py-3.5 px-4 font-mono font-bold text-emerald-400">
+                      <td className="py-3.5 px-4 font-mono font-bold text-[#339e71]">
                         {d.closed_deals} {locale === "uz" ? "ta" : "сделок"}
                       </td>
                       <td className="py-3.5 px-4 font-mono font-bold text-white">
@@ -632,7 +632,7 @@ export default function AdminAnalyticsPage() {
             {/* Traffic Sources */}
             <div className="bg-slate-900/80 backdrop-blur-md p-6 rounded-3xl border border-slate-700/80 shadow-md">
               <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-                <Compass className="w-5 h-5 text-emerald-400" />
+                <Compass className="w-5 h-5 text-[#339e71]" />
                 {locale === "uz" ? "Trafik manbalari taqsimoti" : "Источники трафика"}
               </h3>
               <div className="space-y-4">
@@ -660,7 +660,7 @@ export default function AdminAnalyticsPage() {
             {/* Devices */}
             <div className="bg-slate-900/80 backdrop-blur-md p-6 rounded-3xl border border-slate-700/80 shadow-md">
               <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-                <Smartphone className="w-5 h-5 text-emerald-400" />
+                <Smartphone className="w-5 h-5 text-[#339e71]" />
                 {locale === "uz" ? "Foydalanuvchi qurilmalari" : "Устройства пользователей"}
               </h3>
               <div className="space-y-4">
@@ -683,7 +683,7 @@ export default function AdminAnalyticsPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="text-lg font-bold font-mono text-emerald-400">{device.percent}%</div>
+                      <div className="text-lg font-bold font-mono text-[#339e71]">{device.percent}%</div>
                     </div>
                   );
                 })}
@@ -695,7 +695,7 @@ export default function AdminAnalyticsPage() {
           <div className="bg-slate-900/80 backdrop-blur-md p-6 rounded-3xl border border-slate-700/80 shadow-md space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-700/80 pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-[#19573c]/30 flex items-center justify-center text-[#339e71]">
                   <MapPin className="w-5 h-5" />
                 </div>
                 <div>
@@ -711,7 +711,7 @@ export default function AdminAnalyticsPage() {
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-500/20 text-[#339e71] border border-[#19573c]/30">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                   Angren: {angrenShare}%
                 </span>
@@ -743,7 +743,7 @@ export default function AdminAnalyticsPage() {
                   key={geo.city}
                   className={`p-4 rounded-2xl bg-slate-950/80 border transition-all ${
                     geo.is_angren
-                      ? "border-emerald-500/50 ring-1 ring-emerald-500/30 shadow-emerald-950/40"
+                      ? "border-[#19573c]/50 ring-1 ring-[#19573c]/30 shadow-emerald-950/40"
                       : "border-slate-700/80 hover:border-slate-600"
                   }`}
                 >
@@ -752,7 +752,7 @@ export default function AdminAnalyticsPage() {
                       {locale === "uz" ? geo.region : geo.region_ru}
                     </span>
                     {geo.is_angren && (
-                      <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-emerald-500/20 text-[#339e71] border border-[#19573c]/30">
                         Lokal
                       </span>
                     )}
@@ -761,7 +761,7 @@ export default function AdminAnalyticsPage() {
                     {locale === "uz" ? geo.city : geo.city_ru}
                   </div>
                   <div className="flex items-baseline justify-between mt-3">
-                    <span className="text-2xl font-black font-mono text-emerald-400">
+                    <span className="text-2xl font-black font-mono text-[#339e71]">
                       {geo.percent}%
                     </span>
                     {geo.count > 0 && (
@@ -802,7 +802,7 @@ export default function AdminAnalyticsPage() {
               {liveEvents.length} {locale === "uz" ? "ta qayd etilgan voqea" : "зафиксированных событий"}
             </span>
             {data?.db_duration_ms !== undefined && (
-              <span className="text-[11px] font-mono font-bold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-700/60">
+              <span className="text-[11px] font-mono font-bold text-[#339e71] bg-[#0c2e1f]/60 px-2 py-0.5 rounded-md border border-[#0c2e1f]/60">
                 DB: {data.db_duration_ms}ms
               </span>
             )}
@@ -835,7 +835,7 @@ export default function AdminAnalyticsPage() {
                   const isView = evt.event_type.includes("view");
 
                   const badgeClass = isCall
-                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                    ? "bg-emerald-500/20 text-[#339e71] border-[#19573c]/40"
                     : isTg
                     ? "bg-sky-500/20 text-sky-300 border-sky-500/40"
                     : isFav

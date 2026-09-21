@@ -118,12 +118,12 @@ export default function AdminUsersPage() {
         <div
           className={`fixed top-6 right-6 z-50 px-5 py-3 rounded-xl shadow-2xl flex items-center gap-2 backdrop-blur-md animate-in fade-in slide-in-from-top-4 border ${
             toast.type === "success"
-              ? "bg-[#0d3431] border-emerald-500/50 text-white font-bold text-xs"
+              ? "bg-[#0c2e1f] border-[#19573c]/50 text-white font-bold text-xs"
               : "bg-red-900/90 border-red-500/50 text-white font-bold text-xs"
           }`}
         >
           {toast.type === "success" ? (
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-[#339e71] shrink-0" />
           ) : (
             <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
           )}
@@ -135,7 +135,7 @@ export default function AdminUsersPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div>
           <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-[#0d3431]">
+            <div className="w-10 h-10 rounded-2xl bg-[#e5f0eb] border border-[#c2d3c9] flex items-center justify-center text-[#0c2e1f]">
               <Users className="w-5 h-5" />
             </div>
             <span>{locale === "uz" ? "Foydalanuvchilar Boshqaruvi" : "Управление Пользователями"}</span>
@@ -155,12 +155,12 @@ export default function AdminUsersPage() {
             className="flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 text-xs font-bold rounded-xl border border-slate-200 transition-all shadow-xs disabled:opacity-50"
             title="Yangilash"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${loading ? "animate-spin text-[#0d3431]" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${loading ? "animate-spin text-[#0c2e1f]" : ""}`} />
             <span>{locale === "uz" ? "Yangilash" : "Обновить"}</span>
           </button>
 
-          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
-            <ShieldCheck className="w-4 h-4 text-[#0d3431]" />
+          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#e5f0eb]/60 border border-[#c2d3c9] text-[#0c2e1f] text-xs font-bold">
+            <ShieldCheck className="w-4 h-4 text-[#0c2e1f]" />
             <span>{locale === "uz" ? "Google OAuth bilan himoyalangan" : "Защищено через Google OAuth"}</span>
           </div>
         </div>
@@ -173,7 +173,7 @@ export default function AdminUsersPage() {
             <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
               {locale === "uz" ? "Jami Ro‘yxatdan O‘tganlar" : "Всего зарегистрировано"}
             </span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-[#0d3431]">
+            <div className="w-8 h-8 rounded-lg bg-[#e5f0eb] flex items-center justify-center text-[#0c2e1f]">
               <Users className="w-4 h-4" />
             </div>
           </div>
@@ -187,17 +187,17 @@ export default function AdminUsersPage() {
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider">
+            <span className="text-xs font-bold text-[#19573c] uppercase tracking-wider">
               {locale === "uz" ? "Faol Foydalanuvchilar" : "Активные пользователи"}
             </span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700">
+            <div className="w-8 h-8 rounded-lg bg-[#e5f0eb] flex items-center justify-center text-[#19573c]">
               <CheckCircle2 className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-black text-emerald-800 mt-2">
+          <div className="text-2xl font-black text-[#0c2e1f] mt-2">
             {loading ? "..." : activeCount}
           </div>
-          <div className="text-xs text-emerald-700 mt-1 font-semibold">
+          <div className="text-xs text-[#19573c] mt-1 font-semibold">
             {locale === "uz" ? "Cheklovlarsiz to‘liq kirish" : "Полный доступ без ограничений"}
           </div>
         </div>
@@ -233,7 +233,7 @@ export default function AdminUsersPage() {
                 ? "Ism yoki email bo‘yicha qidiruv..."
                 : "Поиск по имени или email..."
             }
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431] transition-all"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f] transition-all"
           />
         </div>
 
@@ -242,7 +242,7 @@ export default function AdminUsersPage() {
             onClick={() => setStatusFilter("all")}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
               statusFilter === "all"
-                ? "bg-[#0d3431] text-white shadow-xs"
+                ? "bg-[#0c2e1f] text-white shadow-xs"
                 : "text-slate-700 hover:text-slate-900 hover:bg-white"
             }`}
           >
@@ -252,7 +252,7 @@ export default function AdminUsersPage() {
             onClick={() => setStatusFilter("active")}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
               statusFilter === "active"
-                ? "bg-emerald-700 text-white shadow-xs"
+                ? "bg-[#19573c] text-white shadow-xs"
                 : "text-slate-700 hover:text-slate-900 hover:bg-white"
             }`}
           >
@@ -290,7 +290,7 @@ export default function AdminUsersPage() {
               {loading ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-slate-500">
-                    <RefreshCw className="w-6 h-6 mx-auto animate-spin text-[#0d3431] mb-2" />
+                    <RefreshCw className="w-6 h-6 mx-auto animate-spin text-[#0c2e1f] mb-2" />
                     <span className="text-xs font-bold">{locale === "uz" ? "Yuklanmoqda..." : "Загрузка..."}</span>
                   </td>
                 </tr>
@@ -322,13 +322,13 @@ export default function AdminUsersPage() {
                               className="object-cover"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-[#0d3431] font-black text-sm bg-emerald-100">
+                            <div className="w-full h-full flex items-center justify-center text-[#0c2e1f] font-black text-sm bg-[#e5f0eb]">
                               {user.name.slice(0, 2).toUpperCase()}
                             </div>
                           )}
                         </div>
                         <div>
-                          <div className="font-bold text-slate-900 group-hover:text-emerald-800 transition-colors flex items-center gap-2">
+                          <div className="font-bold text-slate-900 group-hover:text-[#0c2e1f] transition-colors flex items-center gap-2">
                             <span>{user.name}</span>
                             {user.role === "admin" && (
                               <span className="px-1.5 py-0.5 rounded text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300">
@@ -396,13 +396,13 @@ export default function AdminUsersPage() {
                         disabled={togglingId === user.id}
                         className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border transition-all shadow-xs disabled:opacity-50 ${
                           user.status === "active"
-                            ? "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100"
+                            ? "bg-[#e5f0eb]/60 text-[#0c2e1f] border-[#c2d3c9] hover:bg-[#e5f0eb]"
                             : "bg-red-50 text-red-800 border-red-300 hover:bg-red-100"
                         }`}
                       >
                         {user.status === "active" ? (
                           <>
-                            <CheckCircle2 className="w-3 h-3 text-emerald-700" />
+                            <CheckCircle2 className="w-3 h-3 text-[#19573c]" />
                             {locale === "uz" ? "Faol" : "Активен"}
                           </>
                         ) : (
@@ -427,7 +427,7 @@ export default function AdminUsersPage() {
           <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-md p-6 space-y-6 shadow-2xl animate-in zoom-in-95 text-slate-900">
             <div className="flex items-center justify-between border-b border-slate-200 pb-4">
               <div className="flex items-center gap-3">
-                <div className="relative w-12 h-12 rounded-full overflow-hidden bg-slate-100 border-2 border-emerald-500">
+                <div className="relative w-12 h-12 rounded-full overflow-hidden bg-slate-100 border-2 border-[#19573c]">
                   {selectedUser.avatar_url ? (
                     <Image
                       src={selectedUser.avatar_url}
@@ -436,7 +436,7 @@ export default function AdminUsersPage() {
                       className="object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[#0d3431] font-black bg-emerald-100">
+                    <div className="w-full h-full flex items-center justify-center text-[#0c2e1f] font-black bg-[#e5f0eb]">
                       {selectedUser.name.slice(0, 2).toUpperCase()}
                     </div>
                   )}
@@ -489,7 +489,7 @@ export default function AdminUsersPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-600 font-bold">{locale === "uz" ? "Rol:" : "Роль:"}</span>
-                  <span className="text-[#0d3431] font-bold uppercase">{selectedUser.role}</span>
+                  <span className="text-[#0c2e1f] font-bold uppercase">{selectedUser.role}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-600 font-bold">{locale === "uz" ? "Ro‘yxatdan o‘tgan:" : "Дата регистрации:"}</span>
@@ -501,8 +501,8 @@ export default function AdminUsersPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-600 font-bold">{locale === "uz" ? "Avtorizatsiya turi:" : "Тип авторизации:"}</span>
-                  <span className="text-[#0d3431] font-bold flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-emerald-600" />
+                  <span className="text-[#0c2e1f] font-bold flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-[#19573c]" />
                     Google OAuth 2.0 / Supabase
                   </span>
                 </div>
@@ -516,7 +516,7 @@ export default function AdminUsersPage() {
                   className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-xs ${
                     selectedUser.status === "active"
                       ? "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
-                      : "bg-[#0d3431] hover:bg-[#19453c] text-white"
+                      : "bg-[#0c2e1f] hover:bg-[#19573c] text-white"
                   }`}
                 >
                   {selectedUser.status === "active" ? (

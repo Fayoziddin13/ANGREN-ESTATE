@@ -177,7 +177,7 @@ export function PropertyPhotoGalleryModal({
                 onClick={() => setCurrentIndex(idx)}
                 className={`relative h-12 w-9 sm:h-14 sm:w-11 shrink-0 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
                   currentIndex === idx
-                    ? "border-emerald-400 ring-2 ring-emerald-400/50 scale-105"
+                    ? "border-[#339e71] ring-2 ring-[#339e71]/50 scale-105"
                     : "border-transparent opacity-50 hover:opacity-100"
                 }`}
               >

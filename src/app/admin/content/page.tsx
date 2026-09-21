@@ -123,8 +123,8 @@ export default function AdminContentPage() {
     <div className="p-4 sm:p-8 max-w-7xl mx-auto w-full space-y-6 pb-16">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-6 right-6 z-50 bg-[#0d3431] border border-emerald-600 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-4">
-          <CheckCircle2 className="w-5 h-5 text-emerald-200" />
+        <div className="fixed top-6 right-6 z-50 bg-[#0c2e1f] border border-[#19573c] text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-4">
+          <CheckCircle2 className="w-5 h-5 text-white/80" />
           <span className="text-sm font-semibold">{toastMessage}</span>
         </div>
       )}
@@ -133,7 +133,7 @@ export default function AdminContentPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-            <FileText className="w-7 h-7 text-[#0d3431]" />
+            <FileText className="w-7 h-7 text-[#0c2e1f]" />
             {locale === "uz" ? "Kontent Boshqaruvi (CMS)" : "Управление Контентом (CMS)"}
           </h1>
           <p className="text-slate-600 text-sm mt-1 font-medium">
@@ -158,7 +158,7 @@ export default function AdminContentPage() {
             type="button"
             onClick={() => handleSaveSection(activeTab)}
             disabled={isSaving || isLoading}
-            className="flex items-center gap-2 px-5 py-2 bg-[#0d3431] hover:bg-[#19453c] text-white rounded-xl font-bold text-sm shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-5 py-2 bg-[#0c2e1f] hover:bg-[#19573c] text-white rounded-xl font-bold text-sm shadow-sm hover:shadow-md transition-all disabled:opacity-50"
           >
             <Save className="w-4 h-4" />
             {isSaving
@@ -186,10 +186,10 @@ export default function AdminContentPage() {
       )}
 
       {/* Language Policy Standard Notice */}
-      <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-3 text-xs text-emerald-950 font-medium">
-        <Globe className="w-5 h-5 text-[#0d3431] flex-shrink-0" />
+      <div className="p-4 bg-[#e5f0eb]/60 border border-[#c2d3c9] rounded-2xl flex items-center gap-3 text-xs text-[#0c2e1f] font-medium">
+        <Globe className="w-5 h-5 text-[#0c2e1f] flex-shrink-0" />
         <div>
-          <span className="font-bold text-[#0d3431]">
+          <span className="font-bold text-[#0c2e1f]">
             {locale === "uz" ? "Til standarti: " : "Языковой стандарт: "}
           </span>
           {locale === "uz"
@@ -205,7 +205,7 @@ export default function AdminContentPage() {
           onClick={() => setActiveTab("hero")}
           className={`pb-3 px-1 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${
             activeTab === "hero"
-              ? "border-[#0d3431] text-[#0d3431]"
+              ? "border-[#0c2e1f] text-[#0c2e1f]"
               : "border-transparent text-slate-500 hover:text-slate-900"
           }`}
         >
@@ -218,7 +218,7 @@ export default function AdminContentPage() {
           onClick={() => setActiveTab("about")}
           className={`pb-3 px-1 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${
             activeTab === "about"
-              ? "border-[#0d3431] text-[#0d3431]"
+              ? "border-[#0c2e1f] text-[#0c2e1f]"
               : "border-transparent text-slate-500 hover:text-slate-900"
           }`}
         >
@@ -231,7 +231,7 @@ export default function AdminContentPage() {
           onClick={() => setActiveTab("contacts")}
           className={`pb-3 px-1 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${
             activeTab === "contacts"
-              ? "border-[#0d3431] text-[#0d3431]"
+              ? "border-[#0c2e1f] text-[#0c2e1f]"
               : "border-transparent text-slate-500 hover:text-slate-900"
           }`}
         >
@@ -244,7 +244,7 @@ export default function AdminContentPage() {
           onClick={() => setActiveTab("announcement")}
           className={`pb-3 px-1 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${
             activeTab === "announcement"
-              ? "border-[#0d3431] text-[#0d3431]"
+              ? "border-[#0c2e1f] text-[#0c2e1f]"
               : "border-transparent text-slate-500 hover:text-slate-900"
           }`}
         >
@@ -257,7 +257,7 @@ export default function AdminContentPage() {
           onClick={() => setActiveTab("seo")}
           className={`pb-3 px-1 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${
             activeTab === "seo"
-              ? "border-[#0d3431] text-[#0d3431]"
+              ? "border-[#0c2e1f] text-[#0c2e1f]"
               : "border-transparent text-slate-500 hover:text-slate-900"
           }`}
         >
@@ -271,7 +271,7 @@ export default function AdminContentPage() {
         <div className="space-y-6">
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
             <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-[#0d3431]" />
+              <Sparkles className="w-5 h-5 text-[#0c2e1f]" />
               {locale === "uz" ? "Hero Sarlavhalari va Nishon (Badge)" : "Заголовки и значок Hero"}
             </h2>
 
@@ -289,7 +289,7 @@ export default function AdminContentPage() {
                       hero: { ...payload.hero, badge_uz: e.target.value },
                     })
                   }
-                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
                   placeholder="ANGREN KO‘CHMAS MULKI"
                 />
               </div>
@@ -307,7 +307,7 @@ export default function AdminContentPage() {
                       hero: { ...payload.hero, badge_ru: e.target.value },
                     })
                   }
-                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
                   placeholder="НЕДВИЖИМОСТЬ АНГРЕНА"
                 />
               </div>
@@ -325,7 +325,7 @@ export default function AdminContentPage() {
                       hero: { ...payload.hero, title_uz: e.target.value },
                     })
                   }
-                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
                   placeholder="Angrendagi ko‘chmas mulk — bir xaritada"
                 />
               </div>
@@ -343,7 +343,7 @@ export default function AdminContentPage() {
                       hero: { ...payload.hero, title_ru: e.target.value },
                     })
                   }
-                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
                   placeholder="Недвижимость Ангрена — на одной карте"
                 />
               </div>
@@ -361,7 +361,7 @@ export default function AdminContentPage() {
                       hero: { ...payload.hero, subtitle_uz: e.target.value },
                     })
                   }
-                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
                   placeholder="Kvartiralar, hovlilar va tijorat binolarini shahar xaritasida qulay toping"
                 />
               </div>
@@ -379,7 +379,7 @@ export default function AdminContentPage() {
                       hero: { ...payload.hero, subtitle_ru: e.target.value },
                     })
                   }
-                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
                   placeholder="Удобный поиск квартир, домов и коммерческой недвижимости на карте города"
                 />
               </div>
@@ -388,12 +388,12 @@ export default function AdminContentPage() {
 
           {/* Hero Live Preview Card */}
           <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
-            <div className="text-xs font-bold text-[#0d3431] uppercase tracking-wider mb-3 flex items-center gap-1.5">
+            <div className="text-xs font-bold text-[#0c2e1f] uppercase tracking-wider mb-3 flex items-center gap-1.5">
               <Eye className="w-4 h-4" />
               {locale === "uz" ? "Jonli ko‘rinish namoyishi" : "Живой предпросмотр"}
             </div>
             <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs text-center space-y-3">
-              <span className="inline-block px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-bold text-emerald-800">
+              <span className="inline-block px-3 py-1 rounded-full bg-[#e5f0eb]/60 border border-[#c2d3c9] text-[11px] font-bold text-[#0c2e1f]">
                 {locale === "uz" ? payload.hero.badge_uz : payload.hero.badge_ru}
               </span>
               <h3 className="text-xl md:text-2xl font-black text-slate-900">
@@ -411,7 +411,7 @@ export default function AdminContentPage() {
       {activeTab === "about" && (
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
           <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-            <Layers className="w-5 h-5 text-[#0d3431]" />
+            <Layers className="w-5 h-5 text-[#0c2e1f]" />
             {locale === "uz" ? "'Biz Haqimizda' Sahifasi Matnlari" : "Тексты страницы 'О нас'"}
           </h2>
 
@@ -429,7 +429,7 @@ export default function AdminContentPage() {
                     about: { ...payload.about, badge_uz: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -446,7 +446,7 @@ export default function AdminContentPage() {
                     about: { ...payload.about, badge_ru: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -463,7 +463,7 @@ export default function AdminContentPage() {
                     about: { ...payload.about, headline_uz: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -480,7 +480,7 @@ export default function AdminContentPage() {
                     about: { ...payload.about, headline_ru: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -497,7 +497,7 @@ export default function AdminContentPage() {
                     about: { ...payload.about, intro_p1_uz: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -514,7 +514,7 @@ export default function AdminContentPage() {
                     about: { ...payload.about, intro_p1_ru: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -531,7 +531,7 @@ export default function AdminContentPage() {
                     about: { ...payload.about, intro_p2_uz: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -548,7 +548,7 @@ export default function AdminContentPage() {
                     about: { ...payload.about, intro_p2_ru: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -565,7 +565,7 @@ export default function AdminContentPage() {
                     about: { ...payload.about, intro_p3_uz: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -582,7 +582,7 @@ export default function AdminContentPage() {
                     about: { ...payload.about, intro_p3_ru: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -599,7 +599,7 @@ export default function AdminContentPage() {
                     about: { ...payload.about, mission_uz: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -616,7 +616,7 @@ export default function AdminContentPage() {
                     about: { ...payload.about, mission_ru: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
           </div>
@@ -627,7 +627,7 @@ export default function AdminContentPage() {
       {activeTab === "contacts" && (
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
           <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-            <Phone className="w-5 h-5 text-[#0d3431]" />
+            <Phone className="w-5 h-5 text-[#0c2e1f]" />
             {locale === "uz" ? "Kompaniya va Bosh Ofis Kontaktlari" : "Контакты компании и головного офиса"}
           </h2>
 
@@ -645,7 +645,7 @@ export default function AdminContentPage() {
                     contacts: { ...payload.contacts, company_name: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -662,7 +662,7 @@ export default function AdminContentPage() {
                     contacts: { ...payload.contacts, phone: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -679,7 +679,7 @@ export default function AdminContentPage() {
                     contacts: { ...payload.contacts, phone_secondary: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -696,7 +696,7 @@ export default function AdminContentPage() {
                     contacts: { ...payload.contacts, email: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -713,7 +713,7 @@ export default function AdminContentPage() {
                     contacts: { ...payload.contacts, telegram: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -730,7 +730,7 @@ export default function AdminContentPage() {
                     contacts: { ...payload.contacts, telegram_url: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -747,7 +747,7 @@ export default function AdminContentPage() {
                     contacts: { ...payload.contacts, instagram: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -764,7 +764,7 @@ export default function AdminContentPage() {
                     contacts: { ...payload.contacts, instagram_url: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -781,7 +781,7 @@ export default function AdminContentPage() {
                     contacts: { ...payload.contacts, address_uz: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -798,7 +798,7 @@ export default function AdminContentPage() {
                     contacts: { ...payload.contacts, address_ru: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -815,7 +815,7 @@ export default function AdminContentPage() {
                     contacts: { ...payload.contacts, working_hours_uz: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -832,7 +832,7 @@ export default function AdminContentPage() {
                     contacts: { ...payload.contacts, working_hours_ru: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
           </div>
@@ -845,7 +845,7 @@ export default function AdminContentPage() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <Megaphone className="w-5 h-5 text-[#0d3431]" />
+                <Megaphone className="w-5 h-5 text-[#0c2e1f]" />
                 {locale === "uz" ? "Saytning Yuqori Qismidagi E’lon Banneri" : "Верхний баннер объявлений сайта"}
               </h2>
               <p className="text-xs text-slate-600 font-medium mt-1">
@@ -868,7 +868,7 @@ export default function AdminContentPage() {
                 }
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0d3431]"></div>
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0c2e1f]"></div>
               <span className="ml-3 text-xs font-bold text-slate-700">
                 {payload.announcement.is_active
                   ? locale === "uz" ? "Faol (Ko‘rinmoqda)" : "Активен"
@@ -891,7 +891,7 @@ export default function AdminContentPage() {
                     announcement: { ...payload.announcement, text_uz: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -908,7 +908,7 @@ export default function AdminContentPage() {
                     announcement: { ...payload.announcement, text_ru: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -925,7 +925,7 @@ export default function AdminContentPage() {
                     announcement: { ...payload.announcement, link_url: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
                 placeholder="/sotib-olish"
               />
             </div>
@@ -936,9 +936,9 @@ export default function AdminContentPage() {
               </label>
               <div className="flex items-center gap-3">
                 {[
-                  { id: "info", uz: "Axborot (Yashil)", color: "border-emerald-600 bg-emerald-50 text-emerald-800" },
+                  { id: "info", uz: "Axborot (Yashil)", color: "border-[#19573c] bg-[#e5f0eb]/60 text-[#0c2e1f]" },
                   { id: "warning", uz: "Ogohlantirish (Sariq)", color: "border-amber-600 bg-amber-50 text-amber-800" },
-                  { id: "success", uz: "Muvaffaqiyat (Yorqin)", color: "border-teal-600 bg-teal-50 text-teal-800" },
+                  { id: "success", uz: "Muvaffaqiyat (Yorqin)", color: "border-[#19573c] bg-[#e5f0eb]/60 text-[#0c2e1f]" },
                 ].map((item) => (
                   <button
                     type="button"
@@ -973,8 +973,8 @@ export default function AdminContentPage() {
                   payload.announcement.type === "warning"
                     ? "bg-amber-50 text-amber-900 border-amber-300"
                     : payload.announcement.type === "success"
-                    ? "bg-teal-50 text-teal-900 border-teal-300"
-                    : "bg-emerald-50 text-emerald-900 border-emerald-300"
+                    ? "bg-[#e5f0eb]/60 text-[#0c2e1f] border-[#c2d3c9]"
+                    : "bg-[#e5f0eb]/60 text-[#0c2e1f] border-[#c2d3c9]"
                 }`}
               >
                 <Megaphone className="w-4 h-4 flex-shrink-0" />
@@ -989,7 +989,7 @@ export default function AdminContentPage() {
       {activeTab === "seo" && (
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
           <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-            <Search className="w-5 h-5 text-[#0d3431]" />
+            <Search className="w-5 h-5 text-[#0c2e1f]" />
             {locale === "uz" ? "Qidiruv Tizimi va Meta Sozlamalari (SEO)" : "Поисковая оптимизация и метатеги (SEO)"}
           </h2>
 
@@ -1007,7 +1007,7 @@ export default function AdminContentPage() {
                     seo: { ...payload.seo, site_title_uz: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -1024,7 +1024,7 @@ export default function AdminContentPage() {
                     seo: { ...payload.seo, site_title_ru: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -1041,7 +1041,7 @@ export default function AdminContentPage() {
                     seo: { ...payload.seo, meta_description_uz: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -1058,7 +1058,7 @@ export default function AdminContentPage() {
                     seo: { ...payload.seo, meta_description_ru: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -1075,7 +1075,7 @@ export default function AdminContentPage() {
                     seo: { ...payload.seo, keywords_uz: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
 
@@ -1092,7 +1092,7 @@ export default function AdminContentPage() {
                     seo: { ...payload.seo, keywords_ru: e.target.value },
                   })
                 }
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0d3431] focus:ring-1 focus:ring-[#0d3431]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0c2e1f] focus:ring-1 focus:ring-[#0c2e1f]"
               />
             </div>
           </div>
@@ -1105,7 +1105,7 @@ export default function AdminContentPage() {
           type="button"
           onClick={() => handleSaveSection(activeTab)}
           disabled={isSaving || isLoading}
-          className="flex items-center gap-2 px-6 py-3 bg-[#0d3431] hover:bg-[#19453c] text-white rounded-xl font-bold text-sm shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+          className="flex items-center gap-2 px-6 py-3 bg-[#0c2e1f] hover:bg-[#19573c] text-white rounded-xl font-bold text-sm shadow-sm hover:shadow-md transition-all disabled:opacity-50"
         >
           <Save className="w-4 h-4" />
           {isSaving
