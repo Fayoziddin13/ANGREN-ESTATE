@@ -14,18 +14,39 @@ if (fs.existsSync(envPath)) {
 }
 
 const botToken = process.env.TELEGRAM_BOT_TOKEN;
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://angrenestate.uz';
+const siteUrl = 'https://angrenestate.uz';
 
 console.log('--- ANGREN ESTATE Telegram Bot Setup ---');
 console.log('Site URL:', siteUrl);
 
-if (!botToken) {
-  console.error('ERROR: TELEGRAM_BOT_TOKEN is not set in environment or .env.local.');
-  console.log('Add TELEGRAM_BOT_TOKEN=your_token to .env.local and run this script again.');
-  process.exit(1);
-}
+async function main() {
+  if (!botToken) {
+    console.log('TELEGRAM_BOT_TOKEN not found in local .env.local.');
+    console.log('Triggering production Telegram setup on https://angrenestate.uz/api/telegram/setup ...');
+    try {
+      const prodRes = await fetch('https://angrenestate.uz/api/telegram/setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const prodData = await prodRes.json();
+      if (prodData.success) {
+        console.log('Production Telegram setup succeeded:');
+        console.log('- Webhook:', prodData.webhookUrl, '->', prodData.webhook?.ok ? 'OK' : prodData.webhook?.description);
+        console.log('- Menu Button:', prodData.menuButton?.ok ? 'OK' : prodData.menuButton?.description);
+        console.log('- Commands:', prodData.commands?.ok ? 'OK' : prodData.commands?.description);
+        return;
+      } else {
+        console.error('Production setup error:', prodData.error);
+        process.exitCode = 1;
+        return;
+      }
+    } catch (err) {
+      console.error('Network error during production setup:', err.message);
+      process.exitCode = 1;
+      return;
+    }
+  }
 
-async function runSetup() {
   try {
     // 1. Get bot info
     const meRes = await fetch(`https://api.telegram.org/bot${botToken}/getMe`);
@@ -35,7 +56,20 @@ async function runSetup() {
     }
     console.log(`Verified Bot: @${meData.result.username} (${meData.result.first_name})`);
 
-    // 2. Set Menu Button
+    // 2. Set Webhook
+    console.log('Configuring Webhook...');
+    const hookRes = await fetch(`https://api.telegram.org/bot${botToken}/setWebhook`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: `${siteUrl}/api/telegram/webhook`,
+        allowed_updates: ['message', 'callback_query'],
+      }),
+    });
+    const hookData = await hookRes.json();
+    console.log('setWebhook result:', hookData.ok ? 'SUCCESS' : hookData.description);
+
+    // 3. Set Menu Button
     console.log('Configuring Menu Button to open Mini App...');
     const menuRes = await fetch(`https://api.telegram.org/bot${botToken}/setChatMenuButton`, {
       method: 'POST',
@@ -53,7 +87,7 @@ async function runSetup() {
     const menuData = await menuRes.json();
     console.log('setChatMenuButton result:', menuData.ok ? 'SUCCESS' : menuData.description);
 
-    // 3. Set Bot Commands
+    // 4. Set Bot Commands
     console.log('Registering bot commands...');
     const cmdRes = await fetch(`https://api.telegram.org/bot${botToken}/setMyCommands`, {
       method: 'POST',
@@ -71,8 +105,8 @@ async function runSetup() {
     console.log('\nTelegram Bot setup completed successfully!');
   } catch (err) {
     console.error('Setup failed:', err.message);
-    process.exit(1);
+    process.exitCode = 1;
   }
 }
 
-runSetup();
+main();
