@@ -128,7 +128,41 @@ export function validateTelegramInitData(
 }
 
 /**
+ * Configure Telegram Bot Webhook
+ * Docs: https://core.telegram.org/bots/api#setwebhook
+ */
+export async function setTelegramWebhook(
+  botToken?: string,
+  webhookUrl: string = "https://angrenestate.uz/api/telegram/webhook"
+) {
+  const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) {
+    throw new Error("TELEGRAM_BOT_TOKEN is not configured");
+  }
+
+  const response = await fetch(
+    `https://api.telegram.org/bot${token}/setWebhook`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        url: webhookUrl,
+        allowed_updates: ["message", "callback_query"],
+        drop_pending_updates: false,
+      }),
+    }
+  );
+
+  const data = await response.json();
+  if (!data.ok) {
+    throw new Error(`setWebhook failed: ${data.description}`);
+  }
+  return data;
+}
+
+/**
  * Configure Telegram Bot Menu Button to open ANGREN ESTATE Web App
+ * Docs: https://core.telegram.org/bots/api#setchatmenubutton
  */
 export async function setTelegramMenuButton(
   botToken?: string,
@@ -165,6 +199,7 @@ export async function setTelegramMenuButton(
 
 /**
  * Register default bot commands
+ * Docs: https://core.telegram.org/bots/api#setmycommands
  */
 export async function setTelegramBotCommands(botToken?: string) {
   const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
@@ -200,7 +235,39 @@ export async function setTelegramBotCommands(botToken?: string) {
 }
 
 /**
+ * Inspection methods: getMe, getWebhookInfo, getMyCommands, getChatMenuButton
+ */
+export async function getTelegramBotInfo(botToken?: string) {
+  const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not configured");
+  const res = await fetch(`https://api.telegram.org/bot${token}/getMe`);
+  return await res.json();
+}
+
+export async function getTelegramWebhookInfo(botToken?: string) {
+  const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not configured");
+  const res = await fetch(`https://api.telegram.org/bot${token}/getWebhookInfo`);
+  return await res.json();
+}
+
+export async function getTelegramBotCommands(botToken?: string) {
+  const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not configured");
+  const res = await fetch(`https://api.telegram.org/bot${token}/getMyCommands`);
+  return await res.json();
+}
+
+export async function getTelegramMenuButton(botToken?: string) {
+  const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not configured");
+  const res = await fetch(`https://api.telegram.org/bot${token}/getChatMenuButton`);
+  return await res.json();
+}
+
+/**
  * Send welcome message with Telegram Web App button
+ * Uses HTML parse mode for 100% reliable entity parsing
  */
 export async function sendTelegramWelcomeMessage(
   chatId: number | string,
@@ -215,15 +282,15 @@ export async function sendTelegramWelcomeMessage(
 
   const isUz = userLanguageCode.startsWith("uz");
 
-  const messageText = isUz
-    ? `🏢 *ANGREN ESTATE* — Angren shahrining rasmiy ko‘chmas mulk platformasi\.\n\n` +
-      `Xarita orqali kvartiralar, hovlilar va tijorat binolarini ko‘ring, solishtiring va qulay tanlang\.\n\n` +
-      `Ilovani to‘g‘ridan\-to‘g‘ri Telegram ichida ochish uchun pastdagi tugmani bosing:`
-    : `🏢 *ANGREN ESTATE* — официальная платформа недвижимости города Ангрен\.\n\n` +
-      `Интерактивная карта, актуальные цены на квартиры, дома и коммерческую недвижимость\.\n\n` +
+  const messageHtml = isUz
+    ? `🏢 <b>ANGREN ESTATE</b> — Angren shahrining rasmiy ko‘chmas mulk platformasi.\n\n` +
+      `Xarita orqali kvartiralar, hovlilar va tijorat binolarini ko‘ring, solishtiring va qulay tanlang.\n\n` +
+      `Ilovani to‘g‘ridan-to‘g‘ri Telegram ichida ochish uchun pastdagi tugmani bosing:`
+    : `🏢 <b>ANGREN ESTATE</b> — официальная платформа недвижимости города Ангрен.\n\n` +
+      `Интерактивная карта, актуальные цены на квартиры, дома и коммерческую недвижимость.\n\n` +
       `Нажмите кнопку ниже, чтобы открыть приложение прямо в Telegram:`;
 
-  const buttonText = isUz
+  const primaryButtonText = isUz
     ? "Obyektlarni ko‘rish 📍"
     : "Открыть ANGREN ESTATE 🏢";
 
@@ -234,13 +301,13 @@ export async function sendTelegramWelcomeMessage(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: chatId,
-        text: messageText,
-        parse_mode: "MarkdownV2",
+        text: messageHtml,
+        parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
             [
               {
-                text: buttonText,
+                text: primaryButtonText,
                 web_app: {
                   url: webAppUrl,
                 },

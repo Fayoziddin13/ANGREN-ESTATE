@@ -1,14 +1,54 @@
 import { NextRequest, NextResponse } from "next/server";
-import { setTelegramMenuButton, setTelegramBotCommands } from "@/lib/telegramServer";
+import {
+  setTelegramMenuButton,
+  setTelegramBotCommands,
+  setTelegramWebhook,
+  getTelegramBotInfo,
+  getTelegramWebhookInfo,
+  getTelegramBotCommands,
+  getTelegramMenuButton,
+} from "@/lib/telegramServer";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  return NextResponse.json({
-    configured: Boolean(token),
-    site_url: process.env.NEXT_PUBLIC_SITE_URL || "https://angrenestate.uz",
-  });
+  if (!token) {
+    return NextResponse.json({
+      configured: false,
+      site_url: "https://angrenestate.uz",
+    });
+  }
+
+  try {
+    const [botInfo, webhookInfo, commands, menuButton] = await Promise.all([
+      getTelegramBotInfo(token).catch((e) => ({ ok: false, error: e.message })),
+      getTelegramWebhookInfo(token).catch((e) => ({ ok: false, error: e.message })),
+      getTelegramBotCommands(token).catch((e) => ({ ok: false, error: e.message })),
+      getTelegramMenuButton(token).catch((e) => ({ ok: false, error: e.message })),
+    ]);
+
+    return NextResponse.json({
+      configured: true,
+      site_url: "https://angrenestate.uz",
+      bot: botInfo?.result
+        ? {
+            id: botInfo.result.id,
+            first_name: botInfo.result.first_name,
+            username: botInfo.result.username,
+            can_join_groups: botInfo.result.can_join_groups,
+          }
+        : null,
+      webhook: webhookInfo?.result || webhookInfo,
+      commands: commands?.result || commands,
+      menuButton: menuButton?.result || menuButton,
+    });
+  } catch (err: any) {
+    return NextResponse.json({
+      configured: true,
+      error: err.message,
+    });
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -21,25 +61,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let webAppUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://angrenestate.uz";
-    try {
-      const body = await req.json();
-      if (body?.webAppUrl && typeof body.webAppUrl === "string") {
-        webAppUrl = body.webAppUrl;
-      }
-    } catch (e) {
-      // Body is optional
-    }
+    const webAppUrl = "https://angrenestate.uz";
+    const webhookUrl = "https://angrenestate.uz/api/telegram/webhook";
 
-    // 1. Configure Menu Button
+    // 1. Configure Webhook
+    const webhookResult = await setTelegramWebhook(token, webhookUrl);
+
+    // 2. Configure Menu Button
     const menuResult = await setTelegramMenuButton(token, webAppUrl);
 
-    // 2. Configure Commands
+    // 3. Configure Commands
     const commandsResult = await setTelegramBotCommands(token);
 
     return NextResponse.json({
       success: true,
       webAppUrl,
+      webhookUrl,
+      webhook: webhookResult,
       menuButton: menuResult,
       commands: commandsResult,
     });

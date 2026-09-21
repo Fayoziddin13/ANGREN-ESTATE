@@ -25,14 +25,16 @@ export async function POST(req: NextRequest) {
 
     // Check if message received
     const message = update?.message || update?.edited_message;
-    if (message && message.chat && message.text) {
-      const text = message.text.trim();
+    if (message && message.chat) {
+      const text = (message.text || "").trim();
       const chatId = message.chat.id;
       const langCode = message.from?.language_code || "uz";
+      const siteUrl = "https://angrenestate.uz";
 
-      // Match /start or /app commands
-      if (text.startsWith("/start") || text.startsWith("/app")) {
-        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://angrenestate.uz";
+      // If private chat and user sends /start, /app, or any text
+      if (message.chat.type === "private") {
+        await sendTelegramWelcomeMessage(chatId, langCode, token, siteUrl);
+      } else if (text.startsWith("/start") || text.startsWith("/app")) {
         await sendTelegramWelcomeMessage(chatId, langCode, token, siteUrl);
       }
     }
