@@ -4,6 +4,9 @@ import {
   editTelegramWelcomeMessage,
   answerTelegramCallback,
   sendTelegramAppMessage,
+  upsertTelegramUser,
+  setTelegramUserNotifications,
+  getTelegramUser,
 } from "@/lib/telegramServer";
 
 export const dynamic = "force-dynamic";
@@ -29,17 +32,60 @@ export async function POST(req: NextRequest) {
     const update = await req.json();
     const siteUrl = "https://angrenestate.uz";
 
-    // 1. Handle callback_query (Language Switcher)
+    // 1. Handle callback_query
     if (update?.callback_query) {
       const cb = update.callback_query;
-      await answerTelegramCallback(cb.id, token);
-
       const data = cb.data;
       const chatId = cb.message?.chat?.id;
       const messageId = cb.message?.message_id;
+      const fromUser = cb.from;
 
+      // A. Mute Notifications
+      if (data === "mute_notif") {
+        const userId = fromUser?.id || chatId;
+        if (userId) {
+          await setTelegramUserNotifications(userId, false);
+          const lang = fromUser?.language_code?.toLowerCase().startsWith("ru") ? "ru" : "uz";
+          const alertMsg =
+            lang === "ru"
+              ? "🔕 Уведомления отключены.\nЧтобы включить снова, отправьте /start."
+              : "🔕 Bildirishnomalar o‘chirildi.\nQayta yoqish uchun /start yuboring.";
+          await answerTelegramCallback(cb.id, token, alertMsg, true);
+        } else {
+          await answerTelegramCallback(cb.id, token);
+        }
+        return NextResponse.json({ ok: true });
+      }
+
+      // B. Unmute Notifications
+      if (data === "unmute_notif") {
+        const userId = fromUser?.id || chatId;
+        if (userId) {
+          await setTelegramUserNotifications(userId, true);
+          const lang = fromUser?.language_code?.toLowerCase().startsWith("ru") ? "ru" : "uz";
+          const alertMsg =
+            lang === "ru"
+              ? "🔔 Уведомления включены."
+              : "🔔 Bildirishnomalar yoqildi.";
+          await answerTelegramCallback(cb.id, token, alertMsg, true);
+        } else {
+          await answerTelegramCallback(cb.id, token);
+        }
+        return NextResponse.json({ ok: true });
+      }
+
+      // C. Language Switcher (lang_ru / lang_uz)
+      await answerTelegramCallback(cb.id, token);
       if (chatId && messageId && (data === "lang_ru" || data === "lang_uz")) {
         const targetLang = data === "lang_ru" ? "ru" : "uz";
+        if (fromUser?.id) {
+          await upsertTelegramUser({
+            id: fromUser.id,
+            username: fromUser.username,
+            first_name: fromUser.first_name,
+            language: targetLang,
+          });
+        }
         await editTelegramWelcomeMessage(chatId, messageId, targetLang, token, siteUrl);
       }
 
@@ -52,6 +98,16 @@ export async function POST(req: NextRequest) {
       const text = (message.text || "").trim();
       const chatId = message.chat.id;
       const langCode = message.from?.language_code || "uz";
+
+      // Register or update user upon any bot interaction / /start
+      if (message.from && message.from.id) {
+        await upsertTelegramUser({
+          id: message.from.id,
+          username: message.from.username,
+          first_name: message.from.first_name,
+          language_code: langCode,
+        });
+      }
 
       if (text.startsWith("/app")) {
         await sendTelegramAppMessage(chatId, langCode, token, siteUrl);

@@ -30,6 +30,7 @@ import {
   RotateCcw,
   AlertTriangle,
   AlertCircle,
+  Bell,
   Globe,
   Languages,
   Loader2,
@@ -167,6 +168,81 @@ export default function EditPropertyPage() {
   const [hududUsageCount, setHududUsageCount] = useState<number>(0);
   const [isCheckingUsage, setIsCheckingUsage] = useState<boolean>(false);
   const [activeHududMenuId, setActiveHududMenuId] = useState<string | null>(null);
+
+  // Telegram Notifications & Channel State
+  const [telegramStats, setTelegramStats] = useState<{
+    channel_status: "not_published" | "published" | "error";
+    channel_post_id?: number;
+    total_recipients: number;
+    sent_count: number;
+    failed_count: number;
+    blocked_count: number;
+    last_sent_at?: string;
+  } | null>(null);
+  const [isLoadingTelegramStats, setIsLoadingTelegramStats] = useState<boolean>(false);
+  const [testModalOpen, setTestModalOpen] = useState<boolean>(false);
+  const [testTelegramId, setTestTelegramId] = useState<string>("");
+  const [isSendingTest, setIsSendingTest] = useState<boolean>(false);
+  const [testAlert, setTestAlert] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const fetchTelegramStats = useCallback(async () => {
+    if (!propertyId) return;
+    setIsLoadingTelegramStats(true);
+    try {
+      const res = await fetch(`/api/admin/properties/${propertyId}/telegram-stats`);
+      const data = await res.json();
+      if (data.success && data.stats) {
+        setTelegramStats(data.stats);
+      }
+    } catch (err) {
+      console.error("Failed to fetch telegram stats:", err);
+    } finally {
+      setIsLoadingTelegramStats(false);
+    }
+  }, [propertyId]);
+
+  useEffect(() => {
+    fetchTelegramStats();
+  }, [fetchTelegramStats]);
+
+  const handleSendTestNotification = async () => {
+    if (!testTelegramId.trim() || !propertyId) return;
+    setIsSendingTest(true);
+    setTestAlert(null);
+    try {
+      const res = await fetch(`/api/admin/properties/${propertyId}/telegram-test`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          telegramUserId: testTelegramId.trim(),
+          lang: locale,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setTestAlert({
+          type: "success",
+          text:
+            locale === "uz"
+              ? "Test xabari Telegram'ga muvaffaqiyatli yuborildi!"
+              : "Тестовое уведомление успешно отправлено в Telegram!",
+        });
+        fetchTelegramStats();
+      } else {
+        setTestAlert({
+          type: "error",
+          text: data.error || (locale === "uz" ? "Yuborishda xatolik yuz berdi" : "Ошибка отправки"),
+        });
+      }
+    } catch (err: any) {
+      setTestAlert({
+        type: "error",
+        text: err?.message || "Xatolik yuz berdi",
+      });
+    } finally {
+      setIsSendingTest(false);
+    }
+  };
 
   // Live nearby infrastructure calculation based on map coordinates (strict 1km)
   const [liveNearbyInfrastructure, setLiveNearbyInfrastructure] = useState<InfrastructureSummary[]>([]);
@@ -2314,6 +2390,92 @@ export default function EditPropertyPage() {
                   : "Номер владельца не показывается клиентам. На сайте отображаются только контакты риелтора."}
               </p>
             </div>
+
+            {/* Telegram Notifications & Channel Section */}
+            <div className="space-y-4 pt-5 border-t border-slate-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-xl bg-[#eaf5f0] text-[#167d4f] flex items-center justify-center">
+                    <Send className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                      {locale === "uz" ? "Telegram va Ijtimoiy Tarmoqlar" : "Telegram и Социальные сети"}
+                    </h3>
+                    <p className="text-[11px] text-slate-500 font-medium">
+                      {locale === "uz"
+                        ? "Kanal statusi va bot orqali foydalanuvchilarga bildirishnomalar"
+                        : "Статус в канале и уведомления для пользователей бота"}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTestModalOpen(true);
+                    setTestAlert(null);
+                  }}
+                  className="px-3 py-1.5 rounded-xl border border-[#167d4f] text-[#167d4f] hover:bg-[#eaf5f0] text-xs font-bold flex items-center gap-1.5 transition-colors"
+                >
+                  <Bell className="h-3.5 w-3.5" />
+                  <span>{locale === "uz" ? "Test yuborish" : "Отправить тест"}</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {/* Telegram Channel Card */}
+                <div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-600">Telegram Channel</span>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                        telegramStats?.channel_status === "published"
+                          ? "bg-[#eaf5f0] text-[#167d4f]"
+                          : telegramStats?.channel_status === "error"
+                          ? "bg-rose-100 text-rose-800"
+                          : "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      {telegramStats?.channel_status === "published"
+                        ? (locale === "uz" ? "Chop etilgan" : "Published")
+                        : telegramStats?.channel_status === "error"
+                        ? (locale === "uz" ? "Xatolik" : "Error")
+                        : (locale === "uz" ? "Chop etilmagan" : "Not published")}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    {telegramStats?.channel_status === "published"
+                      ? (locale === "uz" ? "Obyekt rasmiy kanalga joylangan" : "Объект опубликован в канале")
+                      : (locale === "uz" ? "Kanalga joylanmagan" : "Еще не опубликован в канале")}
+                  </p>
+                </div>
+
+                {/* Telegram Notifications Card */}
+                <div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-600">Telegram Notifications</span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#eaf5f0] text-[#167d4f]">
+                      {telegramStats ? `${telegramStats.sent_count} sent / ${telegramStats.failed_count} failed` : "0 sent / 0 failed"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] text-slate-500">
+                    <span>
+                      {locale === "uz" ? "Qabul qiluvchilar:" : "Получателей:"}{" "}
+                      <strong className="text-slate-800">{telegramStats?.total_recipients || 0}</strong>
+                      {telegramStats?.blocked_count ? (
+                        <span className="text-rose-600 ml-1.5">({telegramStats.blocked_count} blocked)</span>
+                      ) : null}
+                    </span>
+                    <span>
+                      {telegramStats?.last_sent_at
+                        ? new Date(telegramStats.last_sent_at).toLocaleDateString()
+                        : (locale === "uz" ? "Yuborilmagan" : "Не отправлялось")}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -2519,6 +2681,95 @@ export default function EditPropertyPage() {
             setEditingHudud(null);
           }}
         />
+      )}
+
+      {/* Test Telegram Notification Modal */}
+      {testModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3">
+              <div className="h-11 w-11 rounded-2xl bg-[#eaf5f0] border border-[#bdd1c8] flex items-center justify-center shrink-0">
+                <Bell className="h-5 w-5 text-[#167d4f]" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-slate-900 text-base">
+                  {locale === "uz" ? "Test bildirishnoma yuborish" : "Отправить тестовое уведомление"}
+                </h3>
+                <p className="text-[11px] text-slate-500 font-bold">
+                  {locale === "uz" ? "Obyekt ID:" : "ID объекта:"} {propertyId}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">
+                  {locale === "uz" ? "Telegram User ID (Raqamli)" : "Telegram User ID (Числовой)"}
+                </label>
+                <input
+                  type="text"
+                  value={testTelegramId}
+                  onChange={(e) => setTestTelegramId(e.target.value)}
+                  placeholder="masalan: 123456789"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold focus:ring-2 focus:ring-[#167d4f] outline-none"
+                />
+                <p className="text-[10px] text-slate-400">
+                  {locale === "uz"
+                    ? "O‘zingizning Telegram user ID raqamingizni kiriting (@userinfobot orqali olish mumkin)."
+                    : "Введите числовой ID своего Telegram-аккаунта (можно узнать в @userinfobot)."}
+                </p>
+              </div>
+
+              {testAlert && (
+                <div
+                  className={`p-3 rounded-xl text-xs font-bold flex items-center gap-2 ${
+                    testAlert.type === "success"
+                      ? "bg-[#eaf5f0] text-[#167d4f] border border-[#bdd1c8]"
+                      : "bg-rose-50 text-rose-700 border border-rose-200"
+                  }`}
+                >
+                  {testAlert.type === "success" ? (
+                    <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  ) : (
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                  )}
+                  <span>{testAlert.text}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => {
+                  setTestModalOpen(false);
+                  setTestAlert(null);
+                }}
+                disabled={isSendingTest}
+                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-xs"
+              >
+                {locale === "uz" ? "Bekor qilish" : "Отмена"}
+              </button>
+              <button
+                type="button"
+                onClick={handleSendTestNotification}
+                disabled={isSendingTest || !testTelegramId.trim()}
+                className="px-5 py-2 rounded-xl bg-[#167d4f] hover:bg-[#167d4f] text-white font-bold text-xs flex items-center gap-1.5 disabled:opacity-50 transition-colors"
+              >
+                {isSendingTest ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Send className="h-3.5 w-3.5" />
+                )}
+                <span>
+                  {isSendingTest
+                    ? (locale === "uz" ? "Yuborilmoqda..." : "Отправка...")
+                    : (locale === "uz" ? "Yuborish" : "Отправить")}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -1,4 +1,19 @@
 import crypto from "crypto";
+import fs from "fs";
+import path from "path";
+import { supabaseAdmin } from "./supabaseServer";
+import { isSupabaseConfigured } from "./supabase";
+import {
+  TelegramSubscriber,
+  TelegramPropertyNotificationRecord,
+  TelegramPropertyNotificationStats,
+} from "./types";
+
+export {
+  type TelegramSubscriber,
+  type TelegramPropertyNotificationRecord,
+  type TelegramPropertyNotificationStats,
+};
 
 export interface TelegramUser {
   id: number;
@@ -365,7 +380,9 @@ export async function editTelegramWelcomeMessage(
  */
 export async function answerTelegramCallback(
   callbackQueryId: string,
-  botToken?: string
+  botToken?: string,
+  text?: string,
+  showAlert?: boolean
 ) {
   const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
   if (!token) return;
@@ -375,6 +392,8 @@ export async function answerTelegramCallback(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       callback_query_id: callbackQueryId,
+      text: text,
+      show_alert: Boolean(showAlert),
     }),
   }).catch(() => {});
 }
@@ -424,3 +443,429 @@ export async function sendTelegramAppMessage(
 
   return await response.json();
 }
+
+// =============================================================================
+// TELEGRAM SUBSCRIBERS & PROPERTY NOTIFICATIONS PERSISTENCE
+// =============================================================================
+
+const SUBSCRIBERS_FILE_PATH = path.join(process.cwd(), "data", "telegram_users.json");
+const NOTIFICATIONS_FILE_PATH = path.join(process.cwd(), "data", "telegram_property_notifications.json");
+
+async function readLocalSubscribers(): Promise<TelegramSubscriber[]> {
+  try {
+    if (!fs.existsSync(SUBSCRIBERS_FILE_PATH)) return [];
+    const raw = await fs.promises.readFile(SUBSCRIBERS_FILE_PATH, "utf8");
+    return JSON.parse(raw) as TelegramSubscriber[];
+  } catch {
+    return [];
+  }
+}
+
+async function writeLocalSubscribers(users: TelegramSubscriber[]): Promise<void> {
+  try {
+    const dir = path.dirname(SUBSCRIBERS_FILE_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const temp = `${SUBSCRIBERS_FILE_PATH}.tmp.${Date.now()}`;
+    await fs.promises.writeFile(temp, JSON.stringify(users, null, 2), "utf8");
+    await fs.promises.rename(temp, SUBSCRIBERS_FILE_PATH);
+  } catch (e) {
+    console.error("[TelegramServer] writeLocalSubscribers error:", e);
+  }
+}
+
+async function readLocalNotifications(): Promise<TelegramPropertyNotificationRecord[]> {
+  try {
+    if (!fs.existsSync(NOTIFICATIONS_FILE_PATH)) return [];
+    const raw = await fs.promises.readFile(NOTIFICATIONS_FILE_PATH, "utf8");
+    return JSON.parse(raw) as TelegramPropertyNotificationRecord[];
+  } catch {
+    return [];
+  }
+}
+
+async function writeLocalNotifications(records: TelegramPropertyNotificationRecord[]): Promise<void> {
+  try {
+    const dir = path.dirname(NOTIFICATIONS_FILE_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const temp = `${NOTIFICATIONS_FILE_PATH}.tmp.${Date.now()}`;
+    await fs.promises.writeFile(temp, JSON.stringify(records, null, 2), "utf8");
+    await fs.promises.rename(temp, NOTIFICATIONS_FILE_PATH);
+  } catch (e) {
+    console.error("[TelegramServer] writeLocalNotifications error:", e);
+  }
+}
+
+/**
+ * Register or update a Telegram user upon /start.
+ * Idempotent: updates existing user, enables notifications by default.
+ */
+export async function upsertTelegramUser(user: {
+  id: number;
+  username?: string;
+  first_name?: string;
+  language_code?: string;
+  language?: "uz" | "ru";
+}): Promise<TelegramSubscriber> {
+  const lang: "uz" | "ru" =
+    user.language || (user.language_code?.toLowerCase().startsWith("uz") ? "uz" : "ru");
+  const now = new Date().toISOString();
+
+  let subscriber: TelegramSubscriber = {
+    telegram_user_id: user.id,
+    username: user.username,
+    first_name: user.first_name,
+    language: lang,
+    notifications_enabled: true,
+    created_at: now,
+    updated_at: now,
+  };
+
+  if (isSupabaseConfigured) {
+    try {
+      const { data: existing, error: fetchErr } = await supabaseAdmin
+        .from("telegram_users")
+        .select("*")
+        .eq("telegram_user_id", user.id)
+        .single();
+
+      if (!fetchErr && existing) {
+        subscriber = {
+          telegram_user_id: user.id,
+          username: user.username || existing.username || undefined,
+          first_name: user.first_name || existing.first_name || undefined,
+          language: user.language || existing.language || lang,
+          notifications_enabled: true, // /start re-enables notifications
+          created_at: existing.created_at || now,
+          updated_at: now,
+        };
+
+        await supabaseAdmin
+          .from("telegram_users")
+          .update({
+            username: subscriber.username || null,
+            first_name: subscriber.first_name || null,
+            language: subscriber.language,
+            notifications_enabled: true,
+            updated_at: now,
+          })
+          .eq("telegram_user_id", user.id);
+      } else {
+        await supabaseAdmin.from("telegram_users").insert({
+          telegram_user_id: user.id,
+          username: user.username || null,
+          first_name: user.first_name || null,
+          language: lang,
+          notifications_enabled: true,
+          created_at: now,
+          updated_at: now,
+        });
+      }
+    } catch (err: any) {
+      console.warn("[TelegramServer] Supabase upsert error:", err?.message);
+    }
+  }
+
+  // Always mirror to local file for 100% resilience
+  const localList = await readLocalSubscribers();
+  const existingIdx = localList.findIndex((u) => u.telegram_user_id === user.id);
+  if (existingIdx !== -1) {
+    localList[existingIdx] = {
+      ...localList[existingIdx],
+      username: user.username || localList[existingIdx].username,
+      first_name: user.first_name || localList[existingIdx].first_name,
+      notifications_enabled: true,
+      updated_at: now,
+    };
+  } else {
+    localList.push(subscriber);
+  }
+  await writeLocalSubscribers(localList);
+
+  return subscriber;
+}
+
+/**
+ * Toggle notifications on or off for a user.
+ */
+export async function setTelegramUserNotifications(
+  telegramUserId: number,
+  enabled: boolean
+): Promise<boolean> {
+  const now = new Date().toISOString();
+
+  if (isSupabaseConfigured) {
+    try {
+      await supabaseAdmin
+        .from("telegram_users")
+        .update({
+          notifications_enabled: enabled,
+          updated_at: now,
+        })
+        .eq("telegram_user_id", telegramUserId);
+    } catch (err: any) {
+      console.warn("[TelegramServer] Supabase set notifications error:", err?.message);
+    }
+  }
+
+  const localList = await readLocalSubscribers();
+  const target = localList.find((u) => u.telegram_user_id === telegramUserId);
+  if (target) {
+    target.notifications_enabled = enabled;
+    target.updated_at = now;
+  } else {
+    localList.push({
+      telegram_user_id: telegramUserId,
+      language: "uz",
+      notifications_enabled: enabled,
+      created_at: now,
+      updated_at: now,
+    });
+  }
+  await writeLocalSubscribers(localList);
+  return true;
+}
+
+/**
+ * Retrieve a single Telegram subscriber.
+ */
+export async function getTelegramUser(telegramUserId: number): Promise<TelegramSubscriber | null> {
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabaseAdmin
+        .from("telegram_users")
+        .select("*")
+        .eq("telegram_user_id", telegramUserId)
+        .single();
+      if (!error && data) {
+        return data as TelegramSubscriber;
+      }
+    } catch {}
+  }
+
+  const localList = await readLocalSubscribers();
+  return localList.find((u) => u.telegram_user_id === telegramUserId) || null;
+}
+
+/**
+ * Retrieve all subscribers eligible to receive property notifications.
+ */
+export async function getEligibleNotificationSubscribers(): Promise<TelegramSubscriber[]> {
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabaseAdmin
+        .from("telegram_users")
+        .select("*")
+        .eq("notifications_enabled", true);
+      if (!error && Array.isArray(data) && data.length > 0) {
+        return data as TelegramSubscriber[];
+      }
+    } catch {}
+  }
+
+  const localList = await readLocalSubscribers();
+  return localList.filter((u) => u.notifications_enabled === true);
+}
+
+/**
+ * Check if a notification for property has already been successfully sent to user.
+ */
+export async function hasNotificationBeenSent(
+  propertyId: string,
+  telegramUserId: number
+): Promise<boolean> {
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabaseAdmin
+        .from("telegram_property_notifications")
+        .select("id, status")
+        .eq("property_id", propertyId)
+        .eq("telegram_user_id", telegramUserId)
+        .single();
+      if (!error && data && data.status === "sent") {
+        return true;
+      }
+    } catch {}
+  }
+
+  const localRecords = await readLocalNotifications();
+  return localRecords.some(
+    (r) => r.property_id === propertyId && r.telegram_user_id === telegramUserId && r.status === "sent"
+  );
+}
+
+/**
+ * Record the delivery result of a property notification.
+ */
+export async function recordTelegramNotification(record: {
+  property_id: string;
+  telegram_user_id: number;
+  status: "pending" | "sent" | "failed" | "blocked";
+  telegram_message_id?: number;
+  error_message?: string;
+}): Promise<TelegramPropertyNotificationRecord> {
+  const now = new Date().toISOString();
+  const entry: TelegramPropertyNotificationRecord = {
+    id: `notif-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+    property_id: record.property_id,
+    telegram_user_id: record.telegram_user_id,
+    status: record.status,
+    telegram_message_id: record.telegram_message_id,
+    error_message: record.error_message,
+    sent_at: record.status === "sent" ? now : undefined,
+    created_at: now,
+  };
+
+  if (isSupabaseConfigured) {
+    try {
+      await supabaseAdmin.from("telegram_property_notifications").upsert(
+        {
+          property_id: entry.property_id,
+          telegram_user_id: entry.telegram_user_id,
+          status: entry.status,
+          telegram_message_id: entry.telegram_message_id || null,
+          error_message: entry.error_message || null,
+          sent_at: entry.sent_at || null,
+          created_at: entry.created_at,
+        },
+        { onConflict: "property_id,telegram_user_id" }
+      );
+    } catch (err: any) {
+      console.warn("[TelegramServer] Supabase record notification error:", err?.message);
+    }
+  }
+
+  // Local mirror
+  const localList = await readLocalNotifications();
+  const existingIdx = localList.findIndex(
+    (r) => r.property_id === record.property_id && r.telegram_user_id === record.telegram_user_id
+  );
+  if (existingIdx !== -1) {
+    localList[existingIdx] = {
+      ...localList[existingIdx],
+      ...entry,
+    };
+  } else {
+    localList.push(entry);
+  }
+  await writeLocalNotifications(localList);
+
+  return entry;
+}
+
+/**
+ * Get notification statistics for a specific property.
+ */
+export async function getTelegramNotificationStats(
+  propertyId: string,
+  channelStatus: "not_published" | "published" | "error" = "not_published",
+  channelPostId?: number
+): Promise<TelegramPropertyNotificationStats> {
+  let records: TelegramPropertyNotificationRecord[] = [];
+
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabaseAdmin
+        .from("telegram_property_notifications")
+        .select("*")
+        .eq("property_id", propertyId);
+      if (!error && Array.isArray(data)) {
+        records = data as TelegramPropertyNotificationRecord[];
+      }
+    } catch {}
+  }
+
+  if (records.length === 0) {
+    const localList = await readLocalNotifications();
+    records = localList.filter((r) => r.property_id === propertyId);
+  }
+
+  let sentCount = 0;
+  let failedCount = 0;
+  let blockedCount = 0;
+  let lastSentAt: string | undefined = undefined;
+
+  for (const r of records) {
+    if (r.status === "sent") {
+      sentCount++;
+      if (!lastSentAt || (r.sent_at && r.sent_at > lastSentAt)) {
+        lastSentAt = r.sent_at;
+      }
+    } else if (r.status === "blocked") {
+      blockedCount++;
+    } else if (r.status === "failed") {
+      failedCount++;
+    }
+  }
+
+  return {
+    property_id: propertyId,
+    channel_status: channelStatus,
+    channel_post_id: channelPostId,
+    total_recipients: records.length,
+    sent_count: sentCount,
+    failed_count: failedCount,
+    blocked_count: blockedCount,
+    last_sent_at: lastSentAt,
+  };
+}
+
+/**
+ * Send photo with caption and inline keyboard to Telegram chat.
+ */
+export async function sendTelegramPhoto(
+  chatId: number | string,
+  photoUrl: string,
+  caption: string,
+  replyMarkup?: any,
+  botToken?: string
+): Promise<{ ok: boolean; result?: any; description?: string; error_code?: number }> {
+  const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not configured");
+
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        photo: photoUrl,
+        caption: caption,
+        reply_markup: replyMarkup,
+      }),
+    });
+
+    return await response.json();
+  } catch (err: any) {
+    return { ok: false, description: err?.message || "Network error" };
+  }
+}
+
+/**
+ * Send direct text message with optional inline keyboard to Telegram chat.
+ */
+export async function sendTelegramDirectMessage(
+  chatId: number | string,
+  text: string,
+  replyMarkup?: any,
+  botToken?: string
+): Promise<{ ok: boolean; result?: any; description?: string; error_code?: number }> {
+  const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not configured");
+
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: text,
+        reply_markup: replyMarkup,
+      }),
+    });
+
+    return await response.json();
+  } catch (err: any) {
+    return { ok: false, description: err?.message || "Network error" };
+  }
+}
+

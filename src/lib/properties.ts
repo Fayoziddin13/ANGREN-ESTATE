@@ -3,6 +3,7 @@ import path from "path";
 import { Property, PropertyStatus, TransactionType, PropertyType } from "./types";
 import { supabase, isSupabaseConfigured } from "./supabase";
 import { supabaseAdmin } from "./supabaseServer";
+import { queuePropertyNotification } from "./telegramNotifications";
 
 export interface PropertyFilterParams {
   transaction_type?: TransactionType | "all";
@@ -143,7 +144,11 @@ export function mapRowToProperty(row: any): Property {
       contacts_count: Number(row.contacts_count || 0),
       created_at: row.created_at || new Date().toISOString(),
       updated_at: row.updated_at || new Date().toISOString(),
-      published_at: row.published_at || undefined,
+      published_at: row.published_at || amens?.published_at || undefined,
+      first_published_at: row.first_published_at || amens?.first_published_at || (row.status === "published" ? row.created_at : undefined),
+      telegram_notified_at: row.telegram_notified_at || amens?.telegram_notified_at || undefined,
+      telegram_channel_status: row.telegram_channel_status || amens?.telegram_channel_status || "not_published",
+      telegram_channel_post_id: row.telegram_channel_post_id || amens?.telegram_channel_post_id || undefined,
       hudud_id: row.hudud_id || amens?.hudud_id || row.district || undefined,
       is_top: Boolean(row.is_top ?? amens?.is_top ?? (row.id === "prop-1" || row.id === "prop-4")),
       is_fast_sale: Boolean(row.is_fast_sale ?? amens?.is_fast_sale ?? (row.id === "prop-2")),
@@ -202,6 +207,11 @@ export function mapPropertyToDb(data: any): Record<string, any> {
   if (data.is_top !== undefined) baseAmenities.is_top = Boolean(data.is_top);
   if (data.is_fast_sale !== undefined) baseAmenities.is_fast_sale = Boolean(data.is_fast_sale);
   if (data.is_good_deal !== undefined) baseAmenities.is_good_deal = Boolean(data.is_good_deal);
+  if (data.first_published_at) baseAmenities.first_published_at = data.first_published_at;
+  if (data.telegram_notified_at) baseAmenities.telegram_notified_at = data.telegram_notified_at;
+  if (data.telegram_channel_status) baseAmenities.telegram_channel_status = data.telegram_channel_status;
+  if (data.telegram_channel_post_id) baseAmenities.telegram_channel_post_id = data.telegram_channel_post_id;
+  if (data.published_at) baseAmenities.published_at = data.published_at;
   if (data.hudud_id) baseAmenities.hudud_id = data.hudud_id;
   if (Array.isArray(data.badges)) baseAmenities.badges = data.badges;
   if (data.amenities?.property_features) baseAmenities.property_features = data.amenities.property_features;
@@ -513,9 +523,17 @@ export async function createProperty(
       .slice(0, 45)}-${Date.now().toString().slice(-6)}`;
 
   const now = new Date().toISOString();
-  const dbPayload = mapPropertyToDb({ ...data, id, slug });
+  const isPublishing = data.status === "published";
+  const dbPayload = mapPropertyToDb({
+    ...data,
+    id,
+    slug,
+    first_published_at: isPublishing ? (data.first_published_at || now) : data.first_published_at,
+  });
   dbPayload.created_at = now;
-  dbPayload.published_at = data.status === "published" ? now : null;
+  dbPayload.published_at = isPublishing ? now : null;
+
+  let createdResult: Property | null = null;
 
   if (isSupabaseConfigured) {
     try {
@@ -530,19 +548,28 @@ export async function createProperty(
         // Also mirror to local file for offline resilience
         const all = await readCanonicalLocal();
         await writeCanonicalLocal([result, ...all.filter((p) => p.id !== id)]);
-        return result;
+        createdResult = result;
+      } else {
+        console.warn("[Supabase] createProperty error:", error?.message);
       }
-      console.warn("[Supabase] createProperty error:", error?.message);
     } catch (err) {
       console.warn("[Supabase] createProperty exception:", err);
     }
   }
 
-  // Local fallback
-  const createdProp = mapRowToProperty(dbPayload);
-  const all = await readCanonicalLocal();
-  await writeCanonicalLocal([createdProp, ...all.filter((p) => p.id !== id)]);
-  return createdProp;
+  if (!createdResult) {
+    // Local fallback
+    createdResult = mapRowToProperty(dbPayload);
+    const all = await readCanonicalLocal();
+    await writeCanonicalLocal([createdResult, ...all.filter((p) => p.id !== id)]);
+  }
+
+  // Trigger Telegram notification only if created directly as published
+  if (isPublishing && createdResult) {
+    queuePropertyNotification(createdResult);
+  }
+
+  return createdResult;
 }
 
 /**
@@ -557,19 +584,33 @@ export async function updateProperty(
   const base = existing || (await readCanonicalLocal()).find((p) => p.id === id);
   if (!base) return null;
 
+  const isFirstTimePublish =
+    updates.status === "published" &&
+    base.status !== "published" &&
+    !base.first_published_at &&
+    !base.telegram_notified_at;
+
+  const now = new Date().toISOString();
+  const firstPublishedAt = isFirstTimePublish
+    ? now
+    : updates.first_published_at || base.first_published_at;
+
   const mergedData: Property = {
     ...base,
     ...updates,
     id,
-    updated_at: new Date().toISOString(),
+    updated_at: now,
+    first_published_at: firstPublishedAt,
     published_at:
       updates.status === "published" && base.status !== "published"
-        ? new Date().toISOString()
+        ? now
         : updates.published_at || base.published_at,
   };
 
   const dbUpdates = mapPropertyToDb(mergedData);
   delete dbUpdates.id; // Do not overwrite primary key
+
+  let updatedResult: Property | null = null;
 
   if (isSupabaseConfigured) {
     try {
@@ -584,22 +625,33 @@ export async function updateProperty(
         const result = mapRowToProperty(updated);
         const all = await readCanonicalLocal();
         await writeCanonicalLocal(all.map((p) => (p.id === id ? result : p)));
-        return result;
+        updatedResult = result;
+      } else {
+        console.warn(`[Supabase] updateProperty error for ${id}:`, error?.message);
       }
-      console.warn(`[Supabase] updateProperty error for ${id}:`, error?.message);
     } catch (err) {
       console.warn(`[Supabase] updateProperty exception for ${id}:`, err);
     }
   }
 
-  // Local fallback
-  const all = await readCanonicalLocal();
-  const idx = all.findIndex((p) => p.id === id);
-  if (idx === -1) return null;
+  if (!updatedResult) {
+    // Local fallback
+    const all = await readCanonicalLocal();
+    const idx = all.findIndex((p) => p.id === id);
+    if (idx === -1) return null;
 
-  all[idx] = mergedData;
-  await writeCanonicalLocal(all);
-  return mergedData;
+    all[idx] = mergedData;
+    await writeCanonicalLocal(all);
+    updatedResult = mergedData;
+  }
+
+  // Trigger Telegram notification ONLY on first-time publish transition (draft -> published)
+  // Suppressed on published -> published, published -> sold, or re-publishes
+  if (isFirstTimePublish && updatedResult) {
+    queuePropertyNotification(updatedResult);
+  }
+
+  return updatedResult;
 }
 
 /**

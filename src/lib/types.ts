@@ -92,6 +92,10 @@ export interface Property {
   updated_at?: string;
   created_at: string;
   published_at?: string;
+  first_published_at?: string;
+  telegram_notified_at?: string;
+  telegram_channel_status?: "not_published" | "published" | "error";
+  telegram_channel_post_id?: number;
   images: string[];
   photos?: string[];
   main_image?: string;
@@ -572,5 +576,37 @@ export interface InfrastructureSummary {
   count: number;
   closestDistance: string;
   items: POIItem[];
+}
+
+export interface TelegramSubscriber {
+  telegram_user_id: number;
+  username?: string;
+  first_name?: string;
+  language: "uz" | "ru";
+  notifications_enabled: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TelegramPropertyNotificationRecord {
+  id: string;
+  property_id: string;
+  telegram_user_id: number;
+  status: "pending" | "sent" | "failed" | "blocked";
+  telegram_message_id?: number;
+  error_message?: string;
+  sent_at?: string;
+  created_at: string;
+}
+
+export interface TelegramPropertyNotificationStats {
+  property_id: string;
+  channel_status: "not_published" | "published" | "error";
+  channel_post_id?: number;
+  total_recipients: number;
+  sent_count: number;
+  failed_count: number;
+  blocked_count: number;
+  last_sent_at?: string;
 }
 
