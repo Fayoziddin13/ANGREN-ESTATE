@@ -43,6 +43,7 @@ import { useFavorites } from "@/lib/favoriteStore";
 import { useCompare } from "@/lib/compareStore";
 import { PropertyInfrastructureSection } from "./PropertyInfrastructureSection";
 import { PropertyGroupedFeaturesView } from "./PropertyGroupedFeaturesView";
+import { PropertyPhotoGalleryModal } from "./PropertyPhotoGalleryModal";
 import { recordPublicLead } from "@/lib/leadClient";
 import { trackEvent } from "@/lib/analytics";
 import {
@@ -71,6 +72,7 @@ export function PropertyDetailModal({
   const { isFavorite, toggleFavorite } = useFavorites();
   const { isInCompare, toggleCompare } = useCompare();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const isFavorited = property ? isFavorite(property.id) : false;
   const isCompared = property ? isInCompare(property.id) : false;
   const [copied, setCopied] = useState(false);
@@ -285,14 +287,22 @@ export function PropertyDetailModal({
           <div className="p-3.5 sm:p-6 space-y-5 sm:space-y-6 min-w-0">
             {/* Gallery Section */}
             <div className="space-y-3">
-              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl bg-gray-100 shadow-sm">
+              <div
+                onClick={() => setIsGalleryOpen(true)}
+                className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl bg-gray-100 shadow-sm cursor-pointer group"
+                title={locale === "uz" ? "Rasmlarni to‘liq ekranda ochish" : "Открыть фото на весь экран"}
+              >
                 <Image
                   src={property.images[activeImageIndex] || property.images[0]}
                   alt={title}
                   fill
                   priority
-                  className="object-cover transition-all duration-300"
+                  className="object-cover transition-all duration-300 group-hover:scale-105"
                 />
+                <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-white text-xs font-bold shadow-sm hover:bg-black/80 transition-colors">
+                  <Maximize2 className="w-3.5 h-3.5" />
+                  <span>{activeImageIndex + 1} / {property.images.length}</span>
+                </div>
               </div>
 
               {/* Thumbnail Bar */}
@@ -742,6 +752,15 @@ export function PropertyDetailModal({
           </div>
         </motion.div>
       </div>
+
+      {/* Fullscreen Photo Gallery Modal */}
+      <PropertyPhotoGalleryModal
+        images={property.images}
+        initialIndex={activeImageIndex}
+        isOpen={isGalleryOpen}
+        onClose={() => setIsGalleryOpen(false)}
+        title={title}
+      />
     </AnimatePresence>
   );
 }

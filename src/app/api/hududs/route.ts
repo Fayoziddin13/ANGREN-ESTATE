@@ -31,6 +31,11 @@ export async function GET() {
 
     if (districtsRes.data && districtsRes.data.length > 0) {
       const hududs: HududItem[] = districtsRes.data.map((d: any) => {
+        const defaultMatch = DEFAULT_ANGREN_HUDUDS.find(
+          (def) =>
+            def.id.toLowerCase() === (d.id || "").toLowerCase() ||
+            def.name_uz.toLowerCase() === (d.name_uz || "").toLowerCase()
+        );
         return {
           id: d.id,
           city_id: d.city_id || "angren",
@@ -40,7 +45,8 @@ export async function GET() {
           longitude: Number(d.longitude || 70.1436),
           display_order: d.display_order ?? 99,
           created_at: d.created_at,
-          coordinates: polygonMap[d.id] || polygonMap[d.name_uz] || undefined,
+          coordinates: polygonMap[d.id] || polygonMap[d.name_uz] || defaultMatch?.coordinates || undefined,
+          mahallas: defaultMatch?.mahallas || [],
         };
       });
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSessionServer, verifyAdminSessionToken } from "@/lib/admin-auth";
 import { supabaseAdmin } from "@/lib/supabaseServer";
-import { calculatePolygonCentroid } from "@/lib/hududService";
+import { calculatePolygonCentroid, DEFAULT_ANGREN_HUDUDS } from "@/lib/hududService";
 import { HududItem } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -190,17 +190,25 @@ export async function GET(req: NextRequest) {
 
     const polygonsMap = settings?.value && typeof settings.value === "object" ? settings.value : {};
 
-    const hududs: HududItem[] = (districts || []).map((d) => ({
-      id: d.id,
-      city_id: d.city_id,
-      name_uz: d.name_uz,
-      name_ru: d.name_ru || d.name_uz,
-      latitude: d.latitude,
-      longitude: d.longitude,
-      coordinates: polygonsMap[d.id]?.coordinates || undefined,
-      display_order: d.display_order,
-      created_at: d.created_at,
-    }));
+    const hududs: HududItem[] = (districts || []).map((d) => {
+      const defaultMatch = DEFAULT_ANGREN_HUDUDS.find(
+        (def) =>
+          def.id.toLowerCase() === (d.id || "").toLowerCase() ||
+          def.name_uz.toLowerCase() === (d.name_uz || "").toLowerCase()
+      );
+      return {
+        id: d.id,
+        city_id: d.city_id,
+        name_uz: d.name_uz,
+        name_ru: d.name_ru || d.name_uz,
+        latitude: d.latitude,
+        longitude: d.longitude,
+        coordinates: polygonsMap[d.id]?.coordinates || defaultMatch?.coordinates || undefined,
+        display_order: d.display_order,
+        created_at: d.created_at,
+        mahallas: defaultMatch?.mahallas || [],
+      };
+    });
 
     return NextResponse.json({ success: true, hududs });
   } catch (err: any) {

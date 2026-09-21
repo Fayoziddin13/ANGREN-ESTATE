@@ -111,40 +111,41 @@ export function AngrenMap({
       .catch(() => {});
   }, []);
 
-  // Helper to format short price on marker pill
+  // Helper to format price on marker pin on the map
   const formatMarkerPrice = useCallback(
     (priceUzs: number, isSale: boolean): string => {
       if (currency === "USD") {
         const usd = Math.round(priceUzs / exchangeRate);
-        if (usd >= 1000000) {
-          const m = usd / 1000000;
-          const fmt = m % 1 === 0 ? m.toString() : m.toFixed(1);
-          return isSale ? `$${fmt}M` : `$${fmt}M/oy`;
+        // Fully formatted USD with thousands separator, NEVER shortened (e.g. $33,500, not $33.5K)
+        const formattedUsd = usd.toLocaleString("en-US");
+        if (isSale) {
+          return `$${formattedUsd}`;
         }
-        if (usd >= 1000) {
-          const k = Math.round(usd / 1000);
-          return isSale ? `$${k}k` : `$${usd}/oy`;
-        }
-        return isSale ? `$${usd}` : `$${usd}/oy`;
+        return locale === "uz" ? `$${formattedUsd}/oy` : `$${formattedUsd}/мес`;
       }
 
-      // UZS
+      // UZS: Convenient compact format (e.g. 400 млн сум / 400 mln so‘m, 1.2 млрд сум / 1.2 mlrd so‘m)
+      const suffixMln = locale === "uz" ? "mln so‘m" : "млн сум";
+      const suffixMlrd = locale === "uz" ? "mlrd so‘m" : "млрд сум";
+      const rentSuffix = locale === "uz" ? "/oy" : "/мес";
+
       if (priceUzs >= 1000000000) {
         const mlrd = priceUzs / 1000000000;
         const fmt = mlrd % 1 === 0 ? mlrd.toString() : mlrd.toFixed(1);
-        return isSale ? `${fmt} mlrd` : `${fmt} mlrd/oy`;
+        return isSale ? `${fmt} ${suffixMlrd}` : `${fmt} ${suffixMlrd}${rentSuffix}`;
       }
 
       const mln = priceUzs / 1000000;
       if (mln >= 1) {
         const fmt = mln % 1 === 0 ? mln.toString() : mln.toFixed(1);
-        return isSale ? `${fmt} mln` : `${fmt} mln/oy`;
+        return isSale ? `${fmt} ${suffixMln}` : `${fmt} ${suffixMln}${rentSuffix}`;
       }
 
       const k = Math.round(priceUzs / 1000);
-      return isSale ? `${k} ming` : `${k} ming/oy`;
+      const suffixMing = locale === "uz" ? "ming so‘m" : "тыс. сум";
+      return isSale ? `${k} ${suffixMing}` : `${k} ${suffixMing}${rentSuffix}`;
     },
-    [currency, exchangeRate]
+    [currency, exchangeRate, locale]
   );
 
   // 1. Initialize MapLibre GL Map with Real 3D Perspective

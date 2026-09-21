@@ -48,6 +48,7 @@ import { useFavorites } from "@/lib/favoriteStore";
 import { useCompare } from "@/lib/compareStore";
 import { PropertyInfrastructureSection } from "./PropertyInfrastructureSection";
 import { PropertyGroupedFeaturesView } from "./PropertyGroupedFeaturesView";
+import { PropertyPhotoGalleryModal } from "./PropertyPhotoGalleryModal";
 import { getPropertyRepository } from "@/lib/repository/propertyRepository";
 import { Property } from "@/lib/types";
 import { trackEvent } from "@/lib/analytics";
@@ -103,6 +104,7 @@ export default function PropertyDetailView({
   const isCompared = property ? isInCompare(property.id) : false;
   const [loading, setLoading] = useState(!initialProperty);
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -344,14 +346,22 @@ export default function PropertyDetailView({
               {/* Photo Gallery */}
               <div className="rounded-3xl overflow-hidden bg-white border border-gray-200/80 shadow-card">
                 {/* Main Large Image */}
-                <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full overflow-hidden bg-gray-900 group">
+                <div
+                  onClick={() => setIsGalleryOpen(true)}
+                  className="relative aspect-[16/10] sm:aspect-[16/9] w-full overflow-hidden bg-gray-900 group cursor-pointer"
+                  title={locale === "uz" ? "Rasmlarni to‘liq ekranda ochish" : "Открыть фото на весь экран"}
+                >
                   <Image
                     src={property.images[activePhotoIndex] || property.images[0]}
                     alt={title}
                     fill
                     priority
-                    className="object-cover transition-transform duration-500"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
+                  <div className="absolute bottom-4 right-4 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-white text-xs font-bold shadow-sm hover:bg-black/80 transition-colors">
+                    <Maximize2 className="w-3.5 h-3.5" />
+                    <span>{activePhotoIndex + 1} / {property.images.length}</span>
+                  </div>
 
                   {/* Badges Overlay */}
                   <div className="absolute top-4 left-4 z-10 flex flex-wrap items-center gap-2">
@@ -814,6 +824,17 @@ export default function PropertyDetailView({
           </div>
         </div>
       </main>
+
+      {/* Fullscreen Photo Gallery Modal */}
+      {property && (
+        <PropertyPhotoGalleryModal
+          images={property.images}
+          initialIndex={activePhotoIndex}
+          isOpen={isGalleryOpen}
+          onClose={() => setIsGalleryOpen(false)}
+          title={title}
+        />
+      )}
 
       <Footer />
     </div>

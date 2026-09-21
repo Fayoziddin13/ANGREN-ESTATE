@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 
 export const ANGREN_CENTER = {
-  lat: 41.0167,
-  lng: 70.1436,
+  lat: 41.012277,
+  lng: 70.085182,
 };
 
 export const ANGREN_RADIUS_KM = 18;

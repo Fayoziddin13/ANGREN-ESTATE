@@ -19,8 +19,8 @@ const MAP_DIMENSION_KEY = "angren_map_dimension_v1";
 const MAP_MODE_EVENT = "angren_map_mode_change";
 const MAP_DIMENSION_EVENT = "angren_map_dimension_change";
 
-// Angren urban residential center (5-, 6-, 7-mavze and Central districts)
-export const DEFAULT_ANGREN_CENTER: [number, number] = [41.0185, 70.1340];
+// Angren official center point
+export const DEFAULT_ANGREN_CENTER: [number, number] = [41.012277, 70.085182];
 export const DEFAULT_MAP_ZOOM = 13.8;
 export const DEFAULT_MAP_PITCH_3D = 45;
 export const DEFAULT_MAP_PITCH_2D = 0;

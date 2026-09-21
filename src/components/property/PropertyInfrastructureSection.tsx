@@ -20,6 +20,8 @@ import {
   Fuel,
   Dumbbell,
   Shield,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import {
@@ -48,6 +50,26 @@ export function PropertyInfrastructureSection({
     getInfrastructureAround(latitude, longitude, MAX_INFRASTRUCTURE_RADIUS_METERS, locale)
   );
   const [loading, setLoading] = useState<boolean>(false);
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+
+  // Auto-expand first category when data arrives if none are expanded
+  useEffect(() => {
+    if (summaries.length > 0) {
+      setExpandedCategories((prev) => {
+        if (Object.keys(prev).length === 0) {
+          return { [summaries[0].category]: true };
+        }
+        return prev;
+      });
+    }
+  }, [summaries]);
+
+  const toggleCategory = (category: string) => {
+    setExpandedCategories((prev) => ({
+      ...prev,
+      [category]: !prev[category],
+    }));
+  };
 
   // Fetch real infrastructure from server API when coordinates change
   useEffect(() => {
@@ -199,69 +221,82 @@ export function PropertyInfrastructureSection({
         </div>
       )}
 
-      {/* Categories Filter Pills */}
-      {totalCount > 0 && (
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
-          <button
-            type="button"
-            onClick={() => setSelectedCategory("all")}
-            className={`px-2.5 py-1 rounded-xl font-bold whitespace-nowrap transition-all text-[11px] ${
-              selectedCategory === "all"
-                ? "bg-[#16543C] text-white shadow-xs"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-            }`}
-          >
-            {locale === "uz" ? "Barchasi" : "Все"} ({totalCount})
-          </button>
-          {summaries.map((s) => (
-            <button
-              key={s.category}
-              type="button"
-              onClick={() =>
-                setSelectedCategory(selectedCategory === s.category ? "all" : s.category)
-              }
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl font-bold whitespace-nowrap transition-all text-[11px] ${
-                selectedCategory === s.category
-                  ? "bg-[#16543C] text-white shadow-xs"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
-            >
-              <span className="shrink-0">{getCategoryIcon(s.category)}</span>
-              <span>{locale === "uz" ? s.labelUz : s.labelRu}</span>
-              <span className="opacity-75">({s.count})</span>
-            </button>
-          ))}
-        </div>
-      )}
+      {/* Category-Grouped Expandable Infrastructure List */}
+      <div className="space-y-2">
+        {summaries.map((s) => {
+          const isOpen = Boolean(expandedCategories[s.category]);
+          const sortedItems = [...s.items].sort((a, b) => a.distanceMeters - b.distanceMeters);
 
-      {/* Individual Real Infrastructure Items (Icon, Real Name, Category, Exact Distance) */}
-      {filteredItems.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {filteredItems.map((item) => (
+          return (
             <div
-              key={item.id}
-              className="flex items-center justify-between p-2.5 rounded-xl bg-white border border-slate-100 shadow-2xs hover:border-emerald-200/80 transition-all min-w-0"
+              key={s.category}
+              className="rounded-2xl border border-slate-200/80 bg-white overflow-hidden transition-all shadow-2xs hover:border-emerald-300"
             >
-              <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                <div className="p-1.5 rounded-lg bg-slate-50 border border-slate-200/60 shrink-0">
-                  {getCategoryIcon(item.category)}
-                </div>
-                <div className="min-w-0">
-                  <div className="text-xs font-bold text-slate-900 truncate">
-                    {locale === "uz" ? item.nameUz : item.nameRu}
+              {/* Category Header Row: Icon, Category Name, Count */}
+              <button
+                type="button"
+                onClick={() => toggleCategory(s.category)}
+                className="w-full flex items-center justify-between p-3 sm:p-3.5 text-left transition-colors hover:bg-slate-50/70 select-none"
+              >
+                <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                  <div className="p-1.5 rounded-xl bg-slate-100/90 text-slate-700 shrink-0">
+                    {getCategoryIcon(s.category)}
                   </div>
-                  <div className="text-[10px] font-medium text-slate-400 truncate">
-                    {getCategoryLabel(item.category)}
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-xs sm:text-sm font-extrabold text-slate-900 truncate">
+                      {locale === "uz" ? s.labelUz : s.labelRu}
+                    </span>
+                    <span className="text-xs font-bold text-slate-400">
+                      —
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-[#16543C] text-[11px] font-black shrink-0">
+                      {s.count}
+                    </span>
                   </div>
                 </div>
-              </div>
-              <span className="text-xs font-black text-[#16543C] bg-emerald-50/80 px-2 py-1 rounded-md shrink-0 whitespace-nowrap">
-                {item.formattedDistance}
-              </span>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-[11px] font-semibold text-slate-400 hidden sm:inline">
+                    {locale === "uz" ? `Eng yaqini: ${s.closestDistance}` : `Ближайший: ${s.closestDistance}`}
+                  </span>
+                  <div className={`p-1 rounded-lg text-slate-400 transition-transform duration-200 ${isOpen ? "rotate-180 text-emerald-700" : ""}`}>
+                    <ChevronDown className="w-4 h-4" />
+                  </div>
+                </div>
+              </button>
+
+              {/* Items List Inside Expanded Category: Real name, category, distance (sorted nearest to farthest) */}
+              {isOpen && (
+                <div className="px-3 sm:px-4 pb-3 pt-1 border-t border-slate-100 bg-slate-50/50 divide-y divide-slate-100/80">
+                  {sortedItems.map((item, idx) => (
+                    <div
+                      key={item.id}
+                      className="py-2 flex items-center justify-between gap-3 text-xs"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-[11px] font-mono font-bold text-slate-400 w-4 text-right shrink-0">
+                          {idx + 1}.
+                        </span>
+                        <div className="min-w-0">
+                          <span className="font-bold text-slate-800 truncate block">
+                            {locale === "uz" ? item.nameUz : item.nameRu}
+                          </span>
+                          <span className="text-[10px] font-medium text-slate-400 truncate block">
+                            {getCategoryLabel(item.category)}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="font-black text-[#16543C] shrink-0 text-xs bg-white px-2 py-0.5 rounded-md border border-slate-200/60 shadow-2xs">
+                        {item.formattedDistance}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          ))}
-        </div>
-      )}
+          );
+        })}
+      </div>
     </div>
   );
 }

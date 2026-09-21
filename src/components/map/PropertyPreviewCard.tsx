@@ -69,7 +69,7 @@ export function PropertyPreviewCard({
       {/* Property Image with Clickable trigger for details */}
       <div
         onClick={() => onViewDetails(property)}
-        className="relative aspect-[16/10] w-full overflow-hidden bg-gray-100 cursor-pointer group"
+        className="relative aspect-[3/4] w-full overflow-hidden bg-gray-100 cursor-pointer group"
       >
         <Image
           src={property.images[0]}
@@ -80,6 +80,14 @@ export function PropertyPreviewCard({
           priority={false}
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
+
+        {/* Photo Counter Badge */}
+        {property.images && property.images.length > 0 && (
+          <div className="absolute bottom-2.5 right-2.5 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[10px] font-bold shadow-sm">
+            <Maximize2 className="w-3 h-3" />
+            <span>1 / {property.images.length}</span>
+          </div>
+        )}
 
         {/* Transaction & Property Type Badges */}
         <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5">

@@ -74,6 +74,14 @@ export const DEFAULT_ANGREN_HUDUDS: HududItem[] = [
       [41.015, 70.148],
       [41.014, 70.14],
     ],
+    mahallas: [
+      "Yoshlik MFY",
+      "Bo‘ston MFY",
+      "Ozodlik MFY",
+      "Navro‘z MFY",
+      "Istiqlol MFY",
+      "Oydin MFY",
+    ],
   },
   {
     id: "5-mavze",
@@ -89,6 +97,15 @@ export const DEFAULT_ANGREN_HUDUDS: HududItem[] = [
       [41.015, 70.142],
       [41.01, 70.142],
       [41.01, 70.134],
+    ],
+    mahallas: [
+      "5/1 kvartal",
+      "5/2 kvartal",
+      "5/3 kvartal",
+      "5/4 kvartal",
+      "Fayzobod MFY",
+      "Tolbuloq MFY",
+      "Ziyokor MFY",
     ],
   },
   {
@@ -106,6 +123,13 @@ export const DEFAULT_ANGREN_HUDUDS: HududItem[] = [
       [41.016, 70.136],
       [41.016, 70.128],
     ],
+    mahallas: [
+      "6/1 kvartal",
+      "6/2 kvartal",
+      "6/3 kvartal",
+      "Gulzor MFY",
+      "Ma’rifat MFY",
+    ],
   },
   {
     id: "7-mavze",
@@ -121,6 +145,13 @@ export const DEFAULT_ANGREN_HUDUDS: HududItem[] = [
       [41.027, 70.13],
       [41.021, 70.13],
       [41.021, 70.122],
+    ],
+    mahallas: [
+      "7/1 kvartal",
+      "7/2 kvartal",
+      "Chotqol MFY",
+      "Bog‘i Surx MFY",
+      "Yangi Bog‘i Surx MFY",
     ],
   },
   {
@@ -138,6 +169,12 @@ export const DEFAULT_ANGREN_HUDUDS: HududItem[] = [
       [41.032, 70.182],
       [41.032, 70.168],
     ],
+    mahallas: [
+      "Dukkent MFY",
+      "Nurchi MFY",
+      "Konchi MFY",
+      "Obliq MFY",
+    ],
   },
   {
     id: "geolog",
@@ -154,6 +191,12 @@ export const DEFAULT_ANGREN_HUDUDS: HududItem[] = [
       [41.004, 70.16],
       [41.004, 70.15],
     ],
+    mahallas: [
+      "Geolog MFY",
+      "Qorabog‘ MFY",
+      "Jigariston MFY",
+      "Xakkarman MFY",
+    ],
   },
   {
     id: "yangiobod",
@@ -169,6 +212,11 @@ export const DEFAULT_ANGREN_HUDUDS: HududItem[] = [
       [41.046, 70.116],
       [41.038, 70.116],
       [41.038, 70.1],
+    ],
+    mahallas: [
+      "Yangiobod MFY",
+      "Tut MFY",
+      "Do‘stlik MFY",
     ],
   },
 ];

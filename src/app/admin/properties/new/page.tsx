@@ -52,6 +52,7 @@ import {
   Waves,
   DoorClosed,
   Pencil,
+  MoreVertical,
   GraduationCap,
   Cross,
   ShoppingCart,
@@ -187,6 +188,7 @@ export default function AddPropertyPage() {
   const [editingHudud, setEditingHudud] = useState<HududItem | null>(null);
   const [hududUsageCount, setHududUsageCount] = useState<number>(0);
   const [isCheckingUsage, setIsCheckingUsage] = useState<boolean>(false);
+  const [activeHududMenuId, setActiveHududMenuId] = useState<string | null>(null);
 
   // STEP 4: Dinamik Parametrlar
   // 4A Kvartira
@@ -1655,37 +1657,103 @@ export default function AddPropertyPage() {
                         <span className="truncate">{locale === "uz" ? h.name_uz : h.name_ru}</span>
                         {isSelected && <Check className="w-3.5 h-3.5 text-[#16543C] shrink-0 ml-1" />}
                       </button>
-                      <div className="flex items-center gap-1 shrink-0">
+                      <div className="relative shrink-0">
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setEditingHudud(h);
-                            setIsHududModalOpen(true);
+                            setActiveHududMenuId(activeHududMenuId === h.id ? null : h.id);
                           }}
-                          title={locale === "uz" ? "Hududni tahrirlash" : "Редактировать район"}
-                          className="p-1 rounded-lg hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors"
+                          title={locale === "uz" ? "Amallar" : "Действия"}
+                          className="p-1.5 rounded-lg hover:bg-slate-200/70 text-slate-500 hover:text-slate-800 transition-colors"
                         >
-                          <Pencil className="w-3.5 h-3.5" />
+                          <MoreVertical className="w-3.5 h-3.5" />
                         </button>
-                        {!isProtected && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handlePromptDeleteHudud(h);
-                            }}
-                            title={locale === "uz" ? "Hududni o‘chirish" : "Удалить район"}
-                            className="p-1 rounded-lg hover:bg-rose-100 text-rose-500 hover:text-rose-700 transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+
+                        {activeHududMenuId === h.id && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-20"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveHududMenuId(null);
+                              }}
+                            />
+                            <div
+                              className="absolute right-0 top-full mt-1 z-30 w-36 bg-white rounded-xl shadow-xl border border-slate-200 py-1 text-xs animate-in fade-in"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActiveHududMenuId(null);
+                                  setEditingHudud(h);
+                                  setIsHududModalOpen(true);
+                                }}
+                                className="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-slate-50 text-slate-700 font-medium transition-colors"
+                              >
+                                <Pencil className="w-3.5 h-3.5 text-slate-500" />
+                                <span>{locale === "uz" ? "Tahrirlash" : "Редактировать"}</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActiveHududMenuId(null);
+                                  handlePromptDeleteHudud(h);
+                                }}
+                                className="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-rose-50 text-rose-600 font-medium transition-colors"
+                              >
+                                <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                                <span>{locale === "uz" ? "O‘chirish" : "Удалить"}</span>
+                              </button>
+                            </div>
+                          </>
                         )}
                       </div>
                     </div>
                   );
                 })}
               </div>
+
+              {/* Selected Hudud authentic mahallas & massifs */}
+              {(() => {
+                const currentHudud = hududList.find((h) => h.id === hududId || h.name_uz === district);
+                if (!currentHudud?.mahallas || currentHudud.mahallas.length === 0) return null;
+                return (
+                  <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                        {locale === "uz"
+                          ? `«${currentHudud.name_uz}» hududining rasmiy mahalla va mavzelari:`
+                          : `Официальные махалли и массивы района «${currentHudud.name_ru || currentHudud.name_uz}»:`}
+                      </span>
+                      <span className="text-[11px] text-slate-400 font-medium">
+                        {currentHudud.mahallas.length} {locale === "uz" ? "ta hududiy birlik" : "ед."}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {currentHudud.mahallas.map((m) => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => {
+                            if (!addressUz.includes(m)) {
+                              setAddressUz(addressUz ? `${addressUz}, ${m}` : `Angren sh., ${m}`);
+                            }
+                            if (!addressRu.includes(m)) {
+                              setAddressRu(addressRu ? `${addressRu}, ${m}` : `г. Ангрен, ${m}`);
+                            }
+                          }}
+                          title={locale === "uz" ? "Manzilga qo‘shish uchun bosing" : "Нажмите, чтобы добавить в адрес"}
+                          className="px-2.5 py-1 rounded-lg bg-white border border-slate-200/90 text-xs font-semibold text-slate-700 hover:border-[#16543C] hover:text-[#16543C] hover:bg-emerald-50/50 shadow-xs transition-colors"
+                        >
+                          + {m}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Hudud deletion confirmation modal */}
               {hududToDelete && (

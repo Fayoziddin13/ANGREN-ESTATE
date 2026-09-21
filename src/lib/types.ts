@@ -140,6 +140,7 @@ export interface HududItem {
   coordinates?: [number, number][];
   display_order?: number;
   created_at?: string;
+  mahallas?: string[];
 }
 
 export interface Favorite {

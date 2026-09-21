@@ -22,6 +22,7 @@ import { TransactionType, PropertyType, Property } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
 import { useMapMode } from "@/lib/mapStore";
 import { AdvancedFilterState, defaultAdvancedFilters } from "@/components/map/AdvancedFiltersModal";
+import { DEFAULT_ANGREN_HUDUDS } from "@/lib/hududService";
 import { List, ChevronDown, Map, Layers, Search, SlidersHorizontal } from "lucide-react";
 
 function MapLoadingPlaceholder() {
@@ -216,8 +217,33 @@ export default function HomePage() {
         return false;
       }
       // District Filter
-      if (selectedDistrict !== "all" && p.district_name_uz !== selectedDistrict) {
-        return false;
+      if (selectedDistrict !== "all") {
+        const hududMatch = DEFAULT_ANGREN_HUDUDS.find(
+          (h) =>
+            h.name_uz.toLowerCase() === selectedDistrict.toLowerCase() ||
+            h.id.toLowerCase() === selectedDistrict.toLowerCase() ||
+            h.name_ru.toLowerCase() === selectedDistrict.toLowerCase()
+        );
+        const matchesDistrict =
+          p.district_name_uz === selectedDistrict ||
+          p.district_name_ru === selectedDistrict ||
+          p.district === selectedDistrict ||
+          p.hudud_id === selectedDistrict ||
+          (hududMatch && p.hudud_id === hududMatch.id) ||
+          (hududMatch && (p.district_name_uz === hududMatch.name_uz || p.district === hududMatch.name_uz)) ||
+          (hududMatch?.mahallas &&
+            hududMatch.mahallas.some(
+              (m) =>
+                (p.address_uz && p.address_uz.toLowerCase().includes(m.toLowerCase())) ||
+                (p.address_ru && p.address_ru.toLowerCase().includes(m.toLowerCase())) ||
+                (p.neighborhood && p.neighborhood.toLowerCase().includes(m.toLowerCase())) ||
+                (p.title_uz && p.title_uz.toLowerCase().includes(m.toLowerCase())) ||
+                (p.title_ru && p.title_ru.toLowerCase().includes(m.toLowerCase()))
+            ));
+
+        if (!matchesDistrict) {
+          return false;
+        }
       }
       // Type Filter
       if (selectedType !== "all" && p.property_type !== selectedType) {

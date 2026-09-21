@@ -13,6 +13,7 @@ import { useFavorites } from "@/lib/favoriteStore";
 import { useCompare } from "@/lib/compareStore";
 import { formatPrice } from "@/lib/currency";
 import { getPropertyTitle, getPropertyAddress, isPropertyNew } from "@/lib/propertyFormatters";
+import { PropertyPhotoGalleryModal } from "./PropertyPhotoGalleryModal";
 
 interface PropertyCardProps {
   property: Property;
@@ -27,6 +28,7 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
   const isFavorited = isFavorite(property.id);
   const { isInCompare, toggleCompare } = useCompare();
   const isCompared = isInCompare(property.id);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
 
   const title = getPropertyTitle(property, locale);
   const address = getPropertyAddress(property, locale);
@@ -50,6 +52,12 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
     } else {
       router.push(`/properties/${property.id}`);
     }
+  };
+
+  const handlePhotoClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setIsGalleryOpen(true);
   };
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
@@ -77,8 +85,13 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
       className="group relative flex flex-col overflow-hidden rounded-3xl bg-white border border-gray-100 shadow-card hover:shadow-elevated transition-all duration-300 cursor-pointer"
     >
       
-      {/* Property Image Container */}
-      <div className="relative aspect-[16/10] w-full overflow-hidden bg-gray-100">
+      {/* Property Image Container — 3:4 Vertical Aspect Ratio with Cover & Fullscreen Gallery Trigger */}
+      <div
+        onClick={handlePhotoClick}
+        className="relative aspect-[3/4] w-full overflow-hidden bg-gray-100 cursor-pointer"
+        data-testid={`property-card-photo-${property.id}`}
+        title={locale === "uz" ? "Galereyani to‘liq ekranda ko‘rish" : "Открыть галерею на весь экран"}
+      >
         <Image
           src={property.images[0]}
           alt={title}
@@ -86,6 +99,14 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
+
+        {/* Photo Counter Badge & View Fullscreen Indicator */}
+        {property.images && property.images.length > 0 && (
+          <div className="absolute bottom-2.5 right-2.5 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[10px] font-bold shadow-sm hover:bg-black/80 transition-colors">
+            <Maximize2 className="w-3 h-3" />
+            <span>1 / {property.images.length}</span>
+          </div>
+        )}
 
         {/* Transaction Badge and Marketing Badges (Top Left) */}
         <div className="absolute top-2.5 sm:top-3.5 left-2.5 sm:left-3.5 z-10 flex flex-wrap gap-1 sm:gap-1.5 items-center max-w-[85%]">
@@ -271,6 +292,13 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
 
       </div>
 
+      {/* Fullscreen Photo Gallery Modal */}
+      <PropertyPhotoGalleryModal
+        images={property.images}
+        isOpen={isGalleryOpen}
+        onClose={() => setIsGalleryOpen(false)}
+        title={title}
+      />
     </div>
   );
 }
