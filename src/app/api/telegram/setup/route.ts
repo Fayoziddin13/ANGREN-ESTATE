@@ -67,10 +67,10 @@ export async function POST(req: NextRequest) {
     // 1. Configure Webhook
     const webhookResult = await setTelegramWebhook(token, webhookUrl);
 
-    // 2. Configure Menu Button
+    // 2. Configure Menu Button (🏠 ANGREN ESTATE)
     const menuResult = await setTelegramMenuButton(token, webAppUrl);
 
-    // 3. Configure Commands
+    // 3. Configure Commands (/start, /app)
     const commandsResult = await setTelegramBotCommands(token);
 
     return NextResponse.json({

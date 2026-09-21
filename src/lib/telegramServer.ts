@@ -53,7 +53,6 @@ export function validateTelegramInitData(
       };
     }
 
-    // Sort all key-value pairs alphabetically (excluding 'hash')
     const pairs: string[] = [];
     urlParams.forEach((val, key) => {
       if (key !== "hash") {
@@ -64,19 +63,16 @@ export function validateTelegramInitData(
 
     const dataCheckString = pairs.join("\n");
 
-    // 1. Generate secret key using HMAC-SHA256 of "WebAppData" with botToken
     const secretKey = crypto
       .createHmac("sha256", "WebAppData")
       .update(token)
       .digest();
 
-    // 2. Generate calculated hash using HMAC-SHA256 of dataCheckString with secretKey
     const calculatedHash = crypto
       .createHmac("sha256", secretKey)
       .update(dataCheckString)
       .digest("hex");
 
-    // 3. Timing-safe comparison to prevent timing attacks
     const calculatedBuffer = Buffer.from(calculatedHash, "hex");
     const receivedBuffer = Buffer.from(hash, "hex");
 
@@ -90,7 +86,6 @@ export function validateTelegramInitData(
       };
     }
 
-    // 4. Validate auth_date freshness (allow up to 24 hours to prevent replay attacks)
     const authDateStr = urlParams.get("auth_date");
     const authDate = authDateStr ? parseInt(authDateStr, 10) : 0;
     const now = Math.floor(Date.now() / 1000);
@@ -102,7 +97,6 @@ export function validateTelegramInitData(
       };
     }
 
-    // 5. Parse user data safely
     const userStr = urlParams.get("user");
     let user: TelegramUser | undefined = undefined;
     if (userStr) {
@@ -129,16 +123,13 @@ export function validateTelegramInitData(
 
 /**
  * Configure Telegram Bot Webhook
- * Docs: https://core.telegram.org/bots/api#setwebhook
  */
 export async function setTelegramWebhook(
   botToken?: string,
   webhookUrl: string = "https://angrenestate.uz/api/telegram/webhook"
 ) {
   const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
-  if (!token) {
-    throw new Error("TELEGRAM_BOT_TOKEN is not configured");
-  }
+  if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not configured");
 
   const response = await fetch(
     `https://api.telegram.org/bot${token}/setWebhook`,
@@ -162,16 +153,13 @@ export async function setTelegramWebhook(
 
 /**
  * Configure Telegram Bot Menu Button to open ANGREN ESTATE Web App
- * Docs: https://core.telegram.org/bots/api#setchatmenubutton
  */
 export async function setTelegramMenuButton(
   botToken?: string,
   webAppUrl: string = "https://angrenestate.uz"
 ) {
   const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
-  if (!token) {
-    throw new Error("TELEGRAM_BOT_TOKEN is not configured");
-  }
+  if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not configured");
 
   const response = await fetch(
     `https://api.telegram.org/bot${token}/setChatMenuButton`,
@@ -181,7 +169,7 @@ export async function setTelegramMenuButton(
       body: JSON.stringify({
         menu_button: {
           type: "web_app",
-          text: "ANGREN ESTATE",
+          text: "🏠 ANGREN ESTATE",
           web_app: {
             url: webAppUrl,
           },
@@ -199,13 +187,10 @@ export async function setTelegramMenuButton(
 
 /**
  * Register default bot commands
- * Docs: https://core.telegram.org/bots/api#setmycommands
  */
 export async function setTelegramBotCommands(botToken?: string) {
   const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
-  if (!token) {
-    throw new Error("TELEGRAM_BOT_TOKEN is not configured");
-  }
+  if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not configured");
 
   const response = await fetch(
     `https://api.telegram.org/bot${token}/setMyCommands`,
@@ -235,7 +220,7 @@ export async function setTelegramBotCommands(botToken?: string) {
 }
 
 /**
- * Inspection methods: getMe, getWebhookInfo, getMyCommands, getChatMenuButton
+ * Inspection methods
  */
 export async function getTelegramBotInfo(botToken?: string) {
   const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
@@ -266,8 +251,54 @@ export async function getTelegramMenuButton(botToken?: string) {
 }
 
 /**
+ * Generate standard welcome message payload
+ */
+export function getTelegramWelcomePayload(
+  lang: "uz" | "ru" = "uz",
+  webAppUrl: string = "https://angrenestate.uz"
+) {
+  const isUz = lang === "uz";
+
+  const text = isUz
+    ? "🏠 ANGREN ESTATE — Angren ko‘chmas mulki bir joyda.\n\n" +
+      "📍 Kvartira, uy, yer va tijorat obyektlari.\n" +
+      "🔎 Xarita orqali qidiring va filtrlardan foydalaning.\n" +
+      "💚 Yoqtirgan obyektlaringizni saqlang.\n" +
+      "📞 Mulk egasi yoki rieltor bilan bog‘laning.\n\n" +
+      "Ilovani oching va o‘zingizga mos obyektni toping."
+    : "🏠 ANGREN ESTATE — недвижимость Ангрена в одном месте.\n\n" +
+      "📍 Квартиры, дома, участки и коммерческие объекты.\n" +
+      "🔎 Поиск и фильтры на карте.\n" +
+      "💚 Сохраняйте понравившиеся объекты.\n" +
+      "📞 Связывайтесь с владельцами и риелторами.\n\n" +
+      "Откройте приложение и найдите подходящий объект.";
+
+  const appUrl = isUz ? `${webAppUrl}?lang=uz` : `${webAppUrl}?lang=ru`;
+
+  const reply_markup = {
+    inline_keyboard: [
+      [
+        {
+          text: "🏠 ANGREN ESTATE",
+          web_app: {
+            url: appUrl,
+          },
+        },
+      ],
+      [
+        {
+          text: "🇷🇺 Русский | 🇺🇿 O‘zbekcha",
+          callback_data: isUz ? "lang_ru" : "lang_uz",
+        },
+      ],
+    ],
+  };
+
+  return { text, reply_markup };
+}
+
+/**
  * Send welcome message with Telegram Web App button
- * Uses HTML parse mode for 100% reliable entity parsing
  */
 export async function sendTelegramWelcomeMessage(
   chatId: number | string,
@@ -276,23 +307,10 @@ export async function sendTelegramWelcomeMessage(
   webAppUrl: string = "https://angrenestate.uz"
 ) {
   const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
-  if (!token) {
-    throw new Error("TELEGRAM_BOT_TOKEN is not configured");
-  }
+  if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not configured");
 
-  const isUz = userLanguageCode.startsWith("uz");
-
-  const messageHtml = isUz
-    ? `🏢 <b>ANGREN ESTATE</b> — Angren shahrining rasmiy ko‘chmas mulk platformasi.\n\n` +
-      `Xarita orqali kvartiralar, hovlilar va tijorat binolarini ko‘ring, solishtiring va qulay tanlang.\n\n` +
-      `Ilovani to‘g‘ridan-to‘g‘ri Telegram ichida ochish uchun pastdagi tugmani bosing:`
-    : `🏢 <b>ANGREN ESTATE</b> — официальная платформа недвижимости города Ангрен.\n\n` +
-      `Интерактивная карта, актуальные цены на квартиры, дома и коммерческую недвижимость.\n\n` +
-      `Нажмите кнопку ниже, чтобы открыть приложение прямо в Telegram:`;
-
-  const primaryButtonText = isUz
-    ? "Obyektlarni ko‘rish 📍"
-    : "Открыть ANGREN ESTATE 🏢";
+  const lang = userLanguageCode.startsWith("uz") ? "uz" : "ru";
+  const { text, reply_markup } = getTelegramWelcomePayload(lang, webAppUrl);
 
   const response = await fetch(
     `https://api.telegram.org/bot${token}/sendMessage`,
@@ -301,23 +319,100 @@ export async function sendTelegramWelcomeMessage(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: chatId,
-        text: messageHtml,
-        parse_mode: "HTML",
+        text,
+        reply_markup,
+      }),
+    }
+  );
+
+  return await response.json();
+}
+
+/**
+ * Edit existing welcome message in-place when language toggled
+ */
+export async function editTelegramWelcomeMessage(
+  chatId: number | string,
+  messageId: number,
+  targetLang: "uz" | "ru",
+  botToken?: string,
+  webAppUrl: string = "https://angrenestate.uz"
+) {
+  const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not configured");
+
+  const { text, reply_markup } = getTelegramWelcomePayload(targetLang, webAppUrl);
+
+  const response = await fetch(
+    `https://api.telegram.org/bot${token}/editMessageText`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        message_id: messageId,
+        text,
+        reply_markup,
+      }),
+    }
+  );
+
+  return await response.json();
+}
+
+/**
+ * Acknowledge Telegram callback query
+ */
+export async function answerTelegramCallback(
+  callbackQueryId: string,
+  botToken?: string
+) {
+  const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) return;
+
+  await fetch(`https://api.telegram.org/bot${token}/answerCallbackQuery`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      callback_query_id: callbackQueryId,
+    }),
+  }).catch(() => {});
+}
+
+/**
+ * Send /app direct Mini App button
+ */
+export async function sendTelegramAppMessage(
+  chatId: number | string,
+  userLanguageCode: string = "uz",
+  botToken?: string,
+  webAppUrl: string = "https://angrenestate.uz"
+) {
+  const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not configured");
+
+  const isUz = userLanguageCode.startsWith("uz");
+  const text = isUz
+    ? "🏠 ANGREN ESTATE Mini App:"
+    : "🏠 Приложение ANGREN ESTATE:";
+
+  const appUrl = isUz ? `${webAppUrl}?lang=uz` : `${webAppUrl}?lang=ru`;
+
+  const response = await fetch(
+    `https://api.telegram.org/bot${token}/sendMessage`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
         reply_markup: {
           inline_keyboard: [
             [
               {
-                text: primaryButtonText,
+                text: "🏠 ANGREN ESTATE",
                 web_app: {
-                  url: webAppUrl,
-                },
-              },
-            ],
-            [
-              {
-                text: isUz ? "🇷🇺 Русский" : "🇺🇿 O‘zbekcha",
-                web_app: {
-                  url: `${webAppUrl}?lang=${isUz ? "ru" : "uz"}`,
+                  url: appUrl,
                 },
               },
             ],
