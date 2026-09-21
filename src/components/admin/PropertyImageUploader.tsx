@@ -243,14 +243,14 @@ export function PropertyImageUploader({
         onClick={() => !isUploading && fileInputRef.current?.click()}
         className={`relative border-2 border-dashed rounded-3xl p-6 sm:p-8 text-center transition-all cursor-pointer ${
           isDragging
-            ? "border-[#0c2e1f] bg-[#e5f0eb]/40 ring-4 ring-[#339e71]/30"
-            : "border-slate-200 bg-slate-50/70 hover:bg-slate-50 hover:border-[#339e71]"
+            ? "border-[#167d4f] bg-[#eaf5f0]/40 ring-4 ring-[#2db477]/30"
+            : "border-slate-200 bg-slate-50/70 hover:bg-slate-50 hover:border-[#2db477]"
         } ${isUploading ? "pointer-events-none opacity-80" : ""}`}
       >
         <div className="flex flex-col items-center justify-center space-y-3">
-          <div className="w-14 h-14 rounded-2xl bg-white shadow-xs border border-slate-200 flex items-center justify-center text-[#0c2e1f]">
+          <div className="w-14 h-14 rounded-2xl bg-white shadow-xs border border-slate-200 flex items-center justify-center text-[#167d4f]">
             {isUploading ? (
-              <Loader2 className="w-7 h-7 animate-spin text-[#0c2e1f]" />
+              <Loader2 className="w-7 h-7 animate-spin text-[#167d4f]" />
             ) : (
               <UploadCloud className="w-7 h-7" />
             )}
@@ -277,7 +277,7 @@ export function PropertyImageUploader({
 
           {!isUploading && (
             <div className="pt-1">
-              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0c2e1f] text-white text-xs font-bold shadow-xs hover:bg-[#19573c] transition-colors">
+              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#167d4f] text-white text-xs font-bold shadow-xs hover:bg-[#167d4f] transition-colors">
                 <Plus className="w-3.5 h-3.5" />
                 <span>{locale === "uz" ? "Qurilmadan tanlash" : "Выбрать на устройстве"}</span>
               </span>
@@ -305,8 +305,8 @@ export function PropertyImageUploader({
 
       {/* Success Toast */}
       {successMessage && (
-        <div className="p-3 rounded-2xl bg-[#e5f0eb]/50 border border-[#339e71]/40 flex items-center gap-2 text-xs text-[#0c2e1f] font-bold">
-          <CheckCircle2 className="w-4 h-4 text-[#19573c] shrink-0" />
+        <div className="p-3 rounded-2xl bg-[#eaf5f0]/50 border border-[#2db477]/40 flex items-center gap-2 text-xs text-[#167d4f] font-bold">
+          <CheckCircle2 className="w-4 h-4 text-[#167d4f] shrink-0" />
           <span>{successMessage}</span>
         </div>
       )}
@@ -321,7 +321,7 @@ export function PropertyImageUploader({
         <button
           type="button"
           onClick={() => setShowUrlFallback(!showUrlFallback)}
-          className="text-[#0c2e1f] hover:underline font-bold flex items-center gap-1"
+          className="text-[#167d4f] hover:underline font-bold flex items-center gap-1"
         >
           <Link2 className="w-3 h-3" />
           <span>{showUrlFallback ? (locale === "uz" ? "Yopish" : "Закрыть") : (locale === "uz" ? "URL orqali qo'shish" : "Добавить по URL")}</span>
@@ -341,7 +341,7 @@ export function PropertyImageUploader({
           <button
             type="button"
             onClick={handleAddExternalUrl}
-            className="px-4 py-2 bg-[#0c2e1f] text-white text-xs font-bold rounded-xl hover:bg-[#19573c]"
+            className="px-4 py-2 bg-[#167d4f] text-white text-xs font-bold rounded-xl hover:bg-[#167d4f]"
           >
             {locale === "uz" ? "Qo‘shish" : "Добавить"}
           </button>
@@ -359,7 +359,7 @@ export function PropertyImageUploader({
                 key={idx}
                 className={`relative aspect-[3/4] rounded-2xl overflow-hidden group border transition-all ${
                   isMain
-                    ? "border-[#0c2e1f] ring-2 ring-[#0c2e1f] shadow-md"
+                    ? "border-[#167d4f] ring-2 ring-[#167d4f] shadow-md"
                     : "border-slate-200 hover:border-slate-300"
                 }`}
               >
@@ -378,7 +378,7 @@ export function PropertyImageUploader({
 
                 {/* Main Badge / Indicator */}
                 {isMain ? (
-                  <div className="absolute top-2 left-2 z-10 flex items-center gap-1 px-2.5 py-1 rounded-xl bg-[#0c2e1f] text-white text-[10px] font-black tracking-wide shadow-md">
+                  <div className="absolute top-2 left-2 z-10 flex items-center gap-1 px-2.5 py-1 rounded-xl bg-[#167d4f] text-white text-[10px] font-black tracking-wide shadow-md">
                     <Star className="w-3 h-3 fill-amber-300 text-amber-300" />
                     <span>{locale === "uz" ? "Asosiy" : "Главное"}</span>
                   </div>
@@ -386,7 +386,7 @@ export function PropertyImageUploader({
                   <button
                     type="button"
                     onClick={() => handleSetMain(url)}
-                    className="absolute top-2 left-2 z-10 flex items-center gap-1 px-2 py-1 rounded-xl bg-black/60 hover:bg-[#0c2e1f] text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-all shadow-sm"
+                    className="absolute top-2 left-2 z-10 flex items-center gap-1 px-2 py-1 rounded-xl bg-black/60 hover:bg-[#167d4f] text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-all shadow-sm"
                     title={locale === "uz" ? "Asosiy rasm qilish" : "Сделать главным"}
                   >
                     <Star className="w-3 h-3" />

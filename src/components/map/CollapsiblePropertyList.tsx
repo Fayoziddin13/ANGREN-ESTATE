@@ -73,7 +73,7 @@ export function CollapsiblePropertyList({
               onClick={() => onSelectProperty(p)}
               className={`group flex gap-3 p-2.5 rounded-2xl cursor-pointer transition-all ${
                 isSelected
-                  ? "bg-[#e5f0eb]/40 ring-1.5 ring-[#0c2e1f]"
+                  ? "bg-[#eaf5f0]/40 ring-1.5 ring-[#167d4f]"
                   : "hover:bg-slate-50/80"
               }`}
             >
@@ -85,17 +85,17 @@ export function CollapsiblePropertyList({
                   sizes="100px"
                   className="object-cover"
                 />
-                <span className="absolute top-1 left-1 rounded-md bg-[#0c2e1f] px-1.5 py-0.5 text-[9px] font-bold text-white shadow-xs">
+                <span className="absolute top-1 left-1 rounded-md bg-[#167d4f] px-1.5 py-0.5 text-[9px] font-bold text-white shadow-xs">
                   {isSale ? t.popular.saleBadge : t.popular.rentBadge}
                 </span>
               </div>
 
               <div className="flex-1 flex flex-col justify-between min-w-0">
                 <div>
-                  <div className="text-xs font-black text-[#0c2e1f] truncate">
+                  <div className="text-xs font-black text-[#167d4f] truncate">
                     {priceDisplay}
                   </div>
-                  <h3 className="text-xs font-semibold text-slate-800 truncate group-hover:text-[#0c2e1f] transition-colors">
+                  <h3 className="text-xs font-semibold text-slate-800 truncate group-hover:text-[#167d4f] transition-colors">
                     {title}
                   </h3>
                   <p className="text-[10px] text-slate-500 truncate">{address}</p>
@@ -112,7 +112,7 @@ export function CollapsiblePropertyList({
                       e.stopPropagation();
                       onViewDetails(p);
                     }}
-                    className="flex items-center gap-1 text-[10px] font-bold text-[#0c2e1f] hover:text-[#19573c] transition-colors"
+                    className="flex items-center gap-1 text-[10px] font-bold text-[#167d4f] hover:text-[#167d4f] transition-colors"
                   >
                     <span>{t.propertyCard.details}</span>
                     <ArrowRight className="h-3 w-3" />

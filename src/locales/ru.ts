@@ -3,6 +3,7 @@ import { Dictionary } from "./uz";
 export const ru: Dictionary = {
   common: {
     brandName: "ANGREN ESTATE",
+    brandSubtitle: "РЫНОК НЕДВИЖИМОСТИ",
     tagline: "Недвижимость Ангрена — на единой карте",
     quoteText: "Больше чем просто недвижимость",
     loading: "Загрузка...",

@@ -50,9 +50,9 @@ function getFeatureIcon(iconName: string) {
     case "Wifi":
       return <Wifi className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />;
     case "Warehouse":
-      return <Warehouse className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#0c2e1f]" />;
+      return <Warehouse className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#167d4f]" />;
     case "Trees":
-      return <Trees className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#19573c]" />;
+      return <Trees className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#167d4f]" />;
     case "Archive":
       return <Archive className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600" />;
     case "Home":
@@ -62,7 +62,7 @@ function getFeatureIcon(iconName: string) {
     case "Building":
       return <Building className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600" />;
     case "DoorClosed":
-      return <DoorClosed className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#19573c]" />;
+      return <DoorClosed className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#167d4f]" />;
     case "Wind":
       return <Wind className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-500" />;
     case "Armchair":
@@ -72,18 +72,18 @@ function getFeatureIcon(iconName: string) {
     case "Sparkles":
       return <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />;
     default:
-      return <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#0c2e1f]" />;
+      return <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#167d4f]" />;
   }
 }
 
 function getCategoryIcon(cat: FeatureCategory) {
   switch (cat) {
     case "communications":
-      return <Zap className="w-4 h-4 text-[#0c2e1f]" />;
+      return <Zap className="w-4 h-4 text-[#167d4f]" />;
     case "extra_objects":
-      return <Building className="w-4 h-4 text-[#0c2e1f]" />;
+      return <Building className="w-4 h-4 text-[#167d4f]" />;
     case "advantages":
-      return <Sparkles className="w-4 h-4 text-[#0c2e1f]" />;
+      return <Sparkles className="w-4 h-4 text-[#167d4f]" />;
   }
 }
 
@@ -134,7 +134,7 @@ export function PropertyGroupedFeaturesView({
                   {title}
                 </h3>
               </div>
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#e5f0eb]/50 text-[#0c2e1f]">
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#eaf5f0]/50 text-[#167d4f]">
                 {items.length} {locale === "uz" ? "ta" : "ед."}
               </span>
             </div>
@@ -145,7 +145,7 @@ export function PropertyGroupedFeaturesView({
                 <div
                   key={item.key}
                   data-testid={`feature-item-${item.key}`}
-                  className="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-2xl bg-white border border-slate-100/90 shadow-2xs hover:border-[#c2d3c9] transition-all min-w-0"
+                  className="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-2xl bg-white border border-slate-100/90 shadow-2xs hover:border-[#bdd1c8] transition-all min-w-0"
                 >
                   <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-slate-50 border border-slate-200/60 shrink-0">
                     {getFeatureIcon(item.iconName)}

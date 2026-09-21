@@ -117,13 +117,13 @@ export function PropertyInfrastructureSection({
       case "hospital":
         return <Stethoscope className="h-4 w-4 text-rose-600" />;
       case "pharmacy":
-        return <Cross className="h-4 w-4 text-[#19573c]" />;
+        return <Cross className="h-4 w-4 text-[#167d4f]" />;
       case "supermarket":
         return <ShoppingCart className="h-4 w-4 text-purple-600" />;
       case "bus_stop":
         return <Bus className="h-4 w-4 text-cyan-600" />;
       case "park":
-        return <Trees className="h-4 w-4 text-[#19573c]" />;
+        return <Trees className="h-4 w-4 text-[#167d4f]" />;
       case "atm":
         return <CreditCard className="h-4 w-4 text-slate-700" />;
       case "bank":
@@ -182,12 +182,12 @@ export function PropertyInfrastructureSection({
       {/* Section Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Compass className="h-4 w-4 sm:h-5 sm:w-5 text-[#0c2e1f]" />
+          <Compass className="h-4 w-4 sm:h-5 sm:w-5 text-[#167d4f]" />
           <h3 className="text-sm sm:text-base font-black text-slate-900">
             {locale === "uz" ? "Yaqin infratuzilma" : "Ближайшая инфраструктура"}
           </h3>
           {totalCount > 0 && (
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#e5f0eb] text-[#0c2e1f]">
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#eaf5f0] text-[#167d4f]">
               {totalCount} {locale === "uz" ? "ta maskan" : "объектов"}
             </span>
           )}
@@ -199,8 +199,8 @@ export function PropertyInfrastructureSection({
 
       {/* Loading state indicator */}
       {loading && (
-        <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#e5f0eb]/60/50 border border-[#e2e9e6] text-xs font-bold text-[#0c2e1f] animate-pulse">
-          <Loader2 className="h-3.5 w-3.5 animate-spin text-[#19573c]" />
+        <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#eaf5f0]/60/50 border border-[#dee8e3] text-xs font-bold text-[#167d4f] animate-pulse">
+          <Loader2 className="h-3.5 w-3.5 animate-spin text-[#167d4f]" />
           <span>
             {locale === "uz"
               ? "Atrofdagi infratuzilma aniqlanmoqda..."
@@ -230,7 +230,7 @@ export function PropertyInfrastructureSection({
           return (
             <div
               key={s.category}
-              className="rounded-2xl border border-slate-200/80 bg-white overflow-hidden transition-all shadow-2xs hover:border-[#339e71]"
+              className="rounded-2xl border border-slate-200/80 bg-white overflow-hidden transition-all shadow-2xs hover:border-[#2db477]"
             >
               {/* Category Header Row: Icon, Category Name, Count */}
               <button
@@ -249,7 +249,7 @@ export function PropertyInfrastructureSection({
                     <span className="text-xs font-bold text-slate-400">
                       —
                     </span>
-                    <span className="px-2 py-0.5 rounded-full bg-[#e5f0eb] text-[#0c2e1f] text-[11px] font-black shrink-0">
+                    <span className="px-2 py-0.5 rounded-full bg-[#eaf5f0] text-[#167d4f] text-[11px] font-black shrink-0">
                       {s.count}
                     </span>
                   </div>
@@ -259,7 +259,7 @@ export function PropertyInfrastructureSection({
                   <span className="text-[11px] font-semibold text-slate-400 hidden sm:inline">
                     {locale === "uz" ? `Eng yaqini: ${s.closestDistance}` : `Ближайший: ${s.closestDistance}`}
                   </span>
-                  <div className={`p-1 rounded-lg text-slate-400 transition-transform duration-200 ${isOpen ? "rotate-180 text-[#19573c]" : ""}`}>
+                  <div className={`p-1 rounded-lg text-slate-400 transition-transform duration-200 ${isOpen ? "rotate-180 text-[#167d4f]" : ""}`}>
                     <ChevronDown className="w-4 h-4" />
                   </div>
                 </div>
@@ -286,7 +286,7 @@ export function PropertyInfrastructureSection({
                           </span>
                         </div>
                       </div>
-                      <span className="font-black text-[#0c2e1f] shrink-0 text-xs bg-white px-2 py-0.5 rounded-md border border-slate-200/60 shadow-2xs">
+                      <span className="font-black text-[#167d4f] shrink-0 text-xs bg-white px-2 py-0.5 rounded-md border border-slate-200/60 shadow-2xs">
                         {item.formattedDistance}
                       </span>
                     </div>

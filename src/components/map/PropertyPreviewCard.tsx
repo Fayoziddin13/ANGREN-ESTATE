@@ -96,7 +96,7 @@ export function PropertyPreviewCard({
         <div className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1.5">
           <span
             className={`rounded-lg px-2 py-0.5 text-[10.5px] font-bold tracking-wide text-white shadow-xs ${
-              isSale ? "bg-[#0c2e1f]" : "bg-[#1D4ED8]"
+              isSale ? "bg-[#167d4f]" : "bg-[#1D4ED8]"
             }`}
           >
             {badgeText}
@@ -105,7 +105,7 @@ export function PropertyPreviewCard({
             {getPropertyTypeLabel(property.property_type, locale)}
           </span>
           {property.area_sotikh && (property.property_type === "house_yard" || property.property_type === "land") && (
-            <span className="rounded-lg bg-[#0c2e1f]/80 backdrop-blur-md px-1.5 py-0.5 text-[10.5px] font-semibold text-white/80 shadow-xs">
+            <span className="rounded-lg bg-[#167d4f]/80 backdrop-blur-md px-1.5 py-0.5 text-[10.5px] font-semibold text-white/80 shadow-xs">
               {property.area_sotikh} {locale === "uz" ? "sotix" : "соток"}
             </span>
           )}
@@ -127,24 +127,24 @@ export function PropertyPreviewCard({
       {/* Body Content */}
       <div className="p-3.5 space-y-2.5">
         <div className="cursor-pointer" onClick={() => onViewDetails(property)}>
-          <div className="text-base sm:text-lg font-extrabold tracking-tight text-[#0c2e1f]">
+          <div className="text-base sm:text-lg font-extrabold tracking-tight text-[#167d4f]">
             {priceDisplay}
           </div>
-          <h3 className="text-xs sm:text-sm font-bold text-gray-900 line-clamp-1 hover:text-[#19573c] transition-colors">
+          <h3 className="text-xs sm:text-sm font-bold text-gray-900 line-clamp-1 hover:text-[#167d4f] transition-colors">
             {title}
           </h3>
           <div className="flex items-center gap-1 text-[11px] text-gray-500 pt-0.5">
-            <MapPin className="h-3 w-3 shrink-0 text-[#0c2e1f]" />
+            <MapPin className="h-3 w-3 shrink-0 text-[#167d4f]" />
             <span className="truncate">{address}</span>
           </div>
         </div>
 
         {/* Specs Row & Published Date */}
-        <div className="flex items-center justify-between border-t border-[#e2e9e6] pt-2 text-[11px] font-semibold text-gray-600">
+        <div className="flex items-center justify-between border-t border-[#dee8e3] pt-2 text-[11px] font-semibold text-gray-600">
           {property.property_type === "land" ? (
             <div className="flex items-center gap-2">
               {property.area_sotikh ? (
-                <span className="font-bold text-[#0c2e1f]">
+                <span className="font-bold text-[#167d4f]">
                   {property.area_sotikh} {locale === "uz" ? "sotix" : "соток"}
                 </span>
               ) : null}
@@ -157,7 +157,7 @@ export function PropertyPreviewCard({
           ) : isHouse ? (
             <div className="flex items-center gap-2">
               {property.area_sotikh ? (
-                <span className="font-bold text-[#0c2e1f]">
+                <span className="font-bold text-[#167d4f]">
                   {property.area_sotikh} {locale === "uz" ? "sotix" : "соток"}
                 </span>
               ) : null}
@@ -176,7 +176,7 @@ export function PropertyPreviewCard({
             <div className="flex items-center gap-2">
               {floorNum ? (
                 <div className="flex items-center gap-1 font-bold text-gray-700">
-                  <Layers className="h-3.5 w-3.5 text-[#19573c]" />
+                  <Layers className="h-3.5 w-3.5 text-[#167d4f]" />
                   <span>{floorNum}{totalFloors ? `/${totalFloors}` : ""} {locale === "uz" ? "qavat" : "эт."}</span>
                 </div>
               ) : null}
@@ -205,7 +205,7 @@ export function PropertyPreviewCard({
         {/* "Batafsil ko'rish" Main Button */}
         <button
           onClick={() => onViewDetails(property)}
-          className="group w-full flex items-center justify-center gap-1.5 rounded-xl bg-[#0c2e1f] py-2 text-xs font-bold text-white shadow-card hover:bg-[#19573c] active:scale-[0.98] transition-all"
+          className="group w-full flex items-center justify-center gap-1.5 rounded-xl bg-[#167d4f] py-2 text-xs font-bold text-white shadow-card hover:bg-[#167d4f] active:scale-[0.98] transition-all"
         >
           <span>{t.mapSection.viewDetails}</span>
           <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />

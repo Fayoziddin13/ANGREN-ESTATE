@@ -68,7 +68,7 @@ export function PropertyCatalogModal({
             onClick={onClose}
             className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs sm:text-sm transition-all active:scale-95 shrink-0"
           >
-            <ArrowLeft className="h-4 w-4 text-[#0c2e1f]" />
+            <ArrowLeft className="h-4 w-4 text-[#167d4f]" />
             <span>{locale === "uz" ? "Xaritaga qaytish" : "Вернуться на карту"}</span>
           </button>
 
@@ -88,7 +88,7 @@ export function PropertyCatalogModal({
               onClick={() => onTransactionChange("sale")}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 transactionType === "sale"
-                  ? "bg-[#0c2e1f] text-white shadow-xs"
+                  ? "bg-[#167d4f] text-white shadow-xs"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
@@ -108,7 +108,7 @@ export function PropertyCatalogModal({
 
           {/* Right Close & Total Counter */}
           <div className="flex items-center gap-2">
-            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#e5f0eb]/50 text-[#0c2e1f] text-xs font-extrabold border border-[#339e71]/40">
+            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#eaf5f0]/50 text-[#167d4f] text-xs font-extrabold border border-[#2db477]/40">
               <span>{properties.length}</span>
               <span>{locale === "uz" ? "ta e’lon" : "объектов"}</span>
             </span>
@@ -140,7 +140,7 @@ export function PropertyCatalogModal({
                 onClick={() => onTypeChange(cat.id as PropertyType | "all")}
                 className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all ${
                   isActive
-                    ? "bg-[#0c2e1f] text-white shadow-xs"
+                    ? "bg-[#167d4f] text-white shadow-xs"
                     : "bg-slate-100 hover:bg-slate-200 text-slate-700"
                 }`}
               >
@@ -171,7 +171,7 @@ export function PropertyCatalogModal({
           {/* Empty State */}
           {properties.length === 0 ? (
             <div className="py-20 flex flex-col items-center justify-center text-center space-y-4">
-              <div className="h-16 w-16 rounded-3xl bg-[#e5f0eb]/50 text-[#0c2e1f] flex items-center justify-center">
+              <div className="h-16 w-16 rounded-3xl bg-[#eaf5f0]/50 text-[#167d4f] flex items-center justify-center">
                 <Search className="h-7 w-7" />
               </div>
               <div className="space-y-1">
@@ -187,7 +187,7 @@ export function PropertyCatalogModal({
               {onClearFilters && (
                 <button
                   onClick={onClearFilters}
-                  className="px-4 py-2 rounded-xl bg-[#0c2e1f] text-white text-xs font-bold shadow-sm hover:bg-[#19573c] transition-colors"
+                  className="px-4 py-2 rounded-xl bg-[#167d4f] text-white text-xs font-bold shadow-sm hover:bg-[#167d4f] transition-colors"
                 >
                   {locale === "uz" ? "Filtrlarni tozalash" : "Сбросить фильтры"}
                 </button>
@@ -230,7 +230,7 @@ export function PropertyCatalogModal({
                   <div
                     key={property.id}
                     onClick={() => onViewDetails(property)}
-                    className="group flex flex-col rounded-3xl bg-white border border-[#e2e9e6] shadow-card hover:shadow-elevated transition-all duration-300 overflow-hidden cursor-pointer active:scale-[0.99]"
+                    className="group flex flex-col rounded-3xl bg-white border border-[#dee8e3] shadow-card hover:shadow-elevated transition-all duration-300 overflow-hidden cursor-pointer active:scale-[0.99]"
                   >
                     {/* Image Area */}
                     <div className="relative aspect-[16/10] w-full bg-slate-100 overflow-hidden">
@@ -246,7 +246,7 @@ export function PropertyCatalogModal({
                       <div className="absolute top-3 left-3 z-10 flex flex-wrap items-center gap-1.5 max-w-[75%]">
                         <span
                           className={`rounded-xl px-2.5 py-1 text-[10px] font-black uppercase text-white shadow-sm ${
-                            isSale ? "bg-[#0c2e1f]" : "bg-[#1D4ED8]"
+                            isSale ? "bg-[#167d4f]" : "bg-[#1D4ED8]"
                           }`}
                         >
                           {isSale
@@ -270,7 +270,7 @@ export function PropertyCatalogModal({
                               return (
                                 <span
                                   key={b}
-                                  className="rounded-xl bg-[#19573c] px-2 py-1 text-[10px] font-bold text-white shadow-sm"
+                                  className="rounded-xl bg-[#167d4f] px-2 py-1 text-[10px] font-bold text-white shadow-sm"
                                 >
                                   {locale === "uz" ? "Yangi" : "Новинка"}
                                 </span>
@@ -327,18 +327,18 @@ export function PropertyCatalogModal({
                     <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
                       <div>
                         {/* Price */}
-                        <div className="text-base sm:text-lg font-black tracking-tight text-[#0c2e1f]">
+                        <div className="text-base sm:text-lg font-black tracking-tight text-[#167d4f]">
                           {priceDisplay}
                         </div>
 
                         {/* Title */}
-                        <h4 className="text-xs sm:text-sm font-bold text-slate-900 line-clamp-1 group-hover:text-[#0c2e1f] transition-colors mt-0.5">
+                        <h4 className="text-xs sm:text-sm font-bold text-slate-900 line-clamp-1 group-hover:text-[#167d4f] transition-colors mt-0.5">
                           {title}
                         </h4>
 
                         {/* Address */}
                         <div className="flex items-center gap-1 text-[11px] text-slate-500 pt-1">
-                          <MapPin className="h-3 w-3 shrink-0 text-[#0c2e1f]" />
+                          <MapPin className="h-3 w-3 shrink-0 text-[#167d4f]" />
                           <span className="truncate">{address}</span>
                         </div>
                       </div>

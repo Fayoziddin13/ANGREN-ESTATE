@@ -138,7 +138,7 @@ export default function AdminDashboardPage() {
       {/* Top Banner: Greeting & Date Filters */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#e5f0eb] text-[#0c2e1f] text-xs font-bold mb-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#eaf5f0] text-[#167d4f] text-xs font-bold mb-2">
             <Sparkles className="h-3.5 w-3.5" />
             <span>ANGREN ESTATE Executive Hub</span>
           </div>
@@ -169,7 +169,7 @@ export default function AdminDashboardPage() {
               onClick={() => setDateFilter(filter.key)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
                 dateFilter === filter.key
-                  ? "bg-[#0c2e1f] text-white shadow-xs"
+                  ? "bg-[#167d4f] text-white shadow-xs"
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
               }`}
             >
@@ -187,13 +187,13 @@ export default function AdminDashboardPage() {
             <span className="text-[11px] font-bold uppercase tracking-wider">
               {locale === "uz" ? "Jami obyektlar" : "Всего объектов"}
             </span>
-            <Building2 className="h-4 w-4 text-[#0c2e1f]" />
+            <Building2 className="h-4 w-4 text-[#167d4f]" />
           </div>
           <div className="text-2xl font-black text-slate-900">
             {isPropLoaded ? properties.length : "..."}
           </div>
-          <div className="text-[11px] text-[#0c2e1f] font-semibold flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#19573c]" />
+          <div className="text-[11px] text-[#167d4f] font-semibold flex items-center gap-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#167d4f]" />
             <span>{publishedProperties.length} {locale === "uz" ? "faol e'londa" : "активно"}</span>
           </div>
         </div>
@@ -243,7 +243,7 @@ export default function AdminDashboardPage() {
           <div className="text-2xl font-black text-slate-900">
             {totalViews.toLocaleString()}
           </div>
-          <div className="text-[11px] text-[#0c2e1f] font-semibold flex items-center gap-1">
+          <div className="text-[11px] text-[#167d4f] font-semibold flex items-center gap-1">
             <TrendingUp className="h-3 w-3" />
             <span>{totalViews > 0 ? `${totalViews} ta` : "—"}</span>
           </div>
@@ -255,7 +255,7 @@ export default function AdminDashboardPage() {
             <span className="text-[11px] font-bold uppercase tracking-wider">
               {locale === "uz" ? "Aloqa so‘rovlari" : "Контакты"}
             </span>
-            <PhoneCall className="h-4 w-4 text-[#0c2e1f]" />
+            <PhoneCall className="h-4 w-4 text-[#167d4f]" />
           </div>
           <div className="text-2xl font-black text-slate-900">
             {phoneClicks + telegramClicks}
@@ -276,7 +276,7 @@ export default function AdminDashboardPage() {
           <div className="text-2xl font-black text-slate-900">
             {usersCount !== null ? usersCount : "..."}
           </div>
-          <div className="text-[11px] text-[#0c2e1f] font-semibold">
+          <div className="text-[11px] text-[#167d4f] font-semibold">
             {totalFavorites} {locale === "uz" ? "sevimlilar" : "в избранном"}
           </div>
         </div>
@@ -295,7 +295,7 @@ export default function AdminDashboardPage() {
                 {locale === "uz" ? "Davr bo‘yicha e'lonlar ko‘rilish traektoriyasi" : "Просмотры объявлений по выбранному периоду"}
               </p>
             </div>
-            <div className="text-xs font-bold text-[#0c2e1f] bg-[#e5f0eb]/50 px-3 py-1 rounded-full border border-[#339e71]/40">
+            <div className="text-xs font-bold text-[#167d4f] bg-[#eaf5f0]/50 px-3 py-1 rounded-full border border-[#2db477]/40">
               {totalViews} {locale === "uz" ? "jami ko‘rish" : "просмотров"}
             </div>
           </div>
@@ -312,7 +312,7 @@ export default function AdminDashboardPage() {
                     </div>
                     <div
                       style={{ height: `${heightPercent}%` }}
-                      className="w-full bg-gradient-to-t from-[#0c2e1f] to-[#339e71] rounded-t-xl group-hover:from-[#19573c] group-hover:to-[#339e71] transition-all shadow-xs"
+                      className="w-full bg-gradient-to-t from-[#167d4f] to-[#2db477] rounded-t-xl group-hover:from-[#167d4f] group-hover:to-[#2db477] transition-all shadow-xs"
                     />
                     <span className="text-[10px] font-bold text-slate-600 mt-2 truncate max-w-[48px]">
                       {timeLabels[idx]}
@@ -345,7 +345,7 @@ export default function AdminDashboardPage() {
           <div className="space-y-1">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                <Inbox className="h-4 w-4 text-[#0c2e1f]" />
+                <Inbox className="h-4 w-4 text-[#167d4f]" />
                 <span>{locale === "uz" ? "Yangi lidlar & Murojaatlar" : "Входящие заявки"}</span>
               </h2>
               <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
@@ -372,7 +372,7 @@ export default function AdminDashboardPage() {
                           ? "bg-amber-500"
                           : lead.status === "in_progress"
                           ? "bg-blue-500"
-                          : "bg-[#19573c]"
+                          : "bg-[#167d4f]"
                       }`}
                     />
                     <span className="font-bold text-slate-800 truncate">
@@ -388,7 +388,7 @@ export default function AdminDashboardPage() {
                 </div>
 
                 <div className="text-right shrink-0">
-                  <div className="flex items-center justify-end gap-1 text-[11px] font-bold text-[#0c2e1f]">
+                  <div className="flex items-center justify-end gap-1 text-[11px] font-bold text-[#167d4f]">
                     {lead.type === "phone" ? (
                       <PhoneCall className="h-3 w-3" />
                     ) : (
@@ -420,12 +420,12 @@ export default function AdminDashboardPage() {
         <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-[#0c2e1f]" />
+              <Building2 className="h-4 w-4 text-[#167d4f]" />
               <span>{locale === "uz" ? "So‘nggi qo‘shilgan obyektlar" : "Недавно добавленные"}</span>
             </h2>
             <Link
               href="/admin/properties"
-              className="text-xs font-bold text-[#0c2e1f] hover:underline"
+              className="text-xs font-bold text-[#167d4f] hover:underline"
             >
               {locale === "uz" ? "Barchasi" : "Все"} →
             </Link>
@@ -456,7 +456,7 @@ export default function AdminDashboardPage() {
                 </div>
 
                 <div className="text-right shrink-0">
-                  <div className="text-xs font-black text-[#0c2e1f]">
+                  <div className="text-xs font-black text-[#167d4f]">
                     {prop.price_usd
                       ? `$${prop.price_usd.toLocaleString()}`
                       : `${prop.price_uzs ? (prop.price_uzs / 1000000).toFixed(0) : 0} ${locale === "uz" ? "mln so‘m" : "млн сум"}`}
@@ -464,7 +464,7 @@ export default function AdminDashboardPage() {
                   <span
                     className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full ${
                       prop.status === "published"
-                        ? "bg-[#e5f0eb] text-[#0c2e1f]"
+                        ? "bg-[#eaf5f0] text-[#167d4f]"
                         : prop.status === "draft"
                         ? "bg-amber-100 text-amber-800"
                         : prop.status === "sold"
@@ -535,7 +535,7 @@ export default function AdminDashboardPage() {
 
           <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-700">
             <span>{locale === "uz" ? "Bozor samaradorligi:" : "Конверсия сделок:"}</span>
-            <span className="font-bold text-[#0c2e1f]">{dealEfficiencyRate}</span>
+            <span className="font-bold text-[#167d4f]">{dealEfficiencyRate}</span>
           </div>
         </div>
       </div>
@@ -544,28 +544,28 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Link
           href="/admin/properties/new"
-          className="p-4 rounded-2xl bg-[#0c2e1f] text-white hover:bg-[#19573c] transition-all shadow-sm flex items-center gap-3 font-bold text-xs"
+          className="p-4 rounded-2xl bg-[#167d4f] text-white hover:bg-[#167d4f] transition-all shadow-sm flex items-center gap-3 font-bold text-xs"
         >
           <PlusCircle className="h-5 w-5 shrink-0" />
           <span>{locale === "uz" ? "Yangi obyekt qo‘shish" : "Добавить объект"}</span>
         </Link>
         <Link
           href="/admin/map"
-          className="p-4 rounded-2xl bg-white border border-slate-200 text-slate-800 hover:border-[#0c2e1f] transition-all shadow-xs flex items-center gap-3 font-bold text-xs"
+          className="p-4 rounded-2xl bg-white border border-slate-200 text-slate-800 hover:border-[#167d4f] transition-all shadow-xs flex items-center gap-3 font-bold text-xs"
         >
-          <Layers className="h-5 w-5 text-[#0c2e1f] shrink-0" />
+          <Layers className="h-5 w-5 text-[#167d4f] shrink-0" />
           <span>{locale === "uz" ? "Xarita & Polygonlar" : "Карта и полигоны"}</span>
         </Link>
         <Link
           href="/admin/analytics"
-          className="p-4 rounded-2xl bg-white border border-slate-200 text-slate-800 hover:border-[#0c2e1f] transition-all shadow-xs flex items-center gap-3 font-bold text-xs"
+          className="p-4 rounded-2xl bg-white border border-slate-200 text-slate-800 hover:border-[#167d4f] transition-all shadow-xs flex items-center gap-3 font-bold text-xs"
         >
           <TrendingUp className="h-5 w-5 text-purple-600 shrink-0" />
           <span>{locale === "uz" ? "Tahlil & Hisobotlar" : "Аналитика и отчеты"}</span>
         </Link>
         <Link
           href="/admin/realtors"
-          className="p-4 rounded-2xl bg-white border border-slate-200 text-slate-800 hover:border-[#0c2e1f] transition-all shadow-xs flex items-center gap-3 font-bold text-xs"
+          className="p-4 rounded-2xl bg-white border border-slate-200 text-slate-800 hover:border-[#167d4f] transition-all shadow-xs flex items-center gap-3 font-bold text-xs"
         >
           <Users className="h-5 w-5 text-blue-600 shrink-0" />
           <span>{locale === "uz" ? "Hamkor Rieltorlar" : "Риелторы-партнёры"}</span>

@@ -86,12 +86,12 @@ export function MobileMapStyleSwitcher({
                   onClick={() => handleSelect("standard")}
                   className={`flex items-center justify-between w-full px-3 py-2 rounded-xl text-xs font-bold transition-all active:scale-[0.98] ${
                     mapMode === "standard"
-                      ? "bg-[#0c2e1f] text-white shadow-xs"
+                      ? "bg-[#167d4f] text-white shadow-xs"
                       : "text-slate-700 hover:bg-slate-100 active:bg-slate-200/70"
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <Map className={`h-4 w-4 ${mapMode === "standard" ? "text-white" : "text-[#0c2e1f]"}`} />
+                    <Map className={`h-4 w-4 ${mapMode === "standard" ? "text-white" : "text-[#167d4f]"}`} />
                     <span>{t.mapSection.standard}</span>
                   </div>
                   {mapMode === "standard" && <Check className="h-3.5 w-3.5 text-white shrink-0" />}
@@ -104,12 +104,12 @@ export function MobileMapStyleSwitcher({
                   onClick={() => handleSelect("satellite")}
                   className={`flex items-center justify-between w-full px-3 py-2 rounded-xl text-xs font-bold transition-all active:scale-[0.98] ${
                     mapMode === "satellite"
-                      ? "bg-[#0c2e1f] text-white shadow-xs"
+                      ? "bg-[#167d4f] text-white shadow-xs"
                       : "text-slate-700 hover:bg-slate-100 active:bg-slate-200/70"
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <Layers className={`h-4 w-4 ${mapMode === "satellite" ? "text-white" : "text-[#0c2e1f]"}`} />
+                    <Layers className={`h-4 w-4 ${mapMode === "satellite" ? "text-white" : "text-[#167d4f]"}`} />
                     <span>{t.mapSection.satellite}</span>
                   </div>
                   {mapMode === "satellite" && <Check className="h-3.5 w-3.5 text-white shrink-0" />}
@@ -128,14 +128,14 @@ export function MobileMapStyleSwitcher({
             aria-expanded={isOpen}
             className={`relative flex h-10 w-10 items-center justify-center rounded-2xl backdrop-blur-xl shadow-elevated border transition-all active:scale-95 ${
               isOpen || mapMode === "satellite"
-                ? "bg-[#0c2e1f] text-white border-[#0c2e1f]/80 shadow-card"
-                : "bg-white/95 text-[#0c2e1f] border-white/90 hover:bg-white"
+                ? "bg-[#167d4f] text-white border-[#167d4f]/80 shadow-card"
+                : "bg-white/95 text-[#167d4f] border-white/90 hover:bg-white"
             }`}
           >
             <Layers className="h-4.5 w-4.5 transition-transform" />
             {/* Subtle active mode indicator dot when satellite is active and menu is closed */}
             {mapMode === "satellite" && !isOpen && (
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-emerald-300 ring-2 ring-[#0c2e1f]" />
+              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-emerald-300 ring-2 ring-[#167d4f]" />
             )}
           </button>
         </motion.div>

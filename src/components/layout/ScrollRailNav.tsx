@@ -59,7 +59,7 @@ export function ScrollRailNav() {
         aria-hidden="true"
       >
         <div
-          className="w-full bg-gradient-to-b from-[#0c2e1f] via-[#19573c] to-[#339e71] transition-all duration-75 ease-out rounded-b-full shadow-xs"
+          className="w-full bg-gradient-to-b from-[#167d4f] via-[#167d4f] to-[#2db477] transition-all duration-75 ease-out rounded-b-full shadow-xs"
           style={{ height: `${scrollProgress}%` }}
         />
       </div>
@@ -82,7 +82,7 @@ export function ScrollRailNav() {
             className={`flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full transition-all duration-200 focus:outline-none ${
               isAtTop
                 ? "opacity-30 cursor-default text-gray-400 pointer-events-none"
-                : "text-gray-700 hover:text-[#0c2e1f] hover:bg-[#e5f0eb]/50 active:scale-90"
+                : "text-gray-700 hover:text-[#167d4f] hover:bg-[#eaf5f0]/50 active:scale-90"
             }`}
           >
             <ChevronUp className="h-4 w-4 stroke-[2.5]" />
@@ -94,7 +94,7 @@ export function ScrollRailNav() {
             title={`${Math.round(scrollProgress)}%`}
           >
             <div
-              className="w-full bg-[#0c2e1f] rounded-full transition-all duration-100 ease-out"
+              className="w-full bg-[#167d4f] rounded-full transition-all duration-100 ease-out"
               style={{ height: `${scrollProgress}%` }}
             />
           </div>
@@ -109,7 +109,7 @@ export function ScrollRailNav() {
             className={`flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full transition-all duration-200 focus:outline-none ${
               isAtBottom
                 ? "opacity-30 cursor-default text-gray-400 pointer-events-none"
-                : "text-gray-700 hover:text-[#0c2e1f] hover:bg-[#e5f0eb]/50 active:scale-90"
+                : "text-gray-700 hover:text-[#167d4f] hover:bg-[#eaf5f0]/50 active:scale-90"
             }`}
           >
             <ChevronDown className="h-4 w-4 stroke-[2.5]" />

@@ -78,7 +78,7 @@ export function PropertyCompareModal({
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white/80 backdrop-blur-md">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#e5f0eb]/50 text-[#0c2e1f]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#eaf5f0]/50 text-[#167d4f]">
                 <Scale className="h-5 w-5" />
               </div>
               <div>
@@ -131,7 +131,7 @@ export function PropertyCompareModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-5 py-2.5 rounded-2xl bg-[#0c2e1f] text-white text-xs font-extrabold hover:bg-[#19573c] transition-colors"
+                className="px-5 py-2.5 rounded-2xl bg-[#167d4f] text-white text-xs font-extrabold hover:bg-[#167d4f] transition-colors"
               >
                 {locale === "uz" ? "Katalogga qaytish" : "Вернуться к каталогу"}
               </button>
@@ -185,7 +185,7 @@ export function PropertyCompareModal({
                     </div>
 
                     <div className="pt-2 border-t border-slate-200">
-                      <p className="text-base font-black text-[#0c2e1f]">
+                      <p className="text-base font-black text-[#167d4f]">
                         {formatPriceValue(p).primary}
                       </p>
                       <p className="text-xs text-slate-400">
@@ -235,7 +235,7 @@ export function PropertyCompareModal({
                           onSelectProperty(p);
                           onClose();
                         }}
-                        className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-[#0c2e1f] text-white text-xs font-extrabold hover:bg-[#19573c] transition-all mt-2"
+                        className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-[#167d4f] text-white text-xs font-extrabold hover:bg-[#167d4f] transition-all mt-2"
                       >
                         <span>{locale === "uz" ? "Batafsil ochish" : "Подробнее"}</span>
                         <ArrowRight className="h-3.5 w-3.5" />
@@ -284,7 +284,7 @@ export function PropertyCompareModal({
                         {getPropertyTitle(p, locale)}
                       </h4>
                       <div>
-                        <p className="text-sm font-extrabold text-[#0c2e1f]">
+                        <p className="text-sm font-extrabold text-[#167d4f]">
                           {formatPriceValue(p).primary}
                         </p>
                         <p className="text-[11px] font-medium text-slate-400">
@@ -298,7 +298,7 @@ export function PropertyCompareModal({
                             onSelectProperty(p);
                             onClose();
                           }}
-                          className="w-full flex items-center justify-center gap-1 py-1.5 rounded-xl bg-[#e5f0eb]/40 hover:bg-[#e5f0eb]/80 text-[#0c2e1f] text-[11px] font-extrabold transition-all"
+                          className="w-full flex items-center justify-center gap-1 py-1.5 rounded-xl bg-[#eaf5f0]/40 hover:bg-[#eaf5f0]/80 text-[#167d4f] text-[11px] font-extrabold transition-all"
                         >
                           <span>{locale === "uz" ? "Ko‘rish" : "Открыть"}</span>
                           <ArrowRight className="h-3 w-3" />
@@ -347,7 +347,7 @@ export function PropertyCompareModal({
                       <div key={p.id} className="p-3.5 border-l border-slate-100 font-semibold">
                         <span className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-black ${
                           p.transaction_type === "sale"
-                            ? "bg-[#e5f0eb] text-[#0c2e1f]"
+                            ? "bg-[#eaf5f0] text-[#167d4f]"
                             : "bg-blue-100 text-blue-800"
                         }`}>
                           {p.transaction_type === "sale"
@@ -368,7 +368,7 @@ export function PropertyCompareModal({
                     </div>
                     {comparedProperties.map((p) => (
                       <div key={p.id} className="p-3.5 border-l border-slate-100 font-semibold flex items-center gap-1.5">
-                        <MapPin className="h-3.5 w-3.5 text-[#0c2e1f] shrink-0" />
+                        <MapPin className="h-3.5 w-3.5 text-[#167d4f] shrink-0" />
                         <span>{getPropertyDistrict(p, locale)}</span>
                       </div>
                     ))}
@@ -445,7 +445,7 @@ export function PropertyCompareModal({
                     {comparedProperties.map((p) => (
                       <div key={p.id} className="p-3.5 border-l border-slate-100 font-semibold">
                         {p.furniture ? (
-                          <span className="text-[#19573c] font-bold flex items-center gap-1">
+                          <span className="text-[#167d4f] font-bold flex items-center gap-1">
                             <Check className="h-4 w-4" />
                             <span>{locale === "uz" ? "Mavjud" : "Да"}</span>
                           </span>
@@ -487,7 +487,7 @@ export function PropertyCompareModal({
                     {comparedProperties.map((p) => (
                       <div key={p.id} className="p-3.5 border-l border-slate-100 space-y-1 text-[11px]">
                         <div className="flex items-center gap-1.5">
-                          <span className="h-1.5 w-1.5 rounded-full bg-[#19573c]" />
+                          <span className="h-1.5 w-1.5 rounded-full bg-[#167d4f]" />
                           <span>{locale === "uz" ? "Gaz / Suv / Elektr" : "Газ / Вода / Свет"}</span>
                         </div>
                         {p.amenities?.internet && (

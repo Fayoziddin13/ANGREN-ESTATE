@@ -123,7 +123,7 @@ export function HududPolygonDrawerModal({
         type: "fill",
         source: "drawn-polygon-source",
         paint: {
-          "fill-color": "#0c2e1f",
+          "fill-color": "#167d4f",
           "fill-opacity": 0.25,
         },
       });
@@ -134,7 +134,7 @@ export function HududPolygonDrawerModal({
       type: "line",
       source: "drawn-polygon-source",
       paint: {
-        "line-color": "#0c2e1f",
+        "line-color": "#167d4f",
         "line-width": 3,
         "line-dasharray": isClosed ? [1] : [2, 2],
       },
@@ -153,7 +153,7 @@ export function HududPolygonDrawerModal({
     points.forEach(([lat, lng], idx) => {
       const el = document.createElement("div");
       el.className =
-        "w-6 h-6 rounded-full bg-[#0c2e1f] border-2 border-white text-white flex items-center justify-center text-[10px] font-black shadow-md cursor-pointer hover:scale-110 transition-transform";
+        "w-6 h-6 rounded-full bg-[#167d4f] border-2 border-white text-white flex items-center justify-center text-[10px] font-black shadow-md cursor-pointer hover:scale-110 transition-transform";
       el.innerText = `${idx + 1}`;
 
       // Clicking first vertex when >= 3 points closes polygon
@@ -381,7 +381,7 @@ export function HududPolygonDrawerModal({
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#e5f0eb]/50 text-[#0c2e1f]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#eaf5f0]/50 text-[#167d4f]">
                 <Building2 className="h-5 w-5" />
               </div>
               <div>
@@ -424,7 +424,7 @@ export function HududPolygonDrawerModal({
                   onClick={() => setMapMode(mapMode === "standard" ? "satellite" : "standard")}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/95 backdrop-blur-md border border-slate-200 shadow-sm text-xs font-bold text-slate-700 hover:bg-white transition-colors"
                 >
-                  <Layers className="h-3.5 w-3.5 text-[#0c2e1f]" />
+                  <Layers className="h-3.5 w-3.5 text-[#167d4f]" />
                   <span>
                     {mapMode === "standard"
                       ? locale === "uz"
@@ -439,7 +439,7 @@ export function HududPolygonDrawerModal({
 
               {/* Draw instructions badge */}
               <div className="absolute bottom-3 left-3 z-10 bg-slate-900/85 text-white backdrop-blur-md px-3.5 py-1.5 rounded-xl text-xs flex items-center gap-2 shadow-lg">
-                <span className="h-2 w-2 rounded-full bg-[#339e71] animate-pulse" />
+                <span className="h-2 w-2 rounded-full bg-[#2db477] animate-pulse" />
                 <span>
                   {points.length === 0
                     ? locale === "uz"
@@ -473,7 +473,7 @@ export function HududPolygonDrawerModal({
                     value={nameUz}
                     onChange={(e) => setNameUz(e.target.value)}
                     placeholder={locale === "uz" ? "Masalan: 4-mavze" : "Например: 4-массив"}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#19573c]/20 focus:border-[#19573c]"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#167d4f]/20 focus:border-[#167d4f]"
                   />
                 </div>
 
@@ -486,7 +486,7 @@ export function HududPolygonDrawerModal({
                     value={nameRu}
                     onChange={(e) => setNameRu(e.target.value)}
                     placeholder={locale === "uz" ? "Masalan: 4-массив" : "Например: 4-массив"}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#19573c]/20 focus:border-[#19573c]"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#167d4f]/20 focus:border-[#167d4f]"
                   />
                 </div>
 
@@ -494,7 +494,7 @@ export function HududPolygonDrawerModal({
                 <div className="p-3 rounded-xl bg-white border border-slate-200 space-y-1.5 text-xs">
                   <div className="flex items-center justify-between text-slate-600">
                     <span>{locale === "uz" ? "Nuqtalar soni:" : "Количество точек:"}</span>
-                    <span className="font-extrabold text-[#0c2e1f]">
+                    <span className="font-extrabold text-[#167d4f]">
                       {points.length} {locale === "uz" ? "ta" : "ед."}
                     </span>
                   </div>
@@ -536,7 +536,7 @@ export function HududPolygonDrawerModal({
                   <button
                     type="button"
                     onClick={() => setIsClosed(true)}
-                    className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#e5f0eb]/40 border border-[#339e71]/60 text-[#0c2e1f] text-xs font-extrabold hover:bg-[#e5f0eb]/70 transition-all"
+                    className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#eaf5f0]/40 border border-[#2db477]/60 text-[#167d4f] text-xs font-extrabold hover:bg-[#eaf5f0]/70 transition-all"
                   >
                     <CheckCircle2 className="h-4 w-4" />
                     <span>
@@ -560,7 +560,7 @@ export function HududPolygonDrawerModal({
                   type="button"
                   onClick={handleSave}
                   disabled={isSubmitting || points.length < 3 || !nameUz.trim()}
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-[#0c2e1f] hover:bg-[#19573c] disabled:opacity-50 text-white text-xs font-extrabold shadow-md active:scale-[0.98] transition-all"
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-[#167d4f] hover:bg-[#167d4f] disabled:opacity-50 text-white text-xs font-extrabold shadow-md active:scale-[0.98] transition-all"
                 >
                   <Save className="h-4 w-4" />
                   <span>

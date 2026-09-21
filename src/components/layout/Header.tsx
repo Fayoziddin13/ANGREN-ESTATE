@@ -169,8 +169,8 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
     <header
       className={`sticky top-0 z-40 w-full transition-all duration-300 ${
         isScrolled
-          ? "bg-[#0c2e1f]/95 backdrop-blur-2xl backdrop-saturate-150 shadow-elevated border-b border-white/10"
-          : "bg-[#0c2e1f]/90 backdrop-blur-xl backdrop-saturate-150 shadow-sm border-b border-white/10"
+          ? "bg-[#167d4f]/95 backdrop-blur-2xl backdrop-saturate-150 shadow-elevated border-b border-white/10"
+          : "bg-[#167d4f]/90 backdrop-blur-xl backdrop-saturate-150 shadow-sm border-b border-white/10"
       }`}
     >
       {announcement?.is_active && (
@@ -180,8 +180,8 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
             announcement.type === "warning"
               ? "bg-amber-500 text-slate-950 border-amber-600 font-semibold"
               : announcement.type === "success"
-              ? "bg-[#19573c] text-white border-[#0c2e1f] font-semibold"
-              : "bg-[#081e14]/90 text-white/90 border-white/10"
+              ? "bg-[#167d4f] text-white border-[#167d4f] font-semibold"
+              : "bg-[#0b3824]/90 text-white/90 border-white/10"
           }`}
         >
           <span>{locale === "ru" ? announcement.text_ru : announcement.text_uz}</span>
@@ -196,7 +196,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
         </div>
       )}
       <div className="mx-auto flex h-14 sm:h-16 w-full max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8">
-        {/* Left: Official Canonical Brand Logo (Fully visible architectural mark + ANGREN + ESTATE) */}
+        {/* Left: Official Canonical Brand Lockup ([ LOGO ] ANGREN ESTATE / SUBTITLE) */}
         <Link
           href="/"
           onClick={(e) => {
@@ -208,18 +208,26 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
               }
             }
           }}
-          className="flex items-center group shrink-0 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
+          className="flex items-center gap-2.5 sm:gap-3 group shrink-0 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
           title="ANGREN ESTATE"
         >
-          <div className="relative h-10 sm:h-11 w-[51px] sm:w-[56px] flex items-center justify-center shrink-0">
+          <div className="relative h-9 sm:h-10 w-[46px] sm:w-[50px] flex items-center justify-center shrink-0">
             <Image
               src="/logo-white.png"
               alt="ANGREN ESTATE"
-              width={56}
-              height={44}
+              width={50}
+              height={40}
               className="h-full w-full object-contain filter drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
               priority
             />
+          </div>
+          <div className="flex flex-col justify-center">
+            <span className="font-extrabold tracking-wider text-xs sm:text-sm text-white leading-none whitespace-nowrap">
+              {t.common.brandName}
+            </span>
+            <span className="silver-metallic-text text-[9px] sm:text-[10px] font-bold tracking-[0.18em] uppercase leading-none mt-1 whitespace-nowrap">
+              {t.common.brandSubtitle}
+            </span>
           </div>
         </Link>
 
@@ -271,8 +279,8 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
               className="flex items-center gap-1.5 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-white/20 hover:border-white/30 transition-all active:scale-95"
               title={locale === "uz" ? "Obyektlarni solishtirish" : "Сравнение объектов"}
             >
-              <Scale className="h-3.5 w-3.5 text-[#339e71]" />
-              <span className="h-4 min-w-4 px-1 rounded-full bg-[#339e71] text-[10px] font-black flex items-center justify-center text-white">
+              <Scale className="h-3.5 w-3.5 text-[#2db477]" />
+              <span className="h-4 min-w-4 px-1 rounded-full bg-[#2db477] text-[10px] font-black flex items-center justify-center text-white">
                 {compareCount}
               </span>
             </button>
@@ -286,7 +294,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
           >
             <Bookmark className="h-3.5 w-3.5 text-white/80" />
             {unreadNotificationsCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4 min-w-4 px-1 rounded-full bg-[#339e71] text-slate-900 text-[9px] font-black items-center justify-center shadow-xs">
+              <span className="absolute -top-1 -right-1 flex h-4 min-w-4 px-1 rounded-full bg-[#2db477] text-slate-900 text-[9px] font-black items-center justify-center shadow-xs">
                 {unreadNotificationsCount}
               </span>
             )}
@@ -314,7 +322,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -6, scale: 0.96 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute right-0 mt-2 w-36 overflow-hidden rounded-2xl border border-white/15 bg-[#0c2e1f]/95 backdrop-blur-2xl p-1.5 shadow-float z-50"
+                  className="absolute right-0 mt-2 w-36 overflow-hidden rounded-2xl border border-white/15 bg-[#167d4f]/95 backdrop-blur-2xl p-1.5 shadow-float z-50"
                 >
                   <button
                     onClick={() => {
@@ -329,7 +337,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                   >
                     <span>Русский</span>
                     {locale === "ru" && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#339e71] shadow-sm" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#2db477] shadow-sm" />
                     )}
                   </button>
                   <button
@@ -345,7 +353,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                   >
                     <span>O‘zbekcha</span>
                     {locale === "uz" && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#339e71] shadow-sm" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#2db477] shadow-sm" />
                     )}
                   </button>
                 </motion.div>
@@ -374,7 +382,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -6, scale: 0.96 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute right-0 mt-2 w-36 overflow-hidden rounded-2xl border border-white/15 bg-[#0c2e1f]/95 backdrop-blur-2xl p-1.5 shadow-float z-50"
+                  className="absolute right-0 mt-2 w-36 overflow-hidden rounded-2xl border border-white/15 bg-[#167d4f]/95 backdrop-blur-2xl p-1.5 shadow-float z-50"
                 >
                   <button
                     onClick={() => {
@@ -389,7 +397,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                   >
                     <span>{locale === "ru" ? "UZS (Сум)" : "UZS (So‘m)"}</span>
                     {currency === "UZS" && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#339e71] shadow-sm" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#2db477] shadow-sm" />
                     )}
                   </button>
                   <button
@@ -405,7 +413,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                   >
                     <span>USD ($)</span>
                     {currency === "USD" && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#339e71] shadow-sm" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#2db477] shadow-sm" />
                     )}
                   </button>
                 </motion.div>
@@ -434,7 +442,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -6, scale: 0.96 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute right-0 mt-2 w-48 rounded-2xl border border-white/15 bg-[#0c2e1f]/95 backdrop-blur-2xl p-2 shadow-float z-50 text-white"
+                    className="absolute right-0 mt-2 w-48 rounded-2xl border border-white/15 bg-[#167d4f]/95 backdrop-blur-2xl p-2 shadow-float z-50 text-white"
                   >
                     <div className="px-3 py-2 border-b border-white/10 text-xs">
                       <p className="font-semibold text-white truncate">
@@ -467,11 +475,11 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                       className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-medium text-white/90 hover:bg-white/10 hover:text-white transition-colors"
                     >
                       <div className="flex items-center gap-2">
-                        <Bookmark className="h-3.5 w-3.5 text-[#339e71]" />
+                        <Bookmark className="h-3.5 w-3.5 text-[#2db477]" />
                         <span>{locale === "uz" ? "Saqlangan qidiruvlar" : "Поиски"}</span>
                       </div>
                       {unreadNotificationsCount > 0 && (
-                        <span className="px-1.5 py-0.5 rounded-full bg-[#339e71] text-[10px] font-extrabold text-white">
+                        <span className="px-1.5 py-0.5 rounded-full bg-[#2db477] text-[10px] font-extrabold text-white">
                           {unreadNotificationsCount}
                         </span>
                       )}
@@ -486,11 +494,11 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                       className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-medium text-white/90 hover:bg-white/10 hover:text-white transition-colors"
                     >
                       <div className="flex items-center gap-2">
-                        <Scale className="h-3.5 w-3.5 text-[#339e71]" />
+                        <Scale className="h-3.5 w-3.5 text-[#2db477]" />
                         <span>{locale === "uz" ? "Solishtirish" : "Сравнение"}</span>
                       </div>
                       {compareCount > 0 && (
-                        <span className="px-1.5 py-0.5 rounded-full bg-[#339e71] text-[10px] font-extrabold text-white">
+                        <span className="px-1.5 py-0.5 rounded-full bg-[#2db477] text-[10px] font-extrabold text-white">
                           {compareCount}
                         </span>
                       )}
@@ -512,7 +520,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
           ) : (
             <button
               onClick={openAuthModal}
-              className="flex items-center gap-2 rounded-2xl bg-white text-brand-dark px-4 py-2 text-xs font-extrabold shadow-sm hover:bg-[#e5f0eb]/60 hover:shadow-card hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all"
+              className="flex items-center gap-2 rounded-2xl bg-white text-brand-dark px-4 py-2 text-xs font-extrabold shadow-sm hover:bg-[#eaf5f0]/60 hover:shadow-card hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all"
             >
               {/* Google 4-Color SVG Icon */}
               <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
@@ -577,7 +585,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
-            className="sm:hidden border-t border-white/10 bg-[#0c2e1f]/95 backdrop-blur-2xl px-4 pt-3 pb-6 space-y-3 shadow-float overflow-hidden"
+            className="sm:hidden border-t border-white/10 bg-[#167d4f]/95 backdrop-blur-2xl px-4 pt-3 pb-6 space-y-3 shadow-float overflow-hidden"
           >
             <nav className="flex flex-col space-y-1 text-sm font-semibold">
               {navItems.map((item) => {
@@ -596,7 +604,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                         : "text-white/80 hover:bg-white/10 hover:text-white"
                     }`}
                   >
-                    <Icon className="h-4 w-4 text-[#339e71] shrink-0" />
+                    <Icon className="h-4 w-4 text-[#2db477] shrink-0" />
                     <span>{item.label}</span>
                   </Link>
                 );
@@ -645,11 +653,11 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                     className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium text-white/90 transition-colors"
                   >
                     <div className="flex items-center gap-2">
-                      <Bookmark className="h-3.5 w-3.5 text-[#339e71]" />
+                      <Bookmark className="h-3.5 w-3.5 text-[#2db477]" />
                       <span>{locale === "uz" ? "Saqlangan qidiruvlar" : "Сохранённые поиски"}</span>
                     </div>
                     {unreadNotificationsCount > 0 && (
-                      <span className="px-2 py-0.5 rounded-full bg-[#339e71] text-slate-900 text-[10px] font-black">
+                      <span className="px-2 py-0.5 rounded-full bg-[#2db477] text-slate-900 text-[10px] font-black">
                         {unreadNotificationsCount}
                       </span>
                     )}
@@ -664,11 +672,11 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                     className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium text-white/90 transition-colors"
                   >
                     <div className="flex items-center gap-2">
-                      <Scale className="h-3.5 w-3.5 text-[#339e71]" />
+                      <Scale className="h-3.5 w-3.5 text-[#2db477]" />
                       <span>{locale === "uz" ? "Solishtirish" : "Сравнение"}</span>
                     </div>
                     {compareCount > 0 && (
-                      <span className="px-2 py-0.5 rounded-full bg-[#339e71] text-white text-[10px] font-black">
+                      <span className="px-2 py-0.5 rounded-full bg-[#2db477] text-white text-[10px] font-black">
                         {compareCount}
                       </span>
                     )}

@@ -143,12 +143,12 @@ export default function ContactsPage() {
         {/* Hero Section */}
         <section className="relative overflow-hidden bg-white border-b border-gray-100 py-12 sm:py-16">
           <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full bg-[#e5f0eb] px-3.5 py-1 text-xs font-bold text-[#0c2e1f] border border-[#339e71]/40">
-              <MessageSquare className="h-3.5 w-3.5 text-[#19573c]" />
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#eaf5f0] px-3.5 py-1 text-xs font-bold text-[#167d4f] border border-[#2db477]/40">
+              <MessageSquare className="h-3.5 w-3.5 text-[#167d4f]" />
               <span>{t.contactsPage.badge}</span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0c2e1f]">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#167d4f]">
               {t.contactsPage.title}
             </h1>
 
@@ -162,11 +162,11 @@ export default function ContactsPage() {
           {/* SECTION A: ANGREN ESTATE Administratsiyasi */}
           <section className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#0c2e1f] text-white shadow-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#167d4f] text-white shadow-sm">
                 <Building2 className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-lg sm:text-xl font-bold text-[#0c2e1f]">
+                <h2 className="text-lg sm:text-xl font-bold text-[#167d4f]">
                   {t.contactsPage.adminSectionTitle}
                 </h2>
                 <p className="text-xs text-gray-500">
@@ -177,14 +177,14 @@ export default function ContactsPage() {
 
             {adminContact.is_configured ? (
               /* Configured Admin Contact Card */
-              <div className="rounded-3xl bg-white/95 backdrop-blur-xl p-6 sm:p-8 border border-[#e2e9e6] shadow-elevated grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="rounded-3xl bg-white/95 backdrop-blur-xl p-6 sm:p-8 border border-[#dee8e3] shadow-elevated grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
                   {adminContact.name && (
                     <div>
                       <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
                         {locale === "uz" ? "Mas'ul shaxs" : "Ответственное лицо"}
                       </span>
-                      <h3 className="text-base font-extrabold text-[#0c2e1f]">
+                      <h3 className="text-base font-extrabold text-[#167d4f]">
                         {adminContact.name}
                       </h3>
                     </div>
@@ -306,11 +306,11 @@ export default function ContactsPage() {
           {/* SECTION B: Hamkor Rieltorlar / Риелторы-партнёры */}
           <section className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#0c2e1f] text-white shadow-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#167d4f] text-white shadow-sm">
                 <Users className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-lg sm:text-xl font-bold text-[#0c2e1f]">
+                <h2 className="text-lg sm:text-xl font-bold text-[#167d4f]">
                   {t.contactsPage.realtorsSectionTitle}
                 </h2>
                 <p className="text-xs text-gray-500">
@@ -326,10 +326,10 @@ export default function ContactsPage() {
                   return (
                     <div
                       key={r.id}
-                      className="flex flex-col rounded-3xl bg-white/95 backdrop-blur-xl border border-[#e2e9e6] p-6 shadow-card hover:shadow-elevated transition-all duration-300 group"
+                      className="flex flex-col rounded-3xl bg-white/95 backdrop-blur-xl border border-[#dee8e3] p-6 shadow-card hover:shadow-elevated transition-all duration-300 group"
                     >
                       <div className="flex items-center gap-4 mb-4">
-                        <div className="relative h-16 w-16 rounded-2xl overflow-hidden bg-[#e5f0eb] flex items-center justify-center text-[#0c2e1f] font-black text-2xl shrink-0 shadow-sm border border-[#339e71]/40">
+                        <div className="relative h-16 w-16 rounded-2xl overflow-hidden bg-[#eaf5f0] flex items-center justify-center text-[#167d4f] font-black text-2xl shrink-0 shadow-sm border border-[#2db477]/40">
                           {r.photo_url || r.avatar_url ? (
                             <Image
                               src={r.photo_url || r.avatar_url || ""}
@@ -338,17 +338,17 @@ export default function ContactsPage() {
                               className="object-cover"
                             />
                           ) : (
-                            <UserCheck className="h-8 w-8 text-[#0c2e1f]" />
+                            <UserCheck className="h-8 w-8 text-[#167d4f]" />
                           )}
                         </div>
                         <div className="min-w-0">
                           <h3 className="font-extrabold text-base text-gray-900 truncate">
                             {r.name}
                           </h3>
-                          <p className="text-xs text-[#0c2e1f] font-semibold truncate">
+                          <p className="text-xs text-[#167d4f] font-semibold truncate">
                             {locale === "uz" ? r.specialization_uz : r.specialization_ru}
                           </p>
-                          <span className="inline-block mt-1 rounded-md bg-[#e5f0eb] px-2.5 py-0.5 text-[10px] font-bold text-[#0c2e1f]">
+                          <span className="inline-block mt-1 rounded-md bg-[#eaf5f0] px-2.5 py-0.5 text-[10px] font-bold text-[#167d4f]">
                             {r.experience_years} {t.aboutPage.yearsExp}
                           </span>
                         </div>
@@ -357,7 +357,7 @@ export default function ContactsPage() {
                       <div className={`mt-auto grid ${instagramUrl ? "grid-cols-3 gap-1.5 sm:gap-2" : "grid-cols-2 gap-2"} pt-4 border-t border-gray-100`}>
                         <a
                           href={`tel:${r.phone}`}
-                          className="flex items-center justify-center gap-1 sm:gap-1.5 rounded-2xl bg-[#0c2e1f] px-2 sm:px-3 py-2.5 text-[11px] sm:text-xs font-bold text-white hover:bg-[#19573c] shadow-sm active:scale-95 transition-all min-w-0"
+                          className="flex items-center justify-center gap-1 sm:gap-1.5 rounded-2xl bg-[#167d4f] px-2 sm:px-3 py-2.5 text-[11px] sm:text-xs font-bold text-white hover:bg-[#167d4f] shadow-sm active:scale-95 transition-all min-w-0"
                         >
                           <Phone className="h-3.5 w-3.5 shrink-0" />
                           <span className="truncate">{t.aboutPage.callBtn}</span>
@@ -391,7 +391,7 @@ export default function ContactsPage() {
             ) : (
               /* High-End Realtors Empty State (Zero Fake Data) */
               <div className="rounded-3xl bg-white/90 backdrop-blur-md p-8 sm:p-12 border border-dashed border-gray-200 text-center max-w-xl mx-auto space-y-3 shadow-sm">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#e5f0eb] text-[#0c2e1f] shadow-sm">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#eaf5f0] text-[#167d4f] shadow-sm">
                   <Users className="h-7 w-7" />
                 </div>
                 <h3 className="text-base sm:text-lg font-bold text-gray-900">
@@ -402,7 +402,7 @@ export default function ContactsPage() {
                 </p>
                 <div className="pt-2">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1 text-xs font-medium text-gray-500 border border-gray-200/80 shadow-sm">
-                    <ShieldCheck className="h-3.5 w-3.5 text-[#0c2e1f]" />
+                    <ShieldCheck className="h-3.5 w-3.5 text-[#167d4f]" />
                     <span>ANGREN ESTATE Official Partners</span>
                   </span>
                 </div>
@@ -413,11 +413,11 @@ export default function ContactsPage() {
           {/* SECTION C: ELON BERISH UCHUN ARIZA / ОСТАВИТЬ ЗАЯВКУ НА РАЗМЕЩЕНИЕ */}
           <section className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#0c2e1f] text-white shadow-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#167d4f] text-white shadow-sm">
                 <Home className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-lg sm:text-xl font-bold text-[#0c2e1f]">
+                <h2 className="text-lg sm:text-xl font-bold text-[#167d4f]">
                   {t.contactsPage.listingSectionTitle}
                 </h2>
                 <p className="text-xs text-gray-500">
@@ -426,10 +426,10 @@ export default function ContactsPage() {
               </div>
             </div>
 
-            <div className="rounded-3xl bg-white/95 backdrop-blur-xl border border-[#e2e9e6] p-6 sm:p-10 shadow-card max-w-2xl mx-auto">
+            <div className="rounded-3xl bg-white/95 backdrop-blur-xl border border-[#dee8e3] p-6 sm:p-10 shadow-card max-w-2xl mx-auto">
               {submitSuccess ? (
                 <div className="py-8 text-center space-y-4">
-                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#e5f0eb] text-[#19573c] shadow-sm">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#eaf5f0] text-[#167d4f] shadow-sm">
                     <CheckCircle2 className="h-8 w-8" />
                   </div>
                   <h3 className="text-lg sm:text-xl font-black text-brand-dark">
@@ -555,7 +555,7 @@ export default function ContactsPage() {
                   {/* 4. Lokatsiya (Required) */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-gray-700 flex items-center gap-1">
-                      <MapPin className="h-3.5 w-3.5 text-[#19573c]" />
+                      <MapPin className="h-3.5 w-3.5 text-[#167d4f]" />
                       <span>{locale === "uz" ? "Lokatsiya *" : "Локация *"}</span>
                     </label>
                     <input
@@ -625,7 +625,7 @@ export default function ContactsPage() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full py-3.5 rounded-2xl bg-[#0c2e1f] hover:bg-[#19573c] text-white text-xs font-bold shadow-md shadow-[#0c2e1f]/20 flex items-center justify-center gap-2 transition-all active:scale-98 disabled:opacity-50"
+                    className="w-full py-3.5 rounded-2xl bg-[#167d4f] hover:bg-[#167d4f] text-white text-xs font-bold shadow-md shadow-[#167d4f]/20 flex items-center justify-center gap-2 transition-all active:scale-98 disabled:opacity-50"
                   >
                     {isSubmitting ? (
                       <>

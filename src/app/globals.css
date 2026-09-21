@@ -3,35 +3,45 @@
 @tailwind utilities;
 
 :root {
-  /* Official ANGREN ESTATE Colors (100% Derived from Official Logo, Hue: 154deg) */
-  --brand-primary-dark: #0c2e1f;
-  --brand-primary: #19573c;
-  --brand-primary-medium: #206e4d;
-  --brand-primary-light: #257f59;
-  --brand-accent: #339e71;
-  --brand-surface: #f9fbfa;
-  --brand-surface-soft: #e5f0eb;
-  --brand-border: #e2e9e6;
-  --brand-border-dark: #c2d3c9;
+  /* Official ANGREN ESTATE Colors (100% Derived from Primary #167d4f) */
+  --brand-primary-dark: #0b3824;
+  --brand-primary: #167d4f;
+  --brand-primary-medium: #145d3c;
+  --brand-primary-hover: #1b8d5a;
+  --brand-primary-light: #2db477;
+  --brand-accent: #167d4f;
+  --brand-surface: #fbfcfb;
+  --brand-surface-soft: #eaf5f0;
+  --brand-border: #dee8e3;
+  --brand-border-dark: #bdd1c8;
   --brand-card: #ffffff;
-  --brand-text: #0c2e1f;
-  --brand-text-secondary: #43705c;
+  --brand-text: #07311e;
+  --brand-text-secondary: #3b6854;
 
-  --foreground-rgb: 12, 46, 31;
-  --background-start-rgb: 249, 251, 250;
+  --foreground-rgb: 7, 49, 30;
+  --background-start-rgb: 251, 252, 251;
   --background-end-rgb: 255, 255, 255;
 }
 
 html,
 body {
   color: rgb(var(--foreground-rgb));
-  background: #f9fbfa;
+  background: #fbfcfb;
   min-height: 100vh;
   max-width: 100vw;
   overflow-x: hidden;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11", "tnum";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Premium Silver Metallic Lettering (Subtle, Quiet Luxury) */
+.silver-metallic-text {
+  background: linear-gradient(135deg, #FFFFFF 0%, #D4D8D6 40%, #FFFFFF 60%, #A6ACA9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  letter-spacing: 0.18em;
 }
 
 /* Apple-style smooth scrollbar */
@@ -45,12 +55,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c2d3c9;
+  background: #bdd1c8;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #19573c;
+  background: #167d4f;
 }
 
 /* Apple-style GPU-accelerated micro-interactions & spring easings */
@@ -152,7 +162,7 @@ body {
   min-width: 28px;
   padding: 0 10px;
   border-radius: 9999px;
-  background: #0c2e1f;
+  background: #167d4f;
   color: #FFFFFF;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-size: 12px;
@@ -175,14 +185,14 @@ body {
 }
 
 .glass-panel-dark {
-  background: rgba(12, 46, 31, 0.92);
+  background: rgba(11, 56, 36, 0.92);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .glass-dock {
-  background: rgba(12, 46, 31, 0.90);
+  background: rgba(11, 56, 36, 0.90);
   backdrop-filter: blur(24px) saturate(190%);
   -webkit-backdrop-filter: blur(24px) saturate(190%);
   border-top: 1px solid rgba(255, 255, 255, 0.15);

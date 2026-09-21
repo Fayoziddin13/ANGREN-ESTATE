@@ -75,23 +75,23 @@ export default function AboutPage() {
         <section className="relative overflow-hidden bg-white border-b border-gray-100 py-16 sm:py-24">
           <div className="absolute inset-0 pointer-events-none opacity-40">
             <div className="absolute -top-32 right-0 w-96 h-96 rounded-full bg-brand-light/50 blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full bg-[#e5f0eb]/60 blur-2xl" />
+            <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full bg-[#eaf5f0]/60 blur-2xl" />
           </div>
 
           <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center space-y-4">
-            <div className="inline-flex items-center gap-2 rounded-full bg-[#e5f0eb] px-3.5 py-1 text-xs font-bold text-[#0c2e1f] border border-[#339e71]/40">
-              <ShieldCheck className="h-3.5 w-3.5 text-[#19573c]" />
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#eaf5f0] px-3.5 py-1 text-xs font-bold text-[#167d4f] border border-[#2db477]/40">
+              <ShieldCheck className="h-3.5 w-3.5 text-[#167d4f]" />
               <span>{badgeText}</span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0c2e1f] leading-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#167d4f] leading-tight">
               {headlineText}
             </h1>
 
             <div className="max-w-3xl mx-auto space-y-3 text-xs sm:text-sm text-gray-600 leading-relaxed font-normal">
               <p>{p1Text}</p>
               <p>{p2Text}</p>
-              <p className="font-bold text-[#19573c] text-sm sm:text-base">
+              <p className="font-bold text-[#167d4f] text-sm sm:text-base">
                 {p3Text}
               </p>
             </div>
@@ -99,7 +99,7 @@ export default function AboutPage() {
             <div className="pt-2">
               <Link
                 href="/"
-                className="inline-flex items-center gap-2 rounded-2xl bg-[#0c2e1f] px-5 py-2.5 text-xs font-bold text-white shadow-card hover:bg-[#19573c] hover:shadow-elevated transition-all active:scale-95"
+                className="inline-flex items-center gap-2 rounded-2xl bg-[#167d4f] px-5 py-2.5 text-xs font-bold text-white shadow-card hover:bg-[#167d4f] hover:shadow-elevated transition-all active:scale-95"
               >
                 <span>{t.aboutPage.goToMap}</span>
                 <ArrowRight className="h-4 w-4" />
@@ -111,7 +111,7 @@ export default function AboutPage() {
         {/* 3. Visual Advantages Grid */}
         <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
           <div className="text-center max-w-2xl mx-auto mb-10 space-y-1.5">
-            <h2 className="text-lg sm:text-xl font-bold text-[#0c2e1f]">
+            <h2 className="text-lg sm:text-xl font-bold text-[#167d4f]">
               {t.aboutPage.advantagesTitle}
             </h2>
             <p className="text-xs text-gray-500">
@@ -129,9 +129,9 @@ export default function AboutPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.3, delay: idx * 0.06 }}
-                  className="rounded-3xl bg-white/90 backdrop-blur-md p-6 border border-[#e2e9e6] shadow-card hover:shadow-elevated hover:-translate-y-0.5 transition-all duration-200 group"
+                  className="rounded-3xl bg-white/90 backdrop-blur-md p-6 border border-[#dee8e3] shadow-card hover:shadow-elevated hover:-translate-y-0.5 transition-all duration-200 group"
                 >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#e5f0eb] text-[#0c2e1f] group-hover:bg-[#0c2e1f] group-hover:text-white transition-colors mb-3.5 shadow-sm">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#eaf5f0] text-[#167d4f] group-hover:bg-[#167d4f] group-hover:text-white transition-colors mb-3.5 shadow-sm">
                     <Icon className="h-5 w-5" />
                   </div>
                   <h3 className="text-sm font-bold text-gray-900 mb-1">
@@ -150,7 +150,7 @@ export default function AboutPage() {
         <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-4 pb-12">
           <div className="rounded-3xl bg-white/95 backdrop-blur-xl p-6 sm:p-10 border border-gray-100 shadow-elevated">
             <div className="max-w-3xl space-y-3 mb-8">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-[#e5f0eb]/60 px-3 py-1 text-xs font-bold text-brand-primary">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-[#eaf5f0]/60 px-3 py-1 text-xs font-bold text-brand-primary">
                 <Users className="h-3.5 w-3.5" />
                 <span>{t.aboutPage.realtorsSectionTitle}</span>
               </div>

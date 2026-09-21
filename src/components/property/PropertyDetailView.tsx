@@ -135,7 +135,7 @@ export default function PropertyDetailView({
       <div className="min-h-screen flex flex-col bg-gray-50">
         <Header />
         <div className="flex-1 flex flex-col items-center justify-center py-20 text-gray-400">
-          <div className="w-10 h-10 rounded-full border-3 border-[#0c2e1f] border-t-transparent animate-spin mb-3" />
+          <div className="w-10 h-10 rounded-full border-3 border-[#167d4f] border-t-transparent animate-spin mb-3" />
           <p className="text-sm font-semibold">{locale === "uz" ? "Ko‘chmas mulk ma’lumotlari yuklanmoqda..." : "Загрузка информации об объекте..."}</p>
         </div>
         <Footer />
@@ -148,7 +148,7 @@ export default function PropertyDetailView({
       <div className="min-h-screen flex flex-col bg-gray-50">
         <Header />
         <div className="flex-1 flex flex-col items-center justify-center py-24 px-4 text-center">
-          <div className="w-16 h-16 rounded-3xl bg-[#e5f0eb]/40 text-[#0c2e1f] flex items-center justify-center mb-4">
+          <div className="w-16 h-16 rounded-3xl bg-[#eaf5f0]/40 text-[#167d4f] flex items-center justify-center mb-4">
             <Info className="w-8 h-8" />
           </div>
           <h1 className="text-2xl font-black text-gray-900 mb-2">
@@ -161,7 +161,7 @@ export default function PropertyDetailView({
           </p>
           <Link
             href="/"
-            className="px-6 py-3 rounded-2xl bg-[#0c2e1f] hover:bg-[#19573c] text-white text-sm font-bold shadow-lg shadow-black/20 transition-all flex items-center gap-2"
+            className="px-6 py-3 rounded-2xl bg-[#167d4f] hover:bg-[#167d4f] text-white text-sm font-bold shadow-lg shadow-black/20 transition-all flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>{locale === "uz" ? "Xaritaga qaytish" : "Вернуться на карту"}</span>
@@ -230,7 +230,7 @@ export default function PropertyDetailView({
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f9fbfa]">
+    <div className="min-h-screen flex flex-col bg-[#fbfcfb]">
       <Header />
 
       <main className="flex-1 pb-20">
@@ -238,7 +238,7 @@ export default function PropertyDetailView({
         <div className="bg-white border-b border-gray-200/80">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-xs font-semibold text-gray-500 truncate">
-              <Link href="/" className="hover:text-[#0c2e1f] flex items-center gap-1">
+              <Link href="/" className="hover:text-[#167d4f] flex items-center gap-1">
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>{locale === "uz" ? "Xarita" : "Карта"}</span>
               </Link>
@@ -263,12 +263,12 @@ export default function PropertyDetailView({
                 }}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-colors shadow-sm ${
                   isCompared
-                    ? "bg-[#e5f0eb]/60 border-[#339e71] text-[#0c2e1f]"
+                    ? "bg-[#eaf5f0]/60 border-[#2db477] text-[#167d4f]"
                     : "border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
                 }`}
                 title={locale === "uz" ? "Solishtirishga qo‘shish" : "Добавить в сравнение"}
               >
-                <Scale className="w-3.5 h-3.5 text-[#0c2e1f]" />
+                <Scale className="w-3.5 h-3.5 text-[#167d4f]" />
                 <span>{isCompared ? (locale === "uz" ? "Solishtirishda" : "В сравнении") : (locale === "uz" ? "Solishtirish" : "Сравнить")}</span>
               </button>
 
@@ -276,7 +276,7 @@ export default function PropertyDetailView({
                 onClick={handleShare}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold transition-colors shadow-sm"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-[#19573c]" /> : <Share2 className="w-3.5 h-3.5" />}
+                {copied ? <Check className="w-3.5 h-3.5 text-[#167d4f]" /> : <Share2 className="w-3.5 h-3.5" />}
                 <span>{copied ? (locale === "uz" ? "Nusxalandi" : "Скопировано") : locale === "uz" ? "Ulashish" : "Поделиться"}</span>
               </button>
 
@@ -333,7 +333,7 @@ export default function PropertyDetailView({
 
               <Link
                 href="/"
-                className="shrink-0 px-5 py-2.5 rounded-2xl bg-[#0c2e1f] hover:bg-[#19573c] text-white text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2"
+                className="shrink-0 px-5 py-2.5 rounded-2xl bg-[#167d4f] hover:bg-[#167d4f] text-white text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2"
               >
                 <span>{locale === "uz" ? "Boshqa e'lonlarni ko‘rish" : "Смотреть другие объекты"}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -369,7 +369,7 @@ export default function PropertyDetailView({
 
                   {/* Badges Overlay */}
                   <div className="absolute top-4 left-4 z-10 flex flex-wrap items-center gap-2">
-                    <span className="px-3.5 py-1.5 rounded-xl bg-[#0c2e1f] text-white text-xs font-bold tracking-wide shadow-md">
+                    <span className="px-3.5 py-1.5 rounded-xl bg-[#167d4f] text-white text-xs font-bold tracking-wide shadow-md">
                       {isSale ? (locale === "uz" ? "Sotuv" : "Продажа") : locale === "uz" ? "Ijara" : "Аренда"}
                     </span>
                     {isSold && (
@@ -390,14 +390,14 @@ export default function PropertyDetailView({
                             b === "top"
                               ? "bg-amber-600"
                               : b === "new"
-                              ? "bg-[#206e4d]"
+                              ? "bg-[#145d3c]"
                               : b === "tez_sotiladi"
                               ? "bg-rose-600"
                               : b === "hamyonbop" || b === "yaxshi_taklif"
-                              ? "bg-[#19573c]"
+                              ? "bg-[#167d4f]"
                               : b === "narxi_tushirildi"
                               ? "bg-slate-700"
-                              : "bg-[#0c2e1f]"
+                              : "bg-[#167d4f]"
                           }`}
                         >
                           {b === "top" && <Sparkles className="w-3 h-3 shrink-0" />}
@@ -447,7 +447,7 @@ export default function PropertyDetailView({
                         onClick={() => setActivePhotoIndex(idx)}
                         className={`relative w-20 h-16 rounded-xl overflow-hidden shrink-0 border-2 transition-all ${
                           activePhotoIndex === idx
-                            ? "border-[#0c2e1f] ring-2 ring-[#339e71]/30 scale-105"
+                            ? "border-[#167d4f] ring-2 ring-[#2db477]/30 scale-105"
                             : "border-transparent opacity-70 hover:opacity-100"
                         }`}
                       >
@@ -459,18 +459,18 @@ export default function PropertyDetailView({
               </div>
 
               {/* Title & Key Info */}
-              <div className="p-5 sm:p-7 rounded-2xl bg-white border border-[#e2e9e6] shadow-card space-y-5">
+              <div className="p-5 sm:p-7 rounded-2xl bg-white border border-[#dee8e3] shadow-card space-y-5">
                 <div>
                   {/* Badges and Category row */}
                   <div className="flex flex-wrap items-center gap-1.5 mb-3">
-                    <span className="rounded-lg bg-[#0c2e1f] px-2.5 py-0.5 text-xs font-bold tracking-wide text-white shadow-xs">
+                    <span className="rounded-lg bg-[#167d4f] px-2.5 py-0.5 text-xs font-bold tracking-wide text-white shadow-xs">
                       {property.transaction_type === "sale" ? (locale === "uz" ? "Sotuv" : "Продажа") : (locale === "uz" ? "Ijara" : "Аренда")}
                     </span>
                     <span className="rounded-lg bg-slate-100 text-slate-700 px-2.5 py-0.5 text-xs font-bold border border-slate-200">
                       {getPropertyTypeLabel(property.property_type, locale)}
                     </span>
                     {isPropertyNew(property) && (
-                      <span className="rounded-lg bg-[#206e4d] px-2.5 py-0.5 text-xs font-bold text-white shadow-xs">
+                      <span className="rounded-lg bg-[#145d3c] px-2.5 py-0.5 text-xs font-bold text-white shadow-xs">
                         {locale === "uz" ? "Yangi" : "Новинка"}
                       </span>
                     )}
@@ -482,14 +482,14 @@ export default function PropertyDetailView({
                             b === "top"
                               ? "bg-amber-600"
                               : b === "arzon"
-                              ? "bg-[#206e4d]"
+                              ? "bg-[#145d3c]"
                               : b === "tez_sotiladi"
                               ? "bg-rose-600"
                               : b === "hamyonbop" || b === "yaxshi_taklif"
-                              ? "bg-[#19573c]"
+                              ? "bg-[#167d4f]"
                               : b === "narxi_tushirildi"
                               ? "bg-slate-700"
-                              : "bg-[#0c2e1f]"
+                              : "bg-[#167d4f]"
                           }`}
                         >
                           {getBadgeLabel(b, locale)}
@@ -499,12 +499,12 @@ export default function PropertyDetailView({
 
                   <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
                     <div className="flex items-center gap-3 flex-wrap">
-                      <div className="text-2xl sm:text-3xl font-extrabold text-[#0c2e1f] tracking-tight">
+                      <div className="text-2xl sm:text-3xl font-extrabold text-[#167d4f] tracking-tight">
                         {priceDisplay}
                       </div>
                       {property.price_negotiable && (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-[#e5f0eb] border border-[#339e71]/40 text-[#0c2e1f] text-xs font-bold shadow-xs">
-                          <Handshake className="w-3.5 h-3.5 text-[#19573c]" />
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-[#eaf5f0] border border-[#2db477]/40 text-[#167d4f] text-xs font-bold shadow-xs">
+                          <Handshake className="w-3.5 h-3.5 text-[#167d4f]" />
                           <span>{locale === "uz" ? "Narxi kelishiladi" : "Цена договорная"}</span>
                         </span>
                       )}
@@ -518,7 +518,7 @@ export default function PropertyDetailView({
 
                   <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 mt-1.5">
                     <div className="flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-[#0c2e1f] shrink-0" />
+                      <MapPin className="w-3.5 h-3.5 text-[#167d4f] shrink-0" />
                       <span>{address}</span>
                     </div>
                     {property.published_at && (
@@ -566,7 +566,7 @@ export default function PropertyDetailView({
                         <div className="text-xs text-gray-500 font-medium">
                           {locale === "uz" ? "Ta’mir" : "Ремонт"}
                         </div>
-                        <div className="text-base font-extrabold text-[#0c2e1f] mt-0.5 capitalize">
+                        <div className="text-base font-extrabold text-[#167d4f] mt-0.5 capitalize">
                           {getRenovationLabel(property.renovation, locale)}
                         </div>
                       </div>
@@ -592,7 +592,7 @@ export default function PropertyDetailView({
 
                       <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100/80 text-center">
                         <div className="text-xs text-gray-500 font-medium">{locale === "uz" ? "Ta’mir" : "Ремонт"}</div>
-                        <div className="text-base font-extrabold text-[#0c2e1f] mt-0.5 capitalize">
+                        <div className="text-base font-extrabold text-[#167d4f] mt-0.5 capitalize">
                           {getRenovationLabel(property.renovation, locale)}
                         </div>
                       </div>
@@ -648,7 +648,7 @@ export default function PropertyDetailView({
               <div className="p-6 sm:p-8 rounded-3xl bg-white border border-gray-200/80 shadow-card space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                    <MapPin className="w-5 h-5 text-[#0c2e1f]" />
+                    <MapPin className="w-5 h-5 text-[#167d4f]" />
                     <span>{locale === "uz" ? "Xaritadagi joylashuvi" : "Расположение на карте"}</span>
                   </h3>
                   <span className="text-xs text-gray-500 font-medium">{locale === "uz" ? "Angren shahri" : "г. Ангрен"}</span>
@@ -680,9 +680,9 @@ export default function PropertyDetailView({
             {/* Right Column (4 cols): Sticky Contact & Action Box */}
             <div className="lg:col-span-4 space-y-6">
               {/* Contact Card */}
-              <div className="sticky top-28 p-5 sm:p-6 rounded-2xl bg-white border border-[#e2e9e6] shadow-elevated space-y-5">
+              <div className="sticky top-28 p-5 sm:p-6 rounded-2xl bg-white border border-[#dee8e3] shadow-elevated space-y-5">
                 <div className="flex items-center gap-3.5 pb-4 border-b border-gray-100">
-                  <div className="relative w-13 h-13 rounded-2xl bg-[#0c2e1f] text-white flex items-center justify-center font-bold text-base border-2 border-[#19573c] shadow-sm overflow-hidden shrink-0">
+                  <div className="relative w-13 h-13 rounded-2xl bg-[#167d4f] text-white flex items-center justify-center font-bold text-base border-2 border-[#167d4f] shadow-sm overflow-hidden shrink-0">
                     {property.realtor && property.realtor.is_active && (property.realtor.photo_url || property.realtor.avatar_url) ? (
                       <Image
                         src={property.realtor.photo_url || property.realtor.avatar_url || ""}
@@ -702,7 +702,7 @@ export default function PropertyDetailView({
                         ? property.realtor.name
                         : "ANGREN ESTATE Eksperti"}
                     </div>
-                    <div className="text-xs text-[#0c2e1f] font-semibold flex items-center gap-1 mt-0.5">
+                    <div className="text-xs text-[#167d4f] font-semibold flex items-center gap-1 mt-0.5">
                       <ShieldCheck className="w-3.5 h-3.5" />
                       <span>
                         {property.realtor && property.realtor.is_active
@@ -737,7 +737,7 @@ export default function PropertyDetailView({
 
                     <Link
                       href="/"
-                      className="w-full py-3 px-4 rounded-xl bg-[#0c2e1f] hover:bg-[#19573c] text-white text-xs font-bold shadow-md flex items-center justify-center gap-2 transition-all active:scale-98"
+                      className="w-full py-3 px-4 rounded-xl bg-[#167d4f] hover:bg-[#167d4f] text-white text-xs font-bold shadow-md flex items-center justify-center gap-2 transition-all active:scale-98"
                     >
                       <ArrowLeft className="w-4 h-4" />
                       <span>
@@ -750,7 +750,7 @@ export default function PropertyDetailView({
                     <a
                       href={`tel:${property.contact_phone}`}
                       onClick={handleCallClick}
-                      className="w-full py-3 px-4 rounded-xl bg-[#0c2e1f] hover:bg-[#19573c] text-white text-xs sm:text-sm font-bold shadow-md flex items-center justify-center gap-2 transition-all active:scale-98"
+                      className="w-full py-3 px-4 rounded-xl bg-[#167d4f] hover:bg-[#167d4f] text-white text-xs sm:text-sm font-bold shadow-md flex items-center justify-center gap-2 transition-all active:scale-98"
                     >
                       <Phone className="w-4 h-4" />
                       <span>{property.contact_phone}</span>
@@ -784,17 +784,17 @@ export default function PropertyDetailView({
                     {/* Realtor Profile Button */}
                     <Link
                       href="/kontaktlar#realtors"
-                      className="w-full py-2.5 px-4 rounded-xl border border-gray-200 hover:border-[#0c2e1f] bg-gray-50 hover:bg-[#e5f0eb]/60/40 text-gray-700 hover:text-[#0c2e1f] text-xs font-bold shadow-xs flex items-center justify-center gap-2 transition-all active:scale-98"
+                      className="w-full py-2.5 px-4 rounded-xl border border-gray-200 hover:border-[#167d4f] bg-gray-50 hover:bg-[#eaf5f0]/60/40 text-gray-700 hover:text-[#167d4f] text-xs font-bold shadow-xs flex items-center justify-center gap-2 transition-all active:scale-98"
                     >
-                      <UserCheck className="w-4 h-4 text-[#0c2e1f]" />
+                      <UserCheck className="w-4 h-4 text-[#167d4f]" />
                       <span>{locale === "uz" ? "Rieltor profili" : "Профиль риелтора"}</span>
                     </Link>
                   </div>
                 )}
 
-                <div className="p-3.5 rounded-xl bg-[#e5f0eb]/40 border border-[#339e71]/30 text-xs text-gray-600 space-y-1">
-                  <div className="font-bold text-[#0c2e1f] flex items-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4 text-[#19573c]" />
+                <div className="p-3.5 rounded-xl bg-[#eaf5f0]/40 border border-[#2db477]/30 text-xs text-gray-600 space-y-1">
+                  <div className="font-bold text-[#167d4f] flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-[#167d4f]" />
                     <span>{locale === "uz" ? "Xavfsiz bitim kafolati" : "Гарантия безопасной сделки"}</span>
                   </div>
                   <p className="text-[11px] text-gray-600">

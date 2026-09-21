@@ -14,7 +14,7 @@ export function AuthModal() {
     <Modal isOpen={isAuthModalOpen} onClose={closeAuthModal}>
       <div className="flex flex-col items-center text-center space-y-4">
         {/* Official Canonical Brand Logo */}
-        <div className="flex h-14 w-[70px] items-center justify-center rounded-2xl shadow-sm bg-[#0c2e1f] p-2 shrink-0">
+        <div className="flex h-14 w-[70px] items-center justify-center rounded-2xl shadow-sm bg-[#167d4f] p-2 shrink-0">
           <Image
             src="/logo-white.png"
             alt="ANGREN ESTATE"

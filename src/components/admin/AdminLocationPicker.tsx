@@ -116,7 +116,7 @@ export function AdminLocationPicker({
     // Create Draggable Pin Marker
     const markerEl = document.createElement("div");
     markerEl.className =
-      "cursor-grab active:cursor-grabbing p-1 rounded-full bg-[#0c2e1f] text-white shadow-2xl border-2 border-white ring-4 ring-[#0c2e1f]/40 transition-transform hover:scale-110";
+      "cursor-grab active:cursor-grabbing p-1 rounded-full bg-[#167d4f] text-white shadow-2xl border-2 border-white ring-4 ring-[#167d4f]/40 transition-transform hover:scale-110";
     markerEl.innerHTML = `
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
@@ -172,7 +172,7 @@ export function AdminLocationPicker({
         type: "fill",
         source: "admin-polygon-source",
         paint: {
-          "fill-color": "#0c2e1f",
+          "fill-color": "#167d4f",
           "fill-opacity": 0.35,
         },
       });
@@ -182,7 +182,7 @@ export function AdminLocationPicker({
         type: "line",
         source: "admin-polygon-source",
         paint: {
-          "line-color": "#0c2e1f",
+          "line-color": "#167d4f",
           "line-width": 3,
           "line-dasharray": [2, 1],
         },
@@ -265,7 +265,7 @@ export function AdminLocationPicker({
       polygonCoords.forEach(([vLat, vLng], idx) => {
         const el = document.createElement("div");
         el.className =
-          "flex h-5 w-5 items-center justify-center rounded-full bg-[#0c2e1f] text-white font-bold text-[10px] shadow-md border-2 border-white ring-2 ring-[#339e71]";
+          "flex h-5 w-5 items-center justify-center rounded-full bg-[#167d4f] text-white font-bold text-[10px] shadow-md border-2 border-white ring-2 ring-[#2db477]";
         el.innerText = `${idx + 1}`;
 
         const m = new maplibregl.Marker({ element: el, anchor: "center" })
@@ -312,7 +312,7 @@ export function AdminLocationPicker({
               key={preset.label}
               type="button"
               onClick={() => handleFlyToPreset(preset.lat, preset.lng)}
-              className="px-2.5 py-1 rounded-xl bg-white hover:bg-[#e5f0eb]/40 hover:text-[#0c2e1f] text-[11px] font-bold text-slate-700 border border-slate-200/80 shadow-sm transition-colors whitespace-nowrap"
+              className="px-2.5 py-1 rounded-xl bg-white hover:bg-[#eaf5f0]/40 hover:text-[#167d4f] text-[11px] font-bold text-slate-700 border border-slate-200/80 shadow-sm transition-colors whitespace-nowrap"
             >
               {preset.label}
             </button>
@@ -326,7 +326,7 @@ export function AdminLocationPicker({
             onClick={() => setMapMode("standard")}
             className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
               mapMode === "standard"
-                ? "bg-[#0c2e1f] text-white"
+                ? "bg-[#167d4f] text-white"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
@@ -338,7 +338,7 @@ export function AdminLocationPicker({
             onClick={() => setMapMode("satellite")}
             className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
               mapMode === "satellite"
-                ? "bg-[#0c2e1f] text-white"
+                ? "bg-[#167d4f] text-white"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
@@ -355,7 +355,7 @@ export function AdminLocationPicker({
         {/* Marker Drag Hint Overlay */}
         <div className="absolute top-3 left-3 z-10 pointer-events-none">
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-md shadow-md border border-white/80 text-[11px] font-bold text-slate-700">
-            <MapPin className="h-3.5 w-3.5 text-[#0c2e1f]" />
+            <MapPin className="h-3.5 w-3.5 text-[#167d4f]" />
             <span>
               {isDrawingPolygon
                 ? "Xaritada bosing: nuqta qo‘shiladi"
@@ -381,7 +381,7 @@ export function AdminLocationPicker({
                 {isDrawingPolygon ? "Chizishni to‘xtatish" : "Polygon chizish"}
               </span>
               {polygonCoords.length > 0 && (
-                <span className="px-1.5 py-0.5 rounded-full bg-[#e5f0eb] text-[#0c2e1f] text-[10px] font-extrabold">
+                <span className="px-1.5 py-0.5 rounded-full bg-[#eaf5f0] text-[#167d4f] text-[10px] font-extrabold">
                   {polygonCoords.length} nuqta
                 </span>
               )}

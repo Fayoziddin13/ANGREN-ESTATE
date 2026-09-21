@@ -1,6 +1,7 @@
 export const uz = {
   common: {
     brandName: "ANGREN ESTATE",
+    brandSubtitle: "KO‘CHMAS MULK BOZORI",
     tagline: "Angren ko‘chmas mulki — yagona xaritada",
     quoteText: "Ko‘chmas mulkdan ham ortiqroq",
     loading: "Yuklanmoqda...",
