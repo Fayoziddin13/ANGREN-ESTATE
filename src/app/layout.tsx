@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import Script from "next/script";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { CurrencyProvider } from "@/context/CurrencyContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { TelegramProvider } from "@/context/TelegramContext";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { GlobalModals } from "@/components/common/GlobalModals";
 
@@ -53,13 +55,21 @@ export default function RootLayout({
 }) {
   return (
     <html lang="uz">
+      <head>
+        <Script
+          src="https://telegram.org/js/telegram-web-app.js"
+          strategy="beforeInteractive"
+        />
+      </head>
       <body className="antialiased selection:bg-brand-light selection:text-brand-dark">
         <LanguageProvider>
           <CurrencyProvider>
             <AuthProvider>
-              {children}
-              <AuthModal />
-              <GlobalModals />
+              <TelegramProvider>
+                {children}
+                <AuthModal />
+                <GlobalModals />
+              </TelegramProvider>
             </AuthProvider>
           </CurrencyProvider>
         </LanguageProvider>

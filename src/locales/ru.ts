@@ -164,6 +164,7 @@ export const ru: Dictionary = {
     modalTitle: "Вход в ANGREN ESTATE",
     modalSubtitle: "Войдите, чтобы сохранять понравившиеся объекты и управлять избранным",
     googleSignIn: "Войти через Google",
+    telegramSignIn: "Войти через Telegram",
     guestNotice: "Для просмотра и поиска объектов регистрация не требуется.",
   },
   aboutPage: {

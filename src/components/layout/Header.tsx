@@ -167,7 +167,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
 
   return (
     <header
-      className={`sticky top-0 z-40 w-full transition-all duration-300 ${
+      className={`sticky top-0 z-40 w-full transition-all duration-300 pt-[env(safe-area-inset-top,0px)] ${
         isScrolled
           ? "bg-[#167d4f]/95 backdrop-blur-2xl backdrop-saturate-150 shadow-elevated border-b border-white/10"
           : "bg-[#167d4f]/90 backdrop-blur-xl backdrop-saturate-150 shadow-sm border-b border-white/10"

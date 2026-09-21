@@ -23,6 +23,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useMapMode } from "@/lib/mapStore";
 import { AdvancedFilterState, defaultAdvancedFilters } from "@/components/map/AdvancedFiltersModal";
 import { DEFAULT_ANGREN_HUDUDS } from "@/lib/hududService";
+import { useTelegram } from "@/context/TelegramContext";
 import { List, ChevronDown, Map, Layers, Search, SlidersHorizontal } from "lucide-react";
 
 function MapLoadingPlaceholder() {
@@ -80,6 +81,60 @@ export default function HomePage() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isListOpen, setIsListOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+
+  // Telegram WebApp BackButton coordination
+  const { isTelegram, setBackButton } = useTelegram();
+
+  useEffect(() => {
+    if (!isTelegram) return;
+
+    if (isDetailOpen) {
+      setBackButton({
+        visible: true,
+        onClick: () => {
+          setIsDetailOpen(false);
+        },
+      });
+    } else if (activeView === "catalog") {
+      setBackButton({
+        visible: true,
+        onClick: () => {
+          setActiveView("map");
+        },
+      });
+    } else if (isMobileSearchOpen) {
+      setBackButton({
+        visible: true,
+        onClick: () => {
+          setIsMobileSearchOpen(false);
+        },
+      });
+    } else if (isListOpen) {
+      setBackButton({
+        visible: true,
+        onClick: () => {
+          setIsListOpen(false);
+        },
+      });
+    } else if (selectedProperty) {
+      setBackButton({
+        visible: true,
+        onClick: () => {
+          setSelectedProperty(null);
+        },
+      });
+    } else {
+      setBackButton({ visible: false });
+    }
+  }, [
+    isTelegram,
+    setBackButton,
+    isDetailOpen,
+    activeView,
+    isMobileSearchOpen,
+    isListOpen,
+    selectedProperty,
+  ]);
 
   // Active pool of properties: strictly published properties from canonical data store
   const activePropertiesPool = useMemo(() => {

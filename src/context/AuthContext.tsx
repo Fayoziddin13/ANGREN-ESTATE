@@ -11,6 +11,7 @@ interface AuthContextType {
   openAuthModal: () => void;
   closeAuthModal: () => void;
   handleGoogleLogin: () => Promise<void>;
+  handleTelegramLogin: (initData: string) => Promise<boolean>;
   handleLogout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -147,6 +148,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const handleTelegramLogin = async (initData: string): Promise<boolean> => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/auth/telegram", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ initData }),
+      });
+      const data = await res.json();
+      if (data.success && data.user) {
+        setUser(data.user);
+        setIsAuthModalOpen(false);
+        await migrateGuestFavorites(data.user.id);
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error("[AuthContext] Telegram sign in error:", err);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await signOut();
@@ -174,6 +199,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         openAuthModal,
         closeAuthModal,
         handleGoogleLogin,
+        handleTelegramLogin,
         handleLogout,
         refreshProfile,
       }}

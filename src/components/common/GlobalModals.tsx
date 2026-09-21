@@ -8,15 +8,34 @@ import { FloatingCompareBar } from "@/components/compare/FloatingCompareBar";
 import { PropertyCompareModal } from "@/components/compare/PropertyCompareModal";
 import { SavedSearchesModal } from "@/components/search/SavedSearchesModal";
 import { SavedSearch, Property } from "@/lib/types";
+import { useTelegram } from "@/context/TelegramContext";
 
 export function GlobalModals() {
   const pathname = usePathname();
   const router = useRouter();
   const { publishedProperties } = useProperties();
   const { checkMatchingAlerts } = useSavedSearches();
+  const { isTelegram, setBackButton } = useTelegram();
 
   const [isCompareOpen, setIsCompareOpen] = useState(false);
   const [isSavedSearchesOpen, setIsSavedSearchesOpen] = useState(false);
+
+  // Sync Telegram BackButton with compare and saved searches modals
+  useEffect(() => {
+    if (!isTelegram) return;
+
+    if (isCompareOpen) {
+      setBackButton({
+        visible: true,
+        onClick: () => setIsCompareOpen(false),
+      });
+    } else if (isSavedSearchesOpen) {
+      setBackButton({
+        visible: true,
+        onClick: () => setIsSavedSearchesOpen(false),
+      });
+    }
+  }, [isTelegram, setBackButton, isCompareOpen, isSavedSearchesOpen]);
 
   // Check matching saved search alerts when properties are loaded
   useEffect(() => {

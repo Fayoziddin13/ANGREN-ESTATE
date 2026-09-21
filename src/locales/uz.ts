@@ -155,6 +155,7 @@ export const uz = {
     modalTitle: "ANGREN ESTATE tizimiga kirish",
     modalSubtitle: "Yoqqan obyektlarni saqlash va boshqarish uchun tizimga kiring",
     googleSignIn: "Google orqali kirish",
+    telegramSignIn: "Telegram orqali kirish",
     guestNotice: "Ob’ektlarni ko‘rish va qidirish uchun ro‘yxatdan o‘tish shart emas.",
   },
   aboutPage: {
