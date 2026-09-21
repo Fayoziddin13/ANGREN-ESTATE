@@ -491,7 +491,7 @@ export default function AdminLeadsPage() {
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-700 uppercase tracking-wider">
               <tr>
-                <th className="py-3.5 px-4">{locale === "uz" ? "Mijoz / Aloqa" : "Клиент / Контакт"}</th>
+                <th className="py-3.5 px-4">{locale === "uz" ? "Mijoz va aloqa" : "Клиент и контакты"}</th>
                 <th className="py-3.5 px-4">{locale === "uz" ? "Qiziqayotgan Mulk" : "Интересующий объект"}</th>
                 <th className="py-3.5 px-4">{locale === "uz" ? "Kanal & Qurilma" : "Канал и устройство"}</th>
                 <th className="py-3.5 px-4">{locale === "uz" ? "Sana & Vaqt" : "Дата и время"}</th>
@@ -785,7 +785,7 @@ export default function AdminLeadsPage() {
                     <div className="bg-white p-3 rounded-xl border border-emerald-100 flex items-start gap-2">
                       <MapPin className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
                       <div>
-                        <div className="text-[10px] font-bold text-slate-500 uppercase">{locale === "uz" ? "Manzil / Hudud" : "Локация / Адрес"}</div>
+                        <div className="text-[10px] font-bold text-slate-500 uppercase">{locale === "uz" ? "Manzil va hudud" : "Адрес и район"}</div>
                         <div className="text-xs font-bold text-slate-900 mt-0.5">{selectedLead.metadata.location}</div>
                       </div>
                     </div>

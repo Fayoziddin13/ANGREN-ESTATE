@@ -2936,7 +2936,7 @@ export default function AddPropertyPage() {
                           <Image src={img} alt={`Preview ${i + 1}`} fill className="object-cover" />
                           {i === 0 && (
                             <span className="absolute top-1.5 left-1.5 bg-[#16543C] text-white text-[9px] font-black px-1.5 py-0.5 rounded shadow">
-                              3:4 Main
+                              {locale === "uz" ? "3:4 Asosiy" : "3:4 Главное"}
                             </span>
                           )}
                         </div>

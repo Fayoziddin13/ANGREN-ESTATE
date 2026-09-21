@@ -595,7 +595,7 @@ export default function AdminArizalarPage() {
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/60 text-slate-600 font-extrabold uppercase tracking-wider text-[10px]">
                   <th className="py-3.5 px-4">{locale === "uz" ? "Mijoz (Ism & Tel)" : "Клиент"}</th>
-                  <th className="py-3.5 px-4">{locale === "uz" ? "Bitim / Mulk turi" : "Сделка / Объект"}</th>
+                  <th className="py-3.5 px-4">{locale === "uz" ? "Bitim va mulk turi" : "Сделка и объект"}</th>
                   <th className="py-3.5 px-4">{locale === "uz" ? "Lokatsiya" : "Локация"}</th>
                   <th className="py-3.5 px-4">{locale === "uz" ? "Ob'ekt haqida" : "Описание"}</th>
                   <th className="py-3.5 px-4">{locale === "uz" ? "Sana" : "Дата"}</th>
@@ -919,7 +919,7 @@ export default function AdminArizalarPage() {
                     </div>
                   </div>
                   <div>
-                    <span className="text-xs text-slate-500">{locale === "uz" ? "Qurilma / Manba" : "Устройство"}:</span>
+                    <span className="text-xs text-slate-500">{locale === "uz" ? "Qurilma va manba" : "Устройство и источник"}:</span>
                     <div className="text-xs font-semibold text-slate-700">
                       {selectedRequest.device || "Desktop"} ({selectedRequest.traffic_source || "Listing Request"})
                     </div>
@@ -979,7 +979,7 @@ export default function AdminArizalarPage() {
                   </div>
 
                   <div className="sm:col-span-2">
-                    <span className="text-xs text-slate-500">{locale === "uz" ? "Lokatsiya / Manzil" : "Локация / Адрес"}:</span>
+                    <span className="text-xs text-slate-500">{locale === "uz" ? "Manzil va hudud" : "Адрес и локация"}:</span>
                     <div className="text-sm font-bold text-slate-900 flex items-center gap-1.5 mt-0.5">
                       <MapPin className="h-4 w-4 text-[#16543C] shrink-0" />
                       <span>{selectedRequest.metadata?.location || selectedRequest.property_title || "-"}</span>
@@ -987,7 +987,7 @@ export default function AdminArizalarPage() {
                   </div>
 
                   <div className="sm:col-span-2">
-                    <span className="text-xs text-slate-500">{locale === "uz" ? "Mijoz tavsifi / Ob'ekt haqida" : "Описание от клиента"}:</span>
+                    <span className="text-xs text-slate-500">{locale === "uz" ? "Mijoz tavsifi" : "Описание от клиента"}:</span>
                     <div className="mt-1.5 p-3 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-800 leading-relaxed whitespace-pre-wrap">
                       {selectedRequest.message || selectedRequest.metadata?.description || "-"}
                     </div>

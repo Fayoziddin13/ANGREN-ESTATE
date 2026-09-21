@@ -727,7 +727,9 @@ export default function AdminAnalyticsPage() {
             <div className="p-3.5 bg-slate-950/80 border border-blue-500/30 rounded-2xl flex items-start gap-2.5 text-xs text-slate-300">
               <Globe className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
               <span>
-                <strong className="text-white font-semibold">Privacy-friendly analitika: </strong>
+                <strong className="text-white font-semibold">
+                  {locale === "uz" ? "Xavfsiz analitika: " : "Безопасная аналитика: "}
+                </strong>
                 {locale === "uz"
                   ? "Foydalanuvchilarning aniq koordinatalari (kenglik/uzunlik) saqlanmaydi. Faqat brauzer tomonidan ruxsat berilgan taqdirda umumiy shahar va viloyat darajasidagi statistikasi jamlanadi."
                   : "Точные координаты пользователей (широта/долгота) не сохраняются. Фиксируется только агрегированная статистика на уровне городов и регионов при согласии пользователя."}

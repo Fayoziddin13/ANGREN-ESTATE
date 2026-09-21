@@ -181,18 +181,21 @@ export default function PropertyDetailView({
   const isRented = property.status === "rented";
   const isSoldOrRented = isSold || isRented;
 
+  const uzsSuffix = locale === "uz" ? "so‘m" : "сум";
+  const monthSuffix = isSale ? "" : ` / ${locale === "uz" ? "oy" : "мес"}`;
+
   const priceDisplay = isSale
     ? currency === "UZS"
-      ? `${property.price_uzs.toLocaleString("ru-RU")} UZS`
+      ? `${property.price_uzs.toLocaleString("ru-RU")} ${uzsSuffix}`
       : `$${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")}`
     : currency === "UZS"
-    ? `${property.price_uzs.toLocaleString("ru-RU")} UZS / ${t.common.month}`
-    : `$${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")} / ${t.common.month}`;
+    ? `${property.price_uzs.toLocaleString("ru-RU")} ${uzsSuffix}${monthSuffix}`
+    : `$${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")}${monthSuffix}`;
 
   const secondaryPrice =
     currency === "UZS"
       ? `≈ $${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")}`
-      : `≈ ${property.price_uzs.toLocaleString("ru-RU")} UZS`;
+      : `≈ ${property.price_uzs.toLocaleString("ru-RU")} ${uzsSuffix}${monthSuffix}`;
 
   const handleShare = () => {
     if (typeof window !== "undefined") {
@@ -379,49 +382,29 @@ export default function PropertyDetailView({
                       </span>
                     )}
                     {property.badges &&
-                      property.badges.map((b) => {
-                        if (b === "top") {
-                          return (
-                            <span
-                              key={b}
-                              className="px-3 py-1.5 rounded-xl bg-amber-500 text-white text-xs font-black tracking-wide shadow-md flex items-center gap-1"
-                            >
-                              ★ {locale === "uz" ? "TOP" : "ТОП"}
-                            </span>
-                          );
-                        }
-                        if (b === "new") {
-                          return (
-                            <span
-                              key={b}
-                              className="px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-bold tracking-wide shadow-md"
-                            >
-                              {locale === "uz" ? "Yangi" : "Новинка"}
-                            </span>
-                          );
-                        }
-                        if (b === "tez_sotiladi") {
-                          return (
-                            <span
-                              key={b}
-                              className="px-3 py-1.5 rounded-xl bg-rose-600 text-white text-xs font-bold tracking-wide shadow-md flex items-center gap-1"
-                            >
-                              ⚡ {locale === "uz" ? "Tez sotiladi" : "Быстрая продажа"}
-                            </span>
-                          );
-                        }
-                        if (b === "yaxshi_taklif") {
-                          return (
-                            <span
-                              key={b}
-                              className="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold tracking-wide shadow-md flex items-center gap-1"
-                            >
-                              % {locale === "uz" ? "Yaxshi taklif" : "Выгодная сделка"}
-                            </span>
-                          );
-                        }
-                        return null;
-                      })}
+                      property.badges.map((b) => (
+                        <span
+                          key={b}
+                          className={`px-3 py-1.5 rounded-xl text-white text-xs font-black tracking-wide shadow-md flex items-center gap-1 ${
+                            b === "top"
+                              ? "bg-amber-500"
+                              : b === "new"
+                              ? "bg-emerald-600"
+                              : b === "tez_sotiladi"
+                              ? "bg-rose-600"
+                              : b === "hamyonbop" || b === "yaxshi_taklif"
+                              ? "bg-blue-600"
+                              : b === "narxi_tushirildi"
+                              ? "bg-purple-600"
+                              : "bg-slate-800"
+                          }`}
+                        >
+                          {b === "top" && "★ "}
+                          {b === "tez_sotiladi" && "⚡ "}
+                          {b === "yaxshi_taklif" && "% "}
+                          {getBadgeLabel(b, locale)}
+                        </span>
+                      ))}
                     <span className="px-3 py-1.5 rounded-xl bg-black/60 backdrop-blur-md text-white text-xs font-semibold">
                       {district}
                     </span>

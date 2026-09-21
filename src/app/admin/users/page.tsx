@@ -45,10 +45,10 @@ export default function AdminUsersPage() {
         setUsers(data.users || []);
       } else {
         const errData = await res.json().catch(() => ({}));
-        showToast(errData.error || "Failed to load users", "error");
+        showToast(errData.error || (locale === "uz" ? "Foydalanuvchilarni yuklashda xatolik" : "Ошибка при загрузке пользователей"), "error");
       }
     } catch (err: any) {
-      showToast("Network error loading users", "error");
+      showToast(locale === "uz" ? "Foydalanuvchilarni yuklashda tarmoq xatosi" : "Сетевая ошибка при загрузке пользователей", "error");
     } finally {
       setLoading(false);
     }
@@ -86,7 +86,7 @@ export default function AdminUsersPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        showToast(data.error || "Amalni bajarishda xatolik yuz berdi", "error");
+        showToast(data.error || (locale === "uz" ? "Amalni bajarishda xatolik yuz berdi" : "Произошла ошибка при выполнении операции"), "error");
         return;
       }
 
@@ -105,7 +105,7 @@ export default function AdminUsersPage() {
         "success"
       );
     } catch (err) {
-      showToast("Tarmoq xatosi / Ошибка сети", "error");
+      showToast(locale === "uz" ? "Tarmoq xatosi yuz berdi" : "Произошла ошибка сети", "error");
     } finally {
       setTogglingId(null);
     }

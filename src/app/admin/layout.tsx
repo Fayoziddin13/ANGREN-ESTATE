@@ -165,7 +165,7 @@ export default function AdminLayout({
       {mobileMenuOpen && (
         <div className="md:hidden bg-[#0A261A] text-white px-3 py-4 space-y-1 border-b border-emerald-950 shadow-2xl z-30">
           <div className="px-3 py-1 text-[10px] uppercase tracking-wider font-extrabold text-emerald-400/60">
-            Menyu
+            {locale === "uz" ? "Menyu" : "Меню"}
           </div>
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -219,7 +219,7 @@ export default function AdminLayout({
               </div>
               <div className="text-[10px] font-extrabold text-emerald-300 uppercase tracking-widest mt-1 flex items-center gap-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span>Control Center</span>
+                <span>{locale === "uz" ? "Boshqaruv markazi" : "Центр управления"}</span>
               </div>
             </div>
           </Link>
@@ -259,7 +259,7 @@ export default function AdminLayout({
           <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs">
             <span className="text-[11px] text-emerald-100 font-medium flex items-center gap-1.5">
               <Globe className="h-3 w-3" />
-              Til / Язык
+              {locale === "uz" ? "Til" : "Язык"}
             </span>
             <div className="flex items-center gap-1">
               <button
@@ -317,6 +317,28 @@ export default function AdminLayout({
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Quick Language Switcher */}
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
+              <Globe className="h-3.5 w-3.5 text-slate-500 ml-1 mr-0.5" />
+              <button
+                onClick={() => setLocale("uz")}
+                className={`px-2 py-0.5 rounded-lg font-bold transition-colors ${
+                  locale === "uz" ? "bg-white text-emerald-700 shadow-xs" : "text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                UZ
+              </button>
+              <span className="text-slate-300">|</span>
+              <button
+                onClick={() => setLocale("ru")}
+                className={`px-2 py-0.5 rounded-lg font-bold transition-colors ${
+                  locale === "ru" ? "bg-white text-emerald-700 shadow-xs" : "text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                RU
+              </button>
+            </div>
+
             <Link
               href="/"
               target="_blank"

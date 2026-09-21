@@ -225,7 +225,7 @@ export default function AdminSettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  Sayt Nomi
+                  {locale === "uz" ? "Sayt Nomi" : "Название сайта"}
                 </label>
                 <input
                   type="text"
@@ -237,7 +237,7 @@ export default function AdminSettingsPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  Asosiy Shahar
+                  {locale === "uz" ? "Asosiy Shahar" : "Основной город"}
                 </label>
                 <input
                   type="text"
@@ -249,21 +249,21 @@ export default function AdminSettingsPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  Boshlang‘ich Valyuta
+                  {locale === "uz" ? "Boshlang‘ich Valyuta" : "Основная валюта"}
                 </label>
                 <select
                   value={formData.default_currency}
                   onChange={(e) => setFormData({ ...formData, default_currency: e.target.value as any })}
                   className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C]"
                 >
-                  <option value="UZS">UZS — O‘zbekiston so‘mi</option>
-                  <option value="USD">USD — AQSH dollari</option>
+                  <option value="UZS">{locale === "uz" ? "UZS — O‘zbekiston so‘mi" : "UZS — Узбекский сум"}</option>
+                  <option value="USD">{locale === "uz" ? "USD — AQSH dollari" : "USD — Доллар США"}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  Boshlang‘ich Til
+                  {locale === "uz" ? "Boshlang‘ich Til" : "Язык по умолчанию"}
                 </label>
                 <select
                   value={formData.default_language}
@@ -291,33 +291,33 @@ export default function AdminSettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  Markaz Latitude (Kenglik)
+                  {locale === "uz" ? "Markaz Latitude (Kenglik)" : "Широта центра (Latitude)"}
                 </label>
                 <input
                   type="number"
                   step="0.0001"
                   value={formData.map_center_lat}
-                  onChange={(e) => setFormData({ ...formData, map_center_lat: parseFloat(e.target.value) || 41.0167 })}
+                  onChange={(e) => setFormData({ ...formData, map_center_lat: parseFloat(e.target.value) || 41.012277 })}
                   className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C] font-mono"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  Markaz Longitude (Uzunlik)
+                  {locale === "uz" ? "Markaz Longitude (Uzunlik)" : "Долгота центра (Longitude)"}
                 </label>
                 <input
                   type="number"
                   step="0.0001"
                   value={formData.map_center_lng}
-                  onChange={(e) => setFormData({ ...formData, map_center_lng: parseFloat(e.target.value) || 70.1436 })}
+                  onChange={(e) => setFormData({ ...formData, map_center_lng: parseFloat(e.target.value) || 70.085182 })}
                   className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#16543C] focus:ring-1 focus:ring-[#16543C] font-mono"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  Boshlang‘ich Zoom (Kattalashtirish)
+                  {locale === "uz" ? "Boshlang‘ich Zoom (Kattalashtirish)" : "Начальный масштаб (Zoom)"}
                 </label>
                 <input
                   type="number"
@@ -332,7 +332,7 @@ export default function AdminSettingsPage() {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                Boshlang‘ich Xarita Qatlami (Layer)
+                {locale === "uz" ? "Boshlang‘ich Xarita Qatlami" : "Слой карты по умолчанию"}
               </label>
               <div className="grid grid-cols-2 gap-4 max-w-md">
                 <button
@@ -344,8 +344,8 @@ export default function AdminSettingsPage() {
                       : "bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
-                  <div className="font-bold text-sm text-slate-900">Sxema (Standard)</div>
-                  <div className="text-xs text-slate-600 mt-1">Toza, ko‘chalar va binolar aniq chizilgan</div>
+                  <div className="font-bold text-sm text-slate-900">{locale === "uz" ? "Sxema (Standard)" : "Схема (Стандарт)"}</div>
+                  <div className="text-xs text-slate-600 mt-1">{locale === "uz" ? "Toza, ko‘chalar va binolar aniq chizilgan" : "Четкие улицы, здания и ориентиры"}</div>
                 </button>
 
                 <button
@@ -357,8 +357,8 @@ export default function AdminSettingsPage() {
                       : "bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
-                  <div className="font-bold text-sm text-slate-900">Sun’iy yo‘ldosh (Satellite)</div>
-                  <div className="text-xs text-slate-600 mt-1">Real aerofotosurat va kosmik tasvirlar</div>
+                  <div className="font-bold text-sm text-slate-900">{locale === "uz" ? "Sun’iy yo‘ldosh (Satellite)" : "Спутник (Satellite)"}</div>
+                  <div className="text-xs text-slate-600 mt-1">{locale === "uz" ? "Real aerofotosurat va kosmik tasvirlar" : "Реальные спутниковые снимки"}</div>
                 </button>
               </div>
             </div>
@@ -378,7 +378,7 @@ export default function AdminSettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  Aloqa Telefoni
+                  {locale === "uz" ? "Aloqa Telefoni" : "Контактный телефон"}
                 </label>
                 <input
                   type="text"
@@ -390,7 +390,7 @@ export default function AdminSettingsPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  Telegram Akkaunt / Bot
+                  {locale === "uz" ? "Telegram Akkaunt / Bot" : "Telegram аккаунт или бот"}
                 </label>
                 <input
                   type="text"
@@ -402,7 +402,7 @@ export default function AdminSettingsPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  Elektron Pochta (Email)
+                  {locale === "uz" ? "Elektron Pochta (Email)" : "Электронная почта (Email)"}
                 </label>
                 <input
                   type="email"
@@ -439,13 +439,13 @@ export default function AdminSettingsPage() {
                   <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <div className="text-xs text-slate-600 font-medium">Sessiya Turi</div>
+                  <div className="text-xs text-slate-600 font-medium">{locale === "uz" ? "Sessiya Turi" : "Тип сессии"}</div>
                   <div className="text-sm font-bold text-slate-900 mt-0.5">HttpOnly + SHA-256</div>
                 </div>
               </div>
               <div className="text-xs text-emerald-700 font-medium mt-3 flex items-center gap-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>XSS va script o‘g‘irlashdan himoyalangan</span>
+                <span>{locale === "uz" ? "XSS va script o‘g‘irlashdan himoyalangan" : "Защищено от XSS и атак"}</span>
               </div>
             </div>
 
@@ -455,13 +455,13 @@ export default function AdminSettingsPage() {
                   <ShieldAlert className="w-5 h-5" />
                 </div>
                 <div>
-                  <div className="text-xs text-slate-600 font-medium">Brute-Force Himoyasi</div>
-                  <div className="text-sm font-bold text-slate-900 mt-0.5">5 urinish / 15 daqiqa</div>
+                  <div className="text-xs text-slate-600 font-medium">{locale === "uz" ? "Brute-Force Himoyasi" : "Защита от подбора"}</div>
+                  <div className="text-sm font-bold text-slate-900 mt-0.5">{locale === "uz" ? "5 urinish / 15 daqiqa" : "5 попыток / 15 минут"}</div>
                 </div>
               </div>
               <div className="text-xs text-blue-700 font-medium mt-3 flex items-center gap-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Rate limiting avtomatik bloklash faol</span>
+                <span>{locale === "uz" ? "Rate limiting avtomatik bloklash faol" : "Автоматическая защита активна"}</span>
               </div>
             </div>
 
@@ -471,12 +471,12 @@ export default function AdminSettingsPage() {
                   <Clock className="w-5 h-5" />
                 </div>
                 <div>
-                  <div className="text-xs text-slate-600 font-medium">Sessiya Muddati</div>
-                  <div className="text-sm font-bold text-slate-900 mt-0.5">8 soat (30 kun 'Eslab qol')</div>
+                  <div className="text-xs text-slate-600 font-medium">{locale === "uz" ? "Sessiya Muddati" : "Время сессии"}</div>
+                  <div className="text-sm font-bold text-slate-900 mt-0.5">{locale === "uz" ? "8 soat (30 kun 'Eslab qolish')" : "8 часов (30 дней с 'Запомнить')"}</div>
                 </div>
               </div>
               <div className="text-xs text-slate-600 font-medium mt-3">
-                Avtomatik muddati tugaydi
+                {locale === "uz" ? "Avtomatik muddati tugaydi" : "Автоматическое завершение"}
               </div>
             </div>
           </div>

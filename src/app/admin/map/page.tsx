@@ -26,7 +26,7 @@ import {
   getPropertyStatusLabel,
 } from "@/lib/propertyFormatters";
 
-const ANGREN_CENTER: [number, number] = [70.1436, 41.0167];
+const ANGREN_CENTER: [number, number] = [70.085182, 41.012277];
 
 export default function AdminMapManagementPage() {
   const { locale } = useLanguage();
@@ -449,7 +449,9 @@ export default function AdminMapManagementPage() {
               </div>
               <div className="text-right shrink-0">
                 <div className="text-xs font-black text-[#16543C]">
-                  ${p.price_usd?.toLocaleString()}
+                  {p.price_usd
+                    ? `$${p.price_usd.toLocaleString()}`
+                    : `${(p.price_uzs / 1000000).toFixed(0)} ${locale === "uz" ? "mln so‘m" : "млн сум"}`}
                 </div>
                 <span className="text-[10px] uppercase font-bold text-slate-500">
                   {getPropertyStatusLabel(p.status, locale)}

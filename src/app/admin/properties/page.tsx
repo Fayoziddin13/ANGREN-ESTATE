@@ -293,11 +293,11 @@ export default function AdminPropertiesPage() {
                         <>
                           <div>${prop.price_usd.toLocaleString()}</div>
                           <div className="text-[10px] text-slate-500 font-medium">
-                            {(prop.price_uzs / 1000000).toFixed(0)} mln UZS
+                            {(prop.price_uzs / 1000000).toFixed(0)} {locale === "uz" ? "mln so‘m" : "млн сум"}
                           </div>
                         </>
                       ) : (
-                        <div>{(prop.price_uzs / 1000000).toFixed(0)} mln UZS</div>
+                        <div>{(prop.price_uzs / 1000000).toFixed(0)} {locale === "uz" ? "mln so‘m" : "млн сум"}</div>
                       )}
                     </td>
 
@@ -720,7 +720,7 @@ export default function AdminPropertiesPage() {
                 disabled={
                   isPermanentDeleting ||
                   (locale === "uz"
-                    ? permanentDeleteConfirmText.trim() !== "O'CHIRAMAN"
+                    ? !["O'CHIRAMAN", "O‘CHIRAMAN", "OʻCHIRAMAN", "OCHIRAMAN"].includes(permanentDeleteConfirmText.trim().toUpperCase())
                     : permanentDeleteConfirmText.trim().toUpperCase() !== "УДАЛИТЬ")
                 }
                 onClick={async () => {

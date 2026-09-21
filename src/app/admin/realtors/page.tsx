@@ -439,7 +439,7 @@ export default function AdminRealtorsPage() {
               : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
           }`}
         >
-          <span>{locale === "uz" ? "Nofaol / Arxiv" : "Неактивные"}</span>
+          <span>{locale === "uz" ? "Nofaol" : "Неактивные"}</span>
           <span
             className={`px-1.5 py-0.5 rounded-full text-[10px] ${
               statusFilter === "inactive" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"
@@ -539,7 +539,7 @@ export default function AdminRealtorsPage() {
                           </h4>
                           {!realtor.is_active ? (
                             <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
-                              {locale === "uz" ? "Nofaol / Yashirilgan" : "Неактивен / Скрыт"}
+                              {locale === "uz" ? "Nofaol" : "Неактивен"}
                             </span>
                           ) : (
                             <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">

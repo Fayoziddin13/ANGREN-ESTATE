@@ -26,6 +26,7 @@ import {
 import { useLanguage } from "@/context/LanguageContext";
 import { useProperties } from "@/lib/propertyStore";
 import { useLeads } from "@/lib/leadStore";
+import { getPropertyStatusLabel } from "@/lib/propertyFormatters";
 
 export default function AdminDashboardPage() {
   const { locale } = useLanguage();
@@ -88,8 +89,12 @@ export default function AdminDashboardPage() {
     dateFilter === "today"
       ? ["00:00", "04:00", "08:00", "12:00", "16:00", "20:00"]
       : dateFilter === "7d"
-      ? ["Dush", "Sesh", "Chor", "Pay", "Juma", "Shan", "Yak"]
-      : ["Hafta 1", "Hafta 2", "Hafta 3", "Hafta 4"];
+      ? (locale === "uz"
+          ? ["Dush", "Sesh", "Chor", "Pay", "Juma", "Shan", "Yak"]
+          : ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"])
+      : (locale === "uz"
+          ? ["Hafta 1", "Hafta 2", "Hafta 3", "Hafta 4"]
+          : ["Неделя 1", "Неделя 2", "Неделя 3", "Неделя 4"]);
 
   const viewsData =
     dateFilter === "today"
@@ -152,11 +157,11 @@ export default function AdminDashboardPage() {
           {(
             [
               { key: "today", label: locale === "uz" ? "Bugun" : "Сегодня" },
-              { key: "7d", label: "7 kun" },
-              { key: "30d", label: "30 kun" },
-              { key: "3m", label: "3 oy" },
-              { key: "6m", label: "6 oy" },
-              { key: "1y", label: "1 yil" },
+              { key: "7d", label: locale === "uz" ? "7 kun" : "7 дней" },
+              { key: "30d", label: locale === "uz" ? "30 kun" : "30 дней" },
+              { key: "3m", label: locale === "uz" ? "3 oy" : "3 месяца" },
+              { key: "6m", label: locale === "uz" ? "6 oy" : "6 месяцев" },
+              { key: "1y", label: locale === "uz" ? "1 yil" : "1 год" },
             ] as const
           ).map((filter) => (
             <button
@@ -221,7 +226,9 @@ export default function AdminDashboardPage() {
             {soldProperties.length + rentedProperties.length}
           </div>
           <div className="text-[11px] text-blue-700 font-semibold">
-            {soldProperties.length} sotildi • {rentedProperties.length} ijara
+            {locale === "uz"
+              ? `${soldProperties.length} sotildi • ${rentedProperties.length} ijara`
+              : `${soldProperties.length} продано • ${rentedProperties.length} аренда`}
           </div>
         </div>
 
@@ -443,14 +450,16 @@ export default function AdminDashboardPage() {
                       {locale === "uz" ? prop.title_uz : prop.title_ru}
                     </h4>
                     <span className="text-[11px] text-slate-400">
-                      {prop.district_name_uz} • {prop.area_sqm} m²
+                      {locale === "uz" ? (prop.district_name_uz || prop.district_name_ru) : (prop.district_name_ru || prop.district_name_uz)} • {prop.area_sqm} {locale === "uz" ? "m²" : "м²"}
                     </span>
                   </div>
                 </div>
 
                 <div className="text-right shrink-0">
                   <div className="text-xs font-black text-[#16543C]">
-                    {prop.price_usd ? `$${prop.price_usd.toLocaleString()}` : `${prop.price_uzs} UZS`}
+                    {prop.price_usd
+                      ? `$${prop.price_usd.toLocaleString()}`
+                      : `${prop.price_uzs ? (prop.price_uzs / 1000000).toFixed(0) : 0} ${locale === "uz" ? "mln so‘m" : "млн сум"}`}
                   </div>
                   <span
                     className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -463,7 +472,7 @@ export default function AdminDashboardPage() {
                         : "bg-blue-100 text-blue-800"
                     }`}
                   >
-                    {prop.status}
+                    {getPropertyStatusLabel(prop.status, locale)}
                   </span>
                 </div>
               </div>
@@ -502,7 +511,7 @@ export default function AdminDashboardPage() {
                       {locale === "uz" ? prop.title_uz : prop.title_ru}
                     </h4>
                     <span className="text-[11px] text-slate-400">
-                      {prop.address_uz}
+                      {locale === "uz" ? prop.address_uz : (prop.address_ru || prop.address_uz)}
                     </span>
                   </div>
                 </div>
@@ -515,7 +524,9 @@ export default function AdminDashboardPage() {
                         : "bg-blue-50 text-blue-700 border border-blue-200"
                     }`}
                   >
-                    {prop.status === "sold" ? "SOTILDI" : "IJARAGA BERILDI"}
+                    {prop.status === "sold"
+                      ? (locale === "uz" ? "SOTILDI" : "ПРОДАНО")
+                      : (locale === "uz" ? "IJARAGA BERILDI" : "СДАНО В АРЕНДУ")}
                   </span>
                 </div>
               </div>

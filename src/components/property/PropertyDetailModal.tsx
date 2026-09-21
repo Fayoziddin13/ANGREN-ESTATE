@@ -89,15 +89,17 @@ export function PropertyDetailModal({
   const isRented = property.status === "rented";
   const isSoldOrRented = isSold || isRented;
 
+  const uzsSuffix = locale === "uz" ? "so‘m" : "сум";
+
   const priceFormatted =
     currency === "UZS"
-      ? `${property.price_uzs.toLocaleString("ru-RU")} UZS`
+      ? `${property.price_uzs.toLocaleString("ru-RU")} ${uzsSuffix}`
       : `$${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")}`;
 
   const secondaryPrice =
     currency === "UZS"
       ? `≈ $${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")}`
-      : `≈ ${property.price_uzs.toLocaleString("ru-RU")} UZS`;
+      : `≈ ${property.price_uzs.toLocaleString("ru-RU")} ${uzsSuffix}`;
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
