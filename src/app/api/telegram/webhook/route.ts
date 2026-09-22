@@ -7,6 +7,9 @@ import {
   upsertTelegramUser,
   setTelegramUserNotifications,
   getTelegramUser,
+  sendContactRequestMessage,
+  sendRegistrationSuccessMessage,
+  sendTelegramDirectMessage,
 } from "@/lib/telegramServer";
 
 export const dynamic = "force-dynamic";
@@ -74,45 +77,147 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ ok: true });
       }
 
-      // C. Language Switcher (lang_ru / lang_uz)
+      // C. Start Registration
+      if (data === "start_registration" || data === "register") {
+        await answerTelegramCallback(cb.id, token);
+        const existing = fromUser?.id ? await getTelegramUser(fromUser.id) : null;
+        const lang =
+          existing?.language ||
+          (fromUser?.language_code?.toLowerCase().startsWith("ru") ? "ru" : "uz");
+        if (chatId) {
+          await sendContactRequestMessage(chatId, lang, token);
+        }
+        return NextResponse.json({ ok: true });
+      }
+
+      // D. Language Switcher (lang_ru / lang_uz)
       await answerTelegramCallback(cb.id, token);
       if (chatId && messageId && (data === "lang_ru" || data === "lang_uz")) {
         const targetLang = data === "lang_ru" ? "ru" : "uz";
+        let isRegistered = false;
         if (fromUser?.id) {
-          await upsertTelegramUser({
+          const updated = await upsertTelegramUser({
             id: fromUser.id,
             username: fromUser.username,
             first_name: fromUser.first_name,
             language: targetLang,
           });
+          isRegistered = Boolean(updated?.phone);
         }
-        await editTelegramWelcomeMessage(chatId, messageId, targetLang, token, siteUrl);
+        await editTelegramWelcomeMessage(chatId, messageId, targetLang, token, siteUrl, isRegistered);
       }
 
       return NextResponse.json({ ok: true });
     }
 
-    // 2. Handle messages (/start, /app, etc.)
+    // 2. Handle messages
     const message = update?.message || update?.edited_message;
     if (message && message.chat) {
-      const text = (message.text || "").trim();
       const chatId = message.chat.id;
-      const langCode = message.from?.language_code || "uz";
+      const fromUser = message.from;
+      const senderId = fromUser?.id;
+      const langCode = fromUser?.language_code || "uz";
 
-      // Register or update user upon any bot interaction / /start
-      if (message.from && message.from.id) {
+      // A. Handle Contact message (Telegram ReplyKeyboardButton request_contact)
+      if (message.contact) {
+        const contact = message.contact;
+
+        // Security Check: contact.user_id must strictly match message.from.id
+        if (!contact.user_id || Number(contact.user_id) !== Number(senderId)) {
+          const existing = senderId ? await getTelegramUser(senderId) : null;
+          const lang =
+            existing?.language ||
+            (langCode.toLowerCase().startsWith("ru") ? "ru" : "uz");
+          const warningText =
+            lang === "ru"
+              ? "Пожалуйста, используйте кнопку «Поделиться контактом»."
+              : "«Kontaktni ulashish» tugmasidan foydalaning.";
+
+          await sendTelegramDirectMessage(chatId, warningText, {
+            keyboard: [
+              [
+                {
+                  text: lang === "ru" ? "📱 Поделиться контактом" : "📱 Kontaktni ulashish",
+                  request_contact: true,
+                },
+              ],
+            ],
+            resize_keyboard: true,
+            one_time_keyboard: true,
+          });
+          return NextResponse.json({ ok: true });
+        }
+
+        // Valid contact from user
+        let phone = (contact.phone_number || "").trim();
+        if (phone && !phone.startsWith("+")) {
+          phone = `+${phone}`;
+        }
+
+        const existingUser = senderId ? await getTelegramUser(senderId) : null;
+        const userLang: "uz" | "ru" =
+          existingUser?.language ||
+          (langCode.toLowerCase().startsWith("ru") ? "ru" : "uz");
+        const now = new Date().toISOString();
+
         await upsertTelegramUser({
-          id: message.from.id,
-          username: message.from.username,
-          first_name: message.from.first_name,
-          language_code: langCode,
+          id: senderId,
+          username: fromUser?.username || null,
+          first_name: contact.first_name || fromUser?.first_name || null,
+          last_name: contact.last_name || fromUser?.last_name || null,
+          phone: phone,
+          language: userLang,
+          notifications_enabled: true,
+          registered_at: existingUser?.registered_at || now,
+        });
+
+        await sendRegistrationSuccessMessage(chatId, userLang, token, siteUrl);
+        return NextResponse.json({ ok: true });
+      }
+
+      // B. Handle Text messages
+      const text = (message.text || "").trim();
+
+      // Check for registration text triggers
+      if (
+        text.startsWith("/register") ||
+        text.toLowerCase() === "регистрация" ||
+        text.toLowerCase() === "ro‘yxatdan o‘tish" ||
+        text.toLowerCase() === "ro'yxatdan o'tish" ||
+        text.toLowerCase() === "royxatdan otish"
+      ) {
+        const existing = senderId ? await getTelegramUser(senderId) : null;
+        const lang =
+          existing?.language ||
+          (langCode.toLowerCase().startsWith("ru") ? "ru" : "uz");
+        await sendContactRequestMessage(chatId, lang, token);
+        return NextResponse.json({ ok: true });
+      }
+
+      // Determine registration state and effective language
+      let isRegistered = false;
+      let effectiveLang: "uz" | "ru" = langCode.toLowerCase().startsWith("ru") ? "ru" : "uz";
+
+      if (senderId) {
+        const existing = await getTelegramUser(senderId);
+        if (existing) {
+          isRegistered = Boolean(existing.phone);
+          effectiveLang = existing.language || effectiveLang;
+        }
+
+        await upsertTelegramUser({
+          id: senderId,
+          username: fromUser?.username,
+          first_name: fromUser?.first_name,
+          last_name: fromUser?.last_name,
+          language: effectiveLang,
         });
       }
 
       if (text.startsWith("/app")) {
-        await sendTelegramAppMessage(chatId, langCode, token, siteUrl);
+        await sendTelegramAppMessage(chatId, effectiveLang, token, siteUrl);
       } else if (text.startsWith("/start") || message.chat.type === "private") {
-        await sendTelegramWelcomeMessage(chatId, langCode, token, siteUrl);
+        await sendTelegramWelcomeMessage(chatId, effectiveLang, token, siteUrl, isRegistered);
       }
     }
 

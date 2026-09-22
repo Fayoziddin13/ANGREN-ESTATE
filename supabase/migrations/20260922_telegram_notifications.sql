@@ -9,11 +9,18 @@ CREATE TABLE IF NOT EXISTS public.telegram_users (
     telegram_user_id BIGINT PRIMARY KEY,
     username TEXT,
     first_name TEXT,
+    last_name TEXT,
+    phone TEXT,
     language VARCHAR(10) NOT NULL DEFAULT 'uz',
     notifications_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    registered_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE public.telegram_users ADD COLUMN IF NOT EXISTS last_name TEXT;
+ALTER TABLE public.telegram_users ADD COLUMN IF NOT EXISTS phone TEXT;
+ALTER TABLE public.telegram_users ADD COLUMN IF NOT EXISTS registered_at TIMESTAMPTZ;
 
 -- Index on notifications_enabled for rapid subscriber lookup
 CREATE INDEX IF NOT EXISTS idx_telegram_users_notifications

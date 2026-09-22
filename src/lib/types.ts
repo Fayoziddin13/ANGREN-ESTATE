@@ -582,8 +582,11 @@ export interface TelegramSubscriber {
   telegram_user_id: number;
   username?: string;
   first_name?: string;
+  last_name?: string;
+  phone?: string;
   language: "uz" | "ru";
   notifications_enabled: boolean;
+  registered_at?: string;
   created_at: string;
   updated_at: string;
 }
