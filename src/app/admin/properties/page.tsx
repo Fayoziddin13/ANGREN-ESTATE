@@ -119,26 +119,20 @@ export default function AdminPropertiesPage() {
         if (totalSubscribers === 0) {
           showToast(
             locale === "uz"
-              ? "Telegram botda faol obunachilar topilmadi"
-              : "Активные подписчики Telegram-бота не найдены"
+              ? "Telegram botda faol foydalanuvchilar topilmadi"
+              : "Активные пользователи Telegram-бота не найдены"
           );
-        } else if (sentCount > 0) {
+        } else if (data.alreadySentCount > 0 && !isTelegramAlreadySent && sentCount === 0) {
           showToast(
             locale === "uz"
-              ? `Xabar ${sentCount} ta obunachiga muvaffaqiyatli yuborildi!`
-              : `Сообщение успешно отправлено ${sentCount} подписчикам!`
-          );
-        } else if (data.alreadySentCount > 0 && !isTelegramAlreadySent) {
-          showToast(
-            locale === "uz"
-              ? "Bu obyekt obunachilarga avval yuborilgan"
+              ? "Bu obyekt bot foydalanuvchilariga avval yuborilgan"
               : "Этот объект уже отправлялся пользователям бота"
           );
         } else {
           showToast(
             locale === "uz"
-              ? `Yuborish yakunlandi: ${sentCount} ta yuborildi`
-              : `Рассылка завершена: отправлено ${sentCount}`
+              ? `Yuborildi: ${sentCount}, Xatolar: ${data.failed || 0}, Bloklangan: ${data.blocked || 0}`
+              : `Отправлено: ${sentCount}, Ошибки: ${data.failed || 0}, Заблокировано: ${data.blocked || 0}`
           );
         }
       } else {
@@ -905,8 +899,8 @@ export default function AdminPropertiesPage() {
                 <div className="text-xs text-slate-700 font-medium leading-relaxed">
                   <p>
                     {locale === "uz"
-                      ? "Ushbu obyektni Telegram-bot foydalanuvchilariga yuborasizmi?"
-                      : "Отправить этот объект пользователям Telegram-бота?"}
+                      ? "Obyektni Telegram-bot foydalanuvchilariga yuborasizmi?"
+                      : "Отправить объект пользователям Telegram-бота?"}
                   </p>
                 </div>
               )}

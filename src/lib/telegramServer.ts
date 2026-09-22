@@ -898,15 +898,21 @@ export async function getTelegramUser(telegramUserId: number): Promise<TelegramS
  * Retrieve all subscribers eligible to receive property notifications.
  */
 export async function getEligibleNotificationSubscribers(): Promise<TelegramSubscriber[]> {
+  const userMap = new Map<number, TelegramSubscriber>();
+
   if (isSupabaseConfigured) {
-    // 1. Try telegram_users table in Supabase
+    // 1. Check telegram_users table in Supabase
     try {
       const { data, error } = await supabaseAdmin
         .from("telegram_users")
         .select("*")
         .eq("notifications_enabled", true);
-      if (!error && Array.isArray(data) && data.length > 0) {
-        return data as TelegramSubscriber[];
+      if (!error && Array.isArray(data)) {
+        for (const u of data) {
+          if (u.notifications_enabled === true || String(u.notifications_enabled) === "true") {
+            userMap.set(Number(u.telegram_user_id), u as TelegramSubscriber);
+          }
+        }
       }
     } catch (err: any) {
       console.warn(
@@ -923,17 +929,28 @@ export async function getEligibleNotificationSubscribers(): Promise<TelegramSubs
         .eq("key", "telegram_users_registry")
         .single();
 
-      if (!regErr && Array.isArray(regData?.value) && regData.value.length > 0) {
-        const eligible = (regData.value as TelegramSubscriber[]).filter(
-          (u) => u.notifications_enabled === true
-        );
-        return eligible;
+      if (!regErr && Array.isArray(regData?.value)) {
+        for (const u of regData.value) {
+          if (u.notifications_enabled === true || String(u.notifications_enabled) === "true") {
+            const id = Number(u.telegram_user_id);
+            const existing = userMap.get(id);
+            if (!existing || (u.phone && !existing.phone)) {
+              userMap.set(id, u as TelegramSubscriber);
+            }
+          }
+        }
       }
     } catch (e: any) {
       console.warn("[TelegramServer] Supabase registry check notice:", e?.message);
     }
   }
 
+  // 3. If any users found in Supabase (canonical), return them
+  if (userMap.size > 0) {
+    return Array.from(userMap.values());
+  }
+
+  // 4. Local dev fallback only if Supabase is completely empty or offline
   const localList = await readLocalSubscribers();
   return localList.filter((u) => u.notifications_enabled === true);
 }
