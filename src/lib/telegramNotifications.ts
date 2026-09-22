@@ -5,7 +5,6 @@ import {
   hasNotificationBeenSent,
   recordTelegramNotification,
   setTelegramUserNotifications,
-  sendTelegramPhoto,
   sendTelegramDirectMessage,
 } from "./telegramServer";
 import { supabaseAdmin } from "./supabaseServer";
@@ -67,7 +66,8 @@ export function buildPropertyNotificationText(property: Property, lang: "uz" | "
 }
 
 /**
- * Build inline keyboard with Mini App deep-link and notification mute button.
+ * Build inline keyboard with Mini App deep-link to the exact property.
+ * Strictly single button as specified: [Открыть объект →] / [Obyektni ko‘rish →].
  */
 export function buildPropertyNotificationMarkup(propertyId: string, lang: "uz" | "ru" = "uz") {
   const isUz = lang === "uz";
@@ -83,19 +83,13 @@ export function buildPropertyNotificationMarkup(propertyId: string, lang: "uz" |
           },
         },
       ],
-      [
-        {
-          text: isUz ? "🔕 Bildirishnomalarni o‘chirish" : "🔕 Отключить уведомления",
-          callback_data: "mute_notif",
-        },
-      ],
     ],
   };
 }
 
 /**
  * Send notification to a single subscriber.
- * Automatically tries sendPhoto if property has an image, with fallback to sendMessage.
+ * Strictly text-only message (NO photo, NO storage downloads).
  * Handles blocked/deactivated users by updating notifications_enabled = false.
  */
 export async function dispatchNotificationToUser(
@@ -103,22 +97,11 @@ export async function dispatchNotificationToUser(
   property: Property
 ): Promise<{ status: "sent" | "failed" | "blocked"; messageId?: number; error?: string }> {
   const lang = user.language === "ru" ? "ru" : "uz";
-  const caption = buildPropertyNotificationText(property, lang);
+  const text = buildPropertyNotificationText(property, lang);
   const replyMarkup = buildPropertyNotificationMarkup(property.id, lang);
-  const photoUrl = property.main_image || property.photos?.[0] || property.images?.[0];
 
-  let res: { ok: boolean; result?: any; description?: string; error_code?: number };
-
-  // Try sending photo if available
-  if (photoUrl && (photoUrl.startsWith("http://") || photoUrl.startsWith("https://"))) {
-    res = await sendTelegramPhoto(user.telegram_user_id, photoUrl, caption, replyMarkup);
-    // If photo failed due to image download/size, fallback to direct message
-    if (!res.ok && res.error_code !== 403 && res.error_code !== 400) {
-      res = await sendTelegramDirectMessage(user.telegram_user_id, caption, replyMarkup);
-    }
-  } else {
-    res = await sendTelegramDirectMessage(user.telegram_user_id, caption, replyMarkup);
-  }
+  // Pure text message delivery
+  const res = await sendTelegramDirectMessage(user.telegram_user_id, text, replyMarkup);
 
   if (res.ok) {
     return { status: "sent", messageId: res.result?.message_id };
@@ -176,44 +159,7 @@ export async function broadcastPropertyToTelegramSubscribers(
       `[TelegramNotifications] propertyId=${property.id} subscribers=${subscribers.length}`
     );
 
-    // 2. Mark property as notified in Supabase (tries columns first, then amenities JSONB)
-    if (isSupabaseConfigured) {
-      try {
-        const { error: colErr } = await supabaseAdmin
-          .from("properties")
-          .update({
-            telegram_notified_at: now,
-          })
-          .eq("id", property.id);
-
-        if (colErr) {
-          const { data: propRow } = await supabaseAdmin
-            .from("properties")
-            .select("amenities")
-            .eq("id", property.id)
-            .single();
-
-          const currentAmenities =
-            typeof propRow?.amenities === "object" && propRow?.amenities !== null
-              ? propRow.amenities
-              : {};
-
-          await supabaseAdmin
-            .from("properties")
-            .update({
-              amenities: {
-                ...currentAmenities,
-                telegram_notified_at: now,
-              },
-            })
-            .eq("id", property.id);
-        }
-      } catch (e: any) {
-        console.warn("[TelegramNotifications] Error marking property notified:", e?.message);
-      }
-    }
-
-    // 3. Process subscribers sequentially with rate-limiting
+    // 2. Process subscribers sequentially with rate-limiting
     for (const sub of subscribers) {
       try {
         // Idempotency check: has this user already been notified for this property?
@@ -253,6 +199,43 @@ export async function broadcastPropertyToTelegramSubscribers(
       }
     }
 
+    // 3. Mark property as notified in Supabase ONLY IF at least one notification was successfully delivered
+    if (isSupabaseConfigured && summary.sent > 0) {
+      try {
+        const { error: colErr } = await supabaseAdmin
+          .from("properties")
+          .update({
+            telegram_notified_at: now,
+          })
+          .eq("id", property.id);
+
+        if (colErr) {
+          const { data: propRow } = await supabaseAdmin
+            .from("properties")
+            .select("amenities")
+            .eq("id", property.id)
+            .single();
+
+          const currentAmenities =
+            typeof propRow?.amenities === "object" && propRow?.amenities !== null
+              ? propRow.amenities
+              : {};
+
+          await supabaseAdmin
+            .from("properties")
+            .update({
+              amenities: {
+                ...currentAmenities,
+                telegram_notified_at: now,
+              },
+            })
+            .eq("id", property.id);
+        }
+      } catch (e: any) {
+        console.warn("[TelegramNotifications] Error marking property notified:", e?.message);
+      }
+    }
+
     console.log(
       `[TelegramNotifications] Broadcast completed for property ${property.id}: sent=${summary.sent}, failed=${summary.failed}, blocked=${summary.blocked}, alreadySent=${summary.alreadySentCount}`
     );
@@ -262,6 +245,7 @@ export async function broadcastPropertyToTelegramSubscribers(
 
   return summary;
 }
+
 
 export const queuePropertyNotification = broadcastPropertyToTelegramSubscribers;
 

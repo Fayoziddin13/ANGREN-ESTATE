@@ -42,14 +42,17 @@ export async function GET(
     }
 
     const stats = await getTelegramNotificationStats(propertyId);
-    const alreadyBroadcasted = Boolean(
-      property.telegram_notified_at || (stats && stats.sent_count > 0)
+    const hasAnyLogs = Boolean(
+      stats && (stats.sent_count > 0 || stats.failed_count > 0 || stats.blocked_count > 0)
     );
+    const alreadyBroadcasted = hasAnyLogs
+      ? Boolean(stats && stats.sent_count > 0)
+      : Boolean(property.telegram_notified_at);
 
     return NextResponse.json({
       success: true,
       alreadyBroadcasted,
-      telegram_notified_at: property.telegram_notified_at || stats?.last_sent_at || null,
+      telegram_notified_at: (stats && stats.last_sent_at) || property.telegram_notified_at || null,
       stats,
     });
   } catch (error: any) {

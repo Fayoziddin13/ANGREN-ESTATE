@@ -84,8 +84,8 @@ export default function AdminPropertiesPage() {
     try {
       const res = await fetch(`/api/admin/properties/${prop.id}/telegram-broadcast`);
       const data = await res.json();
-      if (data?.success && data?.alreadyBroadcasted) {
-        setIsTelegramAlreadySent(true);
+      if (data?.success) {
+        setIsTelegramAlreadySent(Boolean(data.alreadyBroadcasted));
       }
     } catch {
       // fallback to initiallySent
@@ -110,8 +110,10 @@ export default function AdminPropertiesPage() {
       const data = await res.json();
 
       if (data?.success) {
-        telegramBroadcastProperty.telegram_notified_at = new Date().toISOString();
         const sentCount = data.sent || 0;
+        if (sentCount > 0) {
+          telegramBroadcastProperty.telegram_notified_at = new Date().toISOString();
+        }
         const totalSubscribers = data.total || 0;
 
         if (totalSubscribers === 0) {

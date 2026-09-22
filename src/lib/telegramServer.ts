@@ -521,6 +521,7 @@ export async function upsertTelegramUser(user: {
   };
 
   if (isSupabaseConfigured) {
+    // 1. Attempt update/insert into telegram_users table in Supabase
     try {
       const { data: existing, error: fetchErr } = await supabaseAdmin
         .from("telegram_users")
@@ -550,36 +551,80 @@ export async function upsertTelegramUser(user: {
           })
           .eq("telegram_user_id", user.id);
       } else {
-        await supabaseAdmin.from("telegram_users").insert({
-          telegram_user_id: user.id,
-          username: user.username || null,
-          first_name: user.first_name || null,
-          language: lang,
-          notifications_enabled: true,
-          created_at: now,
-          updated_at: now,
-        });
+        await supabaseAdmin.from("telegram_users").upsert(
+          {
+            telegram_user_id: user.id,
+            username: user.username || null,
+            first_name: user.first_name || null,
+            language: lang,
+            notifications_enabled: true,
+            created_at: now,
+            updated_at: now,
+          },
+          { onConflict: "telegram_user_id" }
+        );
       }
     } catch (err: any) {
-      console.warn("[TelegramServer] Supabase upsert error:", err?.message);
+      console.warn("[TelegramServer] Supabase telegram_users upsert notice:", err?.message);
+    }
+
+    // 2. Also persist in Supabase app_settings (guaranteed available across all Vercel Lambdas)
+    try {
+      const { data: regData } = await supabaseAdmin
+        .from("app_settings")
+        .select("value")
+        .eq("key", "telegram_users_registry")
+        .single();
+
+      let list: TelegramSubscriber[] = Array.isArray(regData?.value) ? regData.value : [];
+      const existingIdx = list.findIndex(
+        (u) => Number(u.telegram_user_id) === Number(user.id)
+      );
+
+      if (existingIdx !== -1) {
+        list[existingIdx] = {
+          ...list[existingIdx],
+          username: user.username || list[existingIdx].username,
+          first_name: user.first_name || list[existingIdx].first_name,
+          language: user.language || list[existingIdx].language || lang,
+          notifications_enabled: true,
+          updated_at: now,
+        };
+        subscriber = list[existingIdx];
+      } else {
+        list.push(subscriber);
+      }
+
+      await supabaseAdmin.from("app_settings").upsert(
+        {
+          key: "telegram_users_registry",
+          value: list,
+          updated_at: now,
+        },
+        { onConflict: "key" }
+      );
+    } catch (e: any) {
+      console.warn("[TelegramServer] Supabase app_settings upsert notice:", e?.message);
     }
   }
 
-  // Always mirror to local file for 100% resilience
-  const localList = await readLocalSubscribers();
-  const existingIdx = localList.findIndex((u) => u.telegram_user_id === user.id);
-  if (existingIdx !== -1) {
-    localList[existingIdx] = {
-      ...localList[existingIdx],
-      username: user.username || localList[existingIdx].username,
-      first_name: user.first_name || localList[existingIdx].first_name,
-      notifications_enabled: true,
-      updated_at: now,
-    };
-  } else {
-    localList.push(subscriber);
-  }
-  await writeLocalSubscribers(localList);
+  // 3. Mirror to local file for dev resilience
+  try {
+    const localList = await readLocalSubscribers();
+    const existingIdx = localList.findIndex((u) => u.telegram_user_id === user.id);
+    if (existingIdx !== -1) {
+      localList[existingIdx] = {
+        ...localList[existingIdx],
+        username: user.username || localList[existingIdx].username,
+        first_name: user.first_name || localList[existingIdx].first_name,
+        notifications_enabled: true,
+        updated_at: now,
+      };
+    } else {
+      localList.push(subscriber);
+    }
+    await writeLocalSubscribers(localList);
+  } catch {}
 
   return subscriber;
 }
@@ -605,6 +650,30 @@ export async function setTelegramUserNotifications(
     } catch (err: any) {
       console.warn("[TelegramServer] Supabase set notifications error:", err?.message);
     }
+
+    try {
+      const { data: regData } = await supabaseAdmin
+        .from("app_settings")
+        .select("value")
+        .eq("key", "telegram_users_registry")
+        .single();
+
+      if (Array.isArray(regData?.value)) {
+        const updatedList = (regData.value as TelegramSubscriber[]).map((u) =>
+          Number(u.telegram_user_id) === Number(telegramUserId)
+            ? { ...u, notifications_enabled: enabled, updated_at: now }
+            : u
+        );
+        await supabaseAdmin.from("app_settings").upsert(
+          {
+            key: "telegram_users_registry",
+            value: updatedList,
+            updated_at: now,
+          },
+          { onConflict: "key" }
+        );
+      }
+    } catch (e: any) {}
   }
 
   const localList = await readLocalSubscribers();
@@ -640,6 +709,20 @@ export async function getTelegramUser(telegramUserId: number): Promise<TelegramS
         return data as TelegramSubscriber;
       }
     } catch {}
+
+    try {
+      const { data: regData } = await supabaseAdmin
+        .from("app_settings")
+        .select("value")
+        .eq("key", "telegram_users_registry")
+        .single();
+      if (Array.isArray(regData?.value)) {
+        const found = (regData.value as TelegramSubscriber[]).find(
+          (u) => Number(u.telegram_user_id) === Number(telegramUserId)
+        );
+        if (found) return found;
+      }
+    } catch {}
   }
 
   const localList = await readLocalSubscribers();
@@ -651,25 +734,38 @@ export async function getTelegramUser(telegramUserId: number): Promise<TelegramS
  */
 export async function getEligibleNotificationSubscribers(): Promise<TelegramSubscriber[]> {
   if (isSupabaseConfigured) {
+    // 1. Try telegram_users table in Supabase
     try {
       const { data, error } = await supabaseAdmin
         .from("telegram_users")
         .select("*")
         .eq("notifications_enabled", true);
-      if (!error && Array.isArray(data)) {
+      if (!error && Array.isArray(data) && data.length > 0) {
         return data as TelegramSubscriber[];
-      }
-      if (error) {
-        console.warn(
-          "[TelegramServer] Supabase getEligibleNotificationSubscribers error:",
-          error.message
-        );
       }
     } catch (err: any) {
       console.warn(
-        "[TelegramServer] Supabase getEligibleNotificationSubscribers exception:",
+        "[TelegramServer] Supabase telegram_users getEligibleNotificationSubscribers notice:",
         err?.message
       );
+    }
+
+    // 2. Check Supabase app_settings registry
+    try {
+      const { data: regData, error: regErr } = await supabaseAdmin
+        .from("app_settings")
+        .select("value")
+        .eq("key", "telegram_users_registry")
+        .single();
+
+      if (!regErr && Array.isArray(regData?.value) && regData.value.length > 0) {
+        const eligible = (regData.value as TelegramSubscriber[]).filter(
+          (u) => u.notifications_enabled === true
+        );
+        return eligible;
+      }
+    } catch (e: any) {
+      console.warn("[TelegramServer] Supabase registry check notice:", e?.message);
     }
   }
 
@@ -694,6 +790,23 @@ export async function hasNotificationBeenSent(
         .single();
       if (!error && data && data.status === "sent") {
         return true;
+      }
+    } catch {}
+
+    try {
+      const { data: logData } = await supabaseAdmin
+        .from("app_settings")
+        .select("value")
+        .eq("key", "telegram_notifications_log")
+        .single();
+      if (Array.isArray(logData?.value)) {
+        const match = (logData.value as TelegramPropertyNotificationRecord[]).some(
+          (r) =>
+            r.property_id === propertyId &&
+            Number(r.telegram_user_id) === Number(telegramUserId) &&
+            r.status === "sent"
+        );
+        if (match) return true;
       }
     } catch {}
   }
@@ -743,6 +856,35 @@ export async function recordTelegramNotification(record: {
     } catch (err: any) {
       console.warn("[TelegramServer] Supabase record notification error:", err?.message);
     }
+
+    try {
+      const { data: logData } = await supabaseAdmin
+        .from("app_settings")
+        .select("value")
+        .eq("key", "telegram_notifications_log")
+        .single();
+      let logs: TelegramPropertyNotificationRecord[] = Array.isArray(logData?.value)
+        ? logData.value
+        : [];
+      const idx = logs.findIndex(
+        (r) =>
+          r.property_id === entry.property_id &&
+          Number(r.telegram_user_id) === Number(entry.telegram_user_id)
+      );
+      if (idx !== -1) {
+        logs[idx] = entry;
+      } else {
+        logs.push(entry);
+      }
+      await supabaseAdmin.from("app_settings").upsert(
+        {
+          key: "telegram_notifications_log",
+          value: logs,
+          updated_at: now,
+        },
+        { onConflict: "key" }
+      );
+    } catch (e) {}
   }
 
   // Local mirror
@@ -779,10 +921,25 @@ export async function getTelegramNotificationStats(
         .from("telegram_property_notifications")
         .select("*")
         .eq("property_id", propertyId);
-      if (!error && Array.isArray(data)) {
+      if (!error && Array.isArray(data) && data.length > 0) {
         records = data as TelegramPropertyNotificationRecord[];
       }
     } catch {}
+
+    if (records.length === 0) {
+      try {
+        const { data: logData } = await supabaseAdmin
+          .from("app_settings")
+          .select("value")
+          .eq("key", "telegram_notifications_log")
+          .single();
+        if (Array.isArray(logData?.value)) {
+          records = (logData.value as TelegramPropertyNotificationRecord[]).filter(
+            (r) => r.property_id === propertyId
+          );
+        }
+      } catch {}
+    }
   }
 
   if (records.length === 0) {
