@@ -587,6 +587,8 @@ export interface TelegramSubscriber {
   language: "uz" | "ru";
   notifications_enabled: boolean;
   registered_at?: string;
+  last_welcome_message_id?: number;
+  last_reg_message_id?: number;
   created_at: string;
   updated_at: string;
 }

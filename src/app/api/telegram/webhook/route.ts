@@ -10,7 +10,9 @@ import {
   sendContactRequestMessage,
   sendRegistrationSuccessMessage,
   sendTelegramDirectMessage,
+  deleteTelegramMessage,
 } from "@/lib/telegramServer";
+import type { TelegramSubscriber } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -100,6 +102,7 @@ export async function POST(req: NextRequest) {
             username: fromUser.username,
             first_name: fromUser.first_name,
             language: targetLang,
+            last_welcome_message_id: messageId,
           });
         }
         await editTelegramWelcomeMessage(chatId, messageId, targetLang, token, siteUrl);
@@ -158,6 +161,21 @@ export async function POST(req: NextRequest) {
           (langCode.toLowerCase().startsWith("ru") ? "ru" : "uz");
         const now = new Date().toISOString();
 
+        // Clean up temporary messages:
+        // Delete old registration prompt if one existed
+        if (existingUser?.last_reg_message_id) {
+          await deleteTelegramMessage(chatId, existingUser.last_reg_message_id, token);
+        }
+        // Also delete old welcome message if one existed
+        if (existingUser?.last_welcome_message_id) {
+          await deleteTelegramMessage(chatId, existingUser.last_welcome_message_id, token);
+        }
+
+        // Send registration completion (with remove_keyboard) AND immediately send Welcome message with 2 buttons
+        // User does NOT need to press /start again!
+        const regResult = await sendRegistrationSuccessMessage(chatId, userLang, token, siteUrl);
+
+        // Persist user with phone, registered_at, and tracked welcome message id
         await upsertTelegramUser({
           id: senderId,
           username: fromUser?.username || null,
@@ -167,9 +185,10 @@ export async function POST(req: NextRequest) {
           language: userLang,
           notifications_enabled: true,
           registered_at: existingUser?.registered_at || now,
+          last_welcome_message_id: regResult.welcomeMessageId || null,
+          last_reg_message_id: null,
         });
 
-        await sendRegistrationSuccessMessage(chatId, userLang, token, siteUrl);
         return NextResponse.json({ ok: true });
       }
 
@@ -185,22 +204,55 @@ export async function POST(req: NextRequest) {
         text.toLowerCase() === "royxatdan otish"
       ) {
         const existing = senderId ? await getTelegramUser(senderId) : null;
+        const isReg = Boolean(existing?.phone);
         const lang =
           existing?.language ||
           (langCode.toLowerCase().startsWith("ru") ? "ru" : "uz");
-        await sendContactRequestMessage(chatId, lang, token);
+
+        if (isReg) {
+          // Already registered: show welcome message, do NOT ask for contact again
+          if (existing?.last_welcome_message_id) {
+            await deleteTelegramMessage(chatId, existing.last_welcome_message_id, token);
+          }
+          if (existing?.last_reg_message_id) {
+            await deleteTelegramMessage(chatId, existing.last_reg_message_id, token);
+          }
+          const welcomeRes = await sendTelegramWelcomeMessage(chatId, lang, token, siteUrl);
+          if (senderId) {
+            await upsertTelegramUser({
+              id: senderId,
+              language: lang,
+              last_welcome_message_id: welcomeRes.result?.message_id || null,
+              last_reg_message_id: null,
+            });
+          }
+        } else {
+          // Unregistered: delete old prompt if exists and send fresh contact request
+          if (existing?.last_reg_message_id) {
+            await deleteTelegramMessage(chatId, existing.last_reg_message_id, token);
+          }
+          const promptRes = await sendContactRequestMessage(chatId, lang, token);
+          if (senderId) {
+            await upsertTelegramUser({
+              id: senderId,
+              language: lang,
+              last_reg_message_id: promptRes.result?.message_id || null,
+            });
+          }
+        }
         return NextResponse.json({ ok: true });
       }
 
       // Determine registration state and effective language
       let isRegistered = false;
       let effectiveLang: "uz" | "ru" = langCode.toLowerCase().startsWith("ru") ? "ru" : "uz";
+      let existingUser: TelegramSubscriber | null = null;
 
       if (senderId) {
-        const existing = await getTelegramUser(senderId);
-        if (existing) {
-          isRegistered = Boolean(existing.phone);
-          effectiveLang = existing.language || effectiveLang;
+        existingUser = await getTelegramUser(senderId);
+        if (existingUser) {
+          isRegistered = Boolean(existingUser.phone);
+          effectiveLang = existingUser.language || effectiveLang;
         }
 
         await upsertTelegramUser({
@@ -214,18 +266,66 @@ export async function POST(req: NextRequest) {
 
       if (text.startsWith("/app")) {
         if (!isRegistered) {
-          await sendContactRequestMessage(chatId, effectiveLang, token);
+          if (existingUser?.last_reg_message_id) {
+            await deleteTelegramMessage(chatId, existingUser.last_reg_message_id, token);
+          }
+          const promptRes = await sendContactRequestMessage(chatId, effectiveLang, token);
+          if (senderId) {
+            await upsertTelegramUser({
+              id: senderId,
+              last_reg_message_id: promptRes.result?.message_id || null,
+            });
+          }
         } else {
-          await sendTelegramAppMessage(chatId, effectiveLang, token, siteUrl);
+          if (existingUser?.last_welcome_message_id) {
+            await deleteTelegramMessage(chatId, existingUser.last_welcome_message_id, token);
+          }
+          if (existingUser?.last_reg_message_id) {
+            await deleteTelegramMessage(chatId, existingUser.last_reg_message_id, token);
+          }
+          const appRes = await sendTelegramAppMessage(chatId, effectiveLang, token, siteUrl);
+          if (senderId) {
+            await upsertTelegramUser({
+              id: senderId,
+              last_welcome_message_id: appRes.result?.message_id || null,
+              last_reg_message_id: null,
+            });
+          }
         }
       } else if (text.startsWith("/start") || message.chat.type === "private") {
         if (!isRegistered) {
           // FIRST /start: ONLY REGISTRATION!
           // No site info, no Mini App button, no language switcher.
-          await sendContactRequestMessage(chatId, effectiveLang, token);
+          if (existingUser?.last_reg_message_id) {
+            await deleteTelegramMessage(chatId, existingUser.last_reg_message_id, token);
+          }
+          if (existingUser?.last_welcome_message_id) {
+            await deleteTelegramMessage(chatId, existingUser.last_welcome_message_id, token);
+          }
+          const promptRes = await sendContactRequestMessage(chatId, effectiveLang, token);
+          if (senderId) {
+            await upsertTelegramUser({
+              id: senderId,
+              last_reg_message_id: promptRes.result?.message_id || null,
+            });
+          }
         } else {
           // SUBSEQUENT /start: Welcome + Mini App + Language!
-          await sendTelegramWelcomeMessage(chatId, effectiveLang, token, siteUrl);
+          // Delete old welcome message so chat has NO DUPLICATES and stays in single clean state
+          if (existingUser?.last_welcome_message_id) {
+            await deleteTelegramMessage(chatId, existingUser.last_welcome_message_id, token);
+          }
+          if (existingUser?.last_reg_message_id) {
+            await deleteTelegramMessage(chatId, existingUser.last_reg_message_id, token);
+          }
+          const welcomeRes = await sendTelegramWelcomeMessage(chatId, effectiveLang, token, siteUrl);
+          if (senderId) {
+            await upsertTelegramUser({
+              id: senderId,
+              last_welcome_message_id: welcomeRes.result?.message_id || null,
+              last_reg_message_id: null,
+            });
+          }
         }
       }
     }
