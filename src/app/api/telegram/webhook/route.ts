@@ -94,17 +94,15 @@ export async function POST(req: NextRequest) {
       await answerTelegramCallback(cb.id, token);
       if (chatId && messageId && (data === "lang_ru" || data === "lang_uz")) {
         const targetLang = data === "lang_ru" ? "ru" : "uz";
-        let isRegistered = false;
         if (fromUser?.id) {
-          const updated = await upsertTelegramUser({
+          await upsertTelegramUser({
             id: fromUser.id,
             username: fromUser.username,
             first_name: fromUser.first_name,
             language: targetLang,
           });
-          isRegistered = Boolean(updated?.phone);
         }
-        await editTelegramWelcomeMessage(chatId, messageId, targetLang, token, siteUrl, isRegistered);
+        await editTelegramWelcomeMessage(chatId, messageId, targetLang, token, siteUrl);
       }
 
       return NextResponse.json({ ok: true });
@@ -215,9 +213,20 @@ export async function POST(req: NextRequest) {
       }
 
       if (text.startsWith("/app")) {
-        await sendTelegramAppMessage(chatId, effectiveLang, token, siteUrl);
+        if (!isRegistered) {
+          await sendContactRequestMessage(chatId, effectiveLang, token);
+        } else {
+          await sendTelegramAppMessage(chatId, effectiveLang, token, siteUrl);
+        }
       } else if (text.startsWith("/start") || message.chat.type === "private") {
-        await sendTelegramWelcomeMessage(chatId, effectiveLang, token, siteUrl, isRegistered);
+        if (!isRegistered) {
+          // FIRST /start: ONLY REGISTRATION!
+          // No site info, no Mini App button, no language switcher.
+          await sendContactRequestMessage(chatId, effectiveLang, token);
+        } else {
+          // SUBSEQUENT /start: Welcome + Mini App + Language!
+          await sendTelegramWelcomeMessage(chatId, effectiveLang, token, siteUrl);
+        }
       }
     }
 

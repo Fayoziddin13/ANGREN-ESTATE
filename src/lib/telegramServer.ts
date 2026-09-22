@@ -268,10 +268,12 @@ export async function getTelegramMenuButton(botToken?: string) {
 /**
  * Generate standard welcome message payload
  */
+/**
+ * Generate standard welcome message payload (shown after registration)
+ */
 export function getTelegramWelcomePayload(
   lang: "uz" | "ru" = "uz",
-  webAppUrl: string = "https://angrenestate.uz",
-  isRegistered: boolean = false
+  webAppUrl: string = "https://angrenestate.uz"
 ) {
   const isUz = lang === "uz";
 
@@ -280,44 +282,31 @@ export function getTelegramWelcomePayload(
       "📍 Kvartira, uy, yer va tijorat obyektlari.\n" +
       "🔎 Xarita orqali qidiring va filtrlardan foydalaning.\n" +
       "💚 Yoqtirgan obyektlaringizni saqlang.\n" +
-      "📞 Mulk egasi yoki rieltor bilan bog‘laning.\n\n" +
-      "Ilovani oching va o‘zingizga mos obyektni toping."
+      "📞 Mulk egalari va rieltorlar bilan bog‘laning."
     : "🏠 ANGREN ESTATE — недвижимость Ангрена в одном месте.\n\n" +
       "📍 Квартиры, дома, участки и коммерческие объекты.\n" +
       "🔎 Поиск и фильтры на карте.\n" +
       "💚 Сохраняйте понравившиеся объекты.\n" +
-      "📞 Связывайтесь с владельцами и риелторами.\n\n" +
-      "Откройте приложение и найдите подходящий объект.";
+      "📞 Связывайтесь с владельцами и риелторами.";
 
   const appUrl = isUz ? `${webAppUrl}?lang=uz` : `${webAppUrl}?lang=ru`;
 
-  const inline_keyboard: any[][] = [];
-
-  // If user is not yet registered, add [Регистрация] / [Ro‘yxatdan o‘tish]
-  if (!isRegistered) {
-    inline_keyboard.push([
+  const inline_keyboard = [
+    [
       {
-        text: isUz ? "Ro‘yxatdan o‘tish" : "Регистрация",
-        callback_data: "start_registration",
+        text: "🏠 ANGREN ESTATE",
+        web_app: {
+          url: appUrl,
+        },
       },
-    ]);
-  }
-
-  inline_keyboard.push([
-    {
-      text: "🏠 ANGREN ESTATE",
-      web_app: {
-        url: appUrl,
+    ],
+    [
+      {
+        text: "🇷🇺 Русский | 🇺🇿 O‘zbekcha",
+        callback_data: isUz ? "lang_ru" : "lang_uz",
       },
-    },
-  ]);
-
-  inline_keyboard.push([
-    {
-      text: "🇷🇺 Русский | 🇺🇿 O‘zbekcha",
-      callback_data: isUz ? "lang_ru" : "lang_uz",
-    },
-  ]);
+    ],
+  ];
 
   const reply_markup = { inline_keyboard };
 
@@ -331,14 +320,13 @@ export async function sendTelegramWelcomeMessage(
   chatId: number | string,
   userLanguageCode: string = "uz",
   botToken?: string,
-  webAppUrl: string = "https://angrenestate.uz",
-  isRegistered: boolean = false
+  webAppUrl: string = "https://angrenestate.uz"
 ) {
   const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
   if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not configured");
 
   const lang = userLanguageCode.startsWith("ru") ? "ru" : "uz";
-  const { text, reply_markup } = getTelegramWelcomePayload(lang, webAppUrl, isRegistered);
+  const { text, reply_markup } = getTelegramWelcomePayload(lang, webAppUrl);
 
   const response = await fetch(
     `https://api.telegram.org/bot${token}/sendMessage`,
@@ -364,13 +352,12 @@ export async function editTelegramWelcomeMessage(
   messageId: number,
   targetLang: "uz" | "ru",
   botToken?: string,
-  webAppUrl: string = "https://angrenestate.uz",
-  isRegistered: boolean = false
+  webAppUrl: string = "https://angrenestate.uz"
 ) {
   const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
   if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not configured");
 
-  const { text, reply_markup } = getTelegramWelcomePayload(targetLang, webAppUrl, isRegistered);
+  const { text, reply_markup } = getTelegramWelcomePayload(targetLang, webAppUrl);
 
   const response = await fetch(
     `https://api.telegram.org/bot${token}/editMessageText`,
@@ -402,8 +389,8 @@ export async function sendContactRequestMessage(
 
   const isUz = lang === "uz";
   const text = isUz
-    ? "📱 Ro‘yxatdan o‘tish uchun telefon raqamingizni yuboring."
-    : "📱 Для регистрации поделитесь своим номером телефона.";
+    ? "📱 ANGREN ESTATE'dan foydalanish uchun ro‘yxatdan o‘ting."
+    : "📱 Для использования ANGREN ESTATE пройдите регистрацию.";
 
   const reply_markup = {
     keyboard: [
@@ -464,8 +451,18 @@ export async function sendRegistrationSuccessMessage(
   ];
 
   const successText = isUz
-    ? "✅ Ro‘yxatdan o‘tish muvaffaqiyatli yakunlandi.\n\nEndi ANGREN ESTATE'ni ochib, xizmatdan foydalanishingiz mumkin."
-    : "✅ Регистрация успешно завершена.\n\nТеперь вы можете открыть ANGREN ESTATE и пользоваться сервисом.";
+    ? "✅ Ro‘yxatdan o‘tish muvaffaqiyatli yakunlandi.\n\n" +
+      "🏠 ANGREN ESTATE — Angren ko‘chmas mulki bir joyda.\n\n" +
+      "📍 Kvartira, uy, yer va tijorat obyektlari.\n" +
+      "🔎 Xarita orqali qidiring va filtrlardan foydalaning.\n" +
+      "💚 Yoqtirgan obyektlaringizni saqlang.\n" +
+      "📞 Mulk egalari va rieltorlar bilan bog‘laning."
+    : "✅ Регистрация успешно завершена.\n\n" +
+      "🏠 ANGREN ESTATE — недвижимость Ангрена в одном месте.\n\n" +
+      "📍 Квартиры, дома, участки и коммерческие объекты.\n" +
+      "🔎 Поиск и фильтры на карте.\n" +
+      "💚 Сохраняйте понравившиеся объекты.\n" +
+      "📞 Связывайтесь с владельцами и риелторами.";
 
   const firstRes = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: "POST",
