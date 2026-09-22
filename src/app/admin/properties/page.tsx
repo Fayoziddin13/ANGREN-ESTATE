@@ -24,6 +24,7 @@ import {
   RotateCcw,
   AlertTriangle,
   Trash2,
+  Send,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useProperties } from "@/lib/propertyStore";
@@ -62,9 +63,97 @@ export default function AdminPropertiesPage() {
   const [permanentDeleteConfirmText, setPermanentDeleteConfirmText] = useState("");
   const [isPermanentDeleting, setIsPermanentDeleting] = useState(false);
 
+  // Telegram Broadcast Modal state
+  const [telegramBroadcastProperty, setTelegramBroadcastProperty] = useState<Property | null>(null);
+  const [isTelegramAlreadySent, setIsTelegramAlreadySent] = useState(false);
+  const [isBroadcastingTelegram, setIsBroadcastingTelegram] = useState(false);
+  const [telegramBroadcastStatusLoading, setTelegramBroadcastStatusLoading] = useState(false);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const handleOpenTelegramModal = async (prop: Property) => {
+    setActionMenuOpenId(null);
+    setTelegramBroadcastProperty(prop);
+    const initiallySent = Boolean(prop.telegram_notified_at);
+    setIsTelegramAlreadySent(initiallySent);
+    setTelegramBroadcastStatusLoading(true);
+
+    try {
+      const res = await fetch(`/api/admin/properties/${prop.id}/telegram-broadcast`);
+      const data = await res.json();
+      if (data?.success && data?.alreadyBroadcasted) {
+        setIsTelegramAlreadySent(true);
+      }
+    } catch {
+      // fallback to initiallySent
+    } finally {
+      setTelegramBroadcastStatusLoading(false);
+    }
+  };
+
+  const handleConfirmTelegramBroadcast = async () => {
+    if (!telegramBroadcastProperty) return;
+    setIsBroadcastingTelegram(true);
+
+    try {
+      const res = await fetch(
+        `/api/admin/properties/${telegramBroadcastProperty.id}/telegram-broadcast`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ forceRepeat: isTelegramAlreadySent }),
+        }
+      );
+      const data = await res.json();
+
+      if (data?.success) {
+        telegramBroadcastProperty.telegram_notified_at = new Date().toISOString();
+        const sentCount = data.sent || 0;
+        const totalSubscribers = data.total || 0;
+
+        if (totalSubscribers === 0) {
+          showToast(
+            locale === "uz"
+              ? "Telegram botda faol obunachilar topilmadi"
+              : "Активные подписчики Telegram-бота не найдены"
+          );
+        } else if (sentCount > 0) {
+          showToast(
+            locale === "uz"
+              ? `Xabar ${sentCount} ta obunachiga muvaffaqiyatli yuborildi!`
+              : `Сообщение успешно отправлено ${sentCount} подписчикам!`
+          );
+        } else if (data.alreadySentCount > 0 && !isTelegramAlreadySent) {
+          showToast(
+            locale === "uz"
+              ? "Bu obyekt obunachilarga avval yuborilgan"
+              : "Этот объект уже отправлялся пользователям бота"
+          );
+        } else {
+          showToast(
+            locale === "uz"
+              ? `Yuborish yakunlandi: ${sentCount} ta yuborildi`
+              : `Рассылка завершена: отправлено ${sentCount}`
+          );
+        }
+      } else {
+        showToast(
+          data?.error ||
+            (locale === "uz" ? "Telegramga yuborishda xatolik" : "Ошибка при отправке в Telegram")
+        );
+      }
+    } catch (err: any) {
+      showToast(
+        err?.message ||
+          (locale === "uz" ? "Tarmoq xatoligi yuz berdi" : "Произошла сетевая ошибка")
+      );
+    } finally {
+      setIsBroadcastingTelegram(false);
+      setTelegramBroadcastProperty(null);
+    }
   };
 
   const handleDuplicate = async (id: string) => {
@@ -400,7 +489,15 @@ export default function AdminPropertiesPage() {
 
                     {/* Actions Menu */}
                     <td className="py-3.5 px-4 text-right relative">
-                      <div className="flex items-center justify-end gap-1">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => handleOpenTelegramModal(prop)}
+                          title="Telegram"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20 border border-[#0088cc]/20 transition-colors shadow-xs"
+                        >
+                          <Send className="h-3.5 w-3.5" />
+                          <span>Telegram</span>
+                        </button>
                         <button
                           onClick={() => setPreviewProperty(prop)}
                           title={locale === "uz" ? "Ko‘rish" : "Просмотр"}
@@ -463,6 +560,13 @@ export default function AdminPropertiesPage() {
                       {/* Dropdown Action Popover */}
                       {actionMenuOpenId === prop.id && (
                         <div className="absolute right-4 mt-2 w-48 rounded-2xl bg-white border border-slate-200 shadow-xl p-1.5 z-30 text-left space-y-0.5">
+                          <button
+                            onClick={() => handleOpenTelegramModal(prop)}
+                            className="w-full text-left px-3 py-1.5 rounded-xl hover:bg-[#0088cc]/10 text-[#0088cc] text-xs font-bold flex items-center gap-1.5"
+                          >
+                            <Send className="h-3.5 w-3.5" />
+                            <span>Telegram</span>
+                          </button>
                           <Link
                             href={`/admin/properties/${prop.id}`}
                             className="w-full text-left px-3 py-1.5 rounded-xl hover:bg-slate-100 text-slate-700 text-xs font-bold flex items-center gap-1.5"
@@ -751,6 +855,91 @@ export default function AdminPropertiesPage() {
                     ? locale === "uz" ? "O'chirilmoqda..." : "Удаление..."
                     : locale === "uz" ? "To'liq o'chirish" : "Удалить навсегда"}
                 </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Telegram Bot Broadcast Confirmation Modal */}
+      {telegramBroadcastProperty && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3">
+              <div className="h-11 w-11 rounded-2xl bg-[#0088cc]/10 border border-[#0088cc]/20 flex items-center justify-center shrink-0">
+                <Send className="h-5 w-5 text-[#0088cc]" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-slate-900 text-base">
+                  {locale === "uz" ? "Telegram botga yuborish" : "Отправка в Telegram"}
+                </h3>
+                <p className="text-[11px] text-slate-500 font-bold">
+                  ID: {telegramBroadcastProperty.id}
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-2xl p-4 bg-slate-50 border border-slate-200/80 space-y-2">
+              <p className="text-xs font-bold text-slate-900 line-clamp-1">
+                {locale === "uz"
+                  ? telegramBroadcastProperty.title_uz
+                  : (telegramBroadcastProperty.title_ru || telegramBroadcastProperty.title_uz)}
+              </p>
+
+              {telegramBroadcastStatusLoading ? (
+                <div className="flex items-center gap-2 text-xs text-slate-500 py-1">
+                  <span className="h-3.5 w-3.5 rounded-full border-2 border-[#0088cc] border-t-transparent animate-spin" />
+                  <span>{locale === "uz" ? "Holat tekshirilmoqda..." : "Проверка статуса..."}</span>
+                </div>
+              ) : isTelegramAlreadySent ? (
+                <div className="bg-amber-50 border border-amber-200 text-amber-900 p-3 rounded-xl text-xs font-semibold">
+                  <p>
+                    {locale === "uz"
+                      ? "Ushbu obyekt avval bot foydalanuvchilariga yuborilgan."
+                      : "Этот объект уже отправлялся пользователям бота."}
+                  </p>
+                </div>
+              ) : (
+                <div className="text-xs text-slate-700 font-medium leading-relaxed">
+                  <p>
+                    {locale === "uz"
+                      ? "Ushbu obyektni Telegram-bot foydalanuvchilariga yuborasizmi?"
+                      : "Отправить этот объект пользователям Telegram-бота?"}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                disabled={isBroadcastingTelegram}
+                onClick={() => setTelegramBroadcastProperty(null)}
+                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition-colors"
+              >
+                {locale === "uz" ? "Bekor qilish" : "Отмена"}
+              </button>
+              <button
+                type="button"
+                disabled={isBroadcastingTelegram || telegramBroadcastStatusLoading}
+                onClick={handleConfirmTelegramBroadcast}
+                className="px-4 py-2 rounded-xl bg-[#0088cc] hover:bg-[#0077b5] text-white font-bold text-xs transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+              >
+                {isBroadcastingTelegram ? (
+                  <>
+                    <span className="h-3.5 w-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                    <span>{locale === "uz" ? "Yuborilmoqda..." : "Отправка..."}</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-3.5 w-3.5" />
+                    <span>
+                      {isTelegramAlreadySent
+                        ? (locale === "uz" ? "Qayta yuborish" : "Отправить повторно")
+                        : (locale === "uz" ? "Yuborish" : "Отправить")}
+                    </span>
+                  </>
+                )}
               </button>
             </div>
           </div>

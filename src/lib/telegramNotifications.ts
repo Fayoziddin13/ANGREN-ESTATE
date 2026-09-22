@@ -125,6 +125,10 @@ export async function dispatchNotificationToUser(
   }
 
   const desc = res.description || "Unknown error";
+  console.error(
+    `[TelegramNotifications] Telegram API error: error_code=${res.error_code} description=${desc}`
+  );
+
   // 403: Bot was blocked by user | 400: Chat not found / user deactivated
   if (
     res.error_code === 403 ||
@@ -145,78 +149,121 @@ export async function dispatchNotificationToUser(
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
- * Queue and dispatch notifications for a newly published property.
- * Non-blocking background execution.
- * Guaranteed idempotency:
- * - Checks `first_published_at` / not already notified.
- * - Checks `(property_id, telegram_user_id)` unique constraint before sending.
+ * Manual or automated broadcast to eligible Telegram subscribers for a property.
+ * Awaited serverless execution to guarantee delivery before Lambda terminates.
+ * Supports forceRepeat for manual admin resends.
  */
-export async function queuePropertyNotification(property: Property): Promise<void> {
-  // Execute in non-blocking background queue
-  setImmediate(async () => {
-    try {
-      const now = new Date().toISOString();
+export async function broadcastPropertyToTelegramSubscribers(
+  property: Property,
+  options?: { forceRepeat?: boolean }
+): Promise<{ sent: number; failed: number; blocked: number; total: number; alreadySentCount: number }> {
+  const summary = { sent: 0, failed: 0, blocked: 0, total: 0, alreadySentCount: 0 };
+  const forceRepeat = Boolean(options?.forceRepeat);
 
-      // 1. Mark property as notified in Supabase and local cache
-      if (isSupabaseConfigured) {
-        try {
+  try {
+    const now = new Date().toISOString();
+
+    // 1. Fetch all active subscribers FIRST from Supabase (canonical)
+    const subscribers = await getEligibleNotificationSubscribers();
+    summary.total = subscribers ? subscribers.length : 0;
+
+    if (!subscribers || subscribers.length === 0) {
+      console.log(`[TelegramNotifications] No eligible Telegram subscribers.`);
+      return summary;
+    }
+
+    console.log(
+      `[TelegramNotifications] propertyId=${property.id} subscribers=${subscribers.length}`
+    );
+
+    // 2. Mark property as notified in Supabase (tries columns first, then amenities JSONB)
+    if (isSupabaseConfigured) {
+      try {
+        const { error: colErr } = await supabaseAdmin
+          .from("properties")
+          .update({
+            telegram_notified_at: now,
+          })
+          .eq("id", property.id);
+
+        if (colErr) {
+          const { data: propRow } = await supabaseAdmin
+            .from("properties")
+            .select("amenities")
+            .eq("id", property.id)
+            .single();
+
+          const currentAmenities =
+            typeof propRow?.amenities === "object" && propRow?.amenities !== null
+              ? propRow.amenities
+              : {};
+
           await supabaseAdmin
             .from("properties")
             .update({
-              telegram_notified_at: now,
-              first_published_at: property.first_published_at || now,
+              amenities: {
+                ...currentAmenities,
+                telegram_notified_at: now,
+              },
             })
             .eq("id", property.id);
-        } catch (e: any) {
-          console.warn("[TelegramNotifications] Error marking property notified:", e?.message);
         }
+      } catch (e: any) {
+        console.warn("[TelegramNotifications] Error marking property notified:", e?.message);
       }
+    }
 
-      // 2. Fetch all active subscribers
-      const subscribers = await getEligibleNotificationSubscribers();
-      if (!subscribers || subscribers.length === 0) {
-        console.log(`[TelegramNotifications] No active subscribers for property ${property.id}`);
-        return;
-      }
-
-      console.log(
-        `[TelegramNotifications] Starting broadcast for property ${property.id} to ${subscribers.length} subscriber(s)`
-      );
-
-      // 3. Process subscribers in rate-limited batches (25/sec limit)
-      for (const sub of subscribers) {
-        try {
-          // Idempotency check: has this user already been notified for this property?
+    // 3. Process subscribers sequentially with rate-limiting
+    for (const sub of subscribers) {
+      try {
+        // Idempotency check: has this user already been notified for this property?
+        if (!forceRepeat) {
           const alreadySent = await hasNotificationBeenSent(property.id, sub.telegram_user_id);
           if (alreadySent) {
+            summary.alreadySentCount++;
             continue;
           }
-
-          const result = await dispatchNotificationToUser(sub, property);
-          await recordTelegramNotification({
-            property_id: property.id,
-            telegram_user_id: sub.telegram_user_id,
-            status: result.status,
-            telegram_message_id: result.messageId,
-            error_message: result.error,
-          });
-
-          // 40ms pause between sends = max 25 req/sec (Telegram limit is 30/sec)
-          await sleep(40);
-        } catch (subErr: any) {
-          console.error(
-            `[TelegramNotifications] Error sending to user ${sub.telegram_user_id}:`,
-            subErr?.message
-          );
         }
-      }
 
-      console.log(`[TelegramNotifications] Broadcast completed for property ${property.id}`);
-    } catch (err: any) {
-      console.error("[TelegramNotifications] Broadcast job exception:", err?.message);
+        const result = await dispatchNotificationToUser(sub, property);
+        if (result.status === "sent") {
+          summary.sent++;
+        } else if (result.status === "blocked") {
+          summary.blocked++;
+        } else {
+          summary.failed++;
+        }
+
+        await recordTelegramNotification({
+          property_id: property.id,
+          telegram_user_id: sub.telegram_user_id,
+          status: result.status,
+          telegram_message_id: result.messageId,
+          error_message: result.error,
+        });
+
+        // 35ms pause between sends (safe within Telegram's 30 msg/sec limit)
+        await sleep(35);
+      } catch (subErr: any) {
+        summary.failed++;
+        console.error(
+          `[TelegramNotifications] Error sending to user ${sub.telegram_user_id}:`,
+          subErr?.message
+        );
+      }
     }
-  });
+
+    console.log(
+      `[TelegramNotifications] Broadcast completed for property ${property.id}: sent=${summary.sent}, failed=${summary.failed}, blocked=${summary.blocked}, alreadySent=${summary.alreadySentCount}`
+    );
+  } catch (err: any) {
+    console.error("[TelegramNotifications] Broadcast job exception:", err?.message);
+  }
+
+  return summary;
 }
+
+export const queuePropertyNotification = broadcastPropertyToTelegramSubscribers;
 
 /**
  * Send a manual test notification to an authenticated admin.

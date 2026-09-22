@@ -3,7 +3,6 @@ import path from "path";
 import { Property, PropertyStatus, TransactionType, PropertyType } from "./types";
 import { supabase, isSupabaseConfigured } from "./supabase";
 import { supabaseAdmin } from "./supabaseServer";
-import { queuePropertyNotification } from "./telegramNotifications";
 
 export interface PropertyFilterParams {
   transaction_type?: TransactionType | "all";
@@ -564,11 +563,6 @@ export async function createProperty(
     await writeCanonicalLocal([createdResult, ...all.filter((p) => p.id !== id)]);
   }
 
-  // Trigger Telegram notification only if created directly as published
-  if (isPublishing && createdResult) {
-    queuePropertyNotification(createdResult);
-  }
-
   return createdResult;
 }
 
@@ -643,12 +637,6 @@ export async function updateProperty(
     all[idx] = mergedData;
     await writeCanonicalLocal(all);
     updatedResult = mergedData;
-  }
-
-  // Trigger Telegram notification ONLY on first-time publish transition (draft -> published)
-  // Suppressed on published -> published, published -> sold, or re-publishes
-  if (isFirstTimePublish && updatedResult) {
-    queuePropertyNotification(updatedResult);
   }
 
   return updatedResult;

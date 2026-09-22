@@ -656,10 +656,21 @@ export async function getEligibleNotificationSubscribers(): Promise<TelegramSubs
         .from("telegram_users")
         .select("*")
         .eq("notifications_enabled", true);
-      if (!error && Array.isArray(data) && data.length > 0) {
+      if (!error && Array.isArray(data)) {
         return data as TelegramSubscriber[];
       }
-    } catch {}
+      if (error) {
+        console.warn(
+          "[TelegramServer] Supabase getEligibleNotificationSubscribers error:",
+          error.message
+        );
+      }
+    } catch (err: any) {
+      console.warn(
+        "[TelegramServer] Supabase getEligibleNotificationSubscribers exception:",
+        err?.message
+      );
+    }
   }
 
   const localList = await readLocalSubscribers();

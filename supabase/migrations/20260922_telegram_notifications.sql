@@ -77,3 +77,8 @@ CREATE POLICY "Service role full access on telegram_property_notifications"
     TO service_role
     USING (true)
     WITH CHECK (true);
+
+-- 4. Properties table columns for notification tracking
+ALTER TABLE public.properties ADD COLUMN IF NOT EXISTS first_published_at TIMESTAMPTZ;
+ALTER TABLE public.properties ADD COLUMN IF NOT EXISTS telegram_notified_at TIMESTAMPTZ;
+
