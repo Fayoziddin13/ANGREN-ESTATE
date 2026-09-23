@@ -10,6 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useFavorites } from "@/lib/favoriteStore";
 import { trackEvent } from "@/lib/analytics";
 import { formatPublishedDate } from "@/lib/dateFormat";
+import { formatPropertyPrice } from "@/lib/currency";
 import { getPropertyTitle, getPropertyAddress, getPropertyTypeLabel } from "@/lib/propertyFormatters";
 
 interface PropertyPreviewCardProps {
@@ -35,16 +36,14 @@ export function PropertyPreviewCard({
   const isSale = property.transaction_type === "sale";
   const badgeText = isSale ? t.popular.saleBadge : t.popular.rentBadge;
 
-  const uzsSuffix = locale === "uz" ? "so‘m" : "сум";
-  const monthSuffix = isSale ? "" : ` / ${locale === "uz" ? "oy" : "мес"}`;
-
-  const priceDisplay = isSale
-    ? currency === "UZS"
-      ? `${property.price_uzs.toLocaleString("ru-RU")} ${uzsSuffix}`
-      : `$${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")}`
-    : currency === "UZS"
-      ? `${property.price_uzs.toLocaleString("ru-RU")} ${uzsSuffix}${monthSuffix}`
-      : `$${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")}${monthSuffix}`;
+  const { priceDisplay } = formatPropertyPrice({
+    priceUzs: property.price_uzs,
+    priceUsd: property.price_usd,
+    currency,
+    locale,
+    isSale,
+    exchangeRate,
+  });
 
   const floorNum = property.floor_number ?? property.floor;
   const totalFloors = property.floors ?? property.total_floors;

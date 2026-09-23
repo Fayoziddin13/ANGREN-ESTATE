@@ -6,6 +6,7 @@ import { X, MapPin, Maximize2, Bed, Bath, ArrowRight } from "lucide-react";
 import { Property } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCurrency } from "@/context/CurrencyContext";
+import { formatPropertyPrice } from "@/lib/currency";
 import { formatRooms } from "@/lib/propertyFormatters";
 
 interface CollapsiblePropertyListProps {
@@ -57,15 +58,14 @@ export function CollapsiblePropertyList({
           const title = locale === "uz" ? p.title_uz : p.title_ru;
           const address = locale === "uz" ? p.address_uz : p.address_ru;
           const isSale = p.transaction_type === "sale";
-          const somLabel = locale === "uz" ? "so‘m" : "сум";
-
-          const priceDisplay = isSale
-            ? currency === "UZS"
-              ? `${p.price_uzs.toLocaleString("ru-RU")} ${somLabel}`
-              : `$${Math.round(p.price_uzs / exchangeRate).toLocaleString("ru-RU")}`
-            : currency === "UZS"
-              ? `${p.price_uzs.toLocaleString("ru-RU")} ${somLabel} / ${t.common.month}`
-              : `$${Math.round(p.price_uzs / exchangeRate).toLocaleString("ru-RU")} / ${t.common.month}`;
+          const { priceDisplay } = formatPropertyPrice({
+            priceUzs: p.price_uzs,
+            priceUsd: p.price_usd,
+            currency,
+            locale,
+            isSale,
+            exchangeRate,
+          });
 
           return (
             <div

@@ -53,6 +53,7 @@ import { PropertyPhotoGalleryModal } from "./PropertyPhotoGalleryModal";
 import { getPropertyRepository } from "@/lib/repository/propertyRepository";
 import { Property } from "@/lib/types";
 import { trackEvent } from "@/lib/analytics";
+import { formatPropertyPrice } from "@/lib/currency";
 import { recordPublicLead } from "@/lib/leadClient";
 import { formatPublishedDate } from "@/lib/dateFormat";
 import {
@@ -182,21 +183,14 @@ export default function PropertyDetailView({
   const isRented = property.status === "rented";
   const isSoldOrRented = isSold || isRented;
 
-  const uzsSuffix = locale === "uz" ? "so‘m" : "сум";
-  const monthSuffix = isSale ? "" : ` / ${locale === "uz" ? "oy" : "мес"}`;
-
-  const priceDisplay = isSale
-    ? currency === "UZS"
-      ? `${property.price_uzs.toLocaleString("ru-RU")} ${uzsSuffix}`
-      : `$${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")}`
-    : currency === "UZS"
-    ? `${property.price_uzs.toLocaleString("ru-RU")} ${uzsSuffix}${monthSuffix}`
-    : `$${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")}${monthSuffix}`;
-
-  const secondaryPrice =
-    currency === "UZS"
-      ? `≈ $${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")}`
-      : `≈ ${property.price_uzs.toLocaleString("ru-RU")} ${uzsSuffix}${monthSuffix}`;
+  const { priceDisplay, secondaryPrice } = formatPropertyPrice({
+    priceUzs: property.price_uzs,
+    priceUsd: property.price_usd,
+    currency,
+    locale,
+    isSale,
+    exchangeRate,
+  });
 
   const handleShare = () => {
     if (typeof window !== "undefined") {

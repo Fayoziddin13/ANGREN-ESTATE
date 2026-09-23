@@ -44,6 +44,7 @@ import { useCompare } from "@/lib/compareStore";
 import { PropertyInfrastructureSection } from "./PropertyInfrastructureSection";
 import { PropertyGroupedFeaturesView } from "./PropertyGroupedFeaturesView";
 import { PropertyPhotoGalleryModal } from "./PropertyPhotoGalleryModal";
+import { formatPropertyPrice } from "@/lib/currency";
 import { recordPublicLead } from "@/lib/leadClient";
 import { trackEvent } from "@/lib/analytics";
 import {
@@ -89,17 +90,14 @@ export function PropertyDetailModal({
   const isRented = property.status === "rented";
   const isSoldOrRented = isSold || isRented;
 
-  const uzsSuffix = locale === "uz" ? "so‘m" : "сум";
-
-  const priceFormatted =
-    currency === "UZS"
-      ? `${property.price_uzs.toLocaleString("ru-RU")} ${uzsSuffix}`
-      : `$${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")}`;
-
-  const secondaryPrice =
-    currency === "UZS"
-      ? `≈ $${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")}`
-      : `≈ ${property.price_uzs.toLocaleString("ru-RU")} ${uzsSuffix}`;
+  const { priceDisplay: priceFormatted, secondaryPrice } = formatPropertyPrice({
+    priceUzs: property.price_uzs,
+    priceUsd: property.price_usd,
+    currency,
+    locale,
+    isSale,
+    exchangeRate,
+  });
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();

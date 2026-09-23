@@ -113,9 +113,12 @@ export function AngrenMap({
 
   // Helper to format price on marker pin on the map
   const formatMarkerPrice = useCallback(
-    (priceUzs: number, isSale: boolean): string => {
+    (priceUzs: number, isSale: boolean, priceUsd?: number): string => {
       if (currency === "USD") {
-        const usd = Math.round(priceUzs / exchangeRate);
+        const usd =
+          priceUsd !== undefined && priceUsd > 0
+            ? priceUsd
+            : Math.round(priceUzs / exchangeRate);
         // Fully formatted USD with thousands separator, NEVER shortened (e.g. $33,500, not $33.5K)
         const formattedUsd = usd.toLocaleString("en-US");
         if (isSale) {
@@ -487,7 +490,7 @@ export function AngrenMap({
     individualProps.forEach((property) => {
       const isSelected = selectedProperty?.id === property.id;
       const isSale = property.transaction_type === "sale";
-      const priceText = formatMarkerPrice(property.price_uzs, isSale);
+      const priceText = formatMarkerPrice(property.price_uzs, isSale, property.price_usd);
       const iconSvg = getPropertyIconSvg(property.property_type);
 
       const el = document.createElement("div");

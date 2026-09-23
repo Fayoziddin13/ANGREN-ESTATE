@@ -52,7 +52,7 @@ export function PropertyCompareModal({
   const comparedProperties = properties.filter((p) => compareIds.includes(p.id));
 
   const formatPriceValue = (p: Property) => {
-    return formatPrice(p.price_uzs, locale);
+    return formatPrice(p.price_uzs, locale, false, p.price_usd);
   };
 
   return (

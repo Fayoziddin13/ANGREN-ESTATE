@@ -58,7 +58,7 @@ export function buildPropertyNotificationText(property: Property, lang: "uz" | "
   // Price (formatted using canonical formatPrice helper)
   const priceVal = property.price_uzs || property.price || 0;
   if (priceVal > 0) {
-    const formatted = formatPrice(priceVal, lang, property.currency || "USD");
+    const formatted = formatPrice(priceVal, lang, property.currency || "USD", false, 12800, property.price_usd);
     lines.push(`💰 ${formatted.primary}`);
   }
 

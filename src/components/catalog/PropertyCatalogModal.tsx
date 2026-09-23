@@ -22,6 +22,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useFavorites } from "@/lib/favoriteStore";
 import { formatPublishedDate } from "@/lib/dateFormat";
+import { formatPropertyPrice } from "@/lib/currency";
 
 interface PropertyCatalogModalProps {
   isOpen: boolean;
@@ -207,15 +208,14 @@ export function PropertyCatalogModal({
                 const address =
                   locale === "uz" ? property.address_uz : (property.address_ru || property.address_uz);
 
-                const rentSuffix = locale === "uz" ? " / oy" : " / мес";
-                const currencySuffix = locale === "uz" ? " so‘m" : " сум";
-                const priceDisplay = isSale
-                  ? currency === "UZS"
-                    ? `${property.price_uzs.toLocaleString("ru-RU")}${currencySuffix}`
-                    : `$${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")}`
-                  : currency === "UZS"
-                  ? `${property.price_uzs.toLocaleString("ru-RU")}${currencySuffix}${rentSuffix}`
-                  : `$${Math.round(property.price_uzs / exchangeRate).toLocaleString("ru-RU")}${rentSuffix}`;
+                const { priceDisplay } = formatPropertyPrice({
+                  priceUzs: property.price_uzs,
+                  priceUsd: property.price_usd,
+                  currency,
+                  locale,
+                  isSale,
+                  exchangeRate,
+                });
 
                 const dateDisplay = formatPublishedDate(
                   property.published_at || property.created_at,

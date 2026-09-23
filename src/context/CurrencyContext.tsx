@@ -21,7 +21,8 @@ interface CurrencyContextType {
   formatPrice: (
     amountUzs: number,
     locale: Locale,
-    compact?: boolean
+    compact?: boolean,
+    exactPriceUsd?: number
   ) => { primary: string; secondary: string };
 }
 
@@ -85,8 +86,8 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   );
 
   const formatPrice = useCallback(
-    (amountUzs: number, locale: Locale, compact: boolean = false) =>
-      formatPriceLib(amountUzs, locale, currency, compact, exchangeRate),
+    (amountUzs: number, locale: Locale, compact: boolean = false, exactPriceUsd?: number) =>
+      formatPriceLib(amountUzs, locale, currency, compact, exchangeRate, exactPriceUsd),
     [currency, exchangeRate]
   );
 
