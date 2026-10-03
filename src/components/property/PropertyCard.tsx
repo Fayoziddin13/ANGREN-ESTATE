@@ -37,7 +37,7 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
   const badgeText = isSale ? t.popular.saleBadge : t.popular.rentBadge;
 
   // Format price
-  const { priceDisplay } = formatPropertyPrice({
+  const { priceDisplay, hasBargain, bargainBadge } = formatPropertyPrice({
     priceUzs: property.price_uzs,
     priceUsd: property.price_usd,
     currency,
@@ -45,6 +45,7 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
     isSale,
     exchangeRate,
     isNegotiable: Boolean(property.price_negotiable || (property.amenities as any)?.price_negotiable),
+    bargainAllowed: Boolean(property.bargain_allowed || (property.amenities as any)?.bargain_allowed),
   });
 
   const handleCardClick = () => {
@@ -218,8 +219,15 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
         
         <div className="space-y-1">
           {/* Price */}
-          <div className="text-sm sm:text-lg font-extrabold tracking-tight text-[#167d4f]">
-            {priceDisplay}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-sm sm:text-lg font-extrabold tracking-tight text-[#167d4f]">
+              {priceDisplay}
+            </span>
+            {hasBargain && (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-[#eaf5f0] text-[#167d4f] border border-[#bdd1c8]">
+                {bargainBadge}
+              </span>
+            )}
           </div>
 
           {/* Title */}

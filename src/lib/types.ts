@@ -70,6 +70,7 @@ export interface Property {
   price?: number;
   currency?: Currency;
   price_negotiable?: boolean;
+  bargain_allowed?: boolean;
   area_sqm: number;
   area?: number;
   area_sotikh?: number;

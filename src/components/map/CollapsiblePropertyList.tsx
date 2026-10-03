@@ -58,7 +58,7 @@ export function CollapsiblePropertyList({
           const title = locale === "uz" ? p.title_uz : p.title_ru;
           const address = locale === "uz" ? p.address_uz : p.address_ru;
           const isSale = p.transaction_type === "sale";
-          const { priceDisplay } = formatPropertyPrice({
+          const { priceDisplay, hasBargain, bargainBadge } = formatPropertyPrice({
             priceUzs: p.price_uzs,
             priceUsd: p.price_usd,
             currency,
@@ -66,6 +66,7 @@ export function CollapsiblePropertyList({
             isSale,
             exchangeRate,
             isNegotiable: Boolean(p.price_negotiable || (p.amenities as any)?.price_negotiable),
+            bargainAllowed: Boolean(p.bargain_allowed || (p.amenities as any)?.bargain_allowed),
           });
 
           return (
@@ -93,8 +94,15 @@ export function CollapsiblePropertyList({
 
               <div className="flex-1 flex flex-col justify-between min-w-0">
                 <div>
-                  <div className="text-xs font-black text-[#167d4f] truncate">
-                    {priceDisplay}
+                  <div className="flex flex-wrap items-center gap-1">
+                    <span className="text-xs font-black text-[#167d4f] truncate">
+                      {priceDisplay}
+                    </span>
+                    {hasBargain && (
+                      <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-[#eaf5f0] text-[#167d4f] border border-[#bdd1c8]">
+                        {bargainBadge}
+                      </span>
+                    )}
                   </div>
                   <h3 className="text-xs font-semibold text-slate-800 truncate group-hover:text-[#167d4f] transition-colors">
                     {title}

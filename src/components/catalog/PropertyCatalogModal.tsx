@@ -208,7 +208,7 @@ export function PropertyCatalogModal({
                 const address =
                   locale === "uz" ? property.address_uz : (property.address_ru || property.address_uz);
 
-                const { priceDisplay } = formatPropertyPrice({
+                const { priceDisplay, hasBargain, bargainBadge } = formatPropertyPrice({
                   priceUzs: property.price_uzs,
                   priceUsd: property.price_usd,
                   currency,
@@ -216,6 +216,7 @@ export function PropertyCatalogModal({
                   isSale,
                   exchangeRate,
                   isNegotiable: Boolean(property.price_negotiable || (property.amenities as any)?.price_negotiable),
+                  bargainAllowed: Boolean(property.bargain_allowed || (property.amenities as any)?.bargain_allowed),
                 });
 
                 const dateDisplay = formatPublishedDate(
@@ -328,8 +329,15 @@ export function PropertyCatalogModal({
                     <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
                       <div>
                         {/* Price */}
-                        <div className="text-base sm:text-lg font-black tracking-tight text-[#167d4f]">
-                          {priceDisplay}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="text-base sm:text-lg font-black tracking-tight text-[#167d4f]">
+                            {priceDisplay}
+                          </span>
+                          {hasBargain && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#eaf5f0] text-[#167d4f] border border-[#bdd1c8]">
+                              {bargainBadge}
+                            </span>
+                          )}
                         </div>
 
                         {/* Title */}

@@ -56,10 +56,18 @@ export function buildPropertyNotificationText(property: Property, lang: "uz" | "
   }
 
   // Price (formatted using canonical formatPrice helper)
-  const priceVal = property.price_uzs || property.price || 0;
-  if (priceVal > 0) {
-    const formatted = formatPrice(priceVal, lang, property.currency || "USD", false, 12800, property.price_usd);
-    lines.push(`💰 ${formatted.primary}`);
+  const isNegotiable = Boolean(property.price_negotiable || (property.amenities as any)?.price_negotiable);
+  const bargainAllowed = Boolean(property.bargain_allowed || (property.amenities as any)?.bargain_allowed);
+  const bargainText = bargainAllowed ? ` (${isUz ? "Savdolashish mumkin" : "Торг уместен"})` : "";
+
+  if (isNegotiable) {
+    lines.push(`💰 ${isUz ? "Narxi kelishiladi" : "Цена договорная"}${bargainText}`);
+  } else {
+    const priceVal = property.price_uzs || property.price || 0;
+    if (priceVal > 0) {
+      const formatted = formatPrice(priceVal, lang, property.currency || "USD", false, 12800, property.price_usd);
+      lines.push(`💰 ${formatted.primary}${bargainText}`);
+    }
   }
 
   return lines.join("\n");

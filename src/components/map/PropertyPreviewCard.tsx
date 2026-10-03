@@ -36,7 +36,7 @@ export function PropertyPreviewCard({
   const isSale = property.transaction_type === "sale";
   const badgeText = isSale ? t.popular.saleBadge : t.popular.rentBadge;
 
-  const { priceDisplay } = formatPropertyPrice({
+  const { priceDisplay, hasBargain, bargainBadge } = formatPropertyPrice({
     priceUzs: property.price_uzs,
     priceUsd: property.price_usd,
     currency,
@@ -44,6 +44,7 @@ export function PropertyPreviewCard({
     isSale,
     exchangeRate,
     isNegotiable: Boolean(property.price_negotiable || (property.amenities as any)?.price_negotiable),
+    bargainAllowed: Boolean(property.bargain_allowed || (property.amenities as any)?.bargain_allowed),
   });
 
   const floorNum = property.floor_number ?? property.floor;
@@ -127,8 +128,15 @@ export function PropertyPreviewCard({
       {/* Body Content */}
       <div className="p-3.5 space-y-2.5">
         <div className="cursor-pointer" onClick={() => onViewDetails(property)}>
-          <div className="text-base sm:text-lg font-extrabold tracking-tight text-[#167d4f]">
-            {priceDisplay}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-base sm:text-lg font-extrabold tracking-tight text-[#167d4f]">
+              {priceDisplay}
+            </span>
+            {hasBargain && (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-[#eaf5f0] text-[#167d4f] border border-[#bdd1c8]">
+                {bargainBadge}
+              </span>
+            )}
           </div>
           <h3 className="text-xs sm:text-sm font-bold text-gray-900 line-clamp-1 hover:text-[#167d4f] transition-colors">
             {title}

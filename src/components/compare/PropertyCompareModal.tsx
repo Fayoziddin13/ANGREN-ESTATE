@@ -57,7 +57,8 @@ export function PropertyCompareModal({
       locale,
       false,
       p.price_usd,
-      Boolean(p.price_negotiable || (p.amenities as any)?.price_negotiable)
+      Boolean(p.price_negotiable || (p.amenities as any)?.price_negotiable),
+      Boolean(p.bargain_allowed || (p.amenities as any)?.bargain_allowed)
     );
   };
 
@@ -191,9 +192,16 @@ export function PropertyCompareModal({
                     </div>
 
                     <div className="pt-2 border-t border-slate-200">
-                      <p className="text-base font-black text-[#167d4f]">
-                        {formatPriceValue(p).primary}
-                      </p>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-base font-black text-[#167d4f]">
+                          {formatPriceValue(p).primary}
+                        </span>
+                        {formatPriceValue(p).hasBargain && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-[#eaf5f0] text-[#167d4f] border border-[#bdd1c8]">
+                            {formatPriceValue(p).bargainBadge}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-slate-400">
                         {formatPriceValue(p).secondary}
                       </p>
@@ -290,9 +298,16 @@ export function PropertyCompareModal({
                         {getPropertyTitle(p, locale)}
                       </h4>
                       <div>
-                        <p className="text-sm font-extrabold text-[#167d4f]">
-                          {formatPriceValue(p).primary}
-                        </p>
+                        <div className="flex flex-wrap items-center gap-1">
+                          <span className="text-sm font-extrabold text-[#167d4f]">
+                            {formatPriceValue(p).primary}
+                          </span>
+                          {formatPriceValue(p).hasBargain && (
+                            <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-[#eaf5f0] text-[#167d4f] border border-[#bdd1c8]">
+                              {formatPriceValue(p).bargainBadge}
+                            </span>
+                          )}
+                        </div>
                         <p className="text-[11px] font-medium text-slate-400">
                           {formatPriceValue(p).secondary}
                         </p>

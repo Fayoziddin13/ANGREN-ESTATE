@@ -19,13 +19,19 @@ export function formatPrice(
   compact: boolean = false,
   rate: number = USD_EXCHANGE_RATE,
   exactPriceUsd?: number,
-  isNegotiable?: boolean
-): { primary: string; secondary: string } {
+  isNegotiable?: boolean,
+  bargainAllowed?: boolean
+): { primary: string; secondary: string; hasBargain: boolean; bargainBadge: string } {
   const isUz = locale === "uz";
+  const hasBargain = Boolean(bargainAllowed);
+  const bargainBadge = isUz ? "Savdolashish mumkin" : "Торг уместен";
+
   if (isNegotiable || (!amountUzs && (!exactPriceUsd || exactPriceUsd <= 0))) {
     return {
       primary: isUz ? "Narxi kelishiladi" : "Цена договорная",
       secondary: "",
+      hasBargain,
+      bargainBadge,
     };
   }
 
@@ -50,13 +56,13 @@ export function formatPrice(
     }
     const secondaryText = `~$${formattedUsd}`;
 
-    return { primary: primaryText, secondary: secondaryText };
+    return { primary: primaryText, secondary: secondaryText, hasBargain, bargainBadge };
   } else {
     // USD mode
     const primaryText = `$${formattedUsd}`;
     const secondaryText = `~${amountUzs.toLocaleString("ru-RU")} ${uzsSuffix}`;
 
-    return { primary: primaryText, secondary: secondaryText };
+    return { primary: primaryText, secondary: secondaryText, hasBargain, bargainBadge };
   }
 }
 
@@ -73,6 +79,7 @@ export function formatPropertyPrice({
   isSale = true,
   exchangeRate = USD_EXCHANGE_RATE,
   isNegotiable = false,
+  bargainAllowed = false,
 }: {
   priceUzs: number;
   priceUsd?: number;
@@ -81,13 +88,23 @@ export function formatPropertyPrice({
   isSale?: boolean;
   exchangeRate?: number;
   isNegotiable?: boolean;
-}): { priceDisplay: string; secondaryPrice: string } {
+  bargainAllowed?: boolean;
+}): {
+  priceDisplay: string;
+  secondaryPrice: string;
+  hasBargain: boolean;
+  bargainBadge: string;
+} {
   const isUz = locale === "uz";
+  const hasBargain = Boolean(bargainAllowed);
+  const bargainBadge = isUz ? "Savdolashish mumkin" : "Торг уместен";
 
   if (isNegotiable || (!priceUzs && (!priceUsd || priceUsd <= 0))) {
     return {
       priceDisplay: isUz ? "Narxi kelishiladi" : "Цена договорная",
       secondaryPrice: "",
+      hasBargain,
+      bargainBadge,
     };
   }
 
@@ -104,11 +121,11 @@ export function formatPropertyPrice({
   if (currency === "USD") {
     const priceDisplay = `$${formattedUsd}${monthSuffix}`;
     const secondaryPrice = `≈ ${priceUzs.toLocaleString("ru-RU")} ${uzsSuffix}${monthSuffix}`;
-    return { priceDisplay, secondaryPrice };
+    return { priceDisplay, secondaryPrice, hasBargain, bargainBadge };
   } else {
     const priceDisplay = `${priceUzs.toLocaleString("ru-RU")} ${uzsSuffix}${monthSuffix}`;
     const secondaryPrice = `≈ $${formattedUsd}${monthSuffix}`;
-    return { priceDisplay, secondaryPrice };
+    return { priceDisplay, secondaryPrice, hasBargain, bargainBadge };
   }
 }
 

@@ -185,7 +185,7 @@ export function MobileBottomSheet({
   const isSale = property.transaction_type === "sale";
   const badgeText = isSale ? t.popular.saleBadge : t.popular.rentBadge;
 
-  const { priceDisplay } = formatPropertyPrice({
+  const { priceDisplay, hasBargain, bargainBadge } = formatPropertyPrice({
     priceUzs: property.price_uzs,
     priceUsd: property.price_usd,
     currency,
@@ -193,6 +193,7 @@ export function MobileBottomSheet({
     isSale,
     exchangeRate,
     isNegotiable: Boolean(property.price_negotiable || (property.amenities as any)?.price_negotiable),
+    bargainAllowed: Boolean(property.bargain_allowed || (property.amenities as any)?.bargain_allowed),
   });
 
   const floorNum = property.floor_number ?? property.floor;
@@ -256,8 +257,15 @@ export function MobileBottomSheet({
             <div className="flex-1 flex flex-col justify-between">
               <div>
                 <div className="flex items-start justify-between gap-2">
-                  <div className="text-base font-extrabold tracking-tight text-brand-dark leading-tight">
-                    {priceDisplay}
+                  <div className="flex flex-wrap items-center gap-1.5 leading-tight">
+                    <span className="text-base font-extrabold tracking-tight text-brand-dark">
+                      {priceDisplay}
+                    </span>
+                    {hasBargain && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[#eaf5f0] text-[#167d4f] border border-[#bdd1c8]">
+                        {bargainBadge}
+                      </span>
+                    )}
                   </div>
                   <button
                     onClick={onClose}

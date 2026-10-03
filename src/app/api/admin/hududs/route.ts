@@ -150,43 +150,79 @@ export async function POST(req: NextRequest) {
   }
 }
 
+async function getHududAssignedPropertyCount(targetId: string): Promise<number> {
+  const cleanTarget = targetId.trim().toLowerCase();
+  if (!cleanTarget) return 0;
+
+  // 1. Identify district record to match both its id, name_uz, and name_ru
+  let distId = cleanTarget;
+  let distNameUz = "";
+  let distNameRu = "";
+
+  try {
+    const { data: districts } = await supabaseAdmin
+      .from("districts")
+      .select("id, name_uz, name_ru");
+
+    if (Array.isArray(districts)) {
+      const match = districts.find(
+        (d) =>
+          (d.id && d.id.toLowerCase().trim() === cleanTarget) ||
+          (d.name_uz && d.name_uz.toLowerCase().trim() === cleanTarget) ||
+          (d.name_ru && d.name_ru.toLowerCase().trim() === cleanTarget)
+      );
+      if (match) {
+        distId = (match.id || "").toLowerCase().trim();
+        distNameUz = (match.name_uz || "").toLowerCase().trim();
+        distNameRu = (match.name_ru || "").toLowerCase().trim();
+      }
+    }
+  } catch (err) {
+    console.warn("[Admin Hududs] Error fetching district details:", err);
+  }
+
+  const matchSet = new Set<string>();
+  if (cleanTarget) matchSet.add(cleanTarget);
+  if (distId) matchSet.add(distId);
+  if (distNameUz) matchSet.add(distNameUz);
+  if (distNameRu) matchSet.add(distNameRu);
+
+  // 2. Query properties from Supabase
+  try {
+    const { data: properties, error: pErr } = await supabaseAdmin
+      .from("properties")
+      .select("id, district, district_name_uz, amenities");
+
+    if (!pErr && Array.isArray(properties)) {
+      const matched = properties.filter((p: any) => {
+        const pDistrict = String(p.district || "").toLowerCase().trim();
+        const pDistrictNameUz = String(p.district_name_uz || "").toLowerCase().trim();
+        const pHududId = String((p.amenities as any)?.hudud_id || "").toLowerCase().trim();
+        const pDistrictId = String((p.amenities as any)?.district_id || "").toLowerCase().trim();
+
+        return (
+          matchSet.has(pDistrict) ||
+          matchSet.has(pDistrictNameUz) ||
+          matchSet.has(pHududId) ||
+          matchSet.has(pDistrictId)
+        );
+      });
+      return matched.length;
+    }
+  } catch (err) {
+    console.warn("[Admin Hududs] Error querying properties from Supabase:", err);
+  }
+
+  return 0;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const checkUsageId = searchParams.get("check_usage") || searchParams.get("usage_id");
 
     if (checkUsageId) {
-      // Check whether properties are assigned to this hudud
-      let assignedCount = 0;
-      try {
-        const { count, error } = await supabaseAdmin
-          .from("properties")
-          .select("id", { count: "exact", head: true })
-          .or(`district.eq.${checkUsageId},district_name_uz.eq.${checkUsageId}`);
-
-        if (!error && typeof count === "number") {
-          assignedCount = count;
-        }
-      } catch (err) {
-        console.warn("[Admin Hududs GET usage] error:", err);
-      }
-
-      try {
-        const dataFilePath = path.join(process.cwd(), "data", "properties.json");
-        if (fs.existsSync(dataFilePath)) {
-          const rawContent = fs.readFileSync(dataFilePath, "utf8");
-          const localProps = JSON.parse(rawContent);
-          if (Array.isArray(localProps)) {
-            const localCount = localProps.filter((p: any) => {
-              const dId = String(p.district || p.district_name_uz || (p.amenities as any)?.hudud_id || "").toLowerCase().trim();
-              return dId === checkUsageId.toLowerCase().trim();
-            }).length;
-            if (localCount > assignedCount) {
-              assignedCount = localCount;
-            }
-          }
-        }
-      } catch {}
+      const assignedCount = await getHududAssignedPropertyCount(checkUsageId);
 
       return NextResponse.json({
         success: true,
@@ -370,38 +406,8 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ success: false, error: "ID_REQUIRED" }, { status: 400 });
     }
 
-    // Check if any properties are linked to this hudud (by id, district, district_name_uz, or amenities->hudud_id)
-    let assignedCount = 0;
-    try {
-      const { count: dbCount, error: countErr } = await supabaseAdmin
-        .from("properties")
-        .select("id", { count: "exact", head: true })
-        .or(`district.eq.${id},district_name_uz.eq.${id}`);
-
-      if (!countErr && typeof dbCount === "number") {
-        assignedCount = dbCount;
-      }
-    } catch (countErr) {
-      console.warn("[Admin Hududs DELETE] Error checking property count for hudud:", countErr);
-    }
-
-    // Also check local properties file for resilience
-    try {
-      const dataFilePath = path.join(process.cwd(), "data", "properties.json");
-      if (fs.existsSync(dataFilePath)) {
-        const rawContent = fs.readFileSync(dataFilePath, "utf8");
-        const localProps = JSON.parse(rawContent);
-        if (Array.isArray(localProps)) {
-          const localCount = localProps.filter((p: any) => {
-            const dId = String(p.district || p.district_name_uz || (p.amenities as any)?.hudud_id || "").toLowerCase().trim();
-            return dId === id.toLowerCase().trim();
-          }).length;
-          if (localCount > assignedCount) {
-            assignedCount = localCount;
-          }
-        }
-      }
-    } catch {}
+    // Check if any properties are linked to this hudud
+    const assignedCount = await getHududAssignedPropertyCount(id);
 
     if (assignedCount > 0) {
       return NextResponse.json(

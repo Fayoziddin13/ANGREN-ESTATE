@@ -23,8 +23,9 @@ interface CurrencyContextType {
     locale: Locale,
     compact?: boolean,
     exactPriceUsd?: number,
-    isNegotiable?: boolean
-  ) => { primary: string; secondary: string };
+    isNegotiable?: boolean,
+    bargainAllowed?: boolean
+  ) => { primary: string; secondary: string; hasBargain: boolean; bargainBadge: string };
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
@@ -87,8 +88,15 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   );
 
   const formatPrice = useCallback(
-    (amountUzs: number, locale: Locale, compact: boolean = false, exactPriceUsd?: number, isNegotiable?: boolean) =>
-      formatPriceLib(amountUzs, locale, currency, compact, exchangeRate, exactPriceUsd, isNegotiable),
+    (
+      amountUzs: number,
+      locale: Locale,
+      compact: boolean = false,
+      exactPriceUsd?: number,
+      isNegotiable?: boolean,
+      bargainAllowed?: boolean
+    ) =>
+      formatPriceLib(amountUzs, locale, currency, compact, exchangeRate, exactPriceUsd, isNegotiable, bargainAllowed),
     [currency, exchangeRate]
   );
 

@@ -100,6 +100,7 @@ export function mapRowToProperty(row: any): Property {
       price_usd: Number(row.price_usd || Math.round((row.price_uzs || row.price || 0) / 12850)),
       currency: (row.currency || "UZS") as any,
       price_negotiable: Boolean(row.price_negotiable ?? amens?.price_negotiable ?? false),
+      bargain_allowed: Boolean((row as any).bargain_allowed ?? amens?.bargain_allowed ?? false),
       area_sqm: Number(row.area_sqm || row.area || 0),
       area: Number(row.area || row.area_sqm || 0),
       area_sotikh: row.area_sotikh ? Number(row.area_sotikh) : row.id === "prop-3" ? 6 : undefined,
@@ -225,6 +226,7 @@ export function mapPropertyToDb(data: any): Record<string, any> {
   if (data.owner_phone) baseAmenities.owner_phone = data.owner_phone;
   if (data.owner_phone_visible !== undefined) baseAmenities.owner_phone_visible = Boolean(data.owner_phone_visible);
   if (data.price_negotiable !== undefined) baseAmenities.price_negotiable = Boolean(data.price_negotiable);
+  if (data.bargain_allowed !== undefined) baseAmenities.bargain_allowed = Boolean(data.bargain_allowed);
 
   return {
     id: data.id,

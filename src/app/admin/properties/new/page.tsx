@@ -127,6 +127,7 @@ export default function AddPropertyPage() {
   const [currency, setCurrency] = useState<"USD" | "UZS">("USD");
   const [priceInput, setPriceInput] = useState<number>(35000);
   const [priceNegotiable, setPriceNegotiable] = useState<boolean>(false);
+  const [bargainAllowed, setBargainAllowed] = useState<boolean>(false);
 
   // STEP 2: Rasm va E'lon Kontenti
   const [imageUrls, setImageUrls] = useState<string[]>([]);
@@ -392,6 +393,7 @@ export default function AddPropertyPage() {
           currency,
           priceInput,
           priceNegotiable,
+          bargainAllowed,
           imageUrls,
           mainImage,
           titleUz,
@@ -451,6 +453,7 @@ export default function AddPropertyPage() {
     currency,
     priceInput,
     priceNegotiable,
+    bargainAllowed,
     imageUrls,
     mainImage,
     titleUz,
@@ -509,6 +512,7 @@ export default function AddPropertyPage() {
       if (d.currency) setCurrency(d.currency);
       if (d.priceInput) setPriceInput(d.priceInput);
       if (d.priceNegotiable !== undefined) setPriceNegotiable(d.priceNegotiable);
+      if (d.bargainAllowed !== undefined) setBargainAllowed(d.bargainAllowed);
       if (Array.isArray(d.imageUrls)) setImageUrls(d.imageUrls);
       if (d.mainImage) setMainImage(d.mainImage);
       if (d.titleUz) setTitleUz(d.titleUz);
@@ -899,6 +903,7 @@ export default function AddPropertyPage() {
         price_usd: priceNegotiable ? 0 : calculatedPrices.priceUsd,
         currency,
         price_negotiable: priceNegotiable,
+        bargain_allowed: bargainAllowed,
         area_sqm: effectiveAreaSqm,
         area_sotikh:
           propertyType === "house_yard" || propertyType === "land"
@@ -1257,6 +1262,7 @@ export default function AddPropertyPage() {
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
+                      disabled={priceNegotiable}
                       onClick={() => {
                         if (currency !== "USD") {
                           setCurrency("USD");
@@ -1264,7 +1270,9 @@ export default function AddPropertyPage() {
                         }
                       }}
                       className={`py-2.5 rounded-xl border text-xs font-black transition-all ${
-                        currency === "USD"
+                        priceNegotiable
+                          ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60"
+                          : currency === "USD"
                           ? "bg-[#167d4f] text-white border-[#167d4f]"
                           : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
                       }`}
@@ -1273,6 +1281,7 @@ export default function AddPropertyPage() {
                     </button>
                     <button
                       type="button"
+                      disabled={priceNegotiable}
                       onClick={() => {
                         if (currency !== "UZS") {
                           setCurrency("UZS");
@@ -1280,7 +1289,9 @@ export default function AddPropertyPage() {
                         }
                       }}
                       className={`py-2.5 rounded-xl border text-xs font-black transition-all ${
-                        currency === "UZS"
+                        priceNegotiable
+                          ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60"
+                          : currency === "UZS"
                           ? "bg-[#167d4f] text-white border-[#167d4f]"
                           : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
                       }`}
@@ -1299,12 +1310,21 @@ export default function AddPropertyPage() {
                     <input
                       type="number"
                       min={0}
-                      value={priceInput || ""}
+                      disabled={priceNegotiable}
+                      value={priceNegotiable ? "" : (priceInput || "")}
                       onChange={(e) => setPriceInput(Number(e.target.value))}
-                      placeholder={currency === "USD" ? "Masalan: 35000" : "Masalan: 450000000"}
-                      className="w-full pl-4 pr-16 py-2.5 rounded-xl border border-slate-200 text-slate-900 font-black text-sm focus:ring-2 focus:ring-[#167d4f] outline-none"
+                      placeholder={
+                        priceNegotiable
+                          ? (locale === "uz" ? "Narxi kelishiladi (summa belgilanmaydi)" : "Цена договорная (сумма не указывается)")
+                          : (currency === "USD" ? "Masalan: 35000" : "Masalan: 450000000")
+                      }
+                      className={`w-full pl-4 pr-16 py-2.5 rounded-xl border text-sm font-black outline-none transition-all ${
+                        priceNegotiable
+                          ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed select-none"
+                          : "border-slate-200 text-slate-900 focus:ring-2 focus:ring-[#167d4f]"
+                      }`}
                     />
-                    <span className="absolute right-4 top-2.5 text-xs font-black text-slate-400">
+                    <span className={`absolute right-4 top-2.5 text-xs font-black ${priceNegotiable ? "text-slate-300" : "text-slate-400"}`}>
                       {currency}
                     </span>
                   </div>
@@ -1314,9 +1334,13 @@ export default function AddPropertyPage() {
               {/* Dinamik hisoblangan kurs natijasi */}
               <div className="p-3.5 rounded-2xl bg-[#eaf5f0]/60/70 border border-[#dee8e3] flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-[#167d4f]">
                 <div>
-                  <span className="text-slate-500">{locale === "uz" ? "Ekvivalent: " : "Эквивалент: "}</span>
+                  <span className="text-slate-500">
+                    {priceNegotiable ? (locale === "uz" ? "Holat: " : "Статус: ") : (locale === "uz" ? "Ekvivalent: " : "Эквивалент: ")}
+                  </span>
                   <strong className="text-slate-900">
-                    {currency === "USD"
+                    {priceNegotiable
+                      ? (locale === "uz" ? "Narxi kelishiladi" : "Цена договорная")
+                      : currency === "USD"
                       ? `${calculatedPrices.priceUzs.toLocaleString("uz-UZ")} UZS`
                       : `$${calculatedPrices.priceUsd.toLocaleString("en-US")} USD`}
                   </strong>
@@ -1327,17 +1351,40 @@ export default function AddPropertyPage() {
                 </div>
               </div>
 
-              {/* Kelishiladi checkbox */}
-              <div className="flex items-center gap-2 pt-1">
-                <input
-                  type="checkbox"
-                  id="priceNegotiable"
-                  checked={priceNegotiable}
-                  onChange={(e) => setPriceNegotiable(e.target.checked)}
-                  className="w-4 h-4 rounded text-[#167d4f] focus:ring-[#167d4f] accent-[#167d4f]"
-                />
-                <label htmlFor="priceNegotiable" className="text-xs font-bold text-slate-700 cursor-pointer">
-                  {locale === "uz" ? "Narxi kelishiladi (savdolashish mumkin)" : "Цена договорная (торг уместен)"}
+              {/* Ikkita alohida checkbox: Narxi kelishiladi & Savdolashish mumkin */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 pt-1">
+                {/* 1. Narxi kelishiladi */}
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    id="priceNegotiable"
+                    checked={priceNegotiable}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setPriceNegotiable(checked);
+                      if (checked) {
+                        setStepError(null);
+                      }
+                    }}
+                    className="w-4 h-4 rounded text-[#167d4f] focus:ring-[#167d4f] accent-[#167d4f]"
+                  />
+                  <span className="text-xs font-bold text-slate-700">
+                    {locale === "uz" ? "Narxi kelishiladi" : "Цена договорная"}
+                  </span>
+                </label>
+
+                {/* 2. Savdolashish mumkin */}
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    id="bargainAllowed"
+                    checked={bargainAllowed}
+                    onChange={(e) => setBargainAllowed(e.target.checked)}
+                    className="w-4 h-4 rounded text-[#167d4f] focus:ring-[#167d4f] accent-[#167d4f]"
+                  />
+                  <span className="text-xs font-bold text-slate-700">
+                    {locale === "uz" ? "Savdolashish mumkin" : "Торг уместен"}
+                  </span>
                 </label>
               </div>
             </div>
@@ -3003,22 +3050,29 @@ export default function AddPropertyPage() {
 
                 {/* Title & Price */}
                 <div className="space-y-1">
-                  <div className="text-2xl sm:text-3xl font-black text-slate-900">
-                    {priceNegotiable ? (
-                      <span className="text-[#167d4f]">
-                        {locale === "uz" ? "Narxi kelishiladi" : "Цена договорная"}
-                      </span>
-                    ) : (
-                      <>
-                        {currency === "USD"
-                          ? `$${calculatedPrices.priceUsd.toLocaleString("en-US")} USD`
-                          : `${calculatedPrices.priceUzs.toLocaleString("uz-UZ")} UZS`}
-                        <span className="text-xs font-semibold text-slate-500 ml-2">
-                          ({currency === "USD"
-                            ? `${calculatedPrices.priceUzs.toLocaleString("uz-UZ")} UZS`
-                            : `$${calculatedPrices.priceUsd.toLocaleString("en-US")} USD`})
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="text-2xl sm:text-3xl font-black text-slate-900">
+                      {priceNegotiable ? (
+                        <span className="text-[#167d4f]">
+                          {locale === "uz" ? "Narxi kelishiladi" : "Цена договорная"}
                         </span>
-                      </>
+                      ) : (
+                        <>
+                          {currency === "USD"
+                            ? `$${calculatedPrices.priceUsd.toLocaleString("en-US")} USD`
+                            : `${calculatedPrices.priceUzs.toLocaleString("uz-UZ")} UZS`}
+                          <span className="text-xs font-semibold text-slate-500 ml-2">
+                            ({currency === "USD"
+                              ? `${calculatedPrices.priceUzs.toLocaleString("uz-UZ")} UZS`
+                              : `$${calculatedPrices.priceUsd.toLocaleString("en-US")} USD`})
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    {bargainAllowed && (
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-[#eaf5f0] text-[#167d4f] border border-[#bdd1c8]">
+                        {locale === "uz" ? "Savdolashish mumkin" : "Торг уместен"}
+                      </span>
                     )}
                   </div>
                   <h4 className="text-lg font-bold text-slate-800 leading-snug">

@@ -183,7 +183,7 @@ export default function PropertyDetailView({
   const isRented = property.status === "rented";
   const isSoldOrRented = isSold || isRented;
 
-  const { priceDisplay, secondaryPrice } = formatPropertyPrice({
+  const { priceDisplay, secondaryPrice, hasBargain, bargainBadge } = formatPropertyPrice({
     priceUzs: property.price_uzs,
     priceUsd: property.price_usd,
     currency,
@@ -191,6 +191,7 @@ export default function PropertyDetailView({
     isSale,
     exchangeRate,
     isNegotiable: Boolean(property.price_negotiable || (property.amenities as any)?.price_negotiable),
+    bargainAllowed: Boolean(property.bargain_allowed || (property.amenities as any)?.bargain_allowed),
   });
 
   const handleShare = () => {
@@ -497,10 +498,10 @@ export default function PropertyDetailView({
                       <div className="text-2xl sm:text-3xl font-extrabold text-[#167d4f] tracking-tight">
                         {priceDisplay}
                       </div>
-                      {Boolean(property.price_negotiable || (property.amenities as any)?.price_negotiable) && priceDisplay !== (locale === "uz" ? "Narxi kelishiladi" : "Цена договорная") && (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-[#eaf5f0] border border-[#2db477]/40 text-[#167d4f] text-xs font-bold shadow-xs">
+                      {hasBargain && (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-[#eaf5f0] border border-[#bdd1c8] text-[#167d4f] text-xs font-bold shadow-xs">
                           <Handshake className="w-3.5 h-3.5 text-[#167d4f]" />
-                          <span>{locale === "uz" ? "Narxi kelishiladi" : "Цена договорная"}</span>
+                          <span>{bargainBadge}</span>
                         </span>
                       )}
                     </div>

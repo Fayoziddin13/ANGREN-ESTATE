@@ -141,6 +141,7 @@ export default function EditPropertyPage() {
   const [priceUsd, setPriceUsd] = useState(35000);
   const [currency, setCurrency] = useState<"UZS" | "USD">("USD");
   const [priceNegotiable, setPriceNegotiable] = useState(false);
+  const [bargainAllowed, setBargainAllowed] = useState(false);
 
   // Location
   const [district, setDistrict] = useState("Markaz");
@@ -554,6 +555,7 @@ export default function EditPropertyPage() {
     setPriceUzs(found.price_uzs || 0);
     setPriceUsd(found.price_usd || Math.round((found.price_uzs || 0) / exchangeRate));
     setPriceNegotiable(Boolean(found.price_negotiable ?? (found.amenities as any)?.price_negotiable ?? false));
+    setBargainAllowed(Boolean(found.bargain_allowed ?? (found.amenities as any)?.bargain_allowed ?? false));
     setDistrict(found.district_name_uz || "Markaz");
     setAddressUz(found.address_uz || "");
     setAddressRu(found.address_ru || "");
@@ -730,6 +732,7 @@ export default function EditPropertyPage() {
         price_uzs: priceNegotiable ? 0 : priceUzs,
         price_usd: priceNegotiable ? 0 : priceUsd,
         price_negotiable: priceNegotiable,
+        bargain_allowed: bargainAllowed,
         area_sqm: areaSqm,
         living_area_sqm: livingAreaSqm,
         area_sotikh:
@@ -990,13 +993,23 @@ export default function EditPropertyPage() {
                 </label>
                 <input
                   type="number"
-                  value={priceUsd}
+                  disabled={priceNegotiable}
+                  value={priceNegotiable ? "" : priceUsd}
                   onChange={(e) => {
                     const usd = Number(e.target.value);
                     setPriceUsd(usd);
                     setPriceUzs(Math.round(usd * exchangeRate));
                   }}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#167d4f] outline-none text-sm font-bold"
+                  placeholder={
+                    priceNegotiable
+                      ? (locale === "uz" ? "Narxi kelishiladi (summa belgilanmaydi)" : "Цена договорная (сумма не указывается)")
+                      : "35000"
+                  }
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-bold outline-none transition-all ${
+                    priceNegotiable
+                      ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed select-none"
+                      : "border-slate-200 focus:ring-2 focus:ring-[#167d4f]"
+                  }`}
                 />
               </div>
               <div className="space-y-1">
@@ -1005,28 +1018,61 @@ export default function EditPropertyPage() {
                 </label>
                 <input
                   type="number"
-                  value={priceUzs}
+                  disabled={priceNegotiable}
+                  value={priceNegotiable ? "" : priceUzs}
                   onChange={(e) => {
                     const uzs = Number(e.target.value);
                     setPriceUzs(uzs);
                     setPriceUsd(Math.round(uzs / exchangeRate));
                   }}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#167d4f] outline-none text-sm font-bold"
+                  placeholder={
+                    priceNegotiable
+                      ? (locale === "uz" ? "Narxi kelishiladi (summa belgilanmaydi)" : "Цена договорная (сумма не указывается)")
+                      : "450000000"
+                  }
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-bold outline-none transition-all ${
+                    priceNegotiable
+                      ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed select-none"
+                      : "border-slate-200 focus:ring-2 focus:ring-[#167d4f]"
+                  }`}
                 />
               </div>
             </div>
 
-            {/* Kelishiladi checkbox */}
-            <div className="flex items-center gap-2 pt-1">
-              <input
-                type="checkbox"
-                id="editPriceNegotiable"
-                checked={priceNegotiable}
-                onChange={(e) => setPriceNegotiable(e.target.checked)}
-                className="w-4 h-4 rounded text-[#167d4f] focus:ring-[#167d4f] accent-[#167d4f]"
-              />
-              <label htmlFor="editPriceNegotiable" className="text-xs font-bold text-slate-700 cursor-pointer">
-                {locale === "uz" ? "Narxi kelishiladi (savdolashish mumkin)" : "Цена договорная (торг уместен)"}
+            {/* Ikkita alohida checkbox: Narxi kelishiladi & Savdolashish mumkin */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 pt-1">
+              {/* 1. Narxi kelishiladi */}
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  id="editPriceNegotiable"
+                  checked={priceNegotiable}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setPriceNegotiable(checked);
+                    if (checked) {
+                      setSaveError(null);
+                    }
+                  }}
+                  className="w-4 h-4 rounded text-[#167d4f] focus:ring-[#167d4f] accent-[#167d4f]"
+                />
+                <span className="text-xs font-bold text-slate-700">
+                  {locale === "uz" ? "Narxi kelishiladi" : "Цена договорная"}
+                </span>
+              </label>
+
+              {/* 2. Savdolashish mumkin */}
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  id="editBargainAllowed"
+                  checked={bargainAllowed}
+                  onChange={(e) => setBargainAllowed(e.target.checked)}
+                  className="w-4 h-4 rounded text-[#167d4f] focus:ring-[#167d4f] accent-[#167d4f]"
+                />
+                <span className="text-xs font-bold text-slate-700">
+                  {locale === "uz" ? "Savdolashish mumkin" : "Торг уместен"}
+                </span>
               </label>
             </div>
 
