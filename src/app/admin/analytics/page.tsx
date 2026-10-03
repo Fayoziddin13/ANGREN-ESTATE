@@ -111,12 +111,8 @@ export default function AdminAnalyticsPage() {
     { name: "To‘g‘ridan-to‘g‘ri (Direct / Bookmark)", name_ru: "Прямой переход (Direct / Закладки)", percent: 0, visits: 0, color: "bg-amber-500" },
   ];
 
-  const geoStats = data?.geo_stats || [
-    { city: "Angren shahri", city_ru: "г. Ангрен", region: "Toshkent viloyati", region_ru: "Ташкентская область", count: 0, percent: 68, is_angren: true, color: "bg-emerald-500" },
-    { city: "Toshkent shahri", city_ru: "г. Ташкент", region: "Toshkent shahri", region_ru: "г. Ташкент", count: 0, percent: 22, is_angren: false, color: "bg-blue-500" },
-    { city: "Boshqa hududlar", city_ru: "Другие регионы", region: "O‘zbekiston", region_ru: "Узбекистан", count: 0, percent: 10, is_angren: false, color: "bg-purple-500" },
-  ];
-  const angrenShare = data?.angren_share_percent ?? 68;
+  const geoStats = data?.geo_stats || [];
+  const angrenShare = data?.angren_share_percent ?? 0;
   const totalGeoEvents = data?.total_geo_events ?? 0;
 
   const propertyTypesDemand = data?.property_types_demand || [
@@ -737,48 +733,56 @@ export default function AdminAnalyticsPage() {
             </div>
 
             {/* Geo Distribution Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {geoStats.map((geo) => (
-                <div
-                  key={geo.city}
-                  className={`p-4 rounded-2xl bg-slate-950/80 border transition-all ${
-                    geo.is_angren
-                      ? "border-[#167d4f]/50 ring-1 ring-[#167d4f]/30 shadow-emerald-950/40"
-                      : "border-slate-700/80 hover:border-slate-600"
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-bold text-slate-300">
-                      {locale === "uz" ? geo.region : geo.region_ru}
-                    </span>
-                    {geo.is_angren && (
-                      <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-emerald-500/20 text-[#2db477] border border-[#167d4f]/30">
-                        Lokal
+            {geoStats.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {geoStats.map((geo) => (
+                  <div
+                    key={geo.city}
+                    className={`p-4 rounded-2xl bg-slate-950/80 border transition-all ${
+                      geo.is_angren
+                        ? "border-[#167d4f]/50 ring-1 ring-[#167d4f]/30 shadow-emerald-950/40"
+                        : "border-slate-700/80 hover:border-slate-600"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-bold text-slate-300">
+                        {locale === "uz" ? geo.region : geo.region_ru}
                       </span>
-                    )}
-                  </div>
-                  <div className="text-base font-extrabold text-white mt-1">
-                    {locale === "uz" ? geo.city : geo.city_ru}
-                  </div>
-                  <div className="flex items-baseline justify-between mt-3">
-                    <span className="text-2xl font-black font-mono text-[#2db477]">
-                      {geo.percent}%
-                    </span>
-                    {geo.count > 0 && (
-                      <span className="text-xs text-slate-400 font-mono">
-                        {geo.count} {locale === "uz" ? "tashrif" : "визитов"}
+                      {geo.is_angren && (
+                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-emerald-500/20 text-[#2db477] border border-[#167d4f]/30">
+                          Lokal
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-base font-extrabold text-white mt-1">
+                      {locale === "uz" ? geo.city : geo.city_ru}
+                    </div>
+                    <div className="flex items-baseline justify-between mt-3">
+                      <span className="text-2xl font-black font-mono text-[#2db477]">
+                        {geo.percent}%
                       </span>
-                    )}
+                      {geo.count > 0 && (
+                        <span className="text-xs text-slate-400 font-mono">
+                          {geo.count} {locale === "uz" ? "tashrif" : "визитов"}
+                        </span>
+                      )}
+                    </div>
+                    <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden mt-2 border border-slate-700/50">
+                      <div
+                        className={`h-full ${geo.color} rounded-full transition-all duration-500`}
+                        style={{ width: `${geo.percent}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden mt-2 border border-slate-700/50">
-                    <div
-                      className={`h-full ${geo.color} rounded-full transition-all duration-500`}
-                      style={{ width: `${geo.percent}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-8 text-center text-slate-400 text-xs bg-slate-950/50 rounded-2xl border border-slate-800/80">
+                {locale === "uz"
+                  ? "Hozircha foydalanuvchilar geografiyasi bo‘yicha to‘plangan voqealar mavjud emas."
+                  : "Пока нет зафиксированных геолокационных данных пользователей."}
+              </div>
+            )}
           </div>
         </div>
       )}

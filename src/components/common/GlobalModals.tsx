@@ -7,6 +7,7 @@ import { useSavedSearches } from "@/lib/savedSearchStore";
 import { FloatingCompareBar } from "@/components/compare/FloatingCompareBar";
 import { PropertyCompareModal } from "@/components/compare/PropertyCompareModal";
 import { SavedSearchesModal } from "@/components/search/SavedSearchesModal";
+import { PublicListingSubmissionModal } from "@/components/property/PublicListingSubmissionModal";
 import { SavedSearch, Property } from "@/lib/types";
 import { useTelegram } from "@/context/TelegramContext";
 
@@ -19,8 +20,9 @@ export function GlobalModals() {
 
   const [isCompareOpen, setIsCompareOpen] = useState(false);
   const [isSavedSearchesOpen, setIsSavedSearchesOpen] = useState(false);
+  const [isListingModalOpen, setIsListingModalOpen] = useState(false);
 
-  // Sync Telegram BackButton with compare and saved searches modals
+  // Sync Telegram BackButton with compare, saved searches, and listing modals
   useEffect(() => {
     if (!isTelegram) return;
 
@@ -34,8 +36,13 @@ export function GlobalModals() {
         visible: true,
         onClick: () => setIsSavedSearchesOpen(false),
       });
+    } else if (isListingModalOpen) {
+      setBackButton({
+        visible: true,
+        onClick: () => setIsListingModalOpen(false),
+      });
     }
-  }, [isTelegram, setBackButton, isCompareOpen, isSavedSearchesOpen]);
+  }, [isTelegram, setBackButton, isCompareOpen, isSavedSearchesOpen, isListingModalOpen]);
 
   // Check matching saved search alerts when properties are loaded
   useEffect(() => {
@@ -48,13 +55,16 @@ export function GlobalModals() {
   useEffect(() => {
     const handleOpenCompare = () => setIsCompareOpen(true);
     const handleOpenSavedSearches = () => setIsSavedSearchesOpen(true);
+    const handleOpenListing = () => setIsListingModalOpen(true);
 
     window.addEventListener("angren_open_compare", handleOpenCompare);
     window.addEventListener("angren_open_saved_searches", handleOpenSavedSearches);
+    window.addEventListener("angren_open_listing_modal", handleOpenListing);
 
     return () => {
       window.removeEventListener("angren_open_compare", handleOpenCompare);
       window.removeEventListener("angren_open_saved_searches", handleOpenSavedSearches);
+      window.removeEventListener("angren_open_listing_modal", handleOpenListing);
     };
   }, []);
 
@@ -122,6 +132,10 @@ export function GlobalModals() {
         onClose={() => setIsSavedSearchesOpen(false)}
         onApplySearch={handleApplySearch}
         onViewProperty={handleViewProperty}
+      />
+      <PublicListingSubmissionModal
+        isOpen={isListingModalOpen}
+        onClose={() => setIsListingModalOpen(false)}
       />
     </>
   );

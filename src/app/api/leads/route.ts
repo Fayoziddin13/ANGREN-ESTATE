@@ -243,6 +243,10 @@ export async function POST(req: NextRequest) {
             location: (body.location || metadata?.location || "").trim(),
             deal_type: body.deal_type || metadata?.deal_type || "sale",
             property_type: body.property_type || metadata?.property_type || "apartment",
+            rooms: body.rooms || metadata?.rooms || undefined,
+            area: body.area || metadata?.area || undefined,
+            price: body.price || metadata?.price || undefined,
+            currency: body.currency || metadata?.currency || "USD",
             description: (message || body.description || metadata?.description || "").trim(),
             preferred_channel: body.preferred_channel || metadata?.preferred_channel || "phone",
           }

@@ -113,6 +113,7 @@ export interface Property {
   contact_telegram?: string;
   telegram?: string;
   owner_phone?: string;
+  owner_phone_visible?: boolean;
   realtor_id?: string;
   realtor?: Realtor;
   facade_m?: number;

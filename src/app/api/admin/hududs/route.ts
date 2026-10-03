@@ -359,20 +359,26 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    // CRITICAL: Safely unassign properties without deleting them!
-    // Set hudud_id to NULL. If district was this id, reset to 'markaz'.
-    // DO NOT DELETE PROPERTIES! Do not delete coordinates, photos, price, etc.
-    try {
-      await supabaseAdmin
-        .from("properties")
-        .update({
-          district: "markaz",
-          district_name_uz: "Markaz",
-          district_name_ru: "Центр",
-        })
-        .or(`district.eq.${id},district_name_uz.eq.${id}`);
-    } catch (reassignErr) {
-      console.warn("[Admin Hududs] Safe unassignment warning:", reassignErr);
+    // Check if any properties are linked to this hudud (by id, district, district_name_uz, or amenities->hudud_id)
+    const { count: assignedCount, error: countErr } = await supabaseAdmin
+      .from("properties")
+      .select("id", { count: "exact", head: true })
+      .or(`district.eq.${id},district_name_uz.eq.${id}`);
+
+    if (countErr) {
+      console.warn("[Admin Hududs] Error checking property count for hudud:", countErr);
+    }
+
+    if (assignedCount && assignedCount > 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "HUDUD_IN_USE",
+          message: "Bu hududda mavjud obyektlar mavjud. Avval obyektlarni boshqa hududga o‘tkazing.",
+          assigned_count: assignedCount,
+        },
+        { status: 400 }
+      );
     }
 
     await Promise.all([

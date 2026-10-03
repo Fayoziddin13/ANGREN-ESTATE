@@ -741,6 +741,20 @@ export default function PropertyDetailView({
                   </div>
                 ) : (
                   <div className="space-y-2.5">
+                    {/* Uy egasi telefoni (agar xaridorlarga ko‘rsatish ruxsat etilgan bo‘lsa) */}
+                    {property.owner_phone_visible && property.owner_phone && (
+                      <a
+                        href={`tel:${property.owner_phone}`}
+                        className="w-full py-3 px-4 rounded-xl border-2 border-emerald-600 bg-emerald-50/80 hover:bg-emerald-100 text-emerald-800 text-xs sm:text-sm font-bold shadow-xs flex items-center justify-center gap-2 transition-all active:scale-98"
+                      >
+                        <Phone className="w-4 h-4 text-emerald-700" />
+                        <span>
+                          {locale === "uz" ? "Uy egasi telefoni: " : "Телефон владельца: "}
+                          {property.owner_phone}
+                        </span>
+                      </a>
+                    )}
+
                     <a
                       href={`tel:${property.contact_phone}`}
                       onClick={handleCallClick}

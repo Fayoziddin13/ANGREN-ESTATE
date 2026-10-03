@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { MapPin, Home, Coins, ChevronDown, RotateCcw, Check, Search, X, SlidersHorizontal, Bookmark } from "lucide-react";
+import { MapPin, Home, Coins, ChevronDown, RotateCcw, Check, Search, X, SlidersHorizontal, Bookmark, Plus } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useSavedSearches } from "@/lib/savedSearchStore";
@@ -468,6 +468,19 @@ export function FloatingSearchPanel({
               )}
             </button>
           )}
+
+          {/* + E'lon qoldirish button */}
+          <button
+            type="button"
+            data-testid="desktop-add-listing-button"
+            onClick={() => window.dispatchEvent(new CustomEvent("angren_open_listing_modal"))}
+            title={locale === "uz" ? "Obyektingizni joylashtiring" : "Разместить объявление"}
+            className="flex h-9 px-3 items-center gap-1.5 rounded-xl bg-[#167d4f] hover:bg-[#145d3c] active:scale-95 text-white shadow-sm text-xs font-bold transition-all shrink-0"
+          >
+            <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
+            <span className="hidden sm:inline">{locale === "uz" ? "+ E'lon qoldirish" : "+ Подать объявление"}</span>
+            <span className="sm:hidden">+ E'lon</span>
+          </button>
 
           <button
             type="button"

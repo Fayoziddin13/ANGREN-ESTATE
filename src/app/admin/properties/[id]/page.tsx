@@ -541,6 +541,7 @@ export default function EditPropertyPage() {
   // Contact
   const [selectedRealtorId, setSelectedRealtorId] = useState("");
   const [ownerPhone, setOwnerPhone] = useState("");
+  const [ownerPhoneVisible, setOwnerPhoneVisible] = useState(false);
   const [contactPhone, setContactPhone] = useState("+998 90 123 45 67");
   const [contactTelegram, setContactTelegram] = useState("@angrenestate_admin");
 
@@ -595,6 +596,7 @@ export default function EditPropertyPage() {
       });
     }
     if (found.owner_phone) setOwnerPhone(found.owner_phone);
+    setOwnerPhoneVisible(Boolean(found.owner_phone_visible ?? (found.amenities as any)?.owner_phone_visible ?? false));
     if (found.amenities) {
       setAmenities(found.amenities);
 
@@ -771,6 +773,7 @@ export default function EditPropertyPage() {
         depth_m: depthM ? Number(depthM) : undefined,
         dimensions: facadeM && depthM ? `${facadeM} × ${depthM} m` : undefined,
         owner_phone: ownerPhone || undefined,
+        owner_phone_visible: Boolean(ownerPhoneVisible),
         contact_phone: contactPhone || "+998 90 123 45 67",
         contact_telegram: contactTelegram,
         realtor_id: selectedRealtorId || undefined,
@@ -1509,20 +1512,23 @@ export default function EditPropertyPage() {
                         ? `«${hududToDelete.name_uz}» hududini o‘chirishni tasdiqlaysizmi?`
                         : `Вы действительно хотите удалить этот район «${hududToDelete.name_ru || hududToDelete.name_uz}»?`}
                     </p>
-                    {hududUsageCount > 0 && (
-                      <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-medium space-y-1">
-                        <div className="font-bold">
-                          {locale === "uz"
-                            ? "Bu hududga biriktirilgan obyektlar mavjud."
-                            : "К этому району привязаны объекты."}
+                    {hududUsageCount > 0 ? (
+                      <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-950 text-xs font-medium space-y-1.5">
+                        <div className="font-extrabold text-amber-900 flex items-center gap-1.5">
+                          <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                          <span>
+                            {locale === "uz"
+                              ? "O‘chirish cheklangan"
+                              : "Удаление заблокировано"}
+                          </span>
                         </div>
-                        <div>
+                        <p className="text-amber-900/90 leading-relaxed font-semibold">
                           {locale === "uz"
-                            ? `${hududUsageCount} ta obyekt mavjud. Hudud o‘chirilganda obyektlar o‘chirilmaydi, ularning hududi bo‘shatiladi (hudud_id olib tashlanadi).`
-                            : `Привязано ${hududUsageCount} шт. При удалении района сами объекты НЕ удаляются, снимается только их привязка к району.`}
-                        </div>
+                            ? `Bu hududda mavjud obyektlar mavjud (${hududUsageCount} ta). Avval obyektlarni boshqa hududga o‘tkazing.`
+                            : `В этом районе есть существующие объекты (${hududUsageCount} шт.). Сначала переведите объекты в другой район.`}
+                        </p>
                       </div>
-                    )}
+                    ) : null}
                     <div className="flex items-center justify-end gap-2 pt-2">
                       <button
                         type="button"
@@ -1530,17 +1536,21 @@ export default function EditPropertyPage() {
                         onClick={() => setHududToDelete(null)}
                         className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all"
                       >
-                        {locale === "uz" ? "Bekor qilish" : "Отмена"}
+                        {hududUsageCount > 0
+                          ? (locale === "uz" ? "Tushunarli (Yopish)" : "Понятно (Закрыть)")
+                          : (locale === "uz" ? "Bekor qilish" : "Отмена")}
                       </button>
-                      <button
-                        type="button"
-                        disabled={isDeletingHudud}
-                        onClick={() => handleDeleteHudud(hududToDelete)}
-                        className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all flex items-center gap-1.5"
-                      >
-                        {isDeletingHudud && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                        <span>{locale === "uz" ? "O‘chirish" : "Удалить"}</span>
-                      </button>
+                      {hududUsageCount === 0 && (
+                        <button
+                          type="button"
+                          disabled={isDeletingHudud}
+                          onClick={() => handleDeleteHudud(hududToDelete)}
+                          className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all flex items-center gap-1.5"
+                        >
+                          {isDeletingHudud && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                          <span>{locale === "uz" ? "O‘chirish" : "Удалить"}</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -2369,12 +2379,16 @@ export default function EditPropertyPage() {
               </select>
             </div>
 
-            {/* Owner Direct Phone (Dedicated Field, Optional & Confidential) */}
+            {/* Owner Direct Phone (Dedicated Field, Optional & Visibility Toggle) */}
             <div className="space-y-2 pt-4 border-t border-slate-100">
               <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
-                <span>{locale === "uz" ? "Mulk egasining telefoni (Maxfiy)" : "Телефон владельца (Конфиденциально)"}</span>
-                <span className="text-[10px] text-amber-800 font-bold bg-amber-100 px-2 py-0.5 rounded-md">
-                  {locale === "uz" ? "Faqat Admin • Maxfiy" : "Только Админ • Скрыто"}
+                <span>{locale === "uz" ? "Uy egasi telefoni" : "Телефон владельца"}</span>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                  ownerPhoneVisible ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+                }`}>
+                  {ownerPhoneVisible
+                    ? (locale === "uz" ? "Xaridorlarga ko‘rinadi" : "Видно покупателям")
+                    : (locale === "uz" ? "Faqat Admin • Maxfiy" : "Только Админ • Скрыто")}
                 </span>
               </label>
               <input
@@ -2384,10 +2398,27 @@ export default function EditPropertyPage() {
                 placeholder={locale === "uz" ? "+998 90 123 45 67 (Ixtiyoriy)" : "+998 90 123 45 67 (Необязательно)"}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-amber-200 text-xs font-bold bg-amber-50/20 text-amber-950 focus:ring-2 focus:ring-amber-500 outline-none"
               />
-              <p className="text-[11px] text-amber-800 font-medium">
-                {locale === "uz"
-                  ? "Mulk egasining raqami mijozlarga ko‘rsatilmaydi. Saytda faqat biriktirilgan rieltor kontaktlari ko‘rinadi."
-                  : "Номер владельца не показывается клиентам. На сайте отображаются только контакты риелтора."}
+
+              <label className="flex items-center gap-2 cursor-pointer pt-1 select-none">
+                <input
+                  type="checkbox"
+                  checked={ownerPhoneVisible}
+                  onChange={(e) => setOwnerPhoneVisible(e.target.checked)}
+                  className="w-4 h-4 rounded text-[#167d4f] border-slate-300 focus:ring-[#167d4f] cursor-pointer"
+                />
+                <span className="text-xs font-bold text-slate-800">
+                  {locale === "uz" ? "Xaridorlarga ko‘rsatish" : "Показывать покупателям"}
+                </span>
+              </label>
+
+              <p className="text-[11px] text-slate-500 font-medium">
+                {ownerPhoneVisible
+                  ? (locale === "uz"
+                      ? "Ushbu raqam saytda obyekt sahifasida xaridorlarga ko‘rsatiladi."
+                      : "Этот номер будет отображаться покупателям на странице объекта.")
+                  : (locale === "uz"
+                      ? "Belgilanmagan bo‘lsa, raqam faqat admin panelda saqlanadi va xaridorlarga ko‘rsatilmaydi."
+                      : "Если не отмечено, номер виден только в админ-панели и скрыт от покупателей.")}
               </p>
             </div>
 

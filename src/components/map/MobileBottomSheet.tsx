@@ -19,6 +19,7 @@ import {
   Navigation,
   LocateFixed,
   Map,
+  Plus,
 } from "lucide-react";
 import { Property } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
@@ -88,15 +89,29 @@ export function MobileBottomSheet({
         data-testid="mobile-map-control-row"
         className="sm:hidden fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] left-3 right-3 z-30 pointer-events-auto flex items-center justify-between gap-2 px-2.5 sm:px-3 py-1.5 rounded-2xl bg-[#167d4f] shadow-elevated border border-[#145d3c]/60 backdrop-blur-xl"
       >
-        {/* Object count badge with localized text on the left */}
-        <div
-          data-testid="mobile-object-count-badge"
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/10 border border-white/15 text-white shrink min-w-0"
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-          <span className="text-[11px] sm:text-xs font-bold tracking-tight text-white whitespace-nowrap truncate">
-            {t.mapSection.objectsOnMap(totalCount)}
-          </span>
+        {/* Object count badge + [+ E'lon] button on the left */}
+        <div className="flex items-center gap-1.5 shrink min-w-0">
+          <div
+            data-testid="mobile-object-count-badge"
+            className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl bg-white/10 border border-white/15 text-white shrink min-w-0"
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+            <span className="text-[11px] font-bold tracking-tight text-white whitespace-nowrap truncate">
+              {t.mapSection.objectsOnMap(totalCount)}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            data-testid="mobile-add-listing-button"
+            onClick={() => window.dispatchEvent(new CustomEvent("angren_open_listing_modal"))}
+            aria-label={locale === "uz" ? "E'lon qoldirish" : "Подать объявление"}
+            title={locale === "uz" ? "E'lon qoldirish" : "Подать объявление"}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#0f4f31] hover:bg-[#0c4028] text-white border border-white/20 active:scale-95 font-bold text-[11px] shadow-xs transition-all shrink-0"
+          >
+            <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
+            <span>{locale === "uz" ? "E'lon" : "Объявление"}</span>
+          </button>
         </div>
 
         {/* 4 Icon-Only Controls on the right */}

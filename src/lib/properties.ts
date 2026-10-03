@@ -129,6 +129,7 @@ export function mapRowToProperty(row: any): Property {
       contact_telegram: row.contact_telegram || row.telegram || undefined,
       telegram: row.telegram || row.contact_telegram || undefined,
       owner_phone: row.owner_phone || amens?.owner_phone || undefined,
+      owner_phone_visible: Boolean(row.owner_phone_visible ?? amens?.owner_phone_visible ?? false),
       realtor_id: row.realtor_id || undefined,
       realtor: realtor,
       facade_m: row.facade_m ? Number(row.facade_m) : amens?.facade_m ? Number(amens.facade_m) : row.id === "prop-3" ? 15 : undefined,
@@ -221,6 +222,8 @@ export function mapPropertyToDb(data: any): Record<string, any> {
   if (data.amenities?.pool !== undefined) baseAmenities.pool = Boolean(data.amenities.pool);
   if (data.amenities?.summer_kitchen !== undefined) baseAmenities.summer_kitchen = Boolean(data.amenities.summer_kitchen);
   if (data.amenities?.garden !== undefined) baseAmenities.garden = Boolean(data.amenities.garden);
+  if (data.owner_phone) baseAmenities.owner_phone = data.owner_phone;
+  if (data.owner_phone_visible !== undefined) baseAmenities.owner_phone_visible = Boolean(data.owner_phone_visible);
 
   return {
     id: data.id,
@@ -326,17 +329,26 @@ async function writeCanonicalLocal(properties: Property[]): Promise<void> {
 // =============================================================================
 
 /**
- * Strip confidential owner information before returning property to public consumers.
- * Owner phone is strictly for admin reference and must never be exposed publicly.
+ * Strip confidential owner information before returning property to public consumers,
+ * UNLESS owner_phone_visible is explicitly true.
  */
 export function sanitizePublicProperty(property: Property): Property {
   if (!property) return property;
   const sanitized: Property = { ...property };
-  delete (sanitized as any).owner_phone;
-  if (sanitized.amenities && typeof sanitized.amenities === "object") {
-    const cleanAmenities = { ...sanitized.amenities };
-    delete (cleanAmenities as any).owner_phone;
-    sanitized.amenities = cleanAmenities;
+  const isVisible = Boolean(
+    sanitized.owner_phone_visible ??
+    sanitized.amenities?.owner_phone_visible ??
+    false
+  );
+
+  if (!isVisible) {
+    delete (sanitized as any).owner_phone;
+    if (sanitized.amenities && typeof sanitized.amenities === "object") {
+      const cleanAmenities = { ...sanitized.amenities };
+      delete (cleanAmenities as any).owner_phone;
+      sanitized.amenities = cleanAmenities;
+    }
+    sanitized.owner_phone_visible = false;
   }
   return sanitized;
 }

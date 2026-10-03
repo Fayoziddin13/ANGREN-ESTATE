@@ -413,40 +413,8 @@ export async function GET(req: NextRequest) {
         });
       }
     } else {
-      // Canonical Angren real estate audience baseline
-      angren_share_percent = 68;
-      geo_stats = [
-        {
-          city: "Angren shahri",
-          city_ru: "г. Ангрен",
-          region: "Toshkent viloyati",
-          region_ru: "Ташкентская область",
-          count: Math.round(uniqueVisitors * 0.68) || 0,
-          percent: 68,
-          is_angren: true,
-          color: "bg-emerald-500",
-        },
-        {
-          city: "Toshkent shahri",
-          city_ru: "г. Ташкент",
-          region: "Toshkent shahri",
-          region_ru: "г. Ташкент",
-          count: Math.round(uniqueVisitors * 0.22) || 0,
-          percent: 22,
-          is_angren: false,
-          color: "bg-blue-500",
-        },
-        {
-          city: "Boshqa hududlar",
-          city_ru: "Другие регионы",
-          region: "O‘zbekiston",
-          region_ru: "Узбекистан",
-          count: Math.round(uniqueVisitors * 0.10) || 0,
-          percent: 10,
-          is_angren: false,
-          color: "bg-purple-500",
-        },
-      ];
+      angren_share_percent = 0;
+      geo_stats = [];
     }
 
     // 6. Property Types Demand Breakdown (Real Views from Database)
