@@ -267,9 +267,37 @@ export async function getTelegramMenuButton(botToken?: string) {
 
 /**
  * Generate standard welcome message payload
- */
 /**
- * Generate standard welcome message payload (shown after registration)
+ * Normalize phone numbers to standard format (+998XXXXXXXXX)
+ */
+export function normalizePhoneNumber(rawPhone: string): string {
+  if (!rawPhone || typeof rawPhone !== "string") return "";
+  const trimmed = rawPhone.trim();
+  const hasPlus = trimmed.startsWith("+");
+  const digitsOnly = trimmed.replace(/\D/g, "");
+
+  if (!digitsOnly) return "";
+
+  // If 9 digits (e.g. 901234567), assume Uzbekistan (+998...)
+  if (digitsOnly.length === 9) {
+    return `+998${digitsOnly}`;
+  }
+
+  // If 12 digits starting with 998 (e.g. 998901234567)
+  if (digitsOnly.length === 12 && digitsOnly.startsWith("998")) {
+    return `+${digitsOnly}`;
+  }
+
+  // If already had a + or other international format
+  if (hasPlus) {
+    return `+${digitsOnly}`;
+  }
+
+  return `+${digitsOnly}`;
+}
+
+/**
+ * Generate standard welcome message payload (shown for registered users on /start)
  */
 export function getTelegramWelcomePayload(
   lang: "uz" | "ru" = "uz",
@@ -278,23 +306,19 @@ export function getTelegramWelcomePayload(
   const isUz = lang === "uz";
 
   const text = isUz
-    ? "🏠 ANGREN ESTATE — Angren ko‘chmas mulki bir joyda.\n\n" +
-      "📍 Kvartira, uy, yer va tijorat obyektlari.\n" +
-      "🔎 Xarita orqali qidiring va filtrlardan foydalaning.\n" +
-      "💚 Yoqtirgan obyektlaringizni saqlang.\n" +
-      "📞 Mulk egalari va rieltorlar bilan bog‘laning."
-    : "🏠 ANGREN ESTATE — недвижимость Ангрена в одном месте.\n\n" +
-      "📍 Квартиры, дома, участки и коммерческие объекты.\n" +
-      "🔎 Поиск и фильтры на карте.\n" +
-      "💚 Сохраняйте понравившиеся объекты.\n" +
-      "📞 Связывайтесь с владельцами и риелторами.";
+    ? "🏠 ANGREN ESTATE\n\n" +
+      "Angrendagi ko‘chmas mulklarni yagona xaritada qidiring.\n\n" +
+      "Sotuv va ijara e’lonlarini ko‘ring, filtrlang va batafsil ma’lumot bilan tanishing."
+    : "🏠 ANGREN ESTATE\n\n" +
+      "Ищите недвижимость Ангрена на единой карте.\n\n" +
+      "Смотрите объявления о продаже и аренде, фильтруйте и знакомьтесь с подробной информацией.";
 
   const appUrl = isUz ? `${webAppUrl}?lang=uz` : `${webAppUrl}?lang=ru`;
 
   const inline_keyboard = [
     [
       {
-        text: "🏠 ANGREN ESTATE",
+        text: isUz ? "🏠 Mini App'ni ochish" : "🏠 Открыть Mini App",
         web_app: {
           url: appUrl,
         },
@@ -345,19 +369,110 @@ export async function sendTelegramWelcomeMessage(
 }
 
 /**
- * Edit existing welcome message in-place when language toggled
+ * Generate registration prompt payload (shown on first /start for unregistered users)
+ * STRICTLY NO Mini App button!
+ */
+export function getTelegramRegistrationPromptPayload(lang: "uz" | "ru" = "uz") {
+  const isUz = lang === "uz";
+
+  const text = isUz
+    ? "🏠 ANGREN ESTATE\n\n" +
+      "Angren ko‘chmas mulklarini yagona xaritada toping.\n\n" +
+      "Mini App'dan foydalanish uchun avval ro‘yxatdan o‘ting.\n\n" +
+      "Ro‘yxatdan o‘tish uchun telefon raqamingizni yuboring."
+    : "🏠 ANGREN ESTATE\n\n" +
+      "Найдите недвижимость Ангрена на единой карте.\n\n" +
+      "Для использования Mini App сначала пройдите регистрацию.\n\n" +
+      "Для регистрации отправьте ваш номер телефона.";
+
+  const reply_markup = {
+    keyboard: [
+      [
+        {
+          text: isUz ? "📱 Telefon raqamimni yuborish" : "📱 Отправить номер телефона",
+          request_contact: true,
+        },
+      ],
+    ],
+    resize_keyboard: true,
+    one_time_keyboard: true,
+  };
+
+  return { text, reply_markup };
+}
+
+/**
+ * Generate registration success message payload with Mini App & language buttons
+ */
+export function getTelegramRegistrationSuccessPayload(
+  lang: "uz" | "ru" = "uz",
+  webAppUrl: string = "https://angrenestate.uz"
+) {
+  const isUz = lang === "uz";
+
+  const text = isUz
+    ? "Ro‘yxatdan o‘tish muvaffaqiyatli yakunlandi.\n\n" +
+      "ANGREN ESTATE — Angren ko‘chmas mulklarini yagona xaritada topish uchun qulay platforma.\n\n" +
+      "Bu yerda:\n" +
+      "• Uylar\n" +
+      "• Kvartiralar\n" +
+      "• Yer uchastkalari\n" +
+      "• Noturar joylar\n" +
+      "• Biznes obyektlari\n" +
+      "• Sotuv va ijara\n\n" +
+      "uchun e'lonlarni ko‘rishingiz mumkin."
+    : "Регистрация успешно завершена.\n\n" +
+      "ANGREN ESTATE — удобная платформа для поиска недвижимости в Ангрене на единой карте.\n\n" +
+      "Здесь вы можете посмотреть объявления:\n" +
+      "• Дома\n" +
+      "• Квартиры\n" +
+      "• Земельные участки\n" +
+      "• Нежилые помещения\n" +
+      "• Бизнес-объекты\n" +
+      "• Продажа и аренда\n\n" +
+      "на единой платформе.";
+
+  const appUrl = isUz ? `${webAppUrl}?lang=uz` : `${webAppUrl}?lang=ru`;
+
+  const inline_keyboard = [
+    [
+      {
+        text: isUz ? "🏠 ANGREN ESTATE Mini App'ni ochish" : "🏠 Открыть ANGREN ESTATE Mini App",
+        web_app: {
+          url: appUrl,
+        },
+      },
+    ],
+    [
+      {
+        text: "🇷🇺 Русский | 🇺🇿 O‘zbekcha",
+        callback_data: isUz ? "lang_ru" : "lang_uz",
+      },
+    ],
+  ];
+
+  const reply_markup = { inline_keyboard };
+
+  return { text, reply_markup };
+}
+
+/**
+ * Edit existing welcome or registration message in-place when language toggled
  */
 export async function editTelegramWelcomeMessage(
   chatId: number | string,
   messageId: number,
   targetLang: "uz" | "ru",
   botToken?: string,
-  webAppUrl: string = "https://angrenestate.uz"
+  webAppUrl: string = "https://angrenestate.uz",
+  isSuccessVariant: boolean = false
 ) {
   const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
   if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not configured");
 
-  const { text, reply_markup } = getTelegramWelcomePayload(targetLang, webAppUrl);
+  const { text, reply_markup } = isSuccessVariant
+    ? getTelegramRegistrationSuccessPayload(targetLang, webAppUrl)
+    : getTelegramWelcomePayload(targetLang, webAppUrl);
 
   const response = await fetch(
     `https://api.telegram.org/bot${token}/editMessageText`,
@@ -387,23 +502,7 @@ export async function sendContactRequestMessage(
   const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
   if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not configured");
 
-  const isUz = lang === "uz";
-  const text = isUz
-    ? "📱 ANGREN ESTATE'dan foydalanish uchun ro‘yxatdan o‘ting."
-    : "📱 Для использования ANGREN ESTATE пройдите регистрацию.";
-
-  const reply_markup = {
-    keyboard: [
-      [
-        {
-          text: isUz ? "📱 Kontaktni ulashish" : "📱 Поделиться контактом",
-          request_contact: true,
-        },
-      ],
-    ],
-    resize_keyboard: true,
-    one_time_keyboard: true,
-  };
+  const { text, reply_markup } = getTelegramRegistrationPromptPayload(lang);
 
   const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: "POST",
@@ -460,11 +559,11 @@ export async function sendRegistrationSuccessMessage(
   if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not configured");
 
   const isUz = lang === "uz";
-  const successText = isUz
-    ? "✅ Ro‘yxatdan o‘tish muvaffaqiyatli yakunlandi."
-    : "✅ Регистрация успешно завершена.";
+  const removeKeyboardText = isUz
+    ? "✅ Kontakt qabul qilindi."
+    : "✅ Контакт принят.";
 
-  // 1. Send success message with ReplyKeyboardRemove to immediately remove the contact button from the chat bar
+  // 1. Send confirmation with ReplyKeyboardRemove to immediately remove the contact button from the chat bar
   let successMessageId: number | undefined;
   try {
     const removeRes = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
@@ -472,7 +571,7 @@ export async function sendRegistrationSuccessMessage(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: chatId,
-        text: successText,
+        text: removeKeyboardText,
         reply_markup: {
           remove_keyboard: true,
         },
@@ -486,15 +585,15 @@ export async function sendRegistrationSuccessMessage(
     console.warn("[TelegramServer] remove_keyboard sendMessage notice:", e);
   }
 
-  // 2. Immediately send the Welcome message with the 2 inline buttons
-  const { text: welcomeText, reply_markup } = getTelegramWelcomePayload(lang, webAppUrl);
+  // 2. Immediately send the Registration Success message with the 2 inline buttons
+  const { text: successText, reply_markup } = getTelegramRegistrationSuccessPayload(lang, webAppUrl);
 
   const welcomeRes = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       chat_id: chatId,
-      text: welcomeText,
+      text: successText,
       reply_markup,
     }),
   });
@@ -653,16 +752,18 @@ export async function upsertTelegramUser(
   const lang: "uz" | "ru" =
     user.language || (user.language_code?.toLowerCase().startsWith("ru") ? "ru" : "uz");
   const now = new Date().toISOString();
+  const normalizedPhone = user.phone ? normalizePhoneNumber(user.phone) : undefined;
 
   let subscriber: TelegramSubscriber = {
     telegram_user_id: user.id,
     username: user.username || undefined,
     first_name: user.first_name || undefined,
     last_name: user.last_name || undefined,
-    phone: user.phone || undefined,
+    phone: normalizedPhone,
     language: lang,
     notifications_enabled: user.notifications_enabled !== undefined ? user.notifications_enabled : true,
-    registered_at: user.registered_at || (user.phone ? now : undefined),
+    registered_at: user.registered_at || (normalizedPhone ? now : undefined),
+    is_registered: Boolean(normalizedPhone || user.registered_at),
     last_welcome_message_id: user.last_welcome_message_id !== undefined ? (user.last_welcome_message_id || undefined) : undefined,
     last_reg_message_id: user.last_reg_message_id !== undefined ? (user.last_reg_message_id || undefined) : undefined,
     created_at: now,
@@ -679,15 +780,18 @@ export async function upsertTelegramUser(
         .single();
 
       if (!fetchErr && existing) {
+        const effectivePhone = normalizedPhone || existing.phone || undefined;
+        const effectiveRegAt = user.registered_at || existing.registered_at || (effectivePhone ? now : undefined);
         subscriber = {
           telegram_user_id: user.id,
           username: user.username || existing.username || undefined,
           first_name: user.first_name || existing.first_name || undefined,
           last_name: user.last_name || existing.last_name || undefined,
-          phone: user.phone || existing.phone || undefined,
+          phone: effectivePhone,
           language: user.language || existing.language || lang,
           notifications_enabled: true,
-          registered_at: user.registered_at || existing.registered_at || (user.phone ? now : undefined),
+          registered_at: effectiveRegAt,
+          is_registered: Boolean(effectivePhone || effectiveRegAt),
           last_welcome_message_id: user.last_welcome_message_id !== undefined ? (user.last_welcome_message_id || undefined) : undefined,
           last_reg_message_id: user.last_reg_message_id !== undefined ? (user.last_reg_message_id || undefined) : undefined,
           created_at: existing.created_at || now,
@@ -742,17 +846,21 @@ export async function upsertTelegramUser(
       );
 
       if (existingIdx !== -1) {
+        const existingItem = list[existingIdx];
+        const effectivePhone = normalizedPhone !== undefined ? (normalizedPhone || undefined) : existingItem.phone;
+        const effectiveRegAt = user.registered_at || existingItem.registered_at || (effectivePhone ? now : undefined);
         list[existingIdx] = {
-          ...list[existingIdx],
-          username: user.username !== undefined ? (user.username || undefined) : list[existingIdx].username,
-          first_name: user.first_name !== undefined ? (user.first_name || undefined) : list[existingIdx].first_name,
-          last_name: user.last_name !== undefined ? (user.last_name || undefined) : list[existingIdx].last_name,
-          phone: user.phone !== undefined ? (user.phone || undefined) : list[existingIdx].phone,
-          language: user.language || list[existingIdx].language || lang,
-          notifications_enabled: user.notifications_enabled !== undefined ? user.notifications_enabled : list[existingIdx].notifications_enabled,
-          registered_at: user.registered_at || list[existingIdx].registered_at || (user.phone ? now : undefined),
-          last_welcome_message_id: user.last_welcome_message_id !== undefined ? (user.last_welcome_message_id || undefined) : list[existingIdx].last_welcome_message_id,
-          last_reg_message_id: user.last_reg_message_id !== undefined ? (user.last_reg_message_id || undefined) : list[existingIdx].last_reg_message_id,
+          ...existingItem,
+          username: user.username !== undefined ? (user.username || undefined) : existingItem.username,
+          first_name: user.first_name !== undefined ? (user.first_name || undefined) : existingItem.first_name,
+          last_name: user.last_name !== undefined ? (user.last_name || undefined) : existingItem.last_name,
+          phone: effectivePhone,
+          language: user.language || existingItem.language || lang,
+          notifications_enabled: user.notifications_enabled !== undefined ? user.notifications_enabled : existingItem.notifications_enabled,
+          registered_at: effectiveRegAt,
+          is_registered: Boolean(effectivePhone || effectiveRegAt),
+          last_welcome_message_id: user.last_welcome_message_id !== undefined ? (user.last_welcome_message_id || undefined) : existingItem.last_welcome_message_id,
+          last_reg_message_id: user.last_reg_message_id !== undefined ? (user.last_reg_message_id || undefined) : existingItem.last_reg_message_id,
           updated_at: now,
         };
         subscriber = list[existingIdx];
@@ -778,15 +886,19 @@ export async function upsertTelegramUser(
     const localList = await readLocalSubscribers();
     const existingIdx = localList.findIndex((u) => u.telegram_user_id === user.id);
     if (existingIdx !== -1) {
+      const existingItem = localList[existingIdx];
+      const effectivePhone = normalizedPhone || existingItem.phone;
+      const effectiveRegAt = user.registered_at || existingItem.registered_at || (effectivePhone ? now : undefined);
       localList[existingIdx] = {
-        ...localList[existingIdx],
-        username: user.username || localList[existingIdx].username,
-        first_name: user.first_name || localList[existingIdx].first_name,
-        last_name: user.last_name || localList[existingIdx].last_name,
-        phone: user.phone || localList[existingIdx].phone,
-        language: user.language || localList[existingIdx].language || lang,
+        ...existingItem,
+        username: user.username || existingItem.username,
+        first_name: user.first_name || existingItem.first_name,
+        last_name: user.last_name || existingItem.last_name,
+        phone: effectivePhone,
+        language: user.language || existingItem.language || lang,
         notifications_enabled: true,
-        registered_at: user.registered_at || localList[existingIdx].registered_at || (user.phone ? now : undefined),
+        registered_at: effectiveRegAt,
+        is_registered: Boolean(effectivePhone || effectiveRegAt),
         updated_at: now,
       };
       subscriber = localList[existingIdx];
@@ -897,11 +1009,15 @@ export async function getTelegramUser(telegramUserId: number): Promise<TelegramS
     } catch {}
 
     if (dbUser || registryUser) {
+      const phone = dbUser?.phone || registryUser?.phone;
+      const registeredAt = dbUser?.registered_at || registryUser?.registered_at;
       return {
         ...(registryUser || {}),
         ...(dbUser || {}),
-        phone: dbUser?.phone || registryUser?.phone,
+        phone,
         language: dbUser?.language || registryUser?.language || "uz",
+        is_registered: Boolean(phone),
+        registered_at: registeredAt,
         notifications_enabled:
           dbUser?.notifications_enabled !== undefined
             ? dbUser.notifications_enabled
@@ -915,7 +1031,26 @@ export async function getTelegramUser(telegramUserId: number): Promise<TelegramS
   }
 
   const localList = await readLocalSubscribers();
-  return localList.find((u) => u.telegram_user_id === telegramUserId) || null;
+  const local = localList.find((u) => u.telegram_user_id === telegramUserId) || null;
+  if (local) {
+    return {
+      ...local,
+      is_registered: Boolean(local.phone),
+    };
+  }
+  return null;
+}
+
+/**
+ * Check if a Telegram user is registered (has valid phone number in registry)
+ */
+export async function isTelegramUserRegistered(telegramUserId: number): Promise<{
+  is_registered: boolean;
+  user: TelegramSubscriber | null;
+}> {
+  const user = await getTelegramUser(telegramUserId);
+  const is_registered = Boolean(user && user.phone);
+  return { is_registered, user };
 }
 
 /**

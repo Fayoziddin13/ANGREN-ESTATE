@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateTelegramInitData } from "@/lib/telegramServer";
+import { validateTelegramInitData, isTelegramUserRegistered } from "@/lib/telegramServer";
 import { supabaseAdmin } from "@/lib/supabaseServer";
 import { UserProfile } from "@/lib/types";
 
@@ -27,6 +27,23 @@ export async function POST(req: NextRequest) {
     }
 
     const tgUser = validation.user;
+
+    // 2. Server-side Registration Gate
+    // User must be registered in the Telegram bot with a shared phone number
+    const { is_registered, user: subscriber } = await isTelegramUserRegistered(tgUser.id);
+    if (!is_registered) {
+      return NextResponse.json(
+        {
+          success: false,
+          access_granted: false,
+          is_registered: false,
+          error: "NOT_REGISTERED",
+          message: "Mini App'dan foydalanish uchun avval ro‘yxatdan o‘ting.",
+        },
+        { status: 403 }
+      );
+    }
+
     const fullName =
       [tgUser.first_name, tgUser.last_name].filter(Boolean).join(" ") ||
       tgUser.username ||
@@ -39,11 +56,11 @@ export async function POST(req: NextRequest) {
     let userRole: "user" | "admin" = "user";
     let userStatus: "active" | "disabled" = "active";
 
-    // 2. Sync to Supabase profiles table if available
+    // 3. Sync to Supabase profiles table if available
     try {
       const { data: existingProfile } = await supabaseAdmin
         .from("profiles")
-        .select("id, role, status, full_name, avatar_url")
+        .select("id, role, status, full_name, avatar_url, phone")
         .or(`id.eq.${profileUserId},email.eq.${syntheticEmail}`)
         .maybeSingle();
 
@@ -65,6 +82,7 @@ export async function POST(req: NextRequest) {
           .update({
             full_name: fullName,
             avatar_url: tgUser.photo_url || existingProfile.avatar_url,
+            phone: subscriber?.phone || existingProfile.phone || null,
             last_activity: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           })
@@ -76,6 +94,7 @@ export async function POST(req: NextRequest) {
           email: syntheticEmail,
           full_name: fullName,
           avatar_url: tgUser.photo_url || null,
+          phone: subscriber?.phone || null,
           role: "user",
           status: "active",
           last_activity: new Date().toISOString(),
@@ -92,13 +111,17 @@ export async function POST(req: NextRequest) {
       email: syntheticEmail,
       full_name: fullName,
       avatar_url: tgUser.photo_url,
+      phone: subscriber?.phone,
       role: userRole,
       status: userStatus,
     };
 
     return NextResponse.json({
       success: true,
+      access_granted: true,
+      is_registered: true,
       user: userProfile,
+      subscriber,
     });
   } catch (err: any) {
     console.error("[Telegram Auth API] Exception:", err);

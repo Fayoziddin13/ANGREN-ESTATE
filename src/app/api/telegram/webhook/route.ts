@@ -7,10 +7,12 @@ import {
   upsertTelegramUser,
   setTelegramUserNotifications,
   getTelegramUser,
+  isTelegramUserRegistered,
   sendContactRequestMessage,
   sendRegistrationSuccessMessage,
   sendTelegramDirectMessage,
   deleteTelegramMessage,
+  normalizePhoneNumber,
 } from "@/lib/telegramServer";
 import type { TelegramSubscriber } from "@/lib/types";
 
@@ -131,14 +133,14 @@ export async function POST(req: NextRequest) {
             (langCode.toLowerCase().startsWith("ru") ? "ru" : "uz");
           const warningText =
             lang === "ru"
-              ? "Пожалуйста, используйте кнопку «Поделиться контактом»."
-              : "«Kontaktni ulashish» tugmasidan foydalaning.";
+              ? "⚠️ Для регистрации отправьте собственный номер телефона с помощью кнопки «📱 Отправить номер телефона» ниже."
+              : "⚠️ Ro‘yxatdan o‘tish uchun faqat o‘zingizning telefon raqamingizni pastdagi «📱 Telefon raqamimni yuborish» tugmasi orqali yuboring.";
 
           await sendTelegramDirectMessage(chatId, warningText, {
             keyboard: [
               [
                 {
-                  text: lang === "ru" ? "📱 Поделиться контактом" : "📱 Kontaktni ulashish",
+                  text: lang === "ru" ? "📱 Отправить номер телефона" : "📱 Telefon raqamimni yuborish",
                   request_contact: true,
                 },
               ],
@@ -150,10 +152,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Valid contact from user
-        let phone = (contact.phone_number || "").trim();
-        if (phone && !phone.startsWith("+")) {
-          phone = `+${phone}`;
-        }
+        const phone = normalizePhoneNumber(contact.phone_number || "");
 
         const existingUser = senderId ? await getTelegramUser(senderId) : null;
         const userLang: "uz" | "ru" =

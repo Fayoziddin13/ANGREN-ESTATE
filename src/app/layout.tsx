@@ -5,6 +5,7 @@ import { LanguageProvider } from "@/context/LanguageContext";
 import { CurrencyProvider } from "@/context/CurrencyContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { TelegramProvider } from "@/context/TelegramContext";
+import { TelegramMiniAppGuard } from "@/components/telegram/TelegramMiniAppGuard";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { GlobalModals } from "@/components/common/GlobalModals";
 
@@ -66,9 +67,11 @@ export default function RootLayout({
           <CurrencyProvider>
             <AuthProvider>
               <TelegramProvider>
-                {children}
-                <AuthModal />
-                <GlobalModals />
+                <TelegramMiniAppGuard>
+                  {children}
+                  <AuthModal />
+                  <GlobalModals />
+                </TelegramMiniAppGuard>
               </TelegramProvider>
             </AuthProvider>
           </CurrencyProvider>
