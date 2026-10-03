@@ -190,6 +190,7 @@ export default function PropertyDetailView({
     locale,
     isSale,
     exchangeRate,
+    isNegotiable: Boolean(property.price_negotiable || (property.amenities as any)?.price_negotiable),
   });
 
   const handleShare = () => {
@@ -496,7 +497,7 @@ export default function PropertyDetailView({
                       <div className="text-2xl sm:text-3xl font-extrabold text-[#167d4f] tracking-tight">
                         {priceDisplay}
                       </div>
-                      {property.price_negotiable && (
+                      {Boolean(property.price_negotiable || (property.amenities as any)?.price_negotiable) && priceDisplay !== (locale === "uz" ? "Narxi kelishiladi" : "Цена договорная") && (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-[#eaf5f0] border border-[#2db477]/40 text-[#167d4f] text-xs font-bold shadow-xs">
                           <Handshake className="w-3.5 h-3.5 text-[#167d4f]" />
                           <span>{locale === "uz" ? "Narxi kelishiladi" : "Цена договорная"}</span>

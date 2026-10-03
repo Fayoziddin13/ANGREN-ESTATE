@@ -44,6 +44,7 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
     locale,
     isSale,
     exchangeRate,
+    isNegotiable: Boolean(property.price_negotiable || (property.amenities as any)?.price_negotiable),
   });
 
   const handleCardClick = () => {

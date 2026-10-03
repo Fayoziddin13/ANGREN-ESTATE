@@ -314,10 +314,6 @@ export default function AddPropertyPage() {
 
   // Prompt delete with usage check
   const handlePromptDeleteHudud = async (h: HududItem) => {
-    if (PROTECTED_HUDUDS.includes(h.id.toLowerCase().trim())) {
-      alert(locale === "uz" ? "Ushbu asosiy shahar hududini o‘chirib bo‘lmaydi." : "Этот основной район города нельзя удалить.");
-      return;
-    }
     setIsCheckingUsage(true);
     try {
       const res = await fetch(`/api/admin/hududs?check_usage=${encodeURIComponent(h.id)}`);
@@ -334,10 +330,6 @@ export default function AddPropertyPage() {
 
   // Delete custom hudud handler
   const handleDeleteHudud = async (h: HududItem) => {
-    if (PROTECTED_HUDUDS.includes(h.id.toLowerCase().trim())) {
-      alert(locale === "uz" ? "Ushbu asosiy shahar hududini o‘chirib bo‘lmaydi." : "Этот основной район города нельзя удалить.");
-      return;
-    }
     setIsDeletingHudud(true);
     try {
       const res = await fetch(`/api/admin/hududs?id=${encodeURIComponent(h.id)}`, {
@@ -730,11 +722,11 @@ export default function AddPropertyPage() {
     setStepError(null);
 
     if (step === 1) {
-      if (!priceInput || priceInput <= 0) {
+      if (!priceNegotiable && (!priceInput || priceInput <= 0)) {
         setStepError(
           locale === "uz"
-            ? "Iltimos, obyekt narxini to‘g‘ri kiriting."
-            : "Пожалуйста, укажите корректную стоимость объекта."
+            ? "Narxni kiriting yoki 'Narxi kelishiladi'ni tanlang."
+            : "Введите цену или выберите 'Цена договорная'."
         );
         return false;
       }
@@ -903,8 +895,8 @@ export default function AddPropertyPage() {
         deal_type: transactionType,
         property_type: propertyType,
         status: statusToSave,
-        price_uzs: calculatedPrices.priceUzs,
-        price_usd: calculatedPrices.priceUsd,
+        price_uzs: priceNegotiable ? 0 : calculatedPrices.priceUzs,
+        price_usd: priceNegotiable ? 0 : calculatedPrices.priceUsd,
         currency,
         price_negotiable: priceNegotiable,
         area_sqm: effectiveAreaSqm,
@@ -1765,12 +1757,22 @@ export default function AddPropertyPage() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
                   <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
                     <h3 className="text-base font-black text-slate-900">
-                      {locale === "uz" ? "Hududni o‘chirishni tasdiqlaysizmi?" : "Вы действительно хотите удалить этот район?"}
+                      {hududUsageCount === 0
+                        ? (locale === "uz"
+                            ? "Bu hududda hech qanday obyekt mavjud emas. Hududni o‘chirishni tasdiqlaysizmi?"
+                            : "В этом районе нет объектов. Подтверждаете удаление района?")
+                        : (locale === "uz"
+                            ? "O‘chirish cheklangan"
+                            : "Удаление заблокировано")}
                     </h3>
                     <p className="text-xs text-slate-600 leading-relaxed">
-                      {locale === "uz"
-                        ? `«${hududToDelete.name_uz}» hududini o‘chirishni tasdiqlaysizmi?`
-                        : `Вы действительно хотите удалить этот район «${hududToDelete.name_ru || hududToDelete.name_uz}»?`}
+                      {hududUsageCount === 0
+                        ? (locale === "uz"
+                            ? `«${hududToDelete.name_uz}» hududini butunlay o‘chirib yuborishni tasdiqlaysizmi?`
+                            : `Подтверждаете удаление района «${hududToDelete.name_ru || hududToDelete.name_uz}»?`)
+                        : (locale === "uz"
+                            ? "Bu hududda mavjud obyektlar mavjud. Avval obyektlarni boshqa hududga o‘tkazing."
+                            : "В этом районе есть существующие объекты. Сначала переведите объекты в другой район.")}
                     </p>
                     {hududUsageCount > 0 ? (
                       <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-950 text-xs font-medium space-y-1.5">
@@ -3002,14 +3004,22 @@ export default function AddPropertyPage() {
                 {/* Title & Price */}
                 <div className="space-y-1">
                   <div className="text-2xl sm:text-3xl font-black text-slate-900">
-                    {currency === "USD"
-                      ? `$${calculatedPrices.priceUsd.toLocaleString("en-US")} USD`
-                      : `${calculatedPrices.priceUzs.toLocaleString("uz-UZ")} UZS`}
-                    <span className="text-xs font-semibold text-slate-500 ml-2">
-                      ({currency === "USD"
-                        ? `${calculatedPrices.priceUzs.toLocaleString("uz-UZ")} UZS`
-                        : `$${calculatedPrices.priceUsd.toLocaleString("en-US")} USD`})
-                    </span>
+                    {priceNegotiable ? (
+                      <span className="text-[#167d4f]">
+                        {locale === "uz" ? "Narxi kelishiladi" : "Цена договорная"}
+                      </span>
+                    ) : (
+                      <>
+                        {currency === "USD"
+                          ? `$${calculatedPrices.priceUsd.toLocaleString("en-US")} USD`
+                          : `${calculatedPrices.priceUzs.toLocaleString("uz-UZ")} UZS`}
+                        <span className="text-xs font-semibold text-slate-500 ml-2">
+                          ({currency === "USD"
+                            ? `${calculatedPrices.priceUzs.toLocaleString("uz-UZ")} UZS`
+                            : `$${calculatedPrices.priceUsd.toLocaleString("en-US")} USD`})
+                        </span>
+                      </>
+                    )}
                   </div>
                   <h4 className="text-lg font-bold text-slate-800 leading-snug">
                     {locale === "uz" ? (titleUz || titleRu) : (titleRu || titleUz)}

@@ -97,6 +97,7 @@ export function PropertyDetailModal({
     locale,
     isSale,
     exchangeRate,
+    isNegotiable: Boolean(property.price_negotiable || (property.amenities as any)?.price_negotiable),
   });
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
@@ -345,17 +346,16 @@ export function PropertyDetailModal({
                   <span className="font-semibold text-[#167d4f]">{district}</span>
                 </div>
 
-                {/* 2. Price & Negotiable Badge */}
                 <div className="flex flex-wrap items-center gap-2 pt-0.5">
                   <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#167d4f]">
                     {priceFormatted}
                   </span>
-                  {!isSale && (
+                  {!isSale && priceFormatted !== "Narxi kelishiladi" && priceFormatted !== "Цена договорная" && (
                     <span className="text-xs font-semibold text-gray-500">
                       / {t.common.month}
                     </span>
                   )}
-                  {property.price_negotiable && (
+                  {Boolean(property.price_negotiable || (property.amenities as any)?.price_negotiable) && priceFormatted !== "Narxi kelishiladi" && priceFormatted !== "Цена договорная" && (
                     <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-[#eaf5f0] border border-[#2db477]/40 text-[#167d4f] text-xs font-bold shadow-xs">
                       <Handshake className="w-3.5 h-3.5 text-[#167d4f]" />
                       <span>{locale === "uz" ? "Narxi kelishiladi" : "Цена договорная"}</span>

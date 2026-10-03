@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSessionServer, verifyAdminSessionToken } from "@/lib/admin-auth";
 import { supabaseAdmin } from "@/lib/supabaseServer";
@@ -155,16 +157,37 @@ export async function GET(req: NextRequest) {
 
     if (checkUsageId) {
       // Check whether properties are assigned to this hudud
-      const { count, error } = await supabaseAdmin
-        .from("properties")
-        .select("id", { count: "exact", head: true })
-        .or(`district.eq.${checkUsageId},district_name_uz.eq.${checkUsageId}`);
+      let assignedCount = 0;
+      try {
+        const { count, error } = await supabaseAdmin
+          .from("properties")
+          .select("id", { count: "exact", head: true })
+          .or(`district.eq.${checkUsageId},district_name_uz.eq.${checkUsageId}`);
 
-      if (error) {
-        console.warn("[Admin Hududs GET usage] error:", error);
+        if (!error && typeof count === "number") {
+          assignedCount = count;
+        }
+      } catch (err) {
+        console.warn("[Admin Hududs GET usage] error:", err);
       }
 
-      const assignedCount = count || 0;
+      try {
+        const dataFilePath = path.join(process.cwd(), "data", "properties.json");
+        if (fs.existsSync(dataFilePath)) {
+          const rawContent = fs.readFileSync(dataFilePath, "utf8");
+          const localProps = JSON.parse(rawContent);
+          if (Array.isArray(localProps)) {
+            const localCount = localProps.filter((p: any) => {
+              const dId = String(p.district || p.district_name_uz || (p.amenities as any)?.hudud_id || "").toLowerCase().trim();
+              return dId === checkUsageId.toLowerCase().trim();
+            }).length;
+            if (localCount > assignedCount) {
+              assignedCount = localCount;
+            }
+          }
+        }
+      } catch {}
+
       return NextResponse.json({
         success: true,
         in_use: assignedCount > 0,
@@ -347,29 +370,40 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ success: false, error: "ID_REQUIRED" }, { status: 400 });
     }
 
-    const PROTECTED_HUDUDS = ["markaz", "5-mavze", "6-mavze", "7-mavze", "dukent", "geolog", "yangiobod"];
-    if (PROTECTED_HUDUDS.includes(id.toLowerCase().trim())) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "PROTECTED_HUDUD",
-          message: "Ushbu asosiy shahar hududini o‘chirib bo‘lmaydi",
-        },
-        { status: 400 }
-      );
-    }
-
     // Check if any properties are linked to this hudud (by id, district, district_name_uz, or amenities->hudud_id)
-    const { count: assignedCount, error: countErr } = await supabaseAdmin
-      .from("properties")
-      .select("id", { count: "exact", head: true })
-      .or(`district.eq.${id},district_name_uz.eq.${id}`);
+    let assignedCount = 0;
+    try {
+      const { count: dbCount, error: countErr } = await supabaseAdmin
+        .from("properties")
+        .select("id", { count: "exact", head: true })
+        .or(`district.eq.${id},district_name_uz.eq.${id}`);
 
-    if (countErr) {
-      console.warn("[Admin Hududs] Error checking property count for hudud:", countErr);
+      if (!countErr && typeof dbCount === "number") {
+        assignedCount = dbCount;
+      }
+    } catch (countErr) {
+      console.warn("[Admin Hududs DELETE] Error checking property count for hudud:", countErr);
     }
 
-    if (assignedCount && assignedCount > 0) {
+    // Also check local properties file for resilience
+    try {
+      const dataFilePath = path.join(process.cwd(), "data", "properties.json");
+      if (fs.existsSync(dataFilePath)) {
+        const rawContent = fs.readFileSync(dataFilePath, "utf8");
+        const localProps = JSON.parse(rawContent);
+        if (Array.isArray(localProps)) {
+          const localCount = localProps.filter((p: any) => {
+            const dId = String(p.district || p.district_name_uz || (p.amenities as any)?.hudud_id || "").toLowerCase().trim();
+            return dId === id.toLowerCase().trim();
+          }).length;
+          if (localCount > assignedCount) {
+            assignedCount = localCount;
+          }
+        }
+      }
+    } catch {}
+
+    if (assignedCount > 0) {
       return NextResponse.json(
         {
           success: false,

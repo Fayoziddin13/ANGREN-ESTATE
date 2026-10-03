@@ -18,9 +18,17 @@ export function formatPrice(
   displayCurrency: Currency = "UZS",
   compact: boolean = false,
   rate: number = USD_EXCHANGE_RATE,
-  exactPriceUsd?: number
+  exactPriceUsd?: number,
+  isNegotiable?: boolean
 ): { primary: string; secondary: string } {
   const isUz = locale === "uz";
+  if (isNegotiable || (!amountUzs && (!exactPriceUsd || exactPriceUsd <= 0))) {
+    return {
+      primary: isUz ? "Narxi kelishiladi" : "Цена договорная",
+      secondary: "",
+    };
+  }
+
   const uzsSuffix = isUz ? "so‘m" : "сум";
   const mlnSuffix = isUz ? "mln" : "млн";
   const activeRate = rate > 0 ? rate : USD_EXCHANGE_RATE;
@@ -64,6 +72,7 @@ export function formatPropertyPrice({
   locale,
   isSale = true,
   exchangeRate = USD_EXCHANGE_RATE,
+  isNegotiable = false,
 }: {
   priceUzs: number;
   priceUsd?: number;
@@ -71,8 +80,17 @@ export function formatPropertyPrice({
   locale: Locale;
   isSale?: boolean;
   exchangeRate?: number;
+  isNegotiable?: boolean;
 }): { priceDisplay: string; secondaryPrice: string } {
   const isUz = locale === "uz";
+
+  if (isNegotiable || (!priceUzs && (!priceUsd || priceUsd <= 0))) {
+    return {
+      priceDisplay: isUz ? "Narxi kelishiladi" : "Цена договорная",
+      secondaryPrice: "",
+    };
+  }
+
   const uzsSuffix = isUz ? "so‘m" : "сум";
   const monthSuffix = isSale ? "" : ` / ${isUz ? "oy" : "мес"}`;
   const activeRate = exchangeRate > 0 ? exchangeRate : USD_EXCHANGE_RATE;

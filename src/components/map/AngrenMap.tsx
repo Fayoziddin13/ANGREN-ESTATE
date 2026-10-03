@@ -490,7 +490,14 @@ export function AngrenMap({
     individualProps.forEach((property) => {
       const isSelected = selectedProperty?.id === property.id;
       const isSale = property.transaction_type === "sale";
-      const priceText = formatMarkerPrice(property.price_uzs, isSale, property.price_usd);
+      const isNegotiable = Boolean(
+        property.price_negotiable ||
+        (property.amenities as any)?.price_negotiable ||
+        (!property.price_uzs && (!property.price_usd || property.price_usd <= 0))
+      );
+      const priceText = isNegotiable
+        ? (locale === "uz" ? "Kelishiladi" : "Договорная")
+        : formatMarkerPrice(property.price_uzs, isSale, property.price_usd);
       const iconSvg = getPropertyIconSvg(property.property_type);
 
       const el = document.createElement("div");

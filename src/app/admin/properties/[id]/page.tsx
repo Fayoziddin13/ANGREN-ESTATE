@@ -140,6 +140,7 @@ export default function EditPropertyPage() {
   const [priceUzs, setPriceUzs] = useState(450000000);
   const [priceUsd, setPriceUsd] = useState(35000);
   const [currency, setCurrency] = useState<"UZS" | "USD">("USD");
+  const [priceNegotiable, setPriceNegotiable] = useState(false);
 
   // Location
   const [district, setDistrict] = useState("Markaz");
@@ -278,10 +279,6 @@ export default function EditPropertyPage() {
 
   // Prompt delete with usage check
   const handlePromptDeleteHudud = async (h: HududItem) => {
-    if (PROTECTED_HUDUDS.includes(h.id.toLowerCase().trim())) {
-      alert(locale === "uz" ? "Ushbu asosiy shahar hududini o‘chirib bo‘lmaydi." : "Этот основной район города нельзя удалить.");
-      return;
-    }
     setIsCheckingUsage(true);
     try {
       const res = await fetch(`/api/admin/hududs?check_usage=${encodeURIComponent(h.id)}`);
@@ -297,10 +294,6 @@ export default function EditPropertyPage() {
   };
 
   const handleDeleteHudud = async (h: HududItem) => {
-    if (PROTECTED_HUDUDS.includes(h.id.toLowerCase().trim())) {
-      alert(locale === "uz" ? "Ushbu asosiy shahar hududini o‘chirib bo‘lmaydi." : "Этот основной район города нельзя удалить.");
-      return;
-    }
     setIsDeletingHudud(true);
     try {
       const res = await fetch(`/api/admin/hududs?id=${encodeURIComponent(h.id)}`, {
@@ -560,6 +553,7 @@ export default function EditPropertyPage() {
     setNoteRu(found.note_ru || (found.amenities as any)?.customNoteRu || "");
     setPriceUzs(found.price_uzs || 0);
     setPriceUsd(found.price_usd || Math.round((found.price_uzs || 0) / exchangeRate));
+    setPriceNegotiable(Boolean(found.price_negotiable ?? (found.amenities as any)?.price_negotiable ?? false));
     setDistrict(found.district_name_uz || "Markaz");
     setAddressUz(found.address_uz || "");
     setAddressRu(found.address_ru || "");
@@ -695,6 +689,16 @@ export default function EditPropertyPage() {
 
   const handleUpdate = async (status: PropertyStatus) => {
     if (isUpdating) return;
+
+    if (!priceNegotiable && (!priceUzs || priceUzs <= 0) && (!priceUsd || priceUsd <= 0)) {
+      setSaveError(
+        locale === "uz"
+          ? "Narxni kiriting yoki 'Narxi kelishiladi'ni tanlang."
+          : "Введите цену или выберите 'Цена договорная'."
+      );
+      return;
+    }
+
     setIsUpdating(true);
     setSaveError(null);
 
@@ -723,8 +727,9 @@ export default function EditPropertyPage() {
         transaction_type: transactionType,
         property_type: propertyType,
         status,
-        price_uzs: priceUzs,
-        price_usd: priceUsd,
+        price_uzs: priceNegotiable ? 0 : priceUzs,
+        price_usd: priceNegotiable ? 0 : priceUsd,
+        price_negotiable: priceNegotiable,
         area_sqm: areaSqm,
         living_area_sqm: livingAreaSqm,
         area_sotikh:
@@ -756,6 +761,7 @@ export default function EditPropertyPage() {
         },
         amenities: {
           ...amenities,
+          price_negotiable: priceNegotiable,
           green_zone: extraObjects.includes("Yashil hudud"),
           garage: extraObjects.includes("Garaj"),
           barn: extraObjects.includes("Molxona"),
@@ -1008,6 +1014,20 @@ export default function EditPropertyPage() {
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#167d4f] outline-none text-sm font-bold"
                 />
               </div>
+            </div>
+
+            {/* Kelishiladi checkbox */}
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                type="checkbox"
+                id="editPriceNegotiable"
+                checked={priceNegotiable}
+                onChange={(e) => setPriceNegotiable(e.target.checked)}
+                className="w-4 h-4 rounded text-[#167d4f] focus:ring-[#167d4f] accent-[#167d4f]"
+              />
+              <label htmlFor="editPriceNegotiable" className="text-xs font-bold text-slate-700 cursor-pointer">
+                {locale === "uz" ? "Narxi kelishiladi (savdolashish mumkin)" : "Цена договорная (торг уместен)"}
+              </label>
             </div>
 
             {/* Property Badges Section */}
@@ -1505,12 +1525,22 @@ export default function EditPropertyPage() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
                   <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
                     <h3 className="text-base font-black text-slate-900">
-                      {locale === "uz" ? "Hududni o‘chirishni tasdiqlaysizmi?" : "Вы действительно хотите удалить этот район?"}
+                      {hududUsageCount === 0
+                        ? (locale === "uz"
+                            ? "Bu hududda hech qanday obyekt mavjud emas. Hududni o‘chirishni tasdiqlaysizmi?"
+                            : "В этом районе нет объектов. Подтверждаете удаление района?")
+                        : (locale === "uz"
+                            ? "O‘chirish cheklangan"
+                            : "Удаление заблокировано")}
                     </h3>
                     <p className="text-xs text-slate-600 leading-relaxed">
-                      {locale === "uz"
-                        ? `«${hududToDelete.name_uz}» hududini o‘chirishni tasdiqlaysizmi?`
-                        : `Вы действительно хотите удалить этот район «${hududToDelete.name_ru || hududToDelete.name_uz}»?`}
+                      {hududUsageCount === 0
+                        ? (locale === "uz"
+                            ? `«${hududToDelete.name_uz}» hududini butunlay o‘chirib yuborishni tasdiqlaysizmi?`
+                            : `Подтверждаете удаление района «${hududToDelete.name_ru || hududToDelete.name_uz}»?`)
+                        : (locale === "uz"
+                            ? "Bu hududda mavjud obyektlar mavjud. Avval obyektlarni boshqa hududga o‘tkazing."
+                            : "В этом районе есть существующие объекты. Сначала переведите объекты в другой район.")}
                     </p>
                     {hududUsageCount > 0 ? (
                       <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-950 text-xs font-medium space-y-1.5">

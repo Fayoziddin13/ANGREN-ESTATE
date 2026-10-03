@@ -65,6 +65,7 @@ export function CollapsiblePropertyList({
             locale,
             isSale,
             exchangeRate,
+            isNegotiable: Boolean(p.price_negotiable || (p.amenities as any)?.price_negotiable),
           });
 
           return (
