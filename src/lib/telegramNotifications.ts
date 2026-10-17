@@ -6,9 +6,11 @@ import {
   recordTelegramNotification,
   setTelegramUserNotifications,
   sendTelegramDirectMessage,
+  sendTelegramPhoto,
 } from "./telegramServer";
 import { supabaseAdmin } from "./supabaseServer";
 import { isSupabaseConfigured } from "./supabase";
+import { updateProperty } from "./properties";
 
 const SITE_URL = "https://angrenestate.uz";
 
@@ -288,4 +290,392 @@ export async function sendAdminTestNotification(
     status: result.status,
     error: result.error,
   };
+}
+
+// =============================================================================
+// TELEGRAM CHANNEL PUBLISHING (@angren_estate)
+// =============================================================================
+
+export interface AuthorizedContact {
+  phone: string;
+  name?: string;
+  telegram?: string;
+  type: "owner" | "realtor" | "agency";
+}
+
+/**
+ * Resolve authorized contact phone & info for public channel post.
+ * Strict rules:
+ * 1. If owner_phone is present AND owner_phone_visible === true -> use owner phone.
+ * 2. If owner phone is absent or not permitted to be public -> fallback to realtor.
+ * 3. Realtor info taken only from verified data (property.realtor?.phone or contact_phone).
+ * 4. Hidden or non-public numbers are NEVER returned.
+ */
+export function resolveAuthorizedContact(property: Property): AuthorizedContact | null {
+  // Rule 1: Check owner phone (STRICT: only if explicitly visible to public)
+  const ownerPhone = (property.owner_phone || (property.amenities as any)?.owner_phone || "").trim();
+  const isOwnerVisible = Boolean(
+    property.owner_phone_visible ?? (property.amenities as any)?.owner_phone_visible ?? false
+  );
+
+  if (ownerPhone && isOwnerVisible) {
+    return {
+      phone: ownerPhone,
+      type: "owner",
+    };
+  }
+
+  // Rule 2 & 3: Fallback to realtor if assigned
+  const realtorPhone = (property.realtor?.phone || "").trim();
+  if (realtorPhone) {
+    return {
+      phone: realtorPhone,
+      name: property.realtor?.name?.trim() || undefined,
+      telegram: property.realtor?.telegram?.trim() || undefined,
+      type: "realtor",
+    };
+  }
+
+  // Fallback: Assigned contact_phone
+  const contactPhone = (property.contact_phone || "").trim();
+  if (contactPhone) {
+    return {
+      phone: contactPhone,
+      telegram: (property.contact_telegram || property.telegram || "").trim() || undefined,
+      type: "agency",
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Build rich, clean channel post caption within Telegram's 1024 character photo caption limit.
+ * Formats: title, location, room/area/floor parameters, canonical price, and authorized contact.
+ */
+export function buildChannelPostCaption(property: Property, lang: "uz" | "ru" = "uz"): string {
+  const isUz = lang === "uz";
+  const lines: string[] = [];
+
+  // 1. Title / Header
+  const title = (isUz ? property.title_uz : property.title_ru) || property.title_uz || property.title_ru;
+  if (title && title.trim()) {
+    lines.push(`🏠 ${title.trim()}`);
+  } else {
+    lines.push(isUz ? "🏠 ANGREN ESTATE'da yangi obyekt" : "🏠 Новый объект в ANGREN ESTATE");
+  }
+  lines.push("");
+
+  // 2. Location (District + Specific Address)
+  const districtName = isUz
+    ? property.district_name_uz || property.district
+    : property.district_name_ru || property.district;
+  const addressName = isUz ? property.address_uz : property.address_ru || property.address_uz;
+
+  const locParts: string[] = [];
+  if (districtName && districtName.trim()) locParts.push(districtName.trim());
+  if (addressName && addressName.trim() && addressName.trim() !== districtName?.trim()) {
+    locParts.push(addressName.trim());
+  }
+
+  const loc = locParts.join(", ");
+  if (loc) {
+    lines.push(`📍 ${isUz ? "Manzil:" : "Адрес:"} ${loc}`);
+  }
+
+  // 3. Parameters (Rooms, Area, Floor, Renovation)
+  const paramParts: string[] = [];
+  if (property.rooms && property.rooms > 0) {
+    if (isUz) {
+      paramParts.push(`${property.rooms} xona`);
+    } else {
+      const r = property.rooms;
+      const word = r === 1 ? "комната" : r >= 2 && r <= 4 ? "комнаты" : "комнат";
+      paramParts.push(`${r} ${word}`);
+    }
+  }
+
+  if (property.area_sqm && property.area_sqm > 0) {
+    paramParts.push(`${property.area_sqm} ${isUz ? "m²" : "м²"}`);
+  } else if (property.area_sotikh && property.area_sotikh > 0) {
+    paramParts.push(`${property.area_sotikh} ${isUz ? "sotix" : "соток"}`);
+  } else if (property.area && property.area > 0) {
+    paramParts.push(`${property.area} ${isUz ? "m²" : "м²"}`);
+  }
+
+  if (property.floor && property.floor > 0) {
+    const total = property.total_floors && property.total_floors > 0 ? `/${property.total_floors}` : "";
+    paramParts.push(`${property.floor}${total} ${isUz ? "qavat" : "этаж"}`);
+  }
+
+  if (property.renovation) {
+    const renMap: Record<string, { uz: string; ru: string }> = {
+      euro: { uz: "Yevro ta’mir", ru: "Евроремонт" },
+      good: { uz: "Yaxshi ta’mir", ru: "Хороший ремонт" },
+      average: { uz: "O‘rtacha ta’mir", ru: "Средний ремонт" },
+      cosmetic: { uz: "Kosmetik ta’mir", ru: "Косметический" },
+      need_repair: { uz: "Ta’mirtalab", ru: "Требует ремонта" },
+      black_plaster: { uz: "Qora suvoq", ru: "Черновая отделка" },
+    };
+    if (renMap[property.renovation]) {
+      paramParts.push(isUz ? renMap[property.renovation].uz : renMap[property.renovation].ru);
+    }
+  }
+
+  if (paramParts.length > 0) {
+    lines.push(`ℹ️ ${paramParts.join(" • ")}`);
+  }
+
+  // 4. Price (using canonical formatPrice helper)
+  const isNegotiable = Boolean(property.price_negotiable || (property.amenities as any)?.price_negotiable);
+  const bargainAllowed = Boolean(property.bargain_allowed || (property.amenities as any)?.bargain_allowed);
+  const bargainText = bargainAllowed ? ` (${isUz ? "Savdolashish mumkin" : "Торг уместен"})` : "";
+
+  if (isNegotiable) {
+    lines.push(`💰 ${isUz ? "Narxi kelishiladi" : "Цена договорная"}${bargainText}`);
+  } else {
+    const priceVal = property.price_uzs || property.price || 0;
+    if (priceVal > 0) {
+      const formatted = formatPrice(priceVal, lang, property.currency || "USD", false, 12800, property.price_usd);
+      lines.push(`💰 ${isUz ? "Narxi:" : "Цена:"} ${formatted.primary}${bargainText}`);
+    }
+  }
+
+  // 5. Short Description (capped to safe limit within Telegram caption size)
+  const desc = isUz ? property.description_uz : property.description_ru;
+  if (desc && desc.trim()) {
+    const cleanDesc = desc.trim().replace(/\s+/g, " ");
+    const maxDescLen = 280;
+    const truncatedDesc = cleanDesc.length > maxDescLen ? `${cleanDesc.slice(0, maxDescLen)}...` : cleanDesc;
+    lines.push("");
+    lines.push(`📝 ${truncatedDesc}`);
+  }
+
+  // 6. Authorized contact information
+  const contact = resolveAuthorizedContact(property);
+  if (contact?.phone) {
+    lines.push("");
+    lines.push(`📞 ${isUz ? "Aloqa:" : "Контакты:"} ${contact.phone}${contact.name ? ` (${contact.name})` : ""}`);
+  }
+
+  lines.push("");
+  lines.push("🌐 @angren_estate");
+
+  return lines.join("\n").trim();
+}
+
+/**
+ * Build inline keyboard markup for Telegram channel posts.
+ * STRICT: NO web_app button type (prohibited in Telegram channels by Bot API).
+ * Only valid HTTPS or Telegram direct URLs.
+ */
+export function buildChannelPostMarkup(property: Property, lang: "uz" | "ru" = "uz") {
+  const isUz = lang === "uz";
+  const rows: Array<Array<{ text: string; url: string }>> = [];
+
+  // Button A: «Obyektni ko‘rish» (HTTPS URL directly opens object page)
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || SITE_URL;
+  const openUrl = `${siteUrl}/properties/${property.id}`;
+  rows.push([
+    {
+      text: isUz ? "Obyektni ko‘rish →" : "Посмотреть объект →",
+      url: openUrl,
+    },
+  ]);
+
+  // Secondary buttons row: Video review & Contact
+  const secondaryRow: Array<{ text: string; url: string }> = [];
+
+  // Button B: «Video sharh» (only if valid video_url exists)
+  const videoUrl = (property.video_url || property.video || "").trim();
+  if (videoUrl && (videoUrl.startsWith("http://") || videoUrl.startsWith("https://"))) {
+    secondaryRow.push({
+      text: isUz ? "🎬 Video sharh" : "🎬 Видео обзор",
+      url: videoUrl,
+    });
+  }
+
+  // Button C: «Bog‘lanish» (only if authorized contact exists)
+  const contact = resolveAuthorizedContact(property);
+  if (contact) {
+    let contactUrl: string | null = null;
+    if (contact.telegram) {
+      const cleanTg = contact.telegram.replace(/^@+/, "").trim();
+      if (cleanTg) contactUrl = `https://t.me/${cleanTg}`;
+    }
+    if (!contactUrl && contact.phone) {
+      const cleanDigits = contact.phone.replace(/[^0-9]/g, "");
+      if (cleanDigits) contactUrl = `https://t.me/+${cleanDigits}`;
+    }
+
+    if (contactUrl) {
+      secondaryRow.push({
+        text: isUz ? "💬 Bog‘lanish" : "💬 Связаться",
+        url: contactUrl,
+      });
+    }
+  }
+
+  if (secondaryRow.length > 0) {
+    rows.push(secondaryRow);
+  }
+
+  return { inline_keyboard: rows };
+}
+
+// In-memory concurrency lock to prevent duplicate parallel publishing requests for the same property
+const inFlightChannelPublishes = new Set<string>();
+
+/**
+ * Publish property post to Telegram channel (@angren_estate).
+ * Handles idempotency, formatting, photo delivery, and status persistence.
+ */
+export async function publishPropertyToTelegramChannel(
+  property: Property,
+  options?: {
+    forceRepeat?: boolean;
+    channelId?: string;
+    lang?: "uz" | "ru";
+    botToken?: string;
+  }
+): Promise<{
+  success: boolean;
+  status: "published" | "already_published" | "error";
+  messageId?: number;
+  channelId?: string;
+  error?: string;
+}> {
+  const token = options?.botToken || process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) {
+    return {
+      success: false,
+      status: "error",
+      error: "TELEGRAM_BOT_TOKEN is not configured on the server",
+    };
+  }
+
+  const targetChannel =
+    options?.channelId ||
+    process.env.TELEGRAM_CHANNEL_ID ||
+    process.env.TELEGRAM_CHANNEL ||
+    "@angren_estate";
+
+  // Deduplication check: Has this property already been published to the channel?
+  if (!options?.forceRepeat) {
+    const alreadyPublished =
+      property.telegram_channel_status === "published" &&
+      Boolean(property.telegram_channel_post_id);
+
+    if (alreadyPublished) {
+      return {
+        success: true,
+        status: "already_published",
+        messageId: property.telegram_channel_post_id,
+        channelId: targetChannel,
+      };
+    }
+  }
+
+  // Concurrency check: prevent parallel duplicate posts while publishing is in progress
+  if (inFlightChannelPublishes.has(property.id)) {
+    return {
+      success: false,
+      status: "error",
+      channelId: targetChannel,
+      error: "Publishing is already in progress for this property",
+    };
+  }
+
+  inFlightChannelPublishes.add(property.id);
+
+  const lang = options?.lang || "uz";
+  const caption = buildChannelPostCaption(property, lang);
+  const replyMarkup = buildChannelPostMarkup(property, lang);
+
+  // Select primary photo
+  let photoUrl = property.main_image || property.images?.[0] || property.photos?.[0] || "";
+  if (photoUrl && photoUrl.startsWith("/")) {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || SITE_URL;
+    photoUrl = `${siteUrl}${photoUrl}`;
+  }
+
+  try {
+    let sendResult: { ok: boolean; result?: any; description?: string; error_code?: number };
+
+    // Send photo if valid HTTP URL exists
+    if (photoUrl && (photoUrl.startsWith("http://") || photoUrl.startsWith("https://"))) {
+      sendResult = await sendTelegramPhoto(targetChannel, photoUrl, caption, replyMarkup, token);
+
+      // Graceful fallback to direct text message if photo fetching fails on Telegram's side
+      const descLower = sendResult.description ? sendResult.description.toLowerCase() : "";
+      const isPhotoError =
+        Boolean(descLower) &&
+        (descLower.includes("photo") ||
+          descLower.includes("url content") ||
+          descLower.includes("image") ||
+          descLower.includes("failed to get http"));
+
+      if (!sendResult.ok && isPhotoError) {
+        console.warn("[TelegramChannel] Photo delivery failed, falling back to text post:", sendResult.description);
+        sendResult = await sendTelegramDirectMessage(targetChannel, caption, replyMarkup, token);
+      }
+    } else {
+      // No photo: send direct text message
+      sendResult = await sendTelegramDirectMessage(targetChannel, caption, replyMarkup, token);
+    }
+
+    if (!sendResult.ok) {
+      const desc = sendResult.description || "Unknown error";
+      console.error(`[TelegramChannel] Channel post failed: error_code=${sendResult.error_code} description=${desc}`);
+      try {
+        await updateProperty(property.id, {
+          telegram_channel_status: "error",
+        });
+      } catch (persistErr: any) {
+        console.warn("[TelegramChannel] Could not persist channel status to database:", persistErr?.message);
+      }
+      return {
+        success: false,
+        status: "error",
+        channelId: targetChannel,
+        error: desc,
+      };
+    }
+
+    const messageId = sendResult.result?.message_id;
+
+    // Persist channel publication status safely without altering other fields
+    try {
+      await updateProperty(property.id, {
+        telegram_channel_status: "published",
+        telegram_channel_post_id: messageId,
+      });
+    } catch (persistErr: any) {
+      console.warn("[TelegramChannel] Could not persist channel status to database:", persistErr?.message);
+    }
+
+    return {
+      success: true,
+      status: "published",
+      messageId,
+      channelId: targetChannel,
+    };
+  } catch (err: any) {
+    console.error("[TelegramChannel] Exception while publishing:", err?.message);
+    try {
+      await updateProperty(property.id, {
+        telegram_channel_status: "error",
+      });
+    } catch (persistErr: any) {
+      console.warn("[TelegramChannel] Could not persist channel status to database:", persistErr?.message);
+    }
+    return {
+      success: false,
+      status: "error",
+      channelId: targetChannel,
+      error: err?.message || "Unknown exception",
+    };
+  } finally {
+    inFlightChannelPublishes.delete(property.id);
+  }
 }

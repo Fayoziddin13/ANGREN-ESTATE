@@ -25,6 +25,7 @@ import {
   AlertTriangle,
   Trash2,
   Send,
+  Loader2,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useProperties } from "@/lib/propertyStore";
@@ -68,10 +69,98 @@ export default function AdminPropertiesPage() {
   const [isTelegramAlreadySent, setIsTelegramAlreadySent] = useState(false);
   const [isBroadcastingTelegram, setIsBroadcastingTelegram] = useState(false);
   const [telegramBroadcastStatusLoading, setTelegramBroadcastStatusLoading] = useState(false);
+  // Telegram Channel Modal state
+  const [channelModalProperty, setChannelModalProperty] = useState<Property | null>(null);
+  const [isPublishingChannel, setIsPublishingChannel] = useState(false);
+  const [channelStatusLoading, setChannelStatusLoading] = useState(false);
+  const [channelStatusData, setChannelStatusData] = useState<{
+    isPublished: boolean;
+    status: string;
+    postId?: number | null;
+  } | null>(null);
+  const [publishingPropertyId, setPublishingPropertyId] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const handleOpenChannelModal = async (prop: Property) => {
+    setActionMenuOpenId(null);
+    setChannelModalProperty(prop);
+    setChannelStatusLoading(true);
+    setChannelStatusData(null);
+
+    try {
+      const res = await fetch(`/api/admin/properties/${prop.id}/telegram-channel`);
+      const data = await res.json();
+      if (data?.success) {
+        setChannelStatusData({
+          isPublished: Boolean(data.isPublished),
+          status: data.status || prop.telegram_channel_status || "not_published",
+          postId: data.postId || prop.telegram_channel_post_id || null,
+        });
+      } else {
+        setChannelStatusData({
+          isPublished: prop.telegram_channel_status === "published",
+          status: prop.telegram_channel_status || "not_published",
+          postId: prop.telegram_channel_post_id || null,
+        });
+      }
+    } catch {
+      setChannelStatusData({
+        isPublished: prop.telegram_channel_status === "published",
+        status: prop.telegram_channel_status || "not_published",
+        postId: prop.telegram_channel_post_id || null,
+      });
+    } finally {
+      setChannelStatusLoading(false);
+    }
+  };
+
+  const handleConfirmChannelPublish = async () => {
+    if (!channelModalProperty) return;
+    const propId = channelModalProperty.id;
+    setIsPublishingChannel(true);
+    setPublishingPropertyId(propId);
+
+    const isForceRepeat = Boolean(channelStatusData?.isPublished);
+
+    try {
+      const res = await fetch(`/api/admin/properties/${propId}/telegram-channel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ forceRepeat: isForceRepeat }),
+      });
+      const data = await res.json();
+
+      if (data?.success) {
+        channelModalProperty.telegram_channel_status = "published";
+        if (data.messageId) {
+          channelModalProperty.telegram_channel_post_id = data.messageId;
+        }
+        showToast(
+          locale === "uz"
+            ? "Obyekt @angren_estate kanaliga muvaffaqiyatli joylashtirildi!"
+            : "Объект успешно опубликован в канале @angren_estate!"
+        );
+        setChannelModalProperty(null);
+      } else {
+        channelModalProperty.telegram_channel_status = "error";
+        showToast(
+          data?.error ||
+            (locale === "uz" ? "Kanalga joylashtirishda xatolik yuz berdi" : "Ошибка публикации в канал")
+        );
+      }
+    } catch (err: any) {
+      showToast(
+        err?.message ||
+          (locale === "uz" ? "Tarmoq xatosi yuz berdi" : "Произошла сетевая ошибка")
+      );
+    } finally {
+      setIsPublishingChannel(false);
+      setPublishingPropertyId(null);
+    }
   };
 
   const handleOpenTelegramModal = async (prop: Property) => {
@@ -352,6 +441,33 @@ export default function AdminPropertiesPage() {
                               {getPropertyDistrict(prop, locale)}, {getPropertyAddress(prop, locale)}
                             </span>
                           </p>
+
+                          {/* Telegram Channel Status Indicator */}
+                          <div className="flex items-center gap-1.5 mt-1.5">
+                            {publishingPropertyId === prop.id ? (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 animate-pulse">
+                                <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                                <span>{locale === "uz" ? "Kanalga yuborilmoqda..." : "Публикация в канал..."}</span>
+                              </span>
+                            ) : prop.telegram_channel_status === "published" ? (
+                              <span
+                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-[#eaf5f0] text-[#167d4f] border border-[#2db477]/30"
+                                title={prop.telegram_channel_post_id ? `Post ID: #${prop.telegram_channel_post_id}` : undefined}
+                              >
+                                <Send className="w-2.5 h-2.5" />
+                                <span>{locale === "uz" ? "Kanalga joylangan" : "В канале"}</span>
+                              </span>
+                            ) : prop.telegram_channel_status === "error" ? (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200">
+                                <AlertCircle className="w-2.5 h-2.5" />
+                                <span>{locale === "uz" ? "Kanalda xatolik" : "Ошибка канала"}</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">
+                                <span>{locale === "uz" ? "Kanalga chiqmagan" : "Не в канале"}</span>
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -488,11 +604,25 @@ export default function AdminPropertiesPage() {
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => handleOpenTelegramModal(prop)}
-                          title="Telegram"
+                          title={locale === "uz" ? "Telegram Bot obunachilariga xabar" : "Сообщение подписчикам бота"}
                           className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20 border border-[#0088cc]/20 transition-colors shadow-xs"
                         >
                           <Send className="h-3.5 w-3.5" />
-                          <span>Telegram</span>
+                          <span>Bot</span>
+                        </button>
+                        <button
+                          onClick={() => handleOpenChannelModal(prop)}
+                          title={locale === "uz" ? "Telegram kanal (@angren_estate)" : "Telegram-канал (@angren_estate)"}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-colors shadow-xs ${
+                            prop.telegram_channel_status === "published"
+                              ? "bg-emerald-50 text-[#167d4f] border-emerald-200 hover:bg-emerald-100"
+                              : prop.telegram_channel_status === "error"
+                              ? "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
+                              : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                          }`}
+                        >
+                          <Send className="h-3.5 w-3.5" />
+                          <span>{locale === "uz" ? "Kanal" : "Канал"}</span>
                         </button>
                         <button
                           onClick={() => setPreviewProperty(prop)}
@@ -933,6 +1063,122 @@ export default function AdminPropertiesPage() {
                       {isTelegramAlreadySent
                         ? (locale === "uz" ? "Qayta yuborish" : "Отправить повторно")
                         : (locale === "uz" ? "Yuborish" : "Отправить")}
+                    </span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Telegram Channel Publish Modal */}
+      {channelModalProperty && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3">
+              <div className="h-11 w-11 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center shrink-0">
+                <Send className="h-5 w-5 text-[#167d4f]" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-slate-900 text-base">
+                  {locale === "uz" ? "Telegram kanal (@angren_estate)" : "Telegram-канал (@angren_estate)"}
+                </h3>
+                <p className="text-[11px] text-slate-500 font-bold">
+                  ID: {channelModalProperty.id}
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-2xl p-4 bg-slate-50 border border-slate-200/80 space-y-2.5">
+              <p className="text-xs font-bold text-slate-900 line-clamp-1">
+                {locale === "uz"
+                  ? channelModalProperty.title_uz
+                  : (channelModalProperty.title_ru || channelModalProperty.title_uz)}
+              </p>
+
+              {channelStatusLoading ? (
+                <div className="flex items-center gap-2 text-xs text-slate-500 py-1">
+                  <span className="h-3.5 w-3.5 rounded-full border-2 border-[#167d4f] border-t-transparent animate-spin" />
+                  <span>{locale === "uz" ? "Kanal holati tekshirilmoqda..." : "Проверка статуса канала..."}</span>
+                </div>
+              ) : channelStatusData?.isPublished ? (
+                <div className="bg-amber-50 border border-amber-200 text-amber-900 p-3 rounded-xl text-xs font-semibold space-y-1">
+                  <p className="font-bold">
+                    {locale === "uz"
+                      ? "Ushbu obyekt allaqachon @angren_estate kanaliga joylashtirilgan."
+                      : "Этот объект уже опубликован в канале @angren_estate."}
+                  </p>
+                  {channelStatusData.postId && (
+                    <p className="text-[11px] text-amber-800">
+                      {locale === "uz" ? `Post ID: #${channelStatusData.postId}` : `ID поста: #${channelStatusData.postId}`}
+                    </p>
+                  )}
+                  <p className="text-[11px] text-amber-700 pt-1">
+                    {locale === "uz"
+                      ? "Qayta yuborish kanalga yangi post chiqaradi. Davom ettirasizmi?"
+                      : "Повторная отправка создаст новый пост в канале. Продолжить?"}
+                  </p>
+                </div>
+              ) : channelStatusData?.status === "error" ? (
+                <div className="bg-rose-50 border border-rose-200 text-rose-900 p-3 rounded-xl text-xs font-semibold space-y-1">
+                  <p className="font-bold">
+                    {locale === "uz"
+                      ? "Avvalgi urinishda xatolik yuz bergan."
+                      : "Предыдущая попытка завершилась ошибкой."}
+                  </p>
+                  <p className="text-[11px] text-rose-700">
+                    {locale === "uz"
+                      ? "Kanalga postni qaytadan yuborishni xohlaysizmi?"
+                      : "Хотите повторить публикацию в канал?"}
+                  </p>
+                </div>
+              ) : (
+                <div className="text-xs text-slate-700 font-medium leading-relaxed">
+                  <p>
+                    {locale === "uz"
+                      ? "Obyekt rasmiy @angren_estate kanaliga rasm, asosiy parametrlar va ko‘rish tugmasi bilan joylashtiriladi."
+                      : "Объект будет опубликован в официальном канале @angren_estate с фото, параметрами и ссылкой."}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                disabled={isPublishingChannel}
+                onClick={() => setChannelModalProperty(null)}
+                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition-colors"
+              >
+                {locale === "uz" ? "Bekor qilish" : "Отмена"}
+              </button>
+              <button
+                type="button"
+                disabled={isPublishingChannel || channelStatusLoading}
+                onClick={handleConfirmChannelPublish}
+                className={`px-4 py-2 rounded-xl text-white font-bold text-xs transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50 ${
+                  channelStatusData?.isPublished
+                    ? "bg-amber-600 hover:bg-amber-700"
+                    : channelStatusData?.status === "error"
+                    ? "bg-rose-600 hover:bg-rose-700"
+                    : "bg-[#167d4f] hover:bg-[#136b43]"
+                }`}
+              >
+                {isPublishingChannel ? (
+                  <>
+                    <span className="h-3.5 w-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                    <span>{locale === "uz" ? "Joylashtirilmoqda..." : "Публикация..."}</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-3.5 w-3.5" />
+                    <span>
+                      {channelStatusData?.isPublished
+                        ? (locale === "uz" ? "Qayta joylashtirish" : "Опубликовать повторно")
+                        : channelStatusData?.status === "error"
+                        ? (locale === "uz" ? "Qayta urinish" : "Повторить")
+                        : (locale === "uz" ? "Kanalga joylashtirish" : "Опубликовать в канал")}
                     </span>
                   </>
                 )}

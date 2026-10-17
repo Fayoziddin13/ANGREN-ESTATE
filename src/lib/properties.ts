@@ -227,6 +227,9 @@ export function mapPropertyToDb(data: any): Record<string, any> {
   if (data.owner_phone_visible !== undefined) baseAmenities.owner_phone_visible = Boolean(data.owner_phone_visible);
   if (data.price_negotiable !== undefined) baseAmenities.price_negotiable = Boolean(data.price_negotiable);
   if (data.bargain_allowed !== undefined) baseAmenities.bargain_allowed = Boolean(data.bargain_allowed);
+  if (data.telegram_channel_status) baseAmenities.telegram_channel_status = data.telegram_channel_status;
+  if (data.telegram_channel_post_id) baseAmenities.telegram_channel_post_id = data.telegram_channel_post_id;
+  if (data.telegram_notified_at) baseAmenities.telegram_notified_at = data.telegram_notified_at;
 
   return {
     id: data.id,

@@ -251,6 +251,15 @@ export default function AddPropertyPage() {
   const [contactPhone, setContactPhone] = useState("+998 90 123 45 67");
   const [contactTelegram, setContactTelegram] = useState("@angrenestate_admin");
 
+  // Telegram publication checkboxes (Step 5)
+  const [sendToTelegramBot, setSendToTelegramBot] = useState<boolean>(false);
+  const [sendToTelegramChannel, setSendToTelegramChannel] = useState<boolean>(false);
+  const [publishResult, setPublishResult] = useState<{
+    propertySaved: boolean;
+    botStatus?: { success: boolean; sent?: number; message?: string };
+    channelStatus?: { success: boolean; message?: string };
+  } | null>(null);
+
   // UX & Validation state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -968,7 +977,7 @@ export default function AddPropertyPage() {
         contact_telegram: contactTelegram.trim() || "@angrenestate_admin",
       });
 
-      if (!created) {
+      if (!created || !created.id) {
         throw new Error(
           locale === "uz"
             ? "Obyektni saqlashda xatolik yuz berdi. Qayta urinib ko‘ring."
@@ -978,6 +987,84 @@ export default function AddPropertyPage() {
 
       // Discard draft on successful save
       discardDraft();
+
+      // Telegram publication actions (ONLY if publishing, never for draft)
+      if (statusToSave === "published" && (sendToTelegramBot || sendToTelegramChannel)) {
+        let botResult: { success: boolean; sent?: number; message?: string } | undefined;
+        let channelResult: { success: boolean; message?: string } | undefined;
+
+        // Checkbox 1: Bot subscribers broadcast
+        if (sendToTelegramBot) {
+          try {
+            const botRes = await fetch(`/api/admin/properties/${created.id}/telegram-broadcast`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ forceRepeat: false }),
+            });
+            const botData = await botRes.json();
+            if (botData?.success) {
+              botResult = {
+                success: true,
+                sent: botData.sent ?? 0,
+                message:
+                  locale === "uz"
+                    ? `${botData.sent ?? 0} ta obunachiga xabar yuborildi`
+                    : `Отправлено ${botData.sent ?? 0} подписчикам`,
+              };
+            } else {
+              botResult = {
+                success: false,
+                message: botData?.error || (locale === "uz" ? "Xatolik yuz berdi" : "Произошла ошибка"),
+              };
+            }
+          } catch (e: any) {
+            botResult = {
+              success: false,
+              message: e?.message || (locale === "uz" ? "Tarmoq xatosi" : "Ошибка сети"),
+            };
+          }
+        }
+
+        // Checkbox 2: Channel post (@angren_estate)
+        if (sendToTelegramChannel) {
+          try {
+            const chRes = await fetch(`/api/admin/properties/${created.id}/telegram-channel`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ forceRepeat: false }),
+            });
+            const chData = await chRes.json();
+            if (chData?.success) {
+              channelResult = {
+                success: true,
+                message:
+                  locale === "uz"
+                    ? "Post muvaffaqiyatli joylashtirildi"
+                    : "Пост успешно опубликован в канале",
+              };
+            } else {
+              channelResult = {
+                success: false,
+                message: chData?.error || (locale === "uz" ? "Xatolik yuz berdi" : "Произошла ошибка"),
+              };
+            }
+          } catch (e: any) {
+            channelResult = {
+              success: false,
+              message: e?.message || (locale === "uz" ? "Tarmoq xatosi" : "Ошибка сети"),
+            };
+          }
+        }
+
+        // Set status report modal so admin clearly sees results
+        setPublishResult({
+          propertySaved: true,
+          botStatus: botResult,
+          channelStatus: channelResult,
+        });
+        setIsSubmitting(false);
+        return;
+      }
 
       // Redirect to properties table
       router.push("/admin/properties");
@@ -3181,6 +3268,76 @@ export default function AddPropertyPage() {
                 )}
               </div>
             </div>
+
+            {/* Telegram Publikatsiyasi (2 ta mustaqil checkbox) */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-3">
+              <div className="flex items-center gap-2">
+                <Send className="w-4 h-4 text-[#167d4f]" />
+                <label className="text-xs font-black uppercase tracking-wider text-slate-800">
+                  {locale === "uz" ? "Telegram integratsiyasi (Ixtiyoriy)" : "Интеграция с Telegram (Опционально)"}
+                </label>
+              </div>
+
+              <p className="text-[11px] text-slate-500 font-medium">
+                {locale === "uz"
+                  ? "Obyekt saytda nashr qilingandan so‘ng xabar va postlarni avtomatik yuborish uchun kerakli variantlarni belgilang."
+                  : "Выберите нужные варианты для автоматической отправки уведомлений после публикации объекта на сайте."}
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                {/* Checkbox 1: Bot Subscribers */}
+                <label
+                  className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-start gap-3 select-none ${
+                    sendToTelegramBot
+                      ? "bg-emerald-50/50 border-[#167d4f] ring-1 ring-[#167d4f]/20"
+                      : "bg-slate-50/50 border-slate-200 hover:bg-slate-100/60"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={sendToTelegramBot}
+                    onChange={(e) => setSendToTelegramBot(e.target.checked)}
+                    className="w-4 h-4 mt-0.5 rounded text-[#167d4f] border-slate-300 focus:ring-[#167d4f] cursor-pointer"
+                  />
+                  <div className="space-y-1">
+                    <span className="text-xs font-bold text-slate-900 block leading-snug">
+                      {locale === "uz" ? "Telegram bot obunachilariga xabar yuborish" : "Отправить подписчикам Telegram-бота"}
+                    </span>
+                    <span className="text-[11px] text-slate-500 block leading-tight">
+                      {locale === "uz"
+                        ? "Botda yangi obyekt kartochkasi va Mini App ochish tugmasi bilan xabar yuboriladi."
+                        : "Отправка карточки объекта с кнопкой Mini App подписчикам бота."}
+                    </span>
+                  </div>
+                </label>
+
+                {/* Checkbox 2: Channel Post */}
+                <label
+                  className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-start gap-3 select-none ${
+                    sendToTelegramChannel
+                      ? "bg-emerald-50/50 border-[#167d4f] ring-1 ring-[#167d4f]/20"
+                      : "bg-slate-50/50 border-slate-200 hover:bg-slate-100/60"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={sendToTelegramChannel}
+                    onChange={(e) => setSendToTelegramChannel(e.target.checked)}
+                    className="w-4 h-4 mt-0.5 rounded text-[#167d4f] border-slate-300 focus:ring-[#167d4f] cursor-pointer"
+                  />
+                  <div className="space-y-1">
+                    <span className="text-xs font-bold text-slate-900 block leading-snug">
+                      {locale === "uz" ? "Telegram kanaliga post joylashtirish (@angren_estate)" : "Опубликовать в Telegram-канал (@angren_estate)"}
+                    </span>
+                    <span className="text-[11px] text-slate-500 block leading-tight">
+                      {locale === "uz"
+                        ? "Rasmiy kanalda rasm, parametrlar va ko‘rish havolasi bilan post chiqariladi."
+                        : "Публикация поста с фото, параметрами и кнопками в официальном канале."}
+                    </span>
+                  </div>
+                </label>
+              </div>
+            </div>
           </div>
         )}
 
@@ -3260,6 +3417,89 @@ export default function AddPropertyPage() {
             setEditingHudud(null);
           }}
         />
+      )}
+
+      {/* Publish Report Modal (when Telegram operations were triggered) */}
+      {publishResult && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl border border-slate-100 space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-[#167d4f] flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-slate-900">
+                  {locale === "uz" ? "Obyekt muvaffaqiyatli saqlandi" : "Объект успешно сохранен"}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  {locale === "uz" ? "Saytda yangi e’lon yaratildi" : "Новое объявление создано на сайте"}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2.5 pt-2 border-t border-slate-100">
+              {publishResult.botStatus && (
+                <div
+                  className={`p-3 rounded-2xl border text-xs flex items-start gap-2.5 ${
+                    publishResult.botStatus.success
+                      ? "bg-emerald-50/60 border-emerald-200 text-emerald-950"
+                      : "bg-amber-50/60 border-amber-200 text-amber-950"
+                  }`}
+                >
+                  {publishResult.botStatus.success ? (
+                    <Check className="w-4 h-4 text-[#167d4f] shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  )}
+                  <div>
+                    <div className="font-bold">
+                      {locale === "uz" ? "Telegram Bot obunachilari" : "Подписчики Telegram-бота"}
+                    </div>
+                    <div className="text-[11px] opacity-90 mt-0.5">
+                      {publishResult.botStatus.message}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {publishResult.channelStatus && (
+                <div
+                  className={`p-3 rounded-2xl border text-xs flex items-start gap-2.5 ${
+                    publishResult.channelStatus.success
+                      ? "bg-emerald-50/60 border-emerald-200 text-emerald-950"
+                      : "bg-amber-50/60 border-amber-200 text-amber-950"
+                  }`}
+                >
+                  {publishResult.channelStatus.success ? (
+                    <Check className="w-4 h-4 text-[#167d4f] shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  )}
+                  <div>
+                    <div className="font-bold">
+                      {locale === "uz" ? "Telegram kanal (@angren_estate)" : "Telegram-канал (@angren_estate)"}
+                    </div>
+                    <div className="text-[11px] opacity-90 mt-0.5">
+                      {publishResult.channelStatus.message}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setPublishResult(null);
+                router.push("/admin/properties");
+              }}
+              className="w-full py-2.5 rounded-xl bg-[#167d4f] hover:bg-[#136b43] text-white font-bold text-xs shadow-md shadow-emerald-950/20 transition-all flex items-center justify-center gap-1.5"
+            >
+              <span>{locale === "uz" ? "Obyektlar ro‘yxatiga o‘tish" : "Перейти к списку объектов"}</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

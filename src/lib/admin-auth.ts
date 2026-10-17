@@ -50,7 +50,12 @@ export function hashPassword(password: string, salt?: string): { hash: string; s
 
 export function verifyPassword(password: string, storedHash: string, salt: string): boolean {
   const { hash } = hashPassword(password, salt);
-  return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(storedHash));
+  const hashBuf = Buffer.from(hash);
+  const storedBuf = Buffer.from(storedHash);
+  if (hashBuf.length !== storedBuf.length) {
+    return false;
+  }
+  return crypto.timingSafeEqual(hashBuf, storedBuf);
 }
 
 // Fixed salt for admin verification
@@ -145,7 +150,10 @@ export function verifyAdminSessionToken(token: string): { valid: boolean; sessio
     .update(payloadStr)
     .digest("base64url");
 
-  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
+  const sigBuf = Buffer.from(signature);
+  const expectedSigBuf = Buffer.from(expectedSignature);
+
+  if (sigBuf.length !== expectedSigBuf.length || !crypto.timingSafeEqual(sigBuf, expectedSigBuf)) {
     return { valid: false, error: "Invalid signature" };
   }
 
