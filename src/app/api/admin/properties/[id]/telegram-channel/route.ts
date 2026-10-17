@@ -96,6 +96,7 @@ export async function POST(
       messageId: result.messageId,
       channelId: result.channelId,
       error: result.error,
+      dbPersisted: result.dbPersisted,
     });
   } catch (error: any) {
     console.error("[Admin Telegram Channel POST] Error:", error);

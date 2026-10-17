@@ -526,6 +526,15 @@ export function buildChannelPostMarkup(property: Property, lang: "uz" | "ru" = "
 // In-memory concurrency lock to prevent duplicate parallel publishing requests for the same property
 const inFlightChannelPublishes = new Set<string>();
 
+export interface TelegramChannelPublishResult {
+  success: boolean;
+  status: "published" | "already_published" | "error";
+  messageId?: number;
+  channelId?: string;
+  error?: string;
+  dbPersisted?: boolean;
+}
+
 /**
  * Publish property post to Telegram channel (@angren_estate).
  * Handles idempotency, formatting, photo delivery, and status persistence.
@@ -537,14 +546,9 @@ export async function publishPropertyToTelegramChannel(
     channelId?: string;
     lang?: "uz" | "ru";
     botToken?: string;
+    updatePropertyFn?: (id: string, updates: Partial<Property>) => Promise<Property | null>;
   }
-): Promise<{
-  success: boolean;
-  status: "published" | "already_published" | "error";
-  messageId?: number;
-  channelId?: string;
-  error?: string;
-}> {
+): Promise<TelegramChannelPublishResult> {
   const token = options?.botToken || process.env.TELEGRAM_BOT_TOKEN;
   if (!token) {
     return {
@@ -560,6 +564,8 @@ export async function publishPropertyToTelegramChannel(
     process.env.TELEGRAM_CHANNEL ||
     "@angren_estate";
 
+  const updateFn = options?.updatePropertyFn || updateProperty;
+
   // Deduplication check: Has this property already been published to the channel?
   if (!options?.forceRepeat) {
     const alreadyPublished =
@@ -572,6 +578,7 @@ export async function publishPropertyToTelegramChannel(
         status: "already_published",
         messageId: property.telegram_channel_post_id,
         channelId: targetChannel,
+        dbPersisted: true,
       };
     }
   }
@@ -628,7 +635,7 @@ export async function publishPropertyToTelegramChannel(
       const desc = sendResult.description || "Unknown error";
       console.error(`[TelegramChannel] Channel post failed: error_code=${sendResult.error_code} description=${desc}`);
       try {
-        await updateProperty(property.id, {
+        await updateFn(property.id, {
           telegram_channel_status: "error",
         });
       } catch (persistErr: any) {
@@ -639,19 +646,61 @@ export async function publishPropertyToTelegramChannel(
         status: "error",
         channelId: targetChannel,
         error: desc,
+        dbPersisted: false,
       };
     }
 
     const messageId = sendResult.result?.message_id;
 
-    // Persist channel publication status safely without altering other fields
+    // 1. Strict validation: verify message_id is a valid integer > 0
+    if (typeof messageId !== "number" || !Number.isInteger(messageId) || messageId <= 0) {
+      const missingIdDesc = "Telegram API ok: true qaytardi, ammo javobda haqiqiy result.message_id mavjud emas";
+      console.error(`[TelegramChannel] ${missingIdDesc}:`, sendResult);
+      try {
+        await updateFn(property.id, {
+          telegram_channel_status: "error",
+        });
+      } catch (persistErr: any) {
+        console.warn("[TelegramChannel] Could not persist channel status to database:", persistErr?.message);
+      }
+      return {
+        success: false,
+        status: "error",
+        channelId: targetChannel,
+        error: missingIdDesc,
+        dbPersisted: false,
+      };
+    }
+
+    // 2. Persist channel publication status safely without hiding DB persistence failures
+    let dbPersisted = false;
+    let dbError: string | undefined;
+
     try {
-      await updateProperty(property.id, {
+      const updated = await updateFn(property.id, {
         telegram_channel_status: "published",
         telegram_channel_post_id: messageId,
       });
+      if (updated) {
+        dbPersisted = true;
+      } else {
+        dbError = "Ma'lumotlar bazasida obyekt topilmadi yoki status yangilanmadi";
+        console.error(`[TelegramChannel] ${dbError}`);
+      }
     } catch (persistErr: any) {
-      console.warn("[TelegramChannel] Could not persist channel status to database:", persistErr?.message);
+      dbError = persistErr?.message || "Ma'lumotlar bazasiga yozishda xatolik yuz berdi";
+      console.error("[TelegramChannel] Could not persist channel status to database:", dbError);
+    }
+
+    if (!dbPersisted) {
+      return {
+        success: false,
+        status: "error",
+        messageId,
+        channelId: targetChannel,
+        error: `Telegram kanalga post yuborildi (ID: ${messageId}), ammo ma'lumotlar bazasida statusni saqlashda xatolik yuz berdi: ${dbError}`,
+        dbPersisted: false,
+      };
     }
 
     return {
@@ -659,11 +708,12 @@ export async function publishPropertyToTelegramChannel(
       status: "published",
       messageId,
       channelId: targetChannel,
+      dbPersisted: true,
     };
   } catch (err: any) {
     console.error("[TelegramChannel] Exception while publishing:", err?.message);
     try {
-      await updateProperty(property.id, {
+      await updateFn(property.id, {
         telegram_channel_status: "error",
       });
     } catch (persistErr: any) {
@@ -674,6 +724,7 @@ export async function publishPropertyToTelegramChannel(
       status: "error",
       channelId: targetChannel,
       error: err?.message || "Unknown exception",
+      dbPersisted: false,
     };
   } finally {
     inFlightChannelPublishes.delete(property.id);

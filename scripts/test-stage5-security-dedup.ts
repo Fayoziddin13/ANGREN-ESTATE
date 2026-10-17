@@ -209,13 +209,16 @@ async function runStage5Tests() {
     };
 
     // Fire two requests concurrently at the same millisecond
+    const mockUpdate = async (_id: string, upd: any) => ({ ...concurrentProp, ...upd });
     const p1 = publishPropertyToTelegramChannel(concurrentProp, {
       botToken: "dummy_mock_token",
       forceRepeat: false,
+      updatePropertyFn: mockUpdate,
     });
     const p2 = publishPropertyToTelegramChannel(concurrentProp, {
       botToken: "dummy_mock_token",
       forceRepeat: false,
+      updatePropertyFn: mockUpdate,
     });
 
     const [res1, res2] = await Promise.all([p1, p2]);
@@ -247,6 +250,7 @@ async function runStage5Tests() {
     const rePublishResult = await publishPropertyToTelegramChannel(publishedProp, {
       botToken: "dummy_mock_token",
       forceRepeat: true, // Admin confirmed re-publishing
+      updatePropertyFn: async (_id, upd) => ({ ...publishedProp, ...upd }),
     });
 
     global.fetch = originalFetch;
@@ -456,6 +460,7 @@ async function runStage5Tests() {
 
     const res = await publishPropertyToTelegramChannel(mockProperty, {
       botToken: "dummy_token",
+      updatePropertyFn: async (_id, upd) => ({ ...mockProperty, ...upd }),
     });
 
     global.fetch = originalFetch;
