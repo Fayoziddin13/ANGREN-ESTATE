@@ -23,6 +23,7 @@ import {
   ExternalLink,
   Shield,
   ChevronRight,
+  Share2,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -102,6 +103,12 @@ export default function AdminLayout({
       label: locale === "uz" ? "Xarita boshqaruvi" : "Управление картой",
       icon: Compass,
       active: pathname.startsWith("/admin/map"),
+    },
+    {
+      href: "/admin/social",
+      label: locale === "uz" ? "Янги ижтимоий тармоқлар" : "Новые соцсети",
+      icon: Share2,
+      active: pathname.startsWith("/admin/social"),
     },
     {
       href: "/admin/settings",

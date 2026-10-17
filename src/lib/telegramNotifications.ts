@@ -61,6 +61,210 @@ export function buildPropertyPublicUrl(propertyId: string, lang?: "uz" | "ru"): 
 }
 
 /**
+ * Sanitize an image URL for diagnostic logging to avoid leaking sensitive query params or tokens.
+ */
+export function sanitizeDiagnosticUrl(url: string): string {
+  if (!url) return "<empty>";
+  try {
+    const parsed = new URL(url);
+    if (parsed.search) {
+      parsed.search = "?[REDACTED_QUERY]";
+    }
+    return parsed.toString();
+  } catch {
+    return url.replace(/([?&][^=]+=)[^&]+/g, "$1[REDACTED]").slice(0, 150);
+  }
+}
+
+/**
+ * Select primary candidate photo from property.
+ * Priority:
+ * 1. property.main_image (if non-empty string)
+ * 2. property.images[0] (or first non-empty string)
+ * 3. property.photos[0] (or first non-empty string)
+ */
+export function resolvePropertyPhotoUrl(property: Property): string {
+  const candidates: Array<string | undefined | null> = [
+    property.main_image,
+    ...(Array.isArray(property.images) ? property.images : []),
+    ...(Array.isArray(property.photos) ? property.photos : []),
+  ];
+
+  for (const c of candidates) {
+    if (typeof c === "string") {
+      const trimmed = c.trim();
+      if (trimmed.length > 0) {
+        return trimmed;
+      }
+    }
+  }
+  return "";
+}
+
+/**
+ * Resolve a canonical public HTTPS photo URL for Telegram delivery.
+ * - Relative paths (/uploads/...) are prefixed with public canonical site URL.
+ * - Localhost, 127.0.0.1, 0.0.0.0 are strictly rejected.
+ * - Verified public HTTPS is enforced.
+ */
+export function resolveCanonicalPhotoUrl(rawPhotoUrl: string): {
+  url: string;
+  isValidPublicHttps: boolean;
+  error?: string;
+} {
+  let url = rawPhotoUrl.trim();
+  if (!url) {
+    return { url: "", isValidPublicHttps: false, error: "Empty photo URL" };
+  }
+
+  if (url.startsWith("/")) {
+    const siteUrl = getTelegramPublicSiteUrl();
+    url = `${siteUrl}${url}`;
+  }
+
+  const isLocal =
+    url.includes("localhost") ||
+    url.includes("127.0.0.1") ||
+    url.includes("0.0.0.0");
+
+  if (isLocal) {
+    return {
+      url: "",
+      isValidPublicHttps: false,
+      error: `Local photo URL '${sanitizeDiagnosticUrl(url)}' is prohibited (Telegram cannot fetch from localhost/127.0.0.1)`,
+    };
+  }
+
+  if (!url.startsWith("https://") && !url.startsWith("http://")) {
+    return {
+      url,
+      isValidPublicHttps: false,
+      error: `Photo URL '${sanitizeDiagnosticUrl(url)}' does not start with http(s)://`,
+    };
+  }
+
+  return { url, isValidPublicHttps: true };
+}
+
+/**
+ * Validate image URL accessibility before attempting Telegram Bot API delivery.
+ * Attempts HEAD first with timeout. If HEAD is disallowed (405/403) or fails,
+ * safely falls back to a lightweight GET with Range: bytes=0-1024.
+ * Verifies standard image content types (JPEG, PNG, WebP).
+ */
+export async function checkImageUrlAccessible(
+  url: string,
+  timeoutMs = 4000
+): Promise<{ accessible: boolean; contentType?: string; size?: number; error?: string }> {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+    let headResp: Response | null = null;
+    try {
+      headResp = await fetch(url, {
+        method: "HEAD",
+        headers: { "User-Agent": "AngrenEstate-ImageValidator/1.0" },
+        signal: controller.signal,
+      });
+    } catch {
+      // Ignore network/abort error on HEAD, will try GET
+    }
+
+    if (headResp && headResp.ok) {
+      clearTimeout(timer);
+      const contentType = headResp.headers.get("content-type") || "";
+      const contentLength = headResp.headers.get("content-length");
+      const size = contentLength ? parseInt(contentLength, 10) : undefined;
+      return {
+        accessible: true,
+        contentType,
+        size,
+      };
+    }
+
+    // HEAD failed, 403, or 405 Method Not Allowed: Try GET with Range
+    const getController = new AbortController();
+    const getTimer = setTimeout(() => getController.abort(), timeoutMs);
+    try {
+      const getResp = await fetch(url, {
+        method: "GET",
+        headers: {
+          "User-Agent": "AngrenEstate-ImageValidator/1.0",
+          Range: "bytes=0-1024",
+        },
+        signal: getController.signal,
+      });
+      clearTimeout(getTimer);
+
+      if (getResp.ok || getResp.status === 206) {
+        const contentType = getResp.headers.get("content-type") || "";
+        const contentLength = getResp.headers.get("content-length");
+        const size = contentLength ? parseInt(contentLength, 10) : undefined;
+        return {
+          accessible: true,
+          contentType,
+          size,
+        };
+      }
+
+      return {
+        accessible: false,
+        error: `HTTP ${getResp.status} ${getResp.statusText}`,
+      };
+    } catch (getErr: any) {
+      clearTimeout(getTimer);
+      return {
+        accessible: false,
+        error: getErr?.message || "GET check failed",
+      };
+    }
+  } catch (err: any) {
+    return {
+      accessible: false,
+      error: err?.message || "Image accessibility check exception",
+    };
+  }
+}
+
+/**
+ * Discern whether a Telegram Bot API error description is genuinely a photo delivery/format error.
+ * CRITICAL: Admin rights errors, chat not found, and button errors must NEVER trigger photo fallback.
+ */
+export function isTelegramPhotoSpecificError(description?: string): boolean {
+  if (!description) return false;
+  const lower = description.toLowerCase();
+
+  // Explicit non-photo errors that should NEVER trigger photo fallback
+  if (
+    lower.includes("chat not found") ||
+    lower.includes("not an administrator") ||
+    lower.includes("need administrator") ||
+    lower.includes("chat_admin_required") ||
+    lower.includes("forbidden") ||
+    lower.includes("unauthorized") ||
+    lower.includes("inline keyboard") ||
+    lower.includes("button") ||
+    lower.includes("too many requests") ||
+    lower.includes("retry after")
+  ) {
+    return false;
+  }
+
+  // Exact known Telegram photo delivery / processing errors
+  return (
+    lower.includes("failed to get http url content") ||
+    lower.includes("wrong type of the web page content") ||
+    lower.includes("photo_invalid_dimensions") ||
+    lower.includes("wrong file identifier") ||
+    lower.includes("image_process_failed") ||
+    lower.includes("photo is too big") ||
+    lower.includes("file is too big") ||
+    (lower.includes("photo") && !lower.includes("can't parse entities"))
+  );
+}
+
+/**
  * Build minimal, localized notification text for property.
  * Strictly adheres to project specification:
  * - UZ Latin or Russian only (no Cyrillic Uzbek).
@@ -342,53 +546,108 @@ export async function sendAdminTestNotification(
 // TELEGRAM CHANNEL PUBLISHING (@angren_estate)
 // =============================================================================
 
+export interface ContactPerson {
+  phone: string;
+  name?: string;
+  telegram?: string;
+}
+
 export interface AuthorizedContact {
   phone: string;
   name?: string;
   telegram?: string;
   type: "owner" | "realtor" | "agency";
+  owner?: ContactPerson;
+  realtor?: ContactPerson;
+  agency?: ContactPerson;
+}
+
+export interface ChannelResolvedContacts {
+  owner?: ContactPerson;
+  realtor?: ContactPerson;
+  agency?: ContactPerson;
+}
+
+/**
+ * Resolve all authorized contacts for public channel publication.
+ * Rules:
+ * 1. Owner contact is included ONLY if owner_phone is present AND owner_phone_visible === true.
+ *    If owner_phone_visible !== true, owner contact is strictly undefined (never leaked).
+ * 2. Realtor contact is included if property.realtor?.phone is present.
+ * 3. Agency contact is used as fallback only when neither owner nor realtor is present.
+ */
+export function resolveAllAuthorizedContacts(property: Property): ChannelResolvedContacts {
+  const isOwnerVisible = Boolean(
+    property.owner_phone_visible ?? (property.amenities as any)?.owner_phone_visible ?? false
+  );
+  const rawOwnerPhone = (property.owner_phone || (property.amenities as any)?.owner_phone || "").trim();
+
+  let owner: ContactPerson | undefined;
+  if (rawOwnerPhone && isOwnerVisible) {
+    owner = {
+      phone: rawOwnerPhone,
+      telegram: (property.owner_telegram || (property.amenities as any)?.owner_telegram || "").trim() || undefined,
+    };
+  }
+
+  let realtor: ContactPerson | undefined;
+  const realtorPhone = (property.realtor?.phone || "").trim();
+  if (realtorPhone) {
+    realtor = {
+      phone: realtorPhone,
+      name: property.realtor?.name?.trim() || undefined,
+      telegram: property.realtor?.telegram?.trim() || undefined,
+    };
+  }
+
+  let agency: ContactPerson | undefined;
+  if (!owner && !realtor) {
+    const contactPhone = (property.contact_phone || "").trim();
+    if (contactPhone) {
+      agency = {
+        phone: contactPhone,
+        telegram: (property.contact_telegram || property.telegram || "").trim() || undefined,
+      };
+    }
+  }
+
+  return { owner, realtor, agency };
 }
 
 /**
  * Resolve authorized contact phone & info for public channel post.
- * Strict rules:
- * 1. If owner_phone is present AND owner_phone_visible === true -> use owner phone.
- * 2. If owner phone is absent or not permitted to be public -> fallback to realtor.
- * 3. Realtor info taken only from verified data (property.realtor?.phone or contact_phone).
- * 4. Hidden or non-public numbers are NEVER returned.
+ * Returns the primary authorized contact (owner if public, else realtor, else agency),
+ * while preserving attached owner and realtor details.
  */
 export function resolveAuthorizedContact(property: Property): AuthorizedContact | null {
-  // Rule 1: Check owner phone (STRICT: only if explicitly visible to public)
-  const ownerPhone = (property.owner_phone || (property.amenities as any)?.owner_phone || "").trim();
-  const isOwnerVisible = Boolean(
-    property.owner_phone_visible ?? (property.amenities as any)?.owner_phone_visible ?? false
-  );
+  const { owner, realtor, agency } = resolveAllAuthorizedContacts(property);
 
-  if (ownerPhone && isOwnerVisible) {
+  if (owner) {
     return {
-      phone: ownerPhone,
+      phone: owner.phone,
+      telegram: owner.telegram,
       type: "owner",
+      owner,
+      realtor,
     };
   }
 
-  // Rule 2 & 3: Fallback to realtor if assigned
-  const realtorPhone = (property.realtor?.phone || "").trim();
-  if (realtorPhone) {
+  if (realtor) {
     return {
-      phone: realtorPhone,
-      name: property.realtor?.name?.trim() || undefined,
-      telegram: property.realtor?.telegram?.trim() || undefined,
+      phone: realtor.phone,
+      name: realtor.name,
+      telegram: realtor.telegram,
       type: "realtor",
+      realtor,
     };
   }
 
-  // Fallback: Assigned contact_phone
-  const contactPhone = (property.contact_phone || "").trim();
-  if (contactPhone) {
+  if (agency) {
     return {
-      phone: contactPhone,
-      telegram: (property.contact_telegram || property.telegram || "").trim() || undefined,
+      phone: agency.phone,
+      telegram: agency.telegram,
       type: "agency",
+      agency,
     };
   }
 
@@ -498,10 +757,28 @@ export function buildChannelPostCaption(property: Property, lang: "uz" | "ru" = 
   }
 
   // 6. Authorized contact information
-  const contact = resolveAuthorizedContact(property);
-  if (contact?.phone) {
+  const contacts = resolveAllAuthorizedContacts(property);
+  const contactLines: string[] = [];
+
+  if (contacts.owner?.phone) {
+    const ownerLabel = isUz ? "Obyekt egasi:" : "Владелец:";
+    contactLines.push(`📞 ${ownerLabel} ${contacts.owner.phone}`);
+  }
+
+  if (contacts.realtor?.phone) {
+    const realtorLabel = isUz ? "Rieltor:" : "Риелтор:";
+    const realtorName = contacts.realtor.name ? ` (${contacts.realtor.name})` : "";
+    contactLines.push(`📞 ${realtorLabel} ${contacts.realtor.phone}${realtorName}`);
+  }
+
+  if (!contacts.owner && !contacts.realtor && contacts.agency?.phone) {
+    const agencyLabel = isUz ? "Aloqa:" : "Контакты:";
+    contactLines.push(`📞 ${agencyLabel} ${contacts.agency.phone}`);
+  }
+
+  if (contactLines.length > 0) {
     lines.push("");
-    lines.push(`📞 ${isUz ? "Aloqa:" : "Контакты:"} ${contact.phone}${contact.name ? ` (${contact.name})` : ""}`);
+    lines.push(contactLines.join("\n"));
   }
 
   lines.push("");
@@ -532,6 +809,7 @@ export function buildChannelPostMarkup(property: Property, lang: "uz" | "ru" = "
   const secondaryRow: Array<{ text: string; url: string }> = [];
 
   // Button B: «Video sharh» (only if valid public HTTPS video_url exists)
+  let videoBtn: { text: string; url: string } | null = null;
   const rawVideo = (property.video_url || property.video || "").trim();
   if (rawVideo) {
     const isLocal =
@@ -539,38 +817,88 @@ export function buildChannelPostMarkup(property: Property, lang: "uz" | "ru" = "
       rawVideo.includes("127.0.0.1") ||
       rawVideo.includes("0.0.0.0");
     if (!isLocal && rawVideo.startsWith("https://")) {
-      secondaryRow.push({
+      videoBtn = {
         text: isUz ? "🎬 Video sharh" : "🎬 Видео обзор",
         url: rawVideo,
-      });
+      };
     } else if (rawVideo.startsWith("http://")) {
       console.warn(`[TelegramChannel] Non-HTTPS video URL '${rawVideo}' omitted from inline buttons (Telegram requires verified HTTPS)`);
     }
   }
 
-  // Button C: «Bog‘lanish» (only if authorized contact exists)
-  const contact = resolveAuthorizedContact(property);
-  if (contact) {
-    let contactUrl: string | null = null;
-    if (contact.telegram) {
-      const cleanTg = contact.telegram.replace(/^@+/, "").trim();
-      if (cleanTg) contactUrl = `https://t.me/${cleanTg}`;
-    }
-    if (!contactUrl && contact.phone) {
-      const cleanDigits = contact.phone.replace(/[^0-9]/g, "");
-      if (cleanDigits) contactUrl = `https://t.me/+${cleanDigits}`;
-    }
+  // Button C: Contact buttons (Owner and/or Realtor)
+  const contacts = resolveAllAuthorizedContacts(property);
 
-    if (contactUrl && contactUrl.startsWith("https://t.me/")) {
-      secondaryRow.push({
-        text: isUz ? "💬 Bog‘lanish" : "💬 Связаться",
-        url: contactUrl,
-      });
+  function resolveTelegramContactUrl(person?: ContactPerson): string | null {
+    if (!person) return null;
+    if (person.telegram) {
+      let cleanTg = person.telegram.trim();
+      if (cleanTg.startsWith("https://t.me/")) {
+        return cleanTg;
+      }
+      if (cleanTg.startsWith("http://t.me/")) {
+        return cleanTg.replace("http://", "https://");
+      }
+      if (cleanTg.startsWith("t.me/")) {
+        return `https://${cleanTg}`;
+      }
+      cleanTg = cleanTg.replace(/^@+/, "").trim();
+      if (cleanTg) return `https://t.me/${cleanTg}`;
     }
+    if (person.phone) {
+      const cleanDigits = person.phone.replace(/[^0-9]/g, "");
+      if (cleanDigits) return `https://t.me/+${cleanDigits}`;
+    }
+    return null;
   }
 
-  if (secondaryRow.length > 0) {
-    rows.push(secondaryRow);
+  const ownerBtnUrl = resolveTelegramContactUrl(contacts.owner);
+  const realtorBtnUrl = resolveTelegramContactUrl(contacts.realtor);
+  const agencyBtnUrl = !contacts.owner && !contacts.realtor ? resolveTelegramContactUrl(contacts.agency) : null;
+
+  const contactButtons: Array<{ text: string; url: string }> = [];
+
+  if (ownerBtnUrl && realtorBtnUrl) {
+    // Both owner and realtor are authorized and have valid contact URLs
+    contactButtons.push({
+      text: isUz ? "👤 Egasi bilan bog‘lanish" : "👤 Связаться с владельцем",
+      url: ownerBtnUrl,
+    });
+    contactButtons.push({
+      text: isUz ? "👨‍💼 Rieltor bilan bog‘lanish" : "👨‍💼 Связаться с риелтором",
+      url: realtorBtnUrl,
+    });
+  } else if (realtorBtnUrl) {
+    // Only realtor contact (e.g. owner hidden or absent)
+    contactButtons.push({
+      text: isUz ? "💬 Bog‘lanish" : "💬 Связаться",
+      url: realtorBtnUrl,
+    });
+  } else if (ownerBtnUrl) {
+    // Only owner contact (owner visible, no realtor)
+    contactButtons.push({
+      text: isUz ? "💬 Bog‘lanish" : "💬 Связаться",
+      url: ownerBtnUrl,
+    });
+  } else if (agencyBtnUrl) {
+    // Fallback agency contact
+    contactButtons.push({
+      text: isUz ? "💬 Bog‘lanish" : "💬 Связаться",
+      url: agencyBtnUrl,
+    });
+  }
+
+  // Assemble keyboard rows cleanly
+  if (videoBtn && contactButtons.length === 1) {
+    // Shared secondary row: Video + Single Contact
+    rows.push([videoBtn, contactButtons[0]]);
+  } else {
+    if (videoBtn) {
+      rows.push([videoBtn]);
+    }
+    if (contactButtons.length > 0) {
+      rows.push(contactButtons);
+    }
   }
 
   return { inline_keyboard: rows };
@@ -600,6 +928,7 @@ export async function publishPropertyToTelegramChannel(
     lang?: "uz" | "ru";
     botToken?: string;
     updatePropertyFn?: (id: string, updates: Partial<Property>) => Promise<Property | null>;
+    validateImageBeforeSend?: boolean;
   }
 ): Promise<TelegramChannelPublishResult> {
   const token = options?.botToken || process.env.TELEGRAM_BOT_TOKEN;
@@ -682,41 +1011,119 @@ export async function publishPropertyToTelegramChannel(
     }
   }
 
-  // Select primary photo
-  let photoUrl = property.main_image || property.images?.[0] || property.photos?.[0] || "";
-  if (photoUrl && photoUrl.startsWith("/")) {
-    const siteUrl = getTelegramPublicSiteUrl();
-    photoUrl = `${siteUrl}${photoUrl}`;
-  }
-  // Telegram cannot fetch photos from localhost / 127.0.0.1
-  if (photoUrl && (photoUrl.includes("localhost") || photoUrl.includes("127.0.0.1") || photoUrl.includes("0.0.0.0"))) {
-    console.warn(`[TelegramChannel] Local photo URL '${photoUrl}' rejected for Telegram delivery, sending text post instead`);
-    photoUrl = "";
+  // 1. Resolve photo candidate using priority: main_image -> images[0] -> photos[0]
+  const rawPhoto = resolvePropertyPhotoUrl(property);
+  const resolvedPhoto = resolveCanonicalPhotoUrl(rawPhoto);
+  let photoUrl = resolvedPhoto.url;
+
+  if (rawPhoto && !resolvedPhoto.isValidPublicHttps) {
+    console.warn(`[TelegramChannel] ${resolvedPhoto.error || "Photo URL is not valid public HTTPS"}. Photo delivery skipped.`);
   }
 
   try {
-    let sendResult: { ok: boolean; result?: any; description?: string; error_code?: number };
+    let sendResult: {
+      ok: boolean;
+      result?: any;
+      description?: string;
+      error_code?: number;
+      http_status?: number;
+    };
 
-    // Send photo if valid HTTP URL exists
-    if (photoUrl && (photoUrl.startsWith("http://") || photoUrl.startsWith("https://"))) {
+    if (photoUrl && resolvedPhoto.isValidPublicHttps) {
+      const sanitizedUrl = sanitizeDiagnosticUrl(photoUrl);
+
+      if (options?.validateImageBeforeSend) {
+        const preCheck = await checkImageUrlAccessible(photoUrl);
+        console.log(
+          `[TelegramChannel] Image pre-check for ${sanitizedUrl}: ${
+            preCheck.accessible
+              ? `accessible (${preCheck.contentType || "unknown type"}, size: ${preCheck.size || "unknown"})`
+              : `warning: ${preCheck.error || "inaccessible"}`
+          }`
+        );
+      }
+
+      console.log(`[TelegramChannel] Attempting sendPhoto for property ${property.id}: ${sanitizedUrl}`);
+
+      // Attempt 1: Send photo by URL directly to Telegram Bot API
       sendResult = await sendTelegramPhoto(targetChannel, photoUrl, caption, replyMarkup, token);
 
-      // Graceful fallback to direct text message if photo fetching fails on Telegram's side
-      const descLower = sendResult.description ? sendResult.description.toLowerCase() : "";
-      const isPhotoError =
-        Boolean(descLower) &&
-        (descLower.includes("photo") ||
-          descLower.includes("url content") ||
-          descLower.includes("image") ||
-          descLower.includes("failed to get http"));
+      console.log(
+        `[TelegramChannel] sendPhoto URL response: ok=${sendResult.ok}, http_status=${sendResult.http_status ?? "none"}, error_code=${sendResult.error_code ?? "none"}, description=${sendResult.description || "none"}`
+      );
 
-      if (!sendResult.ok && isPhotoError) {
-        console.warn("[TelegramChannel] Photo delivery failed, falling back to text post:", sendResult.description);
-        sendResult = await sendTelegramDirectMessage(targetChannel, caption, replyMarkup, token);
+      // If Telegram returned a photo-specific error (e.g. failed to get HTTP URL content)
+      if (!sendResult.ok && isTelegramPhotoSpecificError(sendResult.description)) {
+        // Run diagnostic accessibility check from server
+        const diagCheck = await checkImageUrlAccessible(photoUrl);
+        console.warn(
+          `[TelegramChannel] Telegram Bot API failed to download photo from URL (${sendResult.description}). Server accessibility check: ${
+            diagCheck.accessible
+              ? `accessible (${diagCheck.contentType}, size: ${diagCheck.size})`
+              : `inaccessible (${diagCheck.error})`
+          }. Attempting direct multipart buffer download and upload...`
+        );
+
+        // Attempt 2: Download image buffer in server runtime and upload via multipart/form-data
+        let bufferUploadSuccess = false;
+        try {
+          const dlController = new AbortController();
+          const dlTimeout = setTimeout(() => dlController.abort(), 8000);
+          const dlResp = await fetch(photoUrl, {
+            signal: dlController.signal,
+            headers: { "User-Agent": "AngrenEstate-Server/1.0" },
+          });
+          clearTimeout(dlTimeout);
+
+          if (dlResp.ok) {
+            const arrayBuf = await dlResp.arrayBuffer();
+            const buffer = Buffer.from(arrayBuf);
+            const contentType = dlResp.headers.get("content-type") || "image/jpeg";
+
+            if (buffer.length > 0 && buffer.length <= 10 * 1024 * 1024) {
+              console.log(
+                `[TelegramChannel] Image downloaded successfully (${buffer.length} bytes, ${contentType}). Uploading multipart binary directly to Telegram...`
+              );
+              const multipartResult = await sendTelegramPhoto(
+                targetChannel,
+                buffer,
+                caption,
+                replyMarkup,
+                token,
+                contentType
+              );
+
+              console.log(
+                `[TelegramChannel] Direct multipart sendPhoto response: ok=${multipartResult.ok}, http_status=${multipartResult.http_status ?? "none"}, error_code=${multipartResult.error_code ?? "none"}, description=${multipartResult.description || "none"}`
+              );
+
+              if (multipartResult.ok) {
+                sendResult = multipartResult;
+                bufferUploadSuccess = true;
+              }
+            }
+          }
+        } catch (bufErr: any) {
+          console.warn(`[TelegramChannel] Direct multipart buffer attempt failed: ${bufErr?.message || bufErr}`);
+        }
+
+        // Attempt 3: If direct multipart upload also failed, graceful fallback to text post
+        if (!bufferUploadSuccess && !sendResult.ok) {
+          const fallbackReason = sendResult.description || "Photo delivery failed after URL and multipart attempts";
+          console.warn(`[TelegramChannel] Falling back to text-only post. Reason: ${fallbackReason}`);
+          sendResult = await sendTelegramDirectMessage(targetChannel, caption, replyMarkup, token);
+          console.log(
+            `[TelegramChannel] Fallback text post response: ok=${sendResult.ok}, http_status=${sendResult.http_status ?? "none"}, error_code=${sendResult.error_code ?? "none"}, description=${sendResult.description || "none"}`
+          );
+        }
       }
     } else {
-      // No photo: send direct text message
+      // No valid photo: send direct text message
+      console.log(`[TelegramChannel] Property ${property.id} has no valid public photo URL. Sending text-only channel post.`);
       sendResult = await sendTelegramDirectMessage(targetChannel, caption, replyMarkup, token);
+      console.log(
+        `[TelegramChannel] Direct text post response: ok=${sendResult.ok}, http_status=${sendResult.http_status ?? "none"}, error_code=${sendResult.error_code ?? "none"}, description=${sendResult.description || "none"}`
+      );
     }
 
     if (!sendResult.ok) {

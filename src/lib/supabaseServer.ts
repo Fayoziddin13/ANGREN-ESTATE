@@ -43,3 +43,4 @@ export function getSupabaseAdmin(): SupabaseClient {
 }
 
 export const supabaseAdmin: SupabaseClient = getSupabaseAdmin();
+export { isSupabaseConfigured };

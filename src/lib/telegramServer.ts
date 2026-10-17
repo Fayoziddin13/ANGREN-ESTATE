@@ -1320,32 +1320,63 @@ export async function getTelegramNotificationStats(
 
 /**
  * Send photo with caption and inline keyboard to Telegram chat.
+ * Supports both URL string and direct Buffer / Uint8Array binary upload (multipart/form-data).
  */
 export async function sendTelegramPhoto(
   chatId: number | string,
-  photoUrl: string,
+  photo: string | Buffer | Uint8Array,
   caption: string,
   replyMarkup?: any,
-  botToken?: string
-): Promise<{ ok: boolean; result?: any; description?: string; error_code?: number }> {
+  botToken?: string,
+  contentType: string = "image/jpeg"
+): Promise<{ ok: boolean; result?: any; description?: string; error_code?: number; http_status?: number }> {
   const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
   if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not configured");
 
   try {
-    const response = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId,
-        photo: photoUrl,
-        caption: caption,
-        reply_markup: replyMarkup,
-      }),
-    });
+    let response: Response;
 
-    return await response.json();
+    if (typeof photo === "string") {
+      response = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          photo: photo,
+          caption: caption,
+          reply_markup: replyMarkup,
+        }),
+      });
+    } else {
+      // Direct binary buffer upload via multipart/form-data
+      const formData = new FormData();
+      formData.append("chat_id", String(chatId));
+      formData.append(
+        "photo",
+        new Blob([photo as any], { type: contentType || "image/jpeg" }),
+        "property_photo.jpg"
+      );
+      formData.append("caption", caption);
+      if (replyMarkup) {
+        formData.append(
+          "reply_markup",
+          typeof replyMarkup === "string" ? replyMarkup : JSON.stringify(replyMarkup)
+        );
+      }
+
+      response = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+        method: "POST",
+        body: formData,
+      });
+    }
+
+    const data = await response.json();
+    return {
+      ...data,
+      http_status: response.status,
+    };
   } catch (err: any) {
-    return { ok: false, description: err?.message || "Network error" };
+    return { ok: false, description: err?.message || "Network error", http_status: 0 };
   }
 }
 
@@ -1357,7 +1388,7 @@ export async function sendTelegramDirectMessage(
   text: string,
   replyMarkup?: any,
   botToken?: string
-): Promise<{ ok: boolean; result?: any; description?: string; error_code?: number }> {
+): Promise<{ ok: boolean; result?: any; description?: string; error_code?: number; http_status?: number }> {
   const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
   if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not configured");
 
@@ -1372,9 +1403,13 @@ export async function sendTelegramDirectMessage(
       }),
     });
 
-    return await response.json();
+    const data = await response.json();
+    return {
+      ...data,
+      http_status: response.status,
+    };
   } catch (err: any) {
-    return { ok: false, description: err?.message || "Network error" };
+    return { ok: false, description: err?.message || "Network error", http_status: 0 };
   }
 }
 
