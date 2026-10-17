@@ -25,6 +25,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Concurrency lock to prevent duplicate parallel publishing requests for the same news
 const inFlightNewsPublishes = new Set<string>();
+const inFlightBotPublishes = new Set<string>();
 
 /**
  * Build rich channel/bot post caption within Telegram's 1024 character photo caption limit.
@@ -349,46 +350,116 @@ export async function broadcastNewsToTelegramSubscribers(
     };
   }
 
-  const subscribers = await getEligibleNotificationSubscribers();
-  if (!subscribers || subscribers.length === 0) {
+  const lockKey = `${news.id}_bot_${lang}`;
+  if (inFlightBotPublishes.has(lockKey)) {
+    return {
+      success: false,
+      status: "error",
+      targetType: "bot_broadcast",
+      language: lang,
+      error: "Bot broadcast already in progress for this news item",
+    };
+  }
+
+  // Deduplication check: Has this news already been broadcast in this language?
+  if (!options?.forceRepeat) {
+    const existingPub = news.publications?.find(
+      (p) => p.target_type === "bot_broadcast" && p.language === lang && p.status === "published"
+    );
+    if (existingPub && (existingPub.recipients_count ?? 0) > 0) {
+      return {
+        success: true,
+        status: "already_published",
+        targetType: "bot_broadcast",
+        language: lang,
+        recipientsCount: existingPub.recipients_count,
+      };
+    }
+  }
+
+  inFlightBotPublishes.add(lockKey);
+
+  try {
+    const subscribers = await getEligibleNotificationSubscribers();
+    if (!subscribers || subscribers.length === 0) {
+      const errorMsg = "Faol obunachilar ro‘yxati mavjud emas yoki bo‘sh";
+      await recordNewsPublication({
+        news_id: news.id,
+        target_type: "bot_broadcast",
+        language: lang,
+        status: "failed",
+        recipients_count: 0,
+        error_message: errorMsg,
+      });
+
+      return {
+        success: false,
+        status: "error",
+        targetType: "bot_broadcast",
+        language: lang,
+        recipientsCount: 0,
+        error: errorMsg,
+      };
+    }
+
+    const caption = buildNewsPostCaption(news, lang);
+    const replyMarkup = buildNewsPostMarkup(news, lang);
+
+    let sentCount = 0;
+    let lastError: string | undefined;
+
+    for (const sub of subscribers) {
+      try {
+        const res = await sendTelegramDirectMessage(sub.telegram_user_id, caption, replyMarkup, token);
+        if (res.ok && res.result?.message_id && res.result.message_id > 0) {
+          sentCount++;
+        } else if (!res.ok) {
+          lastError = res.description || "Telegram API delivery error";
+        }
+        await sleep(35);
+      } catch (err: any) {
+        lastError = err?.message || "Delivery exception";
+      }
+    }
+
+    if (sentCount === 0) {
+      const errorMsg = lastError || "Barcha bot obunachilariga xabar yetkazishda xatolik yuz berdi";
+      await recordNewsPublication({
+        news_id: news.id,
+        target_type: "bot_broadcast",
+        language: lang,
+        status: "failed",
+        recipients_count: 0,
+        error_message: errorMsg,
+      });
+
+      return {
+        success: false,
+        status: "error",
+        targetType: "bot_broadcast",
+        language: lang,
+        recipientsCount: 0,
+        error: errorMsg,
+      };
+    }
+
+    await recordNewsPublication({
+      news_id: news.id,
+      target_type: "bot_broadcast",
+      language: lang,
+      status: "published",
+      recipients_count: sentCount,
+      published_at: new Date().toISOString(),
+    });
+
     return {
       success: true,
       status: "published",
       targetType: "bot_broadcast",
       language: lang,
-      recipientsCount: 0,
+      recipientsCount: sentCount,
     };
+  } finally {
+    inFlightBotPublishes.delete(lockKey);
   }
-
-  const caption = buildNewsPostCaption(news, lang);
-  const replyMarkup = buildNewsPostMarkup(news, lang);
-
-  let sentCount = 0;
-  for (const sub of subscribers) {
-    try {
-      // Direct text delivery for bot subscribers
-      const res = await sendTelegramDirectMessage(sub.telegram_user_id, caption, replyMarkup, token);
-      if (res.ok) {
-        sentCount++;
-      }
-      await sleep(35);
-    } catch {}
-  }
-
-  await recordNewsPublication({
-    news_id: news.id,
-    target_type: "bot_broadcast",
-    language: lang,
-    status: "published",
-    recipients_count: sentCount,
-    published_at: new Date().toISOString(),
-  });
-
-  return {
-    success: true,
-    status: "published",
-    targetType: "bot_broadcast",
-    language: lang,
-    recipientsCount: sentCount,
-  };
 }

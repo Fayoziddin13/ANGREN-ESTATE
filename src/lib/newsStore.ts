@@ -159,13 +159,59 @@ export const DEFAULT_SOURCES: NewsSource[] = [
   },
 ];
 
-function readLocalData(): LocalNewsData {
+async function readFallbackData(): Promise<LocalNewsData> {
+  // 1. Cloud persistence fallback: Supabase app_settings (guaranteed across all Vercel Lambdas)
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabaseAdmin
+        .from("app_settings")
+        .select("value")
+        .eq("key", "news_store_registry")
+        .single();
+
+      if (!error && data?.value && typeof data.value === "object") {
+        const val = data.value as any;
+        const sourcesList: NewsSource[] = Array.isArray(val.sources) && val.sources.length > 0 ? val.sources : [...DEFAULT_SOURCES];
+        
+        // Ensure all default verified sources exist
+        const currentUrls = new Set(sourcesList.map((s) => s.feed_url.toLowerCase().trim()));
+        for (const def of DEFAULT_SOURCES) {
+          if (!currentUrls.has(def.feed_url.toLowerCase().trim())) {
+            sourcesList.push(def);
+            currentUrls.add(def.feed_url.toLowerCase().trim());
+          }
+        }
+
+        return {
+          sources: sourcesList,
+          news: Array.isArray(val.news) ? val.news : [],
+          translations: Array.isArray(val.translations) ? val.translations : [],
+          assets: Array.isArray(val.assets) ? val.assets : [],
+          publications: Array.isArray(val.publications) ? val.publications : [],
+          checks: Array.isArray(val.checks) ? val.checks : [],
+        };
+      }
+    } catch (e: any) {
+      console.warn("[NewsStore] Supabase app_settings fallback read notice:", e?.message);
+    }
+  }
+
+  // 2. Local JSON file store fallback (local dev environment)
   try {
     if (fs.existsSync(LOCAL_STORE_FILE)) {
       const raw = fs.readFileSync(LOCAL_STORE_FILE, "utf-8");
       const parsed = JSON.parse(raw);
+      const sourcesList: NewsSource[] = Array.isArray(parsed.sources) && parsed.sources.length > 0 ? parsed.sources : [...DEFAULT_SOURCES];
+      const currentUrls = new Set(sourcesList.map((s) => s.feed_url.toLowerCase().trim()));
+      for (const def of DEFAULT_SOURCES) {
+        if (!currentUrls.has(def.feed_url.toLowerCase().trim())) {
+          sourcesList.push(def);
+          currentUrls.add(def.feed_url.toLowerCase().trim());
+        }
+      }
+
       return {
-        sources: Array.isArray(parsed.sources) ? parsed.sources : DEFAULT_SOURCES,
+        sources: sourcesList,
         news: Array.isArray(parsed.news) ? parsed.news : [],
         translations: Array.isArray(parsed.translations) ? parsed.translations : [],
         assets: Array.isArray(parsed.assets) ? parsed.assets : [],
@@ -178,7 +224,7 @@ function readLocalData(): LocalNewsData {
   }
 
   return {
-    sources: DEFAULT_SOURCES,
+    sources: [...DEFAULT_SOURCES],
     news: [],
     translations: [],
     assets: [],
@@ -187,7 +233,27 @@ function readLocalData(): LocalNewsData {
   };
 }
 
-function writeLocalData(data: LocalNewsData): void {
+async function writeFallbackData(data: LocalNewsData): Promise<void> {
+  // 1. Cloud persistence fallback: Supabase app_settings (guaranteed across all Vercel Lambdas)
+  if (isSupabaseConfigured) {
+    try {
+      const { error } = await supabaseAdmin.from("app_settings").upsert(
+        {
+          key: "news_store_registry",
+          value: data,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "key" }
+      );
+      if (error) {
+        console.warn("[NewsStore] Supabase app_settings persist error:", error.message);
+      }
+    } catch (e: any) {
+      console.warn("[NewsStore] Supabase app_settings persist exception:", e?.message);
+    }
+  }
+
+  // 2. Also mirror to local file if writable (local dev environment)
   try {
     const dir = path.dirname(LOCAL_STORE_FILE);
     if (!fs.existsSync(dir)) {
@@ -195,7 +261,7 @@ function writeLocalData(data: LocalNewsData): void {
     }
     fs.writeFileSync(LOCAL_STORE_FILE, JSON.stringify(data, null, 2), "utf-8");
   } catch (err) {
-    console.warn("[NewsStore] Could not write local file:", err);
+    // Expected on Vercel serverless read-only filesystem
   }
 }
 
@@ -281,7 +347,7 @@ export async function getNewsSources(): Promise<NewsSource[]> {
     }
   }
 
-  const local = readLocalData();
+  const local = await readFallbackData();
   return local.sources.map((s) => {
     const latestCheck = local.checks.find((c) => c.source_id === s.id);
     return {
@@ -326,14 +392,14 @@ export async function saveNewsSource(
     }
   }
 
-  const local = readLocalData();
+  const local = await readFallbackData();
   const existingIdx = local.sources.findIndex((s) => s.id === id || s.feed_url === source.feed_url);
   if (existingIdx >= 0) {
     local.sources[existingIdx] = { ...local.sources[existingIdx], ...fullSource, updated_at: now };
   } else {
     local.sources.push(fullSource);
   }
-  writeLocalData(local);
+  await writeFallbackData(local);
   return fullSource;
 }
 
@@ -361,11 +427,11 @@ export async function updateSourceLastChecked(sourceId: string): Promise<void> {
     }
   }
 
-  const local = readLocalData();
+  const local = await readFallbackData();
   const src = local.sources.find((s) => s.id === sourceId);
   if (src) {
     src.last_checked_at = now;
-    writeLocalData(local);
+    await writeFallbackData(local);
   }
 }
 
@@ -413,11 +479,11 @@ export async function deleteNewsSource(sourceId: string): Promise<boolean> {
     }
   }
 
-  const local = readLocalData();
+  const local = await readFallbackData();
   const initialLen = local.sources.length;
   local.sources = local.sources.filter((s) => s.id !== sourceId);
   if (local.sources.length < initialLen) {
-    writeLocalData(local);
+    await writeFallbackData(local);
     return true;
   }
   return false;
@@ -449,12 +515,12 @@ export async function toggleNewsSourceActive(sourceId: string, isActive: boolean
     }
   }
 
-  const local = readLocalData();
+  const local = await readFallbackData();
   const src = local.sources.find((s) => s.id === sourceId);
   if (src) {
     src.is_active = isActive;
     src.updated_at = now;
-    writeLocalData(local);
+    await writeFallbackData(local);
     return src;
   }
   return null;
@@ -535,7 +601,7 @@ export async function getNewsList(params?: {
   }
 
   // Fallback to local
-  const local = readLocalData();
+  const local = await readFallbackData();
   let filtered = [...local.news];
 
   if (params?.status) {
@@ -620,7 +686,7 @@ export async function getNewsById(id: string): Promise<RealEstateNews | null> {
     }
   }
 
-  const local = readLocalData();
+  const local = await readFallbackData();
   const item = local.news.find((n) => n.id === id);
   if (!item) return null;
 
@@ -664,7 +730,7 @@ export async function hasNewsWithUrlHash(urlHash: string): Promise<boolean> {
     }
   }
 
-  const local = readLocalData();
+  const local = await readFallbackData();
   return local.news.some((n) => n.url_hash === urlHash);
 }
 
@@ -718,14 +784,14 @@ export async function saveNewsItem(
     }
   }
 
-  const local = readLocalData();
+  const local = await readFallbackData();
   const existingIdx = local.news.findIndex((n) => n.id === id || n.url_hash === item.url_hash);
   if (existingIdx >= 0) {
     local.news[existingIdx] = { ...local.news[existingIdx], ...fullItem, updated_at: now };
   } else {
     local.news.push(fullItem);
   }
-  writeLocalData(local);
+  await writeFallbackData(local);
   return fullItem;
 }
 
@@ -753,12 +819,12 @@ export async function updateNewsStatus(newsId: string, status: NewsStatus): Prom
     }
   }
 
-  const local = readLocalData();
+  const local = await readFallbackData();
   const item = local.news.find((n) => n.id === newsId);
   if (item) {
     item.status = status;
     item.updated_at = now;
-    writeLocalData(local);
+    await writeFallbackData(local);
     return true;
   }
   return false;
@@ -803,7 +869,7 @@ export async function saveNewsTranslation(
     }
   }
 
-  const local = readLocalData();
+  const local = await readFallbackData();
   const idx = local.translations.findIndex(
     (t) => t.news_id === translation.news_id && t.language === translation.language
   );
@@ -812,7 +878,7 @@ export async function saveNewsTranslation(
   } else {
     local.translations.push(fullTrans);
   }
-  writeLocalData(local);
+  await writeFallbackData(local);
   return fullTrans;
 }
 
@@ -850,7 +916,7 @@ export async function saveNewsAsset(
     }
   }
 
-  const local = readLocalData();
+  const local = await readFallbackData();
   const idx = local.assets.findIndex(
     (a) => a.news_id === asset.news_id && a.language === asset.language
   );
@@ -859,7 +925,7 @@ export async function saveNewsAsset(
   } else {
     local.assets.push(fullAsset);
   }
-  writeLocalData(local);
+  await writeFallbackData(local);
   return fullAsset;
 }
 
@@ -901,7 +967,7 @@ export async function recordNewsPublication(
     }
   }
 
-  const local = readLocalData();
+  const local = await readFallbackData();
   const idx = local.publications.findIndex(
     (p) =>
       p.news_id === pub.news_id &&
@@ -913,7 +979,7 @@ export async function recordNewsPublication(
   } else {
     local.publications.push(fullPub);
   }
-  writeLocalData(local);
+  await writeFallbackData(local);
   return fullPub;
 }
 
@@ -946,8 +1012,8 @@ export async function recordSourceCheck(
     }
   }
 
-  const local = readLocalData();
+  const local = await readFallbackData();
   local.checks.unshift(fullCheck);
   if (local.checks.length > 100) local.checks.pop();
-  writeLocalData(local);
+  await writeFallbackData(local);
 }

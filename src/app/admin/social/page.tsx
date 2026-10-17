@@ -64,8 +64,12 @@ export default function AdminSocialPage() {
   const [isAddManualNewsOpen, setIsAddManualNewsOpen] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [publishSuccessMsg, setPublishSuccessMsg] = useState<string | null>(null);
-  const [publishTarget, setPublishTarget] = useState<"channel" | "bot" | "both">("channel");
+  const [publishToChannel, setPublishToChannel] = useState(true);
+  const [publishToBot, setPublishToBot] = useState(false);
+  const [publishForceRepeat, setPublishForceRepeat] = useState(false);
+  const [publishResultsReport, setPublishResultsReport] = useState<any[] | null>(null);
   const [publishLang, setPublishLang] = useState<"uz" | "ru" | "both">("uz");
+  const [syncSummary, setSyncSummary] = useState<any | null>(null);
 
   // Manual news form state
   const [manualTitle, setManualTitle] = useState("");
@@ -114,14 +118,19 @@ export default function AdminSocialPage() {
   // Sync Trigger
   const handleSyncAll = async () => {
     setSyncing(true);
+    setSyncSummary(null);
     try {
       const res = await fetch("/api/admin/social/sources/sync", { method: "POST" });
       const data = await res.json();
       if (data.success) {
+        setSyncSummary(data);
         await loadData();
+      } else {
+        alert(data.error || (isUz ? "Sinxronlashtirishda xatolik yuz berdi" : "Ошибка синхронизации"));
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error("Sync error:", e);
+      alert(e?.message || (isUz ? "Sinxronlashtirishda tarmoq xatosi" : "Ошибка сети при синхронизации"));
     } finally {
       setSyncing(false);
     }
@@ -151,30 +160,55 @@ export default function AdminSocialPage() {
   // Publish News to Telegram
   const handlePublish = async () => {
     if (!previewNews) return;
+    if (!publishToChannel && !publishToBot) {
+      alert(
+        isUz
+          ? "Iltimos, kamida bitta yo‘nalishni tanlang (Kanal yoki Bot obunachilari)!"
+          : "Пожалуйста, выберите хотя бы одно направление (Канал или Подписчики бота)!"
+      );
+      return;
+    }
+
     setPublishing(true);
     setPublishSuccessMsg(null);
+    setPublishResultsReport(null);
+
+    const target = publishToChannel && publishToBot ? "both" : publishToChannel ? "channel" : "bot";
+
     try {
       const res = await fetch(`/api/admin/social/news/${previewNews.id}/publish`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          target: publishTarget,
+          target,
           language: publishLang,
-          forceRepeat: false,
+          forceRepeat: publishForceRepeat,
         }),
       });
       const data = await res.json();
-      if (data.success) {
+      if (data.results && Array.isArray(data.results)) {
+        setPublishResultsReport(data.results);
+        await loadData();
+        if (data.allSuccessful) {
+          setPublishSuccessMsg(
+            isUz
+              ? "Barcha yo‘nalishlarda muvaffaqiyatli nashr qilindi!"
+              : "Успешно опубликовано по всем выбранным направлениям!"
+          );
+        } else if (data.success) {
+          setPublishSuccessMsg(
+            isUz
+              ? "Qisman muvaffaqiyatli nashr qilindi (pastdagi hisobotni tekshiring)."
+              : "Частично опубликовано (проверьте подробный отчет ниже)."
+          );
+        }
+      } else if (data.success) {
         setPublishSuccessMsg(
           isUz
             ? "Muvaffaqiyatli nashr qilindi!"
             : "Успешно опубликовано в Telegram!"
         );
         await loadData();
-        setTimeout(() => {
-          setPreviewNews(null);
-          setPublishSuccessMsg(null);
-        }, 1500);
       } else {
         alert(data.error || "Nashr qilishda xatolik yuz berdi");
       }
@@ -569,10 +603,16 @@ export default function AdminSocialPage() {
                           <ImageIcon className="w-3 h-3" />
                           {hasAsset ? (isUz ? "Rasm tayyor" : "Фото готово") : (isUz ? "Rasm yo‘q" : "Без фото")}
                         </span>
-                        {isPublished && (
+                        {news.publications?.some((p) => p.target_type === "channel" && p.status === "published") && (
                           <span className="inline-flex items-center gap-1 font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">
-                            <CheckCircle className="w-3 h-3" />
-                            {isUz ? "Telegram’da nashr qilingan" : "Опубликовано в Telegram"}
+                            <Send className="w-3 h-3" />
+                            {isUz ? "📢 Kanalga chiqarilgan" : "📢 В канале"}
+                          </span>
+                        )}
+                        {news.publications?.some((p) => p.target_type === "bot_broadcast" && p.status === "published") && (
+                          <span className="inline-flex items-center gap-1 font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-800">
+                            <Radio className="w-3 h-3" />
+                            {isUz ? "🤖 Botga tarqatilgan" : "🤖 В боте"}
                           </span>
                         )}
                       </div>
@@ -583,7 +623,11 @@ export default function AdminSocialPage() {
                       <button
                         onClick={() => {
                           setPreviewNews(news);
-                          setPublishTarget("channel");
+                          setPublishToChannel(true);
+                          setPublishToBot(false);
+                          setPublishForceRepeat(false);
+                          setPublishResultsReport(null);
+                          setPublishSuccessMsg(null);
                           setPublishLang("uz");
                         }}
                         className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all active:scale-95"
@@ -919,6 +963,129 @@ export default function AdminSocialPage() {
         </div>
       )}
 
+      {/* MODAL 0: SYNC SUMMARY REPORT MODAL */}
+      {syncSummary && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white w-full max-w-xl rounded-3xl border border-slate-200 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
+              <div className="flex items-center gap-2">
+                <RefreshCw className="w-5 h-5 text-emerald-700" />
+                <h3 className="font-black text-slate-900 text-base">
+                  {isUz ? "Sinxronlashtirish hisoboti" : "Отчет о синхронизации"}
+                </h3>
+              </div>
+              <button
+                onClick={() => setSyncSummary(null)}
+                className="p-1.5 rounded-xl hover:bg-slate-200 text-slate-500 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-4">
+              {/* Summary Metrics Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
+                  <span className="block text-xl font-black text-slate-900">
+                    {syncSummary.summary?.sourcesChecked ?? 0}
+                  </span>
+                  <span className="text-[11px] font-bold text-slate-500">
+                    {isUz ? "Tekshirilgan" : "Проверено"}
+                  </span>
+                </div>
+
+                <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-200 text-center">
+                  <span className="block text-xl font-black text-emerald-700">
+                    {syncSummary.summary?.totalNew ?? 0}
+                  </span>
+                  <span className="text-[11px] font-bold text-emerald-800">
+                    {isUz ? "Yangi maqola" : "Новые статьи"}
+                  </span>
+                </div>
+
+                <div className="bg-amber-50 p-3 rounded-xl border border-amber-200 text-center">
+                  <span className="block text-xl font-black text-amber-700">
+                    {syncSummary.summary?.totalDuplicates ?? 0}
+                  </span>
+                  <span className="text-[11px] font-bold text-amber-800">
+                    {isUz ? "Dublikatlar" : "Дубликаты"}
+                  </span>
+                </div>
+
+                <div className="bg-blue-50 p-3 rounded-xl border border-blue-200 text-center">
+                  <span className="block text-xl font-black text-blue-700">
+                    {syncSummary.summary?.totalFound ?? 0}
+                  </span>
+                  <span className="text-[11px] font-bold text-blue-800">
+                    {isUz ? "Jami RSS" : "Всего в RSS"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Status explanation */}
+              {(syncSummary.summary?.totalNew ?? 0) === 0 && (
+                <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs font-semibold leading-relaxed">
+                  💡 {isUz
+                    ? "0 ta yangi yangilik qo‘shildi: RSS manbalaridagi barcha maqolalar allaqachon bazaga kiritilgan (dublikat) yoki manbalarda so‘nggi paytda yangi xabarlar chiqmagan."
+                    : "0 новых статей добавлено: все статьи из RSS уже сохранены в базе или новых публикаций по недвижимости пока не появилось."}
+                </div>
+              )}
+
+              {/* Per-Source details */}
+              <div className="space-y-2">
+                <span className="block text-xs font-extrabold text-slate-700">
+                  {isUz ? "Manbalar holati:" : "Статус источников:"}
+                </span>
+                <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                  {syncSummary.results?.map((res: any, idx: number) => {
+                    const hasErr = Boolean(res.error);
+                    return (
+                      <div
+                        key={idx}
+                        className={`flex items-center justify-between p-2.5 rounded-xl border text-xs ${
+                          hasErr
+                            ? "bg-rose-50 border-rose-200 text-rose-900"
+                            : "bg-slate-50 border-slate-200 text-slate-800"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 truncate pr-2">
+                          {hasErr ? (
+                            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                          ) : (
+                            <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                          )}
+                          <span className="font-bold truncate">{res.sourceName}</span>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          {hasErr ? (
+                            <span className="font-semibold text-rose-700 text-[11px]">{res.error}</span>
+                          ) : (
+                            <span className="font-bold text-slate-600 text-[11px]">
+                              {res.newItemsSaved > 0
+                                ? `+${res.newItemsSaved} ta yangi`
+                                : `${res.itemsFound} ta (0 yangi)`}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-end">
+              <button
+                onClick={() => setSyncSummary(null)}
+                className="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition-all"
+              >
+                {isUz ? "Tushunarli" : "Понятно"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* MODAL 1: PUBLISH PREVIEW MODAL */}
       {previewNews && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
@@ -943,36 +1110,67 @@ export default function AdminSocialPage() {
             <div className="p-6 overflow-y-auto space-y-6">
               {/* Publication Controls */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                {/* Target */}
+                {/* Targets */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1.5">
-                    {isUz ? "Qayerga nashr qilish:" : "Куда публиковать:"}
+                  <label className="block text-xs font-bold text-slate-700 mb-2">
+                    {isUz ? "Nashr yo‘nalishlari (tanlang):" : "Направления публикации:"}
                   </label>
-                  <select
-                    value={publishTarget}
-                    onChange={(e: any) => setPublishTarget(e.target.value)}
-                    className="w-full bg-white border border-slate-200 text-xs font-bold rounded-xl px-3 py-2 text-slate-800"
-                  >
-                    <option value="channel">{isUz ? "📢 @angren_estate Kanaliga" : "📢 В канал @angren_estate"}</option>
-                    <option value="bot">{isUz ? "🤖 Bot obunachilariga" : "🤖 Подписчикам бота"}</option>
-                    <option value="both">{isUz ? "✨ Ikkalasiga ham (Kanal + Bot)" : "✨ И в канал, и в бот"}</option>
-                  </select>
+                  <div className="space-y-2">
+                    <label className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-xs font-bold cursor-pointer transition-all ${
+                      publishToChannel ? "bg-emerald-50 border-emerald-300 text-emerald-950" : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                    }`}>
+                      <input
+                        type="checkbox"
+                        checked={publishToChannel}
+                        onChange={(e) => setPublishToChannel(e.target.checked)}
+                        className="rounded text-emerald-700 focus:ring-emerald-600 w-4 h-4"
+                      />
+                      <span>{isUz ? "📢 @angren_estate Kanaliga" : "📢 В канал @angren_estate"}</span>
+                    </label>
+
+                    <label className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-xs font-bold cursor-pointer transition-all ${
+                      publishToBot ? "bg-emerald-50 border-emerald-300 text-emerald-950" : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                    }`}>
+                      <input
+                        type="checkbox"
+                        checked={publishToBot}
+                        onChange={(e) => setPublishToBot(e.target.checked)}
+                        className="rounded text-emerald-700 focus:ring-emerald-600 w-4 h-4"
+                      />
+                      <span>{isUz ? "🤖 Bot obunachilariga" : "🤖 Подписчикам бота"}</span>
+                    </label>
+
+                    <label className="flex items-center gap-2 px-1 pt-1 text-[11px] font-semibold text-slate-500 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={publishForceRepeat}
+                        onChange={(e) => setPublishForceRepeat(e.target.checked)}
+                        className="rounded text-slate-600 focus:ring-slate-500 w-3.5 h-3.5"
+                      />
+                      <span>{isUz ? "Takroran nashr qilish (Force repeat)" : "Повторная публикация"}</span>
+                    </label>
+                  </div>
                 </div>
 
                 {/* Language */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700 mb-2">
                     {isUz ? "Post tili:" : "Язык публикации:"}
                   </label>
                   <select
                     value={publishLang}
                     onChange={(e: any) => setPublishLang(e.target.value)}
-                    className="w-full bg-white border border-slate-200 text-xs font-bold rounded-xl px-3 py-2 text-slate-800"
+                    className="w-full bg-white border border-slate-200 text-xs font-bold rounded-xl px-3 py-2.5 text-slate-800 focus:ring-2 focus:ring-emerald-600"
                   >
                     <option value="uz">{isUz ? "O‘zbekcha (Lotin)" : "Узбекский (Латиница)"}</option>
                     <option value="ru">{isUz ? "Ruscha" : "Русский"}</option>
                     <option value="both">{isUz ? "Ikkala tilda ham (2 ta post)" : "На двух языках (2 поста)"}</option>
                   </select>
+                  <p className="text-[11px] text-slate-400 mt-2">
+                    {isUz
+                      ? "Har bir yo‘nalish mustaqil ishlaydi: kanal va bot natijalari alohida qayd etiladi."
+                      : "Каждое направление работает автономно: результаты канала и бота фиксируются отдельно."}
+                  </p>
                 </div>
               </div>
 
@@ -1066,6 +1264,58 @@ export default function AdminSocialPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Detailed publication report */}
+              {publishResultsReport && publishResultsReport.length > 0 && (
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                  <span className="block text-xs font-extrabold text-slate-800">
+                    {isUz ? "Nashr hisoboti (har bir yo‘nalish bo‘yicha):" : "Отчет о публикации по направлениям:"}
+                  </span>
+                  <div className="space-y-1.5">
+                    {publishResultsReport.map((res: any, idx: number) => {
+                      const isChannel = res.targetType === "channel";
+                      const label = isChannel
+                        ? isUz ? "📢 @angren_estate Kanali" : "📢 Канал @angren_estate"
+                        : isUz ? "🤖 Bot obunachilari" : "🤖 Подписчики бота";
+
+                      if (res.status === "published") {
+                        return (
+                          <div key={idx} className="flex items-center gap-2 text-xs font-bold text-emerald-800 bg-emerald-50 p-2.5 rounded-xl border border-emerald-200">
+                            <CheckCircle className="w-4 h-4 shrink-0 text-emerald-600" />
+                            <span>
+                              {label}: {isUz ? "Muvaffaqiyatli yuborildi" : "Успешно отправлено"}
+                              {res.messageId ? ` (Telegram Post ID: ${res.messageId})` : ""}
+                              {res.recipientsCount !== undefined ? ` (${res.recipientsCount} ta obunachiga)` : ""}
+                            </span>
+                          </div>
+                        );
+                      }
+
+                      if (res.status === "already_published") {
+                        return (
+                          <div key={idx} className="flex items-center gap-2 text-xs font-bold text-amber-800 bg-amber-50 p-2.5 rounded-xl border border-amber-200">
+                            <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />
+                            <span>
+                              {label}: {isUz ? "Ushbu yangilik allaqachon chiqarilgan" : "Новость уже опубликована ранее"}
+                              {res.messageId ? ` (Post ID: ${res.messageId})` : ""}
+                              {isUz ? ". Qayta yuborish uchun 'Takroran nashr qilish'ni belgilang." : ". Для повтора включите повторную публикацию."}
+                            </span>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div key={idx} className="flex items-center gap-2 text-xs font-bold text-red-800 bg-red-50 p-2.5 rounded-xl border border-red-200">
+                          <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+                          <span>
+                            {label}: {res.error || (isUz ? "Yuborishda xatolik yuz berdi" : "Ошибка при публикации")}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {publishSuccessMsg && (
                 <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-bold text-center">

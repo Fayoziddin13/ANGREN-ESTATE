@@ -61,11 +61,13 @@ export async function POST(
       }
     }
 
+    const anySuccessful = publishResults.some((r) => r.success);
     const allSuccessful = publishResults.every((r) => r.success);
     const updatedNews = await getNewsById(params.id);
 
     return NextResponse.json({
-      success: allSuccessful,
+      success: anySuccessful,
+      allSuccessful,
       results: publishResults,
       news: updatedNews,
     });

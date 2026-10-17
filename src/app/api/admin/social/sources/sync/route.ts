@@ -63,14 +63,22 @@ export async function POST(request: NextRequest) {
     // Harvest all active sources
     const results = await harvestAllActiveSources();
     const totalFound = results.reduce((acc, r) => acc + r.itemsFound, 0);
+    const totalRelevant = results.reduce((acc, r) => acc + (r.relevantFound || 0), 0);
+    const totalDuplicates = results.reduce((acc, r) => acc + (r.duplicatesCount || 0), 0);
     const totalNew = results.reduce((acc, r) => acc + r.newItemsSaved, 0);
+    const sourcesSuccessful = results.filter((r) => !r.error).length;
+    const sourcesFailed = results.filter((r) => Boolean(r.error)).length;
     const updatedSources = await getNewsSources();
 
     return NextResponse.json({
       success: true,
       summary: {
         sourcesChecked: results.length,
+        sourcesSuccessful,
+        sourcesFailed,
         totalFound,
+        totalRelevant,
+        totalDuplicates,
         totalNew,
       },
       results,

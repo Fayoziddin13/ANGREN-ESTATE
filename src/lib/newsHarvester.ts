@@ -64,7 +64,11 @@ export function parseRssXml(xml: string): ParsedFeedItem[] {
       itemBlock.match(/<content:encoded[\s\S]*?>([\s\S]*?)<\/content:encoded>/i);
     const pubDateMatch = itemBlock.match(/<pubDate[\s\S]*?>([\s\S]*?)<\/pubDate>/i);
     const guidMatch = itemBlock.match(/<guid[\s\S]*?>([\s\S]*?)<\/guid>/i);
-    const enclosureMatch = itemBlock.match(/<enclosure[\s\S]*?url=["'](.*?)["']/i);
+    const enclosureMatch =
+      itemBlock.match(/<enclosure[\s\S]*?url=["'](.*?)["']/i) ||
+      itemBlock.match(/<media:content[\s\S]*?url=["'](.*?)["']/i) ||
+      itemBlock.match(/<media:thumbnail[\s\S]*?url=["'](.*?)["']/i) ||
+      itemBlock.match(/<img[^>]+src=["'](https?:\/\/[^"']+)["']/i);
 
     const title = cleanHtmlText(titleMatch ? titleMatch[1] : "");
     const rawLink = linkMatch ? linkMatch[1].replace(/<!\[CDATA\[(.*?)\]\]>/gs, "$1").trim() : "";
@@ -97,11 +101,16 @@ export function parseRssXml(xml: string): ParsedFeedItem[] {
       const pubDateMatch =
         entryBlock.match(/<updated[\s\S]*?>([\s\S]*?)<\/updated>/i) ||
         entryBlock.match(/<published[\s\S]*?>([\s\S]*?)<\/published>/i);
+      const imageMatch =
+        entryBlock.match(/<media:content[\s\S]*?url=["'](.*?)["']/i) ||
+        entryBlock.match(/<media:thumbnail[\s\S]*?url=["'](.*?)["']/i) ||
+        entryBlock.match(/<img[^>]+src=["'](https?:\/\/[^"']+)["']/i);
 
       const title = cleanHtmlText(titleMatch ? titleMatch[1] : "");
       const link = linkMatch ? linkMatch[1].trim() : "";
       const description = cleanHtmlText(descMatch ? descMatch[1] : "");
       const pubDateStr = pubDateMatch ? pubDateMatch[1].trim() : new Date().toISOString();
+      const imageUrl = imageMatch ? imageMatch[1].trim() : undefined;
 
       if (title && link) {
         items.push({
@@ -109,6 +118,7 @@ export function parseRssXml(xml: string): ParsedFeedItem[] {
           link,
           description,
           pubDate: pubDateStr,
+          imageUrl,
         });
       }
     }
@@ -121,22 +131,41 @@ export function parseRssXml(xml: string): ParsedFeedItem[] {
 // REAL ESTATE RELEVANCE & CATEGORIZATION
 // -------------------------------------------------------------
 
-const REAL_ESTATE_KEYWORDS = [
-  // Uzbek
-  "ko‘chmas mulk", "kochmas mulk", "uy-joy", "uy joy", "xonadon", "turar joy",
-  "yer uchastkasi", "kadastr", "ipoteka", "qurilish", "ijara", "developer",
-  "shaharsozlik", "bino", "kvartira", "hovli", "dacha", "noturar joy", "mulk huquqi",
-  "quruvchi", "renovatsiya", "eskrou", "soliq", "kommunal",
-  // Russian
-  "недвижимость", "жилье", "жильё", "квартира", "дом", "участок", "кадастр",
-  "ипотека", "строительство", "аренда", "застройщик", "градостроительство",
-  "новостройка", "новостройки", "право собственности", "вторичка", "реновация",
-  "коммунальные услуги", "жк", "стройк"
+const REAL_ESTATE_KEYWORDS_UZ_LATIN = [
+  "ko‘chmas mulk", "kochmas mulk", "ko'chmas mulk", "uy-joy", "uy joy", "xonadon", "turar joy", "turar-joy",
+  "yer uchastkasi", "kadastr", "ipoteka", "qurilish", "ijara", "developer", "dehqon xo'jaligi",
+  "shaharsozlik", "kvartira", "hovli", "dacha", "noturar joy", "mulk huquqi",
+  "quruvchi", "renovatsiya", "eskrou", "turar-joy", "kommunal xo'jalik", "issiqlik ta'minoti"
+];
+
+const REAL_ESTATE_KEYWORDS_UZ_CYRILLIC = [
+  "кўчмас мулк", "кочмас мулк", "уй-жой", "уй жой", "хонадон", "турар жой", "турар-жой",
+  "ер участкаси", "кадастр", "ипотека", "қурилиш", "курилиш", "ижара", "девелопер",
+  "шаҳарсозлик", "шахарсозлик", "квартира", "ҳовли", "ховли", "дача",
+  "нотурар жой", "мулк ҳуқуқи", "мулк хукуки", "қурувчи", "курувчи", "реновация",
+  "коммунал хўжалик", "коммунал", "иссиқлик таъминоти", "иситиш"
+];
+
+const REAL_ESTATE_KEYWORDS_RU = [
+  "недвижимост", "жиль", "квартир", "кадастр",
+  "ипотек", "строительств", "аренд", "застройщик", "градостроительств",
+  "новостройк", "право собственности", "вторичк", "реноваци",
+  "жкх", "девелопер", "жилой комплекс", "земельный участок", "новостройка"
+];
+
+const BOUNDARY_REGEXES = [
+  /\b(дом|дома|домов|домами|доме|домах)\b/i,
+  /\b(бино|бинолар|бинолари)\b/i,
+  /\b(участок|участки|участка|участков)\b/i,
 ];
 
 export function isRealEstateRelated(title: string, description: string): boolean {
   const combined = `${title} ${description}`.toLowerCase();
-  return REAL_ESTATE_KEYWORDS.some((kw) => combined.includes(kw));
+  if (REAL_ESTATE_KEYWORDS_UZ_LATIN.some((kw) => combined.includes(kw))) return true;
+  if (REAL_ESTATE_KEYWORDS_UZ_CYRILLIC.some((kw) => combined.includes(kw))) return true;
+  if (REAL_ESTATE_KEYWORDS_RU.some((kw) => combined.includes(kw))) return true;
+  if (BOUNDARY_REGEXES.some((rx) => rx.test(combined))) return true;
+  return false;
 }
 
 export function classifyNewsCategory(title: string, description: string): NewsCategory {
@@ -147,7 +176,9 @@ export function classifyNewsCategory(title: string, description: string): NewsCa
     text.includes("qonun") || text.includes("qaror") || text.includes("farmon") ||
     text.includes("nizom") || text.includes("kadastr") || text.includes("adliya") ||
     text.includes("mulk huquqi") || text.includes("закон") || text.includes("указ") ||
-    text.includes("постановление") || text.includes("кадастр") || text.includes("регламент")
+    text.includes("постановление") || text.includes("кадастр") || text.includes("регламент") ||
+    text.includes("қонун") || text.includes("қарор") || text.includes("фармон") ||
+    text.includes("низом") || text.includes("адлия") || text.includes("мулк ҳуқуқи")
   ) {
     return "legislation_cadastre";
   }
@@ -156,7 +187,8 @@ export function classifyNewsCategory(title: string, description: string): NewsCa
   if (
     text.includes("ipoteka") || text.includes("kredit") || text.includes("subsidiya") ||
     text.includes("markaziy bank") || text.includes("stavka") || text.includes("ипотека") ||
-    text.includes("кредит") || text.includes("субсидия") || text.includes("ставка")
+    text.includes("кредит") || text.includes("субсидия") || text.includes("ставка") ||
+    text.includes("марказий банк")
   ) {
     return "mortgage_finance";
   }
@@ -165,7 +197,9 @@ export function classifyNewsCategory(title: string, description: string): NewsCa
   if (
     text.includes("qurilish") || text.includes("yangi loyiha") || text.includes("bino") ||
     text.includes("majmua") || text.includes("developer") || text.includes("строительств") ||
-    text.includes("новостройк") || text.includes("жк") || text.includes("застройщик")
+    text.includes("новостройк") || text.includes("жк") || text.includes("застройщик") ||
+    text.includes("қурилиш") || text.includes("янги лойиҳа") || text.includes("бино") ||
+    text.includes("мажмуа") || text.includes("девелопер")
   ) {
     return "construction_projects";
   }
@@ -173,7 +207,8 @@ export function classifyNewsCategory(title: string, description: string): NewsCa
   // 4. Rental Market
   if (
     text.includes("ijara") || text.includes("arenda") || text.includes("ijarachi") ||
-    text.includes("аренда") || text.includes("съем") || text.includes("арендатор")
+    text.includes("аренда") || text.includes("съем") || text.includes("арендатор") ||
+    text.includes("ижара") || text.includes("ижарачи")
   ) {
     return "rental_market";
   }
@@ -182,7 +217,8 @@ export function classifyNewsCategory(title: string, description: string): NewsCa
   if (
     text.includes("soliq") || text.includes("davlat boji") || text.includes("xarajat") ||
     text.includes("to‘lov") || text.includes("налог") || text.includes("пошлина") ||
-    text.includes("сбор")
+    text.includes("сбор") || text.includes("солиқ") || text.includes("давлат божи") ||
+    text.includes("тўлов") || text.includes("харажат")
   ) {
     return "taxes_and_fees";
   }
@@ -191,7 +227,8 @@ export function classifyNewsCategory(title: string, description: string): NewsCa
   if (
     text.includes("maslahat") || text.includes("tavsiya") || text.includes("tartibi") ||
     text.includes("qanday qilib") || text.includes("совет") || text.includes("рекомендац") ||
-    text.includes("как оформить")
+    text.includes("как оформить") || text.includes("маслаҳат") || text.includes("тавсия") ||
+    text.includes("тартиби") || text.includes("қандай қилиб")
   ) {
     return "useful_tips";
   }
@@ -317,6 +354,8 @@ export interface HarvestResult {
   sourceId: string;
   sourceName: string;
   itemsFound: number;
+  relevantFound: number;
+  duplicatesCount: number;
   newItemsSaved: number;
   error?: string;
 }
@@ -327,6 +366,8 @@ export async function harvestFromSingleSource(
 ): Promise<HarvestResult> {
   const maxItems = options?.maxItems || 10;
   let itemsFound = 0;
+  let relevantFound = 0;
+  let duplicatesCount = 0;
   let newItemsSaved = 0;
 
   try {
@@ -348,6 +389,7 @@ export async function harvestFromSingleSource(
 
     // Filter real estate items
     const relevantItems = parsedItems.filter((i) => isRealEstateRelated(i.title, i.description));
+    relevantFound = relevantItems.length;
 
     for (const item of relevantItems.slice(0, maxItems)) {
       // Normalize relative or schema-less links
@@ -362,6 +404,7 @@ export async function harvestFromSingleSource(
       const alreadyExists = await hasNewsWithUrlHash(urlHash);
 
       if (alreadyExists) {
+        duplicatesCount++;
         continue;
       }
 
@@ -416,6 +459,8 @@ export async function harvestFromSingleSource(
       sourceId: source.id,
       sourceName: source.name,
       itemsFound,
+      relevantFound,
+      duplicatesCount,
       newItemsSaved,
     };
   } catch (err: any) {
@@ -432,6 +477,8 @@ export async function harvestFromSingleSource(
       sourceId: source.id,
       sourceName: source.name,
       itemsFound: 0,
+      relevantFound: 0,
+      duplicatesCount: 0,
       newItemsSaved: 0,
       error: errorMsg,
     };
@@ -443,9 +490,14 @@ export async function harvestAllActiveSources(): Promise<HarvestResult[]> {
   const activeSources = sources.filter((s) => s.is_active);
   const results: HarvestResult[] = [];
 
-  for (const source of activeSources) {
-    const res = await harvestFromSingleSource(source);
-    results.push(res);
+  // Run in chunks of 3 for fast, parallel harvesting without hitting Vercel serverless timeouts
+  const chunkSize = 3;
+  for (let i = 0; i < activeSources.length; i += chunkSize) {
+    const chunk = activeSources.slice(i, i + chunkSize);
+    const chunkResults = await Promise.all(
+      chunk.map((source) => harvestFromSingleSource(source))
+    );
+    results.push(...chunkResults);
   }
 
   return results;
