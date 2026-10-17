@@ -469,17 +469,17 @@ export function FloatingSearchPanel({
             </button>
           )}
 
-          {/* + E'lon qoldirish button */}
+          {/* Listing submission button */}
           <button
             type="button"
             data-testid="desktop-add-listing-button"
             onClick={() => window.dispatchEvent(new CustomEvent("angren_open_listing_modal"))}
             title={locale === "uz" ? "Obyektingizni joylashtiring" : "Разместить объявление"}
-            className="flex h-9 px-3 items-center gap-1.5 rounded-xl bg-[#167d4f] hover:bg-[#145d3c] active:scale-95 text-white shadow-sm text-xs font-bold transition-all shrink-0"
+            className="flex h-9 px-3 items-center gap-1.5 rounded-xl bg-[#167d4f] hover:bg-[#145d3c] active:bg-[#0f4f31] active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#167d4f] focus-visible:ring-offset-2 text-white shadow-sm text-xs font-bold tracking-tight transition-all shrink-0"
           >
-            <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
-            <span className="hidden sm:inline">{locale === "uz" ? "+ E'lon qoldirish" : "+ Подать объявление"}</span>
-            <span className="sm:hidden">+ E'lon</span>
+            <Plus className="h-3.5 w-3.5 stroke-[2.5] text-white shrink-0" />
+            <span className="hidden sm:inline">{locale === "uz" ? "E'lon qoldirish" : "Подать объявление"}</span>
+            <span className="sm:hidden">{locale === "uz" ? "E'lon" : "Объявление"}</span>
           </button>
 
           <button

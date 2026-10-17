@@ -107,10 +107,11 @@ export function MobileBottomSheet({
             onClick={() => window.dispatchEvent(new CustomEvent("angren_open_listing_modal"))}
             aria-label={locale === "uz" ? "E'lon qoldirish" : "Подать объявление"}
             title={locale === "uz" ? "E'lon qoldirish" : "Подать объявление"}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#0f4f31] hover:bg-[#0c4028] text-white border border-white/20 active:scale-95 font-bold text-[11px] shadow-xs transition-all shrink-0"
+            className="flex items-center justify-center gap-1.5 h-10 px-2.5 sm:px-3 rounded-xl bg-[#0f4f31] hover:bg-[#0c4028] text-white border border-white/20 active:bg-[#093521] active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-white font-bold text-[11px] sm:text-xs shadow-xs transition-all shrink-0"
           >
-            <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
-            <span>{locale === "uz" ? "E'lon" : "Объявление"}</span>
+            <Plus className="h-3.5 w-3.5 stroke-[2.5] text-white shrink-0" />
+            <span className="hidden min-[480px]:inline">{locale === "uz" ? "E'lon qoldirish" : "Подать объявление"}</span>
+            <span className="min-[480px]:hidden">{locale === "uz" ? "E'lon" : "Объявление"}</span>
           </button>
         </div>
 
