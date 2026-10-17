@@ -267,7 +267,15 @@ async function runSocialCenterTests() {
     global.fetch = async (url: any, init?: any): Promise<Response> => {
       const urlStr = String(url);
       if (urlStr.includes("api.telegram.org")) {
-        publishPayload = JSON.parse(init?.body || "{}");
+        if (typeof init?.body === "string") {
+          publishPayload = JSON.parse(init.body || "{}");
+        } else if (init?.body && typeof (init.body as any).get === "function") {
+          publishPayload = {
+            chat_id: (init.body as any).get("chat_id"),
+            caption: (init.body as any).get("caption"),
+            text: (init.body as any).get("caption"),
+          };
+        }
         return new Response(
           JSON.stringify({
             ok: true,

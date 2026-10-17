@@ -188,12 +188,10 @@ export function generateBrandCardSvg(options: VisualCardOptions): string {
 }
 
 /**
- * Generate brand asset for news article and persist record.
+ * Get raw SVG Buffer for news brand card.
+ * Used for direct binary multipart upload to Telegram Bot API.
  */
-export async function generateAndSaveNewsAsset(
-  news: RealEstateNews,
-  lang: "uz" | "ru"
-): Promise<NewsAsset> {
+export function getNewsCardSvgBuffer(news: RealEstateNews, lang: "uz" | "ru"): Buffer {
   const trans = lang === "uz" ? news.translations?.uz : news.translations?.ru;
   const title = trans?.title || news.original_title;
   const sourceName = news.source?.name || news.original_url.split("/")[2] || "Rasmiy manba";
@@ -206,12 +204,23 @@ export async function generateAndSaveNewsAsset(
     statValue: news.verified_stat_value,
   });
 
-  const buffer = Buffer.from(svgContent, "utf-8");
+  return Buffer.from(svgContent, "utf-8");
+}
+
+/**
+ * Generate brand asset for news article and persist record.
+ * Never uses data: URIs as public_url.
+ */
+export async function generateAndSaveNewsAsset(
+  news: RealEstateNews,
+  lang: "uz" | "ru"
+): Promise<NewsAsset> {
+  const buffer = getNewsCardSvgBuffer(news, lang);
   const randomSuffix = crypto.randomBytes(4).toString("hex");
   const filename = `news_${news.id}_${lang}_${randomSuffix}.svg`;
   const storagePath = `news/${news.id}/${filename}`;
 
-  let publicUrl = `data:image/svg+xml;base64,${buffer.toString("base64")}`;
+  let publicUrl = "";
 
   // Try uploading to Supabase Storage if configured
   if (isSupabaseConfigured) {
@@ -227,12 +236,14 @@ export async function generateAndSaveNewsAsset(
         const { data: urlData } = supabaseAdmin.storage
           .from("property-images")
           .getPublicUrl(storagePath);
-        if (urlData?.publicUrl) {
+        if (urlData?.publicUrl && urlData.publicUrl.startsWith("https://")) {
           publicUrl = urlData.publicUrl;
         }
+      } else if (uploadErr) {
+        console.warn("[VisualGenerator] Remote storage upload warning:", uploadErr.message);
       }
-    } catch (e) {
-      console.warn("[VisualGenerator] Remote storage upload skipped, using data URI:", e);
+    } catch (e: any) {
+      console.warn("[VisualGenerator] Remote storage upload exception:", e?.message || e);
     }
   }
 

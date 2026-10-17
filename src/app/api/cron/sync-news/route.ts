@@ -12,11 +12,25 @@ export async function GET(request: NextRequest) {
     const authHeader = request.headers.get("authorization");
     const cronSecret = process.env.CRON_SECRET || process.env.ADMIN_JWT_SECRET;
 
-    // In production, verify bearer secret
-    if (process.env.NODE_ENV === "production" && cronSecret) {
-      if (authHeader !== `Bearer ${cronSecret}`) {
-        return NextResponse.json({ success: false, error: "Unauthorized cron request" }, { status: 401 });
+    // In production, ensure cron secret is configured (503 if missing) and check Authorization (401 if invalid)
+    if (process.env.NODE_ENV === "production") {
+      if (!cronSecret) {
+        return NextResponse.json(
+          { success: false, error: "CRON_SECRET is not configured on the server" },
+          { status: 503 }
+        );
       }
+      if (authHeader !== `Bearer ${cronSecret}`) {
+        return NextResponse.json(
+          { success: false, error: "Unauthorized cron request" },
+          { status: 401 }
+        );
+      }
+    } else if (cronSecret && authHeader && authHeader !== `Bearer ${cronSecret}`) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized cron request" },
+        { status: 401 }
+      );
     }
 
     const results = await harvestAllActiveSources();

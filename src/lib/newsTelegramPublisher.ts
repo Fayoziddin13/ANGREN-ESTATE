@@ -9,7 +9,10 @@ import {
   updateNewsStatus,
   recordNewsPublication,
 } from "./newsStore";
-import { generateAndSaveNewsAsset } from "./newsVisualGenerator";
+import {
+  generateAndSaveNewsAsset,
+  getNewsCardSvgBuffer,
+} from "./newsVisualGenerator";
 import {
   sendTelegramPhoto,
   sendTelegramDirectMessage,
@@ -191,28 +194,64 @@ export async function publishNewsToTelegramChannel(
 
     // Get or generate brand visual
     let asset = lang === "uz" ? news.assets?.uz : news.assets?.ru;
-    if (!asset || !asset.public_url) {
+    if (!asset) {
       try {
         asset = await generateAndSaveNewsAsset(news, lang);
-      } catch (assetErr) {
-        console.warn("[NewsPublisher] Could not generate asset, will send as text:", assetErr);
+      } catch (assetErr: any) {
+        console.warn("[NewsPublisher] Could not generate asset:", assetErr?.message || assetErr);
       }
     }
 
-    let sendResult: any;
+    let sendResult: any = null;
+    let photoSendAttempted = false;
 
-    if (asset && asset.public_url && asset.public_url.startsWith("https://")) {
-      sendResult = await sendTelegramPhoto(targetChannel, asset.public_url, caption, replyMarkup, token);
-      if (!sendResult.ok) {
-        // Fallback to direct text
-        console.warn(`[NewsPublisher] Photo send failed (${sendResult.description}), falling back to text post`);
-        sendResult = await sendTelegramDirectMessage(targetChannel, caption, replyMarkup, token);
+    // 1. Try public HTTPS URL if available (never data: URI)
+    if (asset?.public_url && asset.public_url.startsWith("https://")) {
+      photoSendAttempted = true;
+      try {
+        sendResult = await sendTelegramPhoto(targetChannel, asset.public_url, caption, replyMarkup, token);
+        if (!sendResult.ok) {
+          console.warn(
+            `[NewsPublisher] Remote URL photo delivery failed (code: ${sendResult.error_code || "unknown"}, desc: ${sendResult.description || "none"}). Trying multipart buffer upload.`
+          );
+        }
+      } catch (err: any) {
+        console.warn("[NewsPublisher] Exception during URL photo send:", err?.message || err);
       }
-    } else {
-      // Direct text post
+    }
+
+    // 2. If URL send was not possible or failed, attempt direct multipart binary upload of SVG buffer
+    if (!sendResult || !sendResult.ok) {
+      try {
+        const svgBuffer = getNewsCardSvgBuffer(news, lang);
+        photoSendAttempted = true;
+        sendResult = await sendTelegramPhoto(
+          targetChannel,
+          svgBuffer,
+          caption,
+          replyMarkup,
+          token,
+          "image/svg+xml"
+        );
+        if (!sendResult.ok) {
+          console.warn(
+            `[NewsPublisher] Multipart buffer photo delivery failed (code: ${sendResult.error_code || "unknown"}, desc: ${sendResult.description || "none"}).`
+          );
+        }
+      } catch (err: any) {
+        console.warn("[NewsPublisher] Exception during multipart buffer photo send:", err?.message || err);
+      }
+    }
+
+    // 3. If photo delivery (both URL and multipart) failed or was not possible, fallback to plain text message
+    if (!sendResult || !sendResult.ok) {
+      if (photoSendAttempted) {
+        console.warn("[NewsPublisher] All photo delivery methods failed. Falling back to plain text post.");
+      }
       sendResult = await sendTelegramDirectMessage(targetChannel, caption, replyMarkup, token);
     }
 
+    // Validate result and message_id
     if (!sendResult.ok) {
       await recordNewsPublication({
         news_id: news.id,
@@ -232,6 +271,27 @@ export async function publishNewsToTelegramChannel(
     }
 
     const messageId = sendResult.result?.message_id;
+
+    // Strict validation of message_id: must exist, must be number, and must be > 0
+    if (!messageId || typeof messageId !== "number" || messageId <= 0) {
+      const errDesc = "Telegram API succeeded but returned invalid or missing message_id";
+      console.error(`[NewsPublisher] ${errDesc}:`, sendResult.result);
+      await recordNewsPublication({
+        news_id: news.id,
+        target_type: "channel",
+        language: lang,
+        status: "failed",
+        error_message: errDesc,
+      });
+
+      return {
+        success: false,
+        status: "error",
+        targetType: "channel",
+        language: lang,
+        error: errDesc,
+      };
+    }
 
     await recordNewsPublication({
       news_id: news.id,
