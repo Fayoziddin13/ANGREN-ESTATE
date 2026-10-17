@@ -32,6 +32,13 @@ export interface NewsSource {
   check_frequency_min: number;
   is_active: boolean;
   last_checked_at?: string;
+  last_check?: {
+    status: "success" | "failed" | "empty";
+    items_found: number;
+    new_items_count: number;
+    error_message?: string;
+    checked_at: string;
+  };
   created_at: string;
   updated_at: string;
 }

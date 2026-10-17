@@ -13,6 +13,7 @@ import {
   computeUrlHash,
 } from "./newsStore";
 import { cyrillicToUzbekLatin, translateContent } from "./translationService";
+import { safeFetchFeed } from "./sourceSecurity";
 import type { NewsCategory, NewsSource, RealEstateNews } from "./types/news";
 
 export interface ParsedFeedItem {
@@ -329,17 +330,13 @@ export async function harvestFromSingleSource(
   let newItemsSaved = 0;
 
   try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 10000);
-
-    const resp = await fetch(source.feed_url, {
-      signal: controller.signal,
+    const resp = await safeFetchFeed(source.feed_url, {
+      timeoutMs: 12000,
       headers: {
         "User-Agent": "AngrenEstate-NewsHarvester/1.0 (+https://angrenestate.uz)",
         Accept: "application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
       },
     });
-    clearTimeout(timer);
 
     if (!resp.ok) {
       throw new Error(`HTTP ${resp.status} ${resp.statusText}`);
@@ -353,7 +350,15 @@ export async function harvestFromSingleSource(
     const relevantItems = parsedItems.filter((i) => isRealEstateRelated(i.title, i.description));
 
     for (const item of relevantItems.slice(0, maxItems)) {
-      const urlHash = computeUrlHash(item.link);
+      // Normalize relative or schema-less links
+      let itemLink = item.link.trim();
+      if (itemLink.startsWith("/")) {
+        itemLink = `https://${source.domain}${itemLink}`;
+      } else if (!itemLink.startsWith("http://") && !itemLink.startsWith("https://")) {
+        itemLink = `https://${itemLink}`;
+      }
+
+      const urlHash = computeUrlHash(itemLink);
       const alreadyExists = await hasNewsWithUrlHash(urlHash);
 
       if (alreadyExists) {
@@ -366,7 +371,7 @@ export async function harvestFromSingleSource(
       const savedNews = await saveNewsItem({
         source_id: source.id,
         original_title: item.title,
-        original_url: item.link,
+        original_url: itemLink,
         url_hash: urlHash,
         category,
         published_at: new Date(item.pubDate).toISOString(),
@@ -402,7 +407,7 @@ export async function harvestFromSingleSource(
     await updateSourceLastChecked(source.id);
     await recordSourceCheck({
       source_id: source.id,
-      status: "success",
+      status: itemsFound === 0 ? "empty" : "success",
       items_found: itemsFound,
       new_items_count: newItemsSaved,
     });

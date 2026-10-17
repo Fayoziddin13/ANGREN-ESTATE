@@ -6,9 +6,7 @@ import { getNewsSources } from "@/lib/newsStore";
 export const dynamic = "force-dynamic";
 
 async function verifyAuth(request: NextRequest) {
-  const session = await getAdminSessionServer();
-  if (session) return session;
-
+  // 1. Authorization header (Bearer token)
   const authHeader = request.headers.get("authorization") || request.headers.get("Authorization");
   if (authHeader && authHeader.startsWith("Bearer ")) {
     const token = authHeader.slice(7).trim();
@@ -17,6 +15,21 @@ async function verifyAuth(request: NextRequest) {
       return verified.session;
     }
   }
+
+  // 2. NextRequest cookies
+  try {
+    const cookieToken = request.cookies?.get("angren_admin_session")?.value;
+    if (cookieToken) {
+      const verified = verifyAdminSessionToken(cookieToken);
+      if (verified.valid && verified.session) {
+        return verified.session;
+      }
+    }
+  } catch {}
+
+  // 3. Fallback to getAdminSessionServer
+  const session = await getAdminSessionServer();
+  if (session) return session;
 
   return null;
 }
@@ -42,13 +55,16 @@ export async function POST(request: NextRequest) {
       }
 
       const result = await harvestFromSingleSource(targetSource);
-      return NextResponse.json({ success: true, result });
+      const updatedSources = await getNewsSources();
+      const updatedSource = updatedSources.find((s) => s.id === sourceId) || targetSource;
+      return NextResponse.json({ success: true, result, source: updatedSource });
     }
 
     // Harvest all active sources
     const results = await harvestAllActiveSources();
     const totalFound = results.reduce((acc, r) => acc + r.itemsFound, 0);
     const totalNew = results.reduce((acc, r) => acc + r.newItemsSaved, 0);
+    const updatedSources = await getNewsSources();
 
     return NextResponse.json({
       success: true,
@@ -58,6 +74,7 @@ export async function POST(request: NextRequest) {
         totalNew,
       },
       results,
+      sources: updatedSources,
     });
   } catch (err: any) {
     console.error("[News Sync API] Error:", err);

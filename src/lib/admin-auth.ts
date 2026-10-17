@@ -207,10 +207,14 @@ export function authenticateAdmin(identifier: string, passwordAttempt: string): 
 
 // 5. Server Helper to Read Session from Next.js Headers/Cookies
 export async function getAdminSessionServer(): Promise<AdminSession | null> {
-  const cookieStore = cookies();
-  const token = cookieStore.get(ADMIN_COOKIE_NAME)?.value;
-  if (!token) return null;
+  try {
+    const cookieStore = cookies();
+    const token = cookieStore.get(ADMIN_COOKIE_NAME)?.value;
+    if (!token) return null;
 
-  const result = verifyAdminSessionToken(token);
-  return result.valid && result.session ? result.session : null;
+    const result = verifyAdminSessionToken(token);
+    return result.valid && result.session ? result.session : null;
+  } catch {
+    return null;
+  }
 }

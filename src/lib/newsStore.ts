@@ -24,12 +24,60 @@ interface LocalNewsData {
   checks: NewsSourceCheck[];
 }
 
-const DEFAULT_SOURCES: NewsSource[] = [
+export const DEFAULT_SOURCES: NewsSource[] = [
   {
     id: "source-lex-uz",
     name: "Lex.uz — Qonunchilik maʼlumotlari milliy bazasi",
     domain: "lex.uz",
     feed_url: "https://lex.uz/rss",
+    source_type: "rss",
+    trust_level: "official_gov",
+    check_frequency_min: 120,
+    is_active: true,
+    created_at: "2026-10-18T00:00:00.000Z",
+    updated_at: "2026-10-18T00:00:00.000Z",
+  },
+  {
+    id: "source-lex-ru",
+    name: "Lex.uz — Законодательство Узбекистана (RU)",
+    domain: "lex.uz",
+    feed_url: "https://lex.uz/ru/rss",
+    source_type: "rss",
+    trust_level: "official_gov",
+    check_frequency_min: 120,
+    is_active: true,
+    created_at: "2026-10-18T00:00:00.000Z",
+    updated_at: "2026-10-18T00:00:00.000Z",
+  },
+  {
+    id: "source-cbu-uz",
+    name: "O‘zbekiston Respublikasi Markaziy Banki — Ipoteka va moliya",
+    domain: "cbu.uz",
+    feed_url: "https://cbu.uz/uz/press_center/news/rss/",
+    source_type: "rss",
+    trust_level: "official_gov",
+    check_frequency_min: 120,
+    is_active: true,
+    created_at: "2026-10-18T00:00:00.000Z",
+    updated_at: "2026-10-18T00:00:00.000Z",
+  },
+  {
+    id: "source-uza-uz",
+    name: "O‘zA — O‘zbekiston Milliy axborot agentligi (Rasmiy davlat xabarlari)",
+    domain: "uza.uz",
+    feed_url: "https://uza.uz/uz/rss",
+    source_type: "rss",
+    trust_level: "official_gov",
+    check_frequency_min: 120,
+    is_active: true,
+    created_at: "2026-10-18T00:00:00.000Z",
+    updated_at: "2026-10-18T00:00:00.000Z",
+  },
+  {
+    id: "source-uza-ru",
+    name: "УзА — Официальные новости Узбекистана (RU)",
+    domain: "uza.uz",
+    feed_url: "https://uza.uz/ru/rss",
     source_type: "rss",
     trust_level: "official_gov",
     check_frequency_min: 120,
@@ -51,7 +99,7 @@ const DEFAULT_SOURCES: NewsSource[] = [
   },
   {
     id: "source-gazeta-ru",
-    name: "Gazeta.uz — Недвижимость (RU)",
+    name: "Gazeta.uz — Недвижимость и экономика (RU)",
     domain: "gazeta.uz",
     feed_url: "https://www.gazeta.uz/ru/rss/",
     source_type: "rss",
@@ -74,10 +122,34 @@ const DEFAULT_SOURCES: NewsSource[] = [
     updated_at: "2026-10-18T00:00:00.000Z",
   },
   {
+    id: "source-kun-uz",
+    name: "Kun.uz — Iqtisodiyot, qurilish va jamiyat yangiliklari",
+    domain: "kun.uz",
+    feed_url: "https://kun.uz/news/rss",
+    source_type: "rss",
+    trust_level: "reputable_media",
+    check_frequency_min: 180,
+    is_active: true,
+    created_at: "2026-10-18T00:00:00.000Z",
+    updated_at: "2026-10-18T00:00:00.000Z",
+  },
+  {
     id: "source-daryo-uz",
     name: "Daryo.uz — Qurilish va Infratuzilma",
     domain: "daryo.uz",
     feed_url: "https://daryo.uz/rss",
+    source_type: "rss",
+    trust_level: "reputable_media",
+    check_frequency_min: 180,
+    is_active: true,
+    created_at: "2026-10-18T00:00:00.000Z",
+    updated_at: "2026-10-18T00:00:00.000Z",
+  },
+  {
+    id: "source-podrobno-uz",
+    name: "Podrobno.uz — Новости Узбекистана, урбанистика и недвижимость",
+    domain: "podrobno.uz",
+    feed_url: "https://podrobno.uz/rss",
     source_type: "rss",
     trust_level: "reputable_media",
     check_frequency_min: 180,
@@ -132,39 +204,91 @@ export function computeUrlHash(url: string): string {
   return crypto.createHash("sha256").update(normalized).digest("hex");
 }
 
+export function isTableMissingError(error: any): boolean {
+  if (!error) return false;
+  return (
+    error.code === "PGRST205" ||
+    error.code === "42P01" ||
+    (typeof error.message === "string" &&
+      (error.message.includes("Could not find the table") ||
+        error.message.includes("does not exist") ||
+        error.message.includes("schema cache")))
+  );
+}
+
 // -------------------------------------------------------------
 // SOURCES REPOSITORY
 // -------------------------------------------------------------
 
 export async function getNewsSources(): Promise<NewsSource[]> {
   if (isSupabaseConfigured) {
-    const { data, error } = await supabaseAdmin
-      .from("news_sources")
-      .select("*")
-      .order("created_at", { ascending: true });
-
-    if (error) {
-      console.error("[NewsStore] Supabase getNewsSources error:", error);
-      throw new Error(`Failed to fetch news sources from Supabase: ${error.message}`);
-    }
-
-    if (Array.isArray(data) && data.length > 0) {
-      return data as NewsSource[];
-    }
-
     try {
-      const { data: seeded, error: seedErr } = await supabaseAdmin
+      const { data, error } = await supabaseAdmin
         .from("news_sources")
-        .upsert(DEFAULT_SOURCES, { onConflict: "feed_url" })
-        .select();
-      if (!seedErr && Array.isArray(seeded) && seeded.length > 0) {
-        return seeded as NewsSource[];
+        .select("*")
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        if (isTableMissingError(error)) {
+          console.warn("[NewsStore] news_sources table not yet created in Supabase schema. Using local store fallback.");
+        } else {
+          console.error("[NewsStore] Supabase getNewsSources error:", error);
+          throw new Error(`Failed to fetch news sources from Supabase: ${error.message}`);
+        }
+      } else {
+        let sourcesList = Array.isArray(data) && data.length > 0 ? (data as NewsSource[]) : [];
+
+        if (sourcesList.length === 0) {
+          try {
+            const { data: seeded, error: seedErr } = await supabaseAdmin
+              .from("news_sources")
+              .upsert(DEFAULT_SOURCES, { onConflict: "feed_url" })
+              .select();
+            if (!seedErr && Array.isArray(seeded) && seeded.length > 0) {
+              sourcesList = seeded as NewsSource[];
+            }
+          } catch {}
+          if (sourcesList.length === 0) {
+            sourcesList = [...DEFAULT_SOURCES];
+          }
+        }
+
+        // Attach latest check for each source
+        try {
+          const { data: checks } = await supabaseAdmin
+            .from("news_source_checks")
+            .select("*")
+            .order("checked_at", { ascending: false });
+
+          if (Array.isArray(checks)) {
+            const checksMap = new Map<string, any>();
+            for (const c of checks) {
+              if (!checksMap.has(c.source_id)) {
+                checksMap.set(c.source_id, c);
+              }
+            }
+            return sourcesList.map((s) => ({
+              ...s,
+              last_check: checksMap.get(s.id) || undefined,
+            }));
+          }
+        } catch {}
+
+        return sourcesList;
       }
-    } catch {}
-    return DEFAULT_SOURCES;
+    } catch (e: any) {
+      if (!isTableMissingError(e)) throw e;
+    }
   }
 
-  return readLocalData().sources;
+  const local = readLocalData();
+  return local.sources.map((s) => {
+    const latestCheck = local.checks.find((c) => c.source_id === s.id);
+    return {
+      ...s,
+      last_check: latestCheck || undefined,
+    };
+  });
 }
 
 export async function saveNewsSource(
@@ -180,21 +304,26 @@ export async function saveNewsSource(
   };
 
   if (isSupabaseConfigured) {
-    const { data, error } = await supabaseAdmin
-      .from("news_sources")
-      .upsert(fullSource, { onConflict: "feed_url" })
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabaseAdmin
+        .from("news_sources")
+        .upsert(fullSource, { onConflict: "feed_url" })
+        .select()
+        .single();
 
-    if (error) {
-      console.error("[NewsStore] Supabase saveNewsSource error:", error);
-      throw new Error(`Failed to save news source to Supabase: ${error.message}`);
+      if (error) {
+        if (isTableMissingError(error)) {
+          console.warn("[NewsStore] news_sources table not yet in Supabase schema. Saving to local store fallback.");
+        } else {
+          console.error("[NewsStore] Supabase saveNewsSource error:", error);
+          throw new Error(`Failed to save news source to Supabase: ${error.message}`);
+        }
+      } else if (data) {
+        return data as NewsSource;
+      }
+    } catch (e: any) {
+      if (!isTableMissingError(e)) throw e;
     }
-
-    if (data) {
-      return data as NewsSource;
-    }
-    throw new Error("Supabase upsert returned no data for news source");
   }
 
   const local = readLocalData();
@@ -211,16 +340,25 @@ export async function saveNewsSource(
 export async function updateSourceLastChecked(sourceId: string): Promise<void> {
   const now = new Date().toISOString();
   if (isSupabaseConfigured) {
-    const { error } = await supabaseAdmin
-      .from("news_sources")
-      .update({ last_checked_at: now, updated_at: now })
-      .eq("id", sourceId);
+    try {
+      const { error } = await supabaseAdmin
+        .from("news_sources")
+        .update({ last_checked_at: now, updated_at: now })
+        .eq("id", sourceId);
 
-    if (error) {
-      console.error("[NewsStore] Supabase updateSourceLastChecked error:", error);
-      throw new Error(`Failed to update source last checked in Supabase: ${error.message}`);
+      if (error) {
+        if (isTableMissingError(error)) {
+          console.warn("[NewsStore] news_sources table not in Supabase. Updating local store.");
+        } else {
+          console.error("[NewsStore] Supabase updateSourceLastChecked error:", error);
+          throw new Error(`Failed to update source last checked in Supabase: ${error.message}`);
+        }
+      } else {
+        return;
+      }
+    } catch (e: any) {
+      if (!isTableMissingError(e)) throw e;
     }
-    return;
   }
 
   const local = readLocalData();
@@ -229,6 +367,97 @@ export async function updateSourceLastChecked(sourceId: string): Promise<void> {
     src.last_checked_at = now;
     writeLocalData(local);
   }
+}
+
+/**
+ * Idempotently seeds verified default Uzbekistan sources that are missing from the store/database.
+ * Never overwrites or duplicates existing sources.
+ */
+export async function seedDefaultSourcesIfMissing(): Promise<{ added: number; total: number }> {
+  const currentSources = await getNewsSources();
+  const existingUrls = new Set(currentSources.map((s) => s.feed_url.toLowerCase().trim()));
+  let added = 0;
+
+  for (const def of DEFAULT_SOURCES) {
+    if (!existingUrls.has(def.feed_url.toLowerCase().trim())) {
+      await saveNewsSource(def);
+      existingUrls.add(def.feed_url.toLowerCase().trim());
+      added++;
+    }
+  }
+
+  const updatedSources = await getNewsSources();
+  return { added, total: updatedSources.length };
+}
+
+export async function deleteNewsSource(sourceId: string): Promise<boolean> {
+  if (isSupabaseConfigured) {
+    try {
+      const { error } = await supabaseAdmin
+        .from("news_sources")
+        .delete()
+        .eq("id", sourceId);
+
+      if (error) {
+        if (isTableMissingError(error)) {
+          console.warn("[NewsStore] news_sources table not in Supabase. Deleting from local store.");
+        } else {
+          console.error("[NewsStore] Supabase deleteNewsSource error:", error);
+          throw new Error(`Failed to delete news source from Supabase: ${error.message}`);
+        }
+      } else {
+        return true;
+      }
+    } catch (e: any) {
+      if (!isTableMissingError(e)) throw e;
+    }
+  }
+
+  const local = readLocalData();
+  const initialLen = local.sources.length;
+  local.sources = local.sources.filter((s) => s.id !== sourceId);
+  if (local.sources.length < initialLen) {
+    writeLocalData(local);
+    return true;
+  }
+  return false;
+}
+
+export async function toggleNewsSourceActive(sourceId: string, isActive: boolean): Promise<NewsSource | null> {
+  const now = new Date().toISOString();
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabaseAdmin
+        .from("news_sources")
+        .update({ is_active: isActive, updated_at: now })
+        .eq("id", sourceId)
+        .select()
+        .single();
+
+      if (error) {
+        if (isTableMissingError(error)) {
+          console.warn("[NewsStore] news_sources table not in Supabase. Toggling in local store.");
+        } else {
+          console.error("[NewsStore] Supabase toggleNewsSourceActive error:", error);
+          throw new Error(`Failed to update news source active status: ${error.message}`);
+        }
+      } else if (data) {
+        return data as NewsSource;
+      }
+    } catch (e: any) {
+      if (!isTableMissingError(e)) throw e;
+    }
+  }
+
+  const local = readLocalData();
+  const src = local.sources.find((s) => s.id === sourceId);
+  if (src) {
+    src.is_active = isActive;
+    src.updated_at = now;
+    writeLocalData(local);
+    return src;
+  }
+  return null;
 }
 
 // -------------------------------------------------------------
@@ -265,37 +494,43 @@ export async function getNewsList(params?: {
     }
 
     query = query.range(offset, offset + limit - 1);
-    const { data, error, count } = await query;
+    try {
+      const { data, error, count } = await query;
 
-    if (error) {
-      console.error("[NewsStore] Supabase getNewsList error:", error);
-      throw new Error(`Failed to fetch news list from Supabase: ${error.message}`);
-    }
+      if (error) {
+        if (isTableMissingError(error)) {
+          console.warn("[NewsStore] real_estate_news table not in Supabase schema yet. Using local store fallback.");
+        } else {
+          console.error("[NewsStore] Supabase getNewsList error:", error);
+          throw new Error(`Failed to fetch news list from Supabase: ${error.message}`);
+        }
+      } else if (Array.isArray(data)) {
+        const mapped = data.map((row: any) => {
+          const uzTrans = Array.isArray(row.translations)
+            ? row.translations.find((t: any) => t.language === "uz")
+            : undefined;
+          const ruTrans = Array.isArray(row.translations)
+            ? row.translations.find((t: any) => t.language === "ru")
+            : undefined;
+          const uzAsset = Array.isArray(row.assets)
+            ? row.assets.find((a: any) => a.language === "uz")
+            : undefined;
+          const ruAsset = Array.isArray(row.assets)
+            ? row.assets.find((a: any) => a.language === "ru")
+            : undefined;
 
-    if (Array.isArray(data)) {
-      const mapped = data.map((row: any) => {
-        const uzTrans = Array.isArray(row.translations)
-          ? row.translations.find((t: any) => t.language === "uz")
-          : undefined;
-        const ruTrans = Array.isArray(row.translations)
-          ? row.translations.find((t: any) => t.language === "ru")
-          : undefined;
-        const uzAsset = Array.isArray(row.assets)
-          ? row.assets.find((a: any) => a.language === "uz")
-          : undefined;
-        const ruAsset = Array.isArray(row.assets)
-          ? row.assets.find((a: any) => a.language === "ru")
-          : undefined;
+          return {
+            ...row,
+            translations: { uz: uzTrans, ru: ruTrans },
+            assets: { uz: uzAsset, ru: ruAsset },
+            publications: Array.isArray(row.publications) ? row.publications : [],
+          } as RealEstateNews;
+        });
 
-        return {
-          ...row,
-          translations: { uz: uzTrans, ru: ruTrans },
-          assets: { uz: uzAsset, ru: ruAsset },
-          publications: Array.isArray(row.publications) ? row.publications : [],
-        } as RealEstateNews;
-      });
-
-      return { items: mapped, total: count ?? mapped.length };
+        return { items: mapped, total: count ?? mapped.length };
+      }
+    } catch (e: any) {
+      if (!isTableMissingError(e)) throw e;
     }
   }
 
@@ -341,40 +576,48 @@ export async function getNewsList(params?: {
 
 export async function getNewsById(id: string): Promise<RealEstateNews | null> {
   if (isSupabaseConfigured) {
-    const { data, error } = await supabaseAdmin
-      .from("real_estate_news")
-      .select(
-        "*, source:news_sources(*), translations:news_translations(*), assets:news_assets(*), publications:news_publications(*)"
-      )
-      .eq("id", id)
-      .maybeSingle();
+    try {
+      const { data, error } = await supabaseAdmin
+        .from("real_estate_news")
+        .select(
+          "*, source:news_sources(*), translations:news_translations(*), assets:news_assets(*), publications:news_publications(*)"
+        )
+        .eq("id", id)
+        .maybeSingle();
 
-    if (error) {
-      console.error("[NewsStore] Supabase getNewsById error:", error);
-      throw new Error(`Failed to fetch news item from Supabase: ${error.message}`);
+      if (error) {
+        if (isTableMissingError(error)) {
+          console.warn("[NewsStore] real_estate_news table not in Supabase yet. Checking local store.");
+        } else {
+          console.error("[NewsStore] Supabase getNewsById error:", error);
+          throw new Error(`Failed to fetch news item from Supabase: ${error.message}`);
+        }
+      } else if (data) {
+        const uzTrans = Array.isArray(data.translations)
+          ? data.translations.find((t: any) => t.language === "uz")
+          : undefined;
+        const ruTrans = Array.isArray(data.translations)
+          ? data.translations.find((t: any) => t.language === "ru")
+          : undefined;
+        const uzAsset = Array.isArray(data.assets)
+          ? data.assets.find((a: any) => a.language === "uz")
+          : undefined;
+        const ruAsset = Array.isArray(data.assets)
+          ? data.assets.find((a: any) => a.language === "ru")
+          : undefined;
+
+        return {
+          ...data,
+          translations: { uz: uzTrans, ru: ruTrans },
+          assets: { uz: uzAsset, ru: ruAsset },
+          publications: Array.isArray(data.publications) ? data.publications : [],
+        } as RealEstateNews;
+      } else {
+        return null;
+      }
+    } catch (e: any) {
+      if (!isTableMissingError(e)) throw e;
     }
-
-    if (!data) return null;
-
-    const uzTrans = Array.isArray(data.translations)
-      ? data.translations.find((t: any) => t.language === "uz")
-      : undefined;
-    const ruTrans = Array.isArray(data.translations)
-      ? data.translations.find((t: any) => t.language === "ru")
-      : undefined;
-    const uzAsset = Array.isArray(data.assets)
-      ? data.assets.find((a: any) => a.language === "uz")
-      : undefined;
-    const ruAsset = Array.isArray(data.assets)
-      ? data.assets.find((a: any) => a.language === "ru")
-      : undefined;
-
-    return {
-      ...data,
-      translations: { uz: uzTrans, ru: ruTrans },
-      assets: { uz: uzAsset, ru: ruAsset },
-      publications: Array.isArray(data.publications) ? data.publications : [],
-    } as RealEstateNews;
   }
 
   const local = readLocalData();
@@ -399,18 +642,26 @@ export async function getNewsById(id: string): Promise<RealEstateNews | null> {
 
 export async function hasNewsWithUrlHash(urlHash: string): Promise<boolean> {
   if (isSupabaseConfigured) {
-    const { data, error } = await supabaseAdmin
-      .from("real_estate_news")
-      .select("id")
-      .eq("url_hash", urlHash)
-      .limit(1);
+    try {
+      const { data, error } = await supabaseAdmin
+        .from("real_estate_news")
+        .select("id")
+        .eq("url_hash", urlHash)
+        .limit(1);
 
-    if (error) {
-      console.error("[NewsStore] Supabase hasNewsWithUrlHash error:", error);
-      throw new Error(`Failed to check url hash in Supabase: ${error.message}`);
+      if (error) {
+        if (isTableMissingError(error)) {
+          console.warn("[NewsStore] real_estate_news table not in Supabase yet. Checking local store.");
+        } else {
+          console.error("[NewsStore] Supabase hasNewsWithUrlHash error:", error);
+          throw new Error(`Failed to check url hash in Supabase: ${error.message}`);
+        }
+      } else {
+        return Array.isArray(data) && data.length > 0;
+      }
+    } catch (e: any) {
+      if (!isTableMissingError(e)) throw e;
     }
-
-    return Array.isArray(data) && data.length > 0;
   }
 
   const local = readLocalData();
@@ -430,36 +681,41 @@ export async function saveNewsItem(
   };
 
   if (isSupabaseConfigured) {
-    const { data, error } = await supabaseAdmin
-      .from("real_estate_news")
-      .upsert(
-        {
-          id: fullItem.id,
-          source_id: fullItem.source_id || null,
-          original_title: fullItem.original_title,
-          original_url: fullItem.original_url,
-          url_hash: fullItem.url_hash,
-          category: fullItem.category,
-          published_at: fullItem.published_at,
-          discovered_at: fullItem.discovered_at,
-          status: fullItem.status,
-          requires_fact_check: fullItem.requires_fact_check,
-          verified_stat_value: fullItem.verified_stat_value || null,
-        },
-        { onConflict: "url_hash" }
-      )
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabaseAdmin
+        .from("real_estate_news")
+        .upsert(
+          {
+            id: fullItem.id,
+            source_id: fullItem.source_id || null,
+            original_title: fullItem.original_title,
+            original_url: fullItem.original_url,
+            url_hash: fullItem.url_hash,
+            category: fullItem.category,
+            published_at: fullItem.published_at,
+            discovered_at: fullItem.discovered_at,
+            status: fullItem.status,
+            requires_fact_check: fullItem.requires_fact_check,
+            verified_stat_value: fullItem.verified_stat_value || null,
+          },
+          { onConflict: "url_hash" }
+        )
+        .select()
+        .single();
 
-    if (error) {
-      console.error("[NewsStore] Supabase saveNewsItem error:", error);
-      throw new Error(`Failed to save news item in Supabase: ${error.message}`);
+      if (error) {
+        if (isTableMissingError(error)) {
+          console.warn("[NewsStore] real_estate_news table not in Supabase yet. Saving to local store.");
+        } else {
+          console.error("[NewsStore] Supabase saveNewsItem error:", error);
+          throw new Error(`Failed to save news item in Supabase: ${error.message}`);
+        }
+      } else if (data) {
+        return data as RealEstateNews;
+      }
+    } catch (e: any) {
+      if (!isTableMissingError(e)) throw e;
     }
-
-    if (data) {
-      return data as RealEstateNews;
-    }
-    throw new Error("Supabase upsert returned no data for news item");
   }
 
   const local = readLocalData();
@@ -476,16 +732,25 @@ export async function saveNewsItem(
 export async function updateNewsStatus(newsId: string, status: NewsStatus): Promise<boolean> {
   const now = new Date().toISOString();
   if (isSupabaseConfigured) {
-    const { error } = await supabaseAdmin
-      .from("real_estate_news")
-      .update({ status, updated_at: now })
-      .eq("id", newsId);
+    try {
+      const { error } = await supabaseAdmin
+        .from("real_estate_news")
+        .update({ status, updated_at: now })
+        .eq("id", newsId);
 
-    if (error) {
-      console.error("[NewsStore] Supabase updateNewsStatus error:", error);
-      throw new Error(`Failed to update news status in Supabase: ${error.message}`);
+      if (error) {
+        if (isTableMissingError(error)) {
+          console.warn("[NewsStore] real_estate_news table not in Supabase yet. Updating in local store.");
+        } else {
+          console.error("[NewsStore] Supabase updateNewsStatus error:", error);
+          throw new Error(`Failed to update news status in Supabase: ${error.message}`);
+        }
+      } else {
+        return true;
+      }
+    } catch (e: any) {
+      if (!isTableMissingError(e)) throw e;
     }
-    return true;
   }
 
   const local = readLocalData();
@@ -516,21 +781,26 @@ export async function saveNewsTranslation(
   };
 
   if (isSupabaseConfigured) {
-    const { data, error } = await supabaseAdmin
-      .from("news_translations")
-      .upsert(fullTrans, { onConflict: "news_id,language" })
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabaseAdmin
+        .from("news_translations")
+        .upsert(fullTrans, { onConflict: "news_id,language" })
+        .select()
+        .single();
 
-    if (error) {
-      console.error("[NewsStore] Supabase saveNewsTranslation error:", error);
-      throw new Error(`Failed to save news translation in Supabase: ${error.message}`);
+      if (error) {
+        if (isTableMissingError(error)) {
+          console.warn("[NewsStore] news_translations table not in Supabase yet. Saving to local store.");
+        } else {
+          console.error("[NewsStore] Supabase saveNewsTranslation error:", error);
+          throw new Error(`Failed to save news translation in Supabase: ${error.message}`);
+        }
+      } else if (data) {
+        return data as NewsTranslation;
+      }
+    } catch (e: any) {
+      if (!isTableMissingError(e)) throw e;
     }
-
-    if (data) {
-      return data as NewsTranslation;
-    }
-    throw new Error("Supabase upsert returned no data for news translation");
   }
 
   const local = readLocalData();
@@ -558,21 +828,26 @@ export async function saveNewsAsset(
   };
 
   if (isSupabaseConfigured) {
-    const { data, error } = await supabaseAdmin
-      .from("news_assets")
-      .upsert(fullAsset, { onConflict: "news_id,language" })
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabaseAdmin
+        .from("news_assets")
+        .upsert(fullAsset, { onConflict: "news_id,language" })
+        .select()
+        .single();
 
-    if (error) {
-      console.error("[NewsStore] Supabase saveNewsAsset error:", error);
-      throw new Error(`Failed to save news asset in Supabase: ${error.message}`);
+      if (error) {
+        if (isTableMissingError(error)) {
+          console.warn("[NewsStore] news_assets table not in Supabase yet. Saving to local store.");
+        } else {
+          console.error("[NewsStore] Supabase saveNewsAsset error:", error);
+          throw new Error(`Failed to save news asset in Supabase: ${error.message}`);
+        }
+      } else if (data) {
+        return data as NewsAsset;
+      }
+    } catch (e: any) {
+      if (!isTableMissingError(e)) throw e;
     }
-
-    if (data) {
-      return data as NewsAsset;
-    }
-    throw new Error("Supabase upsert returned no data for news asset");
   }
 
   const local = readLocalData();
@@ -604,21 +879,26 @@ export async function recordNewsPublication(
   };
 
   if (isSupabaseConfigured) {
-    const { data, error } = await supabaseAdmin
-      .from("news_publications")
-      .upsert(fullPub, { onConflict: "news_id,target_type,language" })
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabaseAdmin
+        .from("news_publications")
+        .upsert(fullPub, { onConflict: "news_id,target_type,language" })
+        .select()
+        .single();
 
-    if (error) {
-      console.error("[NewsStore] Supabase recordNewsPublication error:", error);
-      throw new Error(`Failed to record news publication in Supabase: ${error.message}`);
+      if (error) {
+        if (isTableMissingError(error)) {
+          console.warn("[NewsStore] news_publications table not in Supabase yet. Saving to local store.");
+        } else {
+          console.error("[NewsStore] Supabase recordNewsPublication error:", error);
+          throw new Error(`Failed to record news publication in Supabase: ${error.message}`);
+        }
+      } else if (data) {
+        return data as NewsPublication;
+      }
+    } catch (e: any) {
+      if (!isTableMissingError(e)) throw e;
     }
-
-    if (data) {
-      return data as NewsPublication;
-    }
-    throw new Error("Supabase upsert returned no data for news publication");
   }
 
   const local = readLocalData();
@@ -649,12 +929,21 @@ export async function recordSourceCheck(
   };
 
   if (isSupabaseConfigured) {
-    const { error } = await supabaseAdmin.from("news_source_checks").insert(fullCheck);
-    if (error) {
-      console.error("[NewsStore] Supabase recordSourceCheck error:", error);
-      throw new Error(`Failed to record news source check in Supabase: ${error.message}`);
+    try {
+      const { error } = await supabaseAdmin.from("news_source_checks").insert(fullCheck);
+      if (error) {
+        if (isTableMissingError(error)) {
+          console.warn("[NewsStore] news_source_checks table not found in Supabase. Recording check locally.");
+        } else {
+          console.error("[NewsStore] Supabase recordSourceCheck error:", error);
+          throw new Error(`Failed to record news source check in Supabase: ${error.message}`);
+        }
+      } else {
+        return;
+      }
+    } catch (e: any) {
+      if (!isTableMissingError(e)) throw e;
     }
-    return;
   }
 
   const local = readLocalData();

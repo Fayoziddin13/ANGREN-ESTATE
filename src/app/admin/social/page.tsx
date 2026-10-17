@@ -29,6 +29,11 @@ import {
   Key,
   Receipt,
   Lightbulb,
+  Trash2,
+  ShieldCheck,
+  AlertTriangle,
+  Sparkles,
+  Power,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { NEWS_CATEGORIES } from "@/lib/types/news";
@@ -76,6 +81,11 @@ export default function AdminSocialPage() {
   const [sourceDomain, setSourceDomain] = useState("");
   const [sourceFeedUrl, setSourceFeedUrl] = useState("");
   const [sourceTrust, setSourceTrust] = useState<"official_gov" | "reputable_media" | "analytical_center">("reputable_media");
+  const [isAddingSource, setIsAddingSource] = useState(false);
+  const [addSourceError, setAddSourceError] = useState<string | null>(null);
+  const [checkingSourceId, setCheckingSourceId] = useState<string | null>(null);
+  const [seedingSources, setSeedingSources] = useState(false);
+  const [seedNotice, setSeedNotice] = useState<string | null>(null);
 
   // Load Data
   const loadData = async () => {
@@ -172,6 +182,147 @@ export default function AdminSocialPage() {
       alert(e?.message || "Xatolik");
     } finally {
       setPublishing(false);
+    }
+  };
+
+  // Seed verified default sources
+  const handleSeedDefaults = async () => {
+    setSeedingSources(true);
+    setSeedNotice(null);
+    try {
+      const res = await fetch("/api/admin/social/sources", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "seed_defaults" }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSeedNotice(data.message || (isUz ? "Rasmiy manbalar bazasi to‘ldirildi!" : "Официальные источники успешно добавлены!"));
+        await loadData();
+        setTimeout(() => setSeedNotice(null), 5000);
+      } else {
+        alert(data.error || "Xatolik yuz berdi");
+      }
+    } catch (e: any) {
+      alert(e?.message || "Xatolik");
+    } finally {
+      setSeedingSources(false);
+    }
+  };
+
+  // Check / Harvest a single source
+  const handleCheckSingleSource = async (sourceId: string) => {
+    setCheckingSourceId(sourceId);
+    try {
+      const res = await fetch("/api/admin/social/sources/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sourceId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        await loadData();
+      } else {
+        alert(data.error || (isUz ? "Manbani tekshirishda xatolik yuz berdi" : "Ошибка проверки источника"));
+      }
+    } catch (e: any) {
+      alert(e?.message || "Xatolik");
+    } finally {
+      setCheckingSourceId(null);
+    }
+  };
+
+  // Toggle Source Active
+  const handleToggleSourceActive = async (sourceId: string, currentActive: boolean) => {
+    try {
+      setSources((prev) =>
+        prev.map((s) => (s.id === sourceId ? { ...s, is_active: !currentActive } : s))
+      );
+      const res = await fetch("/api/admin/social/sources", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: sourceId, is_active: !currentActive }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        await loadData();
+        alert(data.error || "Xatolik yuz berdi");
+      }
+    } catch (e: any) {
+      await loadData();
+      alert(e?.message || "Xatolik");
+    }
+  };
+
+  // Delete Source
+  const handleDeleteSource = async (sourceId: string, name: string) => {
+    const confirmed = window.confirm(
+      isUz
+        ? `"${name}" manbasini ro‘yxatdan o‘chirishni xohlaysizmi?`
+        : `Удалить источник "${name}" из списка?`
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(`/api/admin/social/sources?id=${encodeURIComponent(sourceId)}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.success) {
+        await loadData();
+      } else {
+        alert(data.error || (isUz ? "O‘chirishda xatolik yuz berdi" : "Ошибка при удалении"));
+      }
+    } catch (e: any) {
+      alert(e?.message || "Xatolik");
+    }
+  };
+
+  // Add Source Form Submit
+  const handleAddSourceSubmit = async () => {
+    if (!sourceName.trim() || !sourceFeedUrl.trim()) {
+      setAddSourceError(isUz ? "Manba nomi va feed havolasi majburiy" : "Заполните название и ссылку на ленту");
+      return;
+    }
+
+    setIsAddingSource(true);
+    setAddSourceError(null);
+    try {
+      let domain = sourceDomain.trim();
+      if (!domain) {
+        try {
+          domain = new URL(sourceFeedUrl.trim()).hostname;
+        } catch {
+          domain = "unknown";
+        }
+      }
+
+      const res = await fetch("/api/admin/social/sources", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: sourceName.trim(),
+          domain,
+          feed_url: sourceFeedUrl.trim(),
+          trust_level: sourceTrust,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setIsAddSourceOpen(false);
+        setSourceName("");
+        setSourceDomain("");
+        setSourceFeedUrl("");
+        setAddSourceError(null);
+        await loadData();
+      } else {
+        setAddSourceError(data.error || (isUz ? "Manbani qo‘shishda xatolik yuz berdi" : "Ошибка добавления источника"));
+      }
+    } catch (err: any) {
+      setAddSourceError(err?.message || (isUz ? "Serverga ulanish xatosi" : "Ошибка соединения с сервером"));
+    } finally {
+      setIsAddingSource(false);
     }
   };
 
@@ -459,78 +610,308 @@ export default function AdminSocialPage() {
 
       {/* TAB 2: SOURCES MANAGEMENT */}
       {activeTab === "sources" && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <div className="space-y-5">
+          {/* Seed Notice Banner */}
+          {seedNotice && (
+            <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-2xl text-xs font-bold flex items-center justify-between shadow-sm animate-fade-in">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                <span>{seedNotice}</span>
+              </div>
+              <button onClick={() => setSeedNotice(null)} className="text-emerald-700 hover:text-emerald-950 p-1">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {/* Sources KPI Summary Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-bold">
+                <Radio className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  {isUz ? "Jami manbalar" : "Всего источников"}
+                </p>
+                <p className="text-xl font-black text-slate-900">{sources.length}</p>
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+                <CheckCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  {isUz ? "Faol manbalar" : "Активные"}
+                </p>
+                <p className="text-xl font-black text-emerald-700">
+                  {sources.filter((s) => s.is_active).length}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  {isUz ? "Davlat organlari" : "Гос. органы"}
+                </p>
+                <p className="text-xl font-black text-blue-700">
+                  {sources.filter((s) => s.trust_level === "official_gov").length}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold ${
+                sources.filter((s) => s.last_check?.status === "failed").length > 0
+                  ? "bg-rose-50 text-rose-700"
+                  : "bg-slate-50 text-slate-400"
+              }`}>
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  {isUz ? "Xatoliklar" : "Ошибки"}
+                </p>
+                <p className={`text-xl font-black ${
+                  sources.filter((s) => s.last_check?.status === "failed").length > 0
+                    ? "text-rose-700"
+                    : "text-slate-700"
+                }`}>
+                  {sources.filter((s) => s.last_check?.status === "failed").length}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Sources Control Header */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
             <div>
-              <h2 className="font-bold text-slate-800 text-sm">
-                {isUz ? "Ishonchli yangiliklar manbalari" : "Проверенные источники новостей"}
+              <h2 className="font-bold text-slate-900 text-sm">
+                {isUz ? "Ishonchli axborot manbalari ro‘yxati" : "Список проверенных источников информации"}
               </h2>
               <p className="text-xs text-slate-400">
                 {isUz
-                  ? "Davlat organlari, rasmiy qonunchilik va tahliliy portallar"
-                  : "Государственные органы, официальное законодательство и аналитические порталы"}
+                  ? "O‘zbekiston davlat idoralari qonunchilik bazasi, statistika va nufuzli OAV portallari"
+                  : "Официальные порталы органов власти, законодательство и авторитетные СМИ Узбекистана"}
               </p>
             </div>
-            <button
-              onClick={() => setIsAddSourceOpen(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-700 text-white rounded-xl text-xs font-bold hover:bg-emerald-800 transition-all shadow-sm"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              {isUz ? "Manba qo‘shish" : "Добавить источник"}
-            </button>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Seed missing official defaults */}
+              <button
+                onClick={handleSeedDefaults}
+                disabled={seedingSources}
+                title={isUz ? "Barcha 11 ta tasdiqlangan rasmiy va nufuzli manbalarni bazaga qo‘shish" : "Добавить все 11 проверенных официальных источников"}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 disabled:opacity-50"
+              >
+                <Sparkles className={`w-3.5 h-3.5 text-amber-600 ${seedingSources ? "animate-spin" : ""}`} />
+                {seedingSources
+                  ? isUz ? "To‘ldirilmoqda..." : "Заполнение..."
+                  : isUz ? "Rasmiy manbalarni to‘ldirish" : "Заполнить офиц. источниками"}
+              </button>
+
+              {/* Check all sources */}
+              <button
+                onClick={handleSyncAll}
+                disabled={syncing}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 text-emerald-700 ${syncing ? "animate-spin" : ""}`} />
+                {syncing
+                  ? isUz ? "Tekshirilmoqda..." : "Проверка..."
+                  : isUz ? "Manbalarni qayta tekshirish" : "Проверить все"}
+              </button>
+
+              {/* Add custom source */}
+              <button
+                onClick={() => {
+                  setAddSourceError(null);
+                  setIsAddSourceOpen(true);
+                }}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-700 text-white hover:bg-emerald-800 rounded-xl text-xs font-bold transition-all shadow-md active:scale-95"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                {isUz ? "Manba qo‘shish" : "Добавить источник"}
+              </button>
+            </div>
           </div>
 
+          {/* Sources Table */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
                   <tr>
-                    <th className="py-3 px-4">{isUz ? "Manba nomi" : "Название источника"}</th>
-                    <th className="py-3 px-4">{isUz ? "Domen & Havola" : "Домен & Ссылка"}</th>
-                    <th className="py-3 px-4">{isUz ? "Toifa" : "Категория"}</th>
-                    <th className="py-3 px-4">{isUz ? "Chastota" : "Частота"}</th>
-                    <th className="py-3 px-4">{isUz ? "Holati" : "Статус"}</th>
+                    <th className="py-3 px-4">{isUz ? "Manba nomi & Toifa" : "Источник & Категория"}</th>
+                    <th className="py-3 px-4">{isUz ? "Domen & RSS havola" : "Домен & RSS ссылка"}</th>
+                    <th className="py-3 px-4">{isUz ? "Tekshiruv holati" : "Статус проверки"}</th>
+                    <th className="py-3 px-4 text-center">{isUz ? "Faollik" : "Активность"}</th>
+                    <th className="py-3 px-4 text-right">{isUz ? "Amallar" : "Действия"}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium">
-                  {sources.map((src) => (
-                    <tr key={src.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-3.5 px-4 font-bold text-slate-800">{src.name}</td>
-                      <td className="py-3.5 px-4">
-                        <a
-                          href={src.feed_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-emerald-700 hover:underline font-semibold flex items-center gap-1"
-                        >
-                          {src.domain}
-                          <ExternalLink className="w-3 h-3 opacity-60" />
-                        </a>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                          {src.trust_level === "official_gov"
-                            ? isUz ? "Davlat organi" : "Гос. орган"
-                            : isUz ? "OAV" : "СМИ"}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-500">
-                        {src.check_frequency_min} {isUz ? "daqiqa" : "мин"}
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                            src.is_active
-                              ? "bg-emerald-100 text-emerald-800"
-                              : "bg-slate-100 text-slate-500"
-                          }`}
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-full ${src.is_active ? "bg-emerald-600" : "bg-slate-400"}`} />
-                          {src.is_active ? (isUz ? "Faol" : "Активен") : (isUz ? "O‘chiq" : "Отключен")}
-                        </span>
+                  {sources.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-slate-400">
+                        {isUz
+                          ? "Hozircha manbalar yo‘q. «Rasmiy manbalarni to‘ldirish» tugmasini bosing."
+                          : "Источники отсутствуют. Нажмите «Заполнить офиц. источниками»."}
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    sources.map((src) => {
+                      const check = src.last_check;
+                      const isCheckingThis = checkingSourceId === src.id;
+
+                      return (
+                        <tr key={src.id} className="hover:bg-slate-50/80 transition-colors">
+                          {/* Name & Trust Level */}
+                          <td className="py-3.5 px-4">
+                            <div className="font-extrabold text-slate-900 flex items-center gap-1.5">
+                              {src.trust_level === "official_gov" && (
+                                <ShieldCheck className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                              )}
+                              <span>{src.name}</span>
+                            </div>
+                            <div className="mt-1 flex items-center gap-1.5">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                                src.trust_level === "official_gov"
+                                  ? "bg-blue-50 text-blue-700 border-blue-200"
+                                  : src.trust_level === "analytical_center"
+                                  ? "bg-purple-50 text-purple-700 border-purple-200"
+                                  : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              }`}>
+                                {src.trust_level === "official_gov"
+                                  ? isUz ? "Davlat organi" : "Гос. орган"
+                                  : src.trust_level === "analytical_center"
+                                  ? isUz ? "Tahliliy markaz" : "Аналитический центр"
+                                  : isUz ? "Ishonchli OAV" : "Авторитетное СМИ"}
+                              </span>
+                              <span className="text-[10px] text-slate-400 uppercase font-bold">
+                                {src.source_type}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Domain & URL */}
+                          <td className="py-3.5 px-4">
+                            <div className="font-bold text-slate-800">{src.domain}</div>
+                            <a
+                              href={src.feed_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[11px] text-emerald-700 hover:underline flex items-center gap-1 truncate max-w-xs"
+                              title={src.feed_url}
+                            >
+                              <span className="truncate">{src.feed_url}</span>
+                              <ExternalLink className="w-2.5 h-2.5 flex-shrink-0 opacity-70" />
+                            </a>
+                          </td>
+
+                          {/* Health Status */}
+                          <td className="py-3.5 px-4">
+                            {check ? (
+                              <div className="space-y-0.5">
+                                {check.status === "success" && (
+                                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
+                                    <CheckCircle className="w-3 h-3 text-emerald-600 flex-shrink-0" />
+                                    <span>
+                                      {isUz ? "Ishlayapti" : "Работает"}
+                                      {check.items_found > 0 && ` (${check.items_found})`}
+                                    </span>
+                                  </div>
+                                )}
+
+                                {check.status === "empty" && (
+                                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800">
+                                    <AlertCircle className="w-3 h-3 text-amber-600 flex-shrink-0" />
+                                    <span>{isUz ? "Bo‘sh (0 ta)" : "Пусто (0)"}</span>
+                                  </div>
+                                )}
+
+                                {check.status === "failed" && (
+                                  <div className="space-y-0.5">
+                                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800">
+                                      <AlertTriangle className="w-3 h-3 text-rose-600 flex-shrink-0" />
+                                      <span>{isUz ? "Xatolik" : "Ошибка"}</span>
+                                    </div>
+                                    {check.error_message && (
+                                      <p className="text-[10px] text-rose-600 font-semibold truncate max-w-[200px]" title={check.error_message}>
+                                        {check.error_message}
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+
+                                {check.checked_at && (
+                                  <p className="text-[10px] text-slate-400">
+                                    {new Date(check.checked_at).toLocaleDateString(isUz ? "uz-UZ" : "ru-RU", {
+                                      day: "numeric",
+                                      month: "short",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
+                                  </p>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500">
+                                <Clock className="w-3 h-3" />
+                                {isUz ? "Tekshirilmagan" : "Не проверен"}
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Active Toggle Switch */}
+                          <td className="py-3.5 px-4 text-center">
+                            <button
+                              onClick={() => handleToggleSourceActive(src.id, src.is_active)}
+                              className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                src.is_active ? "bg-emerald-600" : "bg-slate-300"
+                              }`}
+                              title={src.is_active ? (isUz ? "Faol (O‘chirish uchun bosing)" : "Активен") : (isUz ? "O‘chiq (Yoqish uchun bosing)" : "Отключен")}
+                            >
+                              <span
+                                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                                  src.is_active ? "translate-x-4" : "translate-x-0"
+                                }`}
+                              />
+                            </button>
+                          </td>
+
+                          {/* Actions (Single Test & Delete) */}
+                          <td className="py-3.5 px-4 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {/* Single Source Sync */}
+                              <button
+                                onClick={() => handleCheckSingleSource(src.id)}
+                                disabled={isCheckingThis}
+                                className="p-1.5 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 transition-all active:scale-95 disabled:opacity-50"
+                                title={isUz ? "Ushbu manbani tekshirish" : "Проверить этот источник"}
+                              >
+                                <RefreshCw className={`w-3.5 h-3.5 ${isCheckingThis ? "animate-spin text-emerald-700" : ""}`} />
+                              </button>
+
+                              {/* Delete Source */}
+                              <button
+                                onClick={() => handleDeleteSource(src.id, src.name)}
+                                className="p-1.5 rounded-lg bg-slate-100 text-slate-500 hover:bg-rose-50 hover:text-rose-700 transition-all active:scale-95"
+                                title={isUz ? "Manbani o‘chirish" : "Удалить источник"}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
@@ -848,15 +1229,32 @@ export default function AdminSocialPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-white w-full max-w-md rounded-3xl border border-slate-200 shadow-2xl overflow-hidden">
             <div className="p-5 border-b border-slate-200 flex items-center justify-between">
-              <h3 className="font-black text-slate-900 text-base">
-                {isUz ? "Yangi manba qo‘shish" : "Добавить новый источник"}
-              </h3>
-              <button onClick={() => setIsAddSourceOpen(false)}>
-                <X className="w-5 h-5 text-slate-400" />
+              <div className="flex items-center gap-2">
+                <Radio className="w-5 h-5 text-emerald-700" />
+                <h3 className="font-black text-slate-900 text-base">
+                  {isUz ? "Yangi manba qo‘shish" : "Добавить новый источник"}
+                </h3>
+              </div>
+              <button
+                onClick={() => {
+                  setAddSourceError(null);
+                  setIsAddSourceOpen(false);
+                }}
+                className="text-slate-400 hover:text-slate-600 p-1"
+              >
+                <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="p-6 space-y-4">
+              {/* Error display */}
+              {addSourceError && (
+                <div className="bg-rose-50 border border-rose-200 text-rose-700 p-3 rounded-xl text-xs font-semibold flex items-start gap-2 animate-fade-in">
+                  <AlertTriangle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
+                  <span className="leading-tight">{addSourceError}</span>
+                </div>
+              )}
+
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   {isUz ? "Manba nomi:" : "Название источника:"}
@@ -865,21 +1263,8 @@ export default function AdminSocialPage() {
                   type="text"
                   value={sourceName}
                   onChange={(e) => setSourceName(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-800"
-                  placeholder="Masalan: Kadastr agentligi"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  {isUz ? "Asl domen:" : "Домен:"}
-                </label>
-                <input
-                  type="text"
-                  value={sourceDomain}
-                  onChange={(e) => setSourceDomain(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-800"
-                  placeholder="kadastr.uz"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  placeholder="Masalan: Kadastr agentligi yangiliklari"
                 />
               </div>
 
@@ -890,9 +1275,36 @@ export default function AdminSocialPage() {
                 <input
                   type="url"
                   value={sourceFeedUrl}
-                  onChange={(e) => setSourceFeedUrl(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-800"
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSourceFeedUrl(val);
+                    try {
+                      if (val.startsWith("http://") || val.startsWith("https://")) {
+                        const parsed = new URL(val);
+                        if (!sourceDomain) {
+                          setSourceDomain(parsed.hostname.replace(/^www\./, ""));
+                        }
+                      }
+                    } catch {}
+                  }}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-600"
                   placeholder="https://kadastr.uz/rss"
+                />
+                <p className="text-[10px] text-slate-400 mt-1">
+                  {isUz ? "Faqat ochiq va xavfsiz HTTPS/HTTP RSS feed manzili qabul qilinadi" : "Принимаются только публичные HTTPS/HTTP RSS ленты"}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  {isUz ? "Asl domen:" : "Домен:"}
+                </label>
+                <input
+                  type="text"
+                  value={sourceDomain}
+                  onChange={(e) => setSourceDomain(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  placeholder="kadastr.uz"
                 />
               </div>
 
@@ -903,9 +1315,9 @@ export default function AdminSocialPage() {
                 <select
                   value={sourceTrust}
                   onChange={(e: any) => setSourceTrust(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-800"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-600"
                 >
-                  <option value="official_gov">{isUz ? "Davlat organi" : "Гос. орган"}</option>
+                  <option value="official_gov">{isUz ? "Davlat organi (Rasmiy)" : "Гос. орган (Официальный)"}</option>
                   <option value="reputable_media">{isUz ? "Ishonchli OAV" : "Авторитетное СМИ"}</option>
                   <option value="analytical_center">{isUz ? "Tahliliy markaz" : "Аналитический центр"}</option>
                 </select>
@@ -914,37 +1326,25 @@ export default function AdminSocialPage() {
 
             <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-end gap-2">
               <button
-                onClick={() => setIsAddSourceOpen(false)}
-                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-xl"
+                onClick={() => {
+                  setAddSourceError(null);
+                  setIsAddSourceOpen(false);
+                }}
+                disabled={isAddingSource}
+                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-xl disabled:opacity-50"
               >
                 {isUz ? "Bekor qilish" : "Отмена"}
               </button>
 
               <button
-                onClick={async () => {
-                  if (!sourceName || !sourceDomain || !sourceFeedUrl) {
-                    alert(isUz ? "Barcha maydonlarni to‘ldiring" : "Заполните все поля");
-                    return;
-                  }
-                  await fetch("/api/admin/social/sources", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      name: sourceName,
-                      domain: sourceDomain,
-                      feed_url: sourceFeedUrl,
-                      trust_level: sourceTrust,
-                    }),
-                  });
-                  setIsAddSourceOpen(false);
-                  setSourceName("");
-                  setSourceDomain("");
-                  setSourceFeedUrl("");
-                  await loadData();
-                }}
-                className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-md"
+                onClick={handleAddSourceSubmit}
+                disabled={isAddingSource}
+                className="flex items-center gap-2 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-md disabled:opacity-50"
               >
-                {isUz ? "Qo‘shish" : "Добавить"}
+                {isAddingSource && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+                {isAddingSource
+                  ? isUz ? "Tekshirilmoqda..." : "Проверка..."
+                  : isUz ? "Tekshirish va qo‘shish" : "Проверить и добавить"}
               </button>
             </div>
           </div>

@@ -28,11 +28,17 @@ CREATE TABLE IF NOT EXISTS public.news_sources (
 -- Seed default verified trusted sources (idempotent ON CONFLICT DO NOTHING)
 INSERT INTO public.news_sources (name, domain, feed_url, source_type, trust_level, check_frequency_min, is_active)
 VALUES
-    ('Lex.uz — Qonunchilik maʼlumotlari', 'lex.uz', 'https://lex.uz/rss', 'rss', 'official_gov', 120, true),
+    ('Lex.uz — Qonunchilik maʼlumotlari milliy bazasi', 'lex.uz', 'https://lex.uz/rss', 'rss', 'official_gov', 120, true),
+    ('Lex.uz — Законодательство Узбекистана (RU)', 'lex.uz', 'https://lex.uz/ru/rss', 'rss', 'official_gov', 120, true),
+    ('O‘zbekiston Respublikasi Markaziy Banki — Ipoteka va moliya', 'cbu.uz', 'https://cbu.uz/uz/press_center/news/rss/', 'rss', 'official_gov', 120, true),
+    ('O‘zA — O‘zbekiston Milliy axborot agentligi (Rasmiy davlat xabarlari)', 'uza.uz', 'https://uza.uz/uz/rss', 'rss', 'official_gov', 120, true),
+    ('УзА — Официальные новости Узбекистана (RU)', 'uza.uz', 'https://uza.uz/ru/rss', 'rss', 'official_gov', 120, true),
     ('Gazeta.uz — Iqtisodiyot va Ko‘chmas mulk', 'gazeta.uz', 'https://www.gazeta.uz/uz/rss/', 'rss', 'reputable_media', 180, true),
-    ('Gazeta.uz — Недвижимость (RU)', 'gazeta.uz', 'https://www.gazeta.uz/ru/rss/', 'rss', 'reputable_media', 180, true),
+    ('Gazeta.uz — Недвижимость и экономика (RU)', 'gazeta.uz', 'https://www.gazeta.uz/ru/rss/', 'rss', 'reputable_media', 180, true),
     ('Spot.uz — Biznes va Ko‘chmas mulk', 'spot.uz', 'https://www.spot.uz/rss/', 'rss', 'reputable_media', 180, true),
-    ('Daryo.uz — Qurilish va Infratuzilma', 'daryo.uz', 'https://daryo.uz/rss', 'rss', 'reputable_media', 180, true)
+    ('Kun.uz — Iqtisodiyot, qurilish va jamiyat yangiliklari', 'kun.uz', 'https://kun.uz/news/rss', 'rss', 'reputable_media', 180, true),
+    ('Daryo.uz — Qurilish va Infratuzilma', 'daryo.uz', 'https://daryo.uz/rss', 'rss', 'reputable_media', 180, true),
+    ('Podrobno.uz — Новости Узбекистана, урбанистика и недвижимость', 'podrobno.uz', 'https://podrobno.uz/rss', 'rss', 'reputable_media', 180, true)
 ON CONFLICT (feed_url) DO NOTHING;
 
 -- 2. Table: real_estate_news
