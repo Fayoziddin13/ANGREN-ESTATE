@@ -12,7 +12,53 @@ import { supabaseAdmin } from "./supabaseServer";
 import { isSupabaseConfigured } from "./supabase";
 import { updateProperty } from "./properties";
 
-const SITE_URL = "https://angrenestate.uz";
+export const PRODUCTION_SITE_URL = "https://angrenestate.uz";
+export const SITE_URL = PRODUCTION_SITE_URL;
+
+/**
+ * Resolve a secure, public HTTPS base URL for Telegram channel posts and inline buttons.
+ * Telegram Bot API strictly prohibits local URLs (localhost, 127.0.0.1, http://)
+ * in public channel inline keyboards and photo endpoints.
+ *
+ * Rules:
+ * - Must start with 'https://'
+ * - Must NOT contain 'localhost', '127.0.0.1', or '0.0.0.0'
+ * - If candidate from env (NEXT_PUBLIC_SITE_URL, SITE_URL) fails any check,
+ *   safely falls back to canonical production domain 'https://angrenestate.uz'.
+ */
+export function getTelegramPublicSiteUrl(): string {
+  const envUrl = (
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.SITE_URL ||
+    ""
+  ).trim();
+
+  if (
+    envUrl &&
+    envUrl.startsWith("https://") &&
+    !envUrl.includes("localhost") &&
+    !envUrl.includes("127.0.0.1") &&
+    !envUrl.includes("0.0.0.0")
+  ) {
+    return envUrl.replace(/\/+$/, "");
+  }
+
+  return PRODUCTION_SITE_URL;
+}
+
+/**
+ * Build canonical public HTTPS URL for a property.
+ * Strictly guarantees:
+ * - Protocol is 'https://'
+ * - Host is never localhost or 127.0.0.1
+ * - Format: 'https://angrenestate.uz/properties/{propertyId}'
+ */
+export function buildPropertyPublicUrl(propertyId: string, lang?: "uz" | "ru"): string {
+  const base = getTelegramPublicSiteUrl();
+  const cleanId = encodeURIComponent(String(propertyId).trim());
+  const query = lang ? `?lang=${lang}` : "";
+  return `${base}/properties/${cleanId}${query}`;
+}
 
 /**
  * Build minimal, localized notification text for property.
@@ -81,7 +127,7 @@ export function buildPropertyNotificationText(property: Property, lang: "uz" | "
  */
 export function buildPropertyNotificationMarkup(propertyId: string, lang: "uz" | "ru" = "uz") {
   const isUz = lang === "uz";
-  const openUrl = `${SITE_URL}/properties/${propertyId}?lang=${lang}`;
+  const openUrl = buildPropertyPublicUrl(propertyId, lang);
 
   return {
     inline_keyboard: [
@@ -474,8 +520,7 @@ export function buildChannelPostMarkup(property: Property, lang: "uz" | "ru" = "
   const rows: Array<Array<{ text: string; url: string }>> = [];
 
   // Button A: «Obyektni ko‘rish» (HTTPS URL directly opens object page)
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || SITE_URL;
-  const openUrl = `${siteUrl}/properties/${property.id}`;
+  const openUrl = buildPropertyPublicUrl(property.id);
   rows.push([
     {
       text: isUz ? "Obyektni ko‘rish →" : "Посмотреть объект →",
@@ -486,13 +531,21 @@ export function buildChannelPostMarkup(property: Property, lang: "uz" | "ru" = "
   // Secondary buttons row: Video review & Contact
   const secondaryRow: Array<{ text: string; url: string }> = [];
 
-  // Button B: «Video sharh» (only if valid video_url exists)
-  const videoUrl = (property.video_url || property.video || "").trim();
-  if (videoUrl && (videoUrl.startsWith("http://") || videoUrl.startsWith("https://"))) {
-    secondaryRow.push({
-      text: isUz ? "🎬 Video sharh" : "🎬 Видео обзор",
-      url: videoUrl,
-    });
+  // Button B: «Video sharh» (only if valid public HTTPS video_url exists)
+  const rawVideo = (property.video_url || property.video || "").trim();
+  if (rawVideo) {
+    const isLocal =
+      rawVideo.includes("localhost") ||
+      rawVideo.includes("127.0.0.1") ||
+      rawVideo.includes("0.0.0.0");
+    if (!isLocal && rawVideo.startsWith("https://")) {
+      secondaryRow.push({
+        text: isUz ? "🎬 Video sharh" : "🎬 Видео обзор",
+        url: rawVideo,
+      });
+    } else if (rawVideo.startsWith("http://")) {
+      console.warn(`[TelegramChannel] Non-HTTPS video URL '${rawVideo}' omitted from inline buttons (Telegram requires verified HTTPS)`);
+    }
   }
 
   // Button C: «Bog‘lanish» (only if authorized contact exists)
@@ -508,7 +561,7 @@ export function buildChannelPostMarkup(property: Property, lang: "uz" | "ru" = "
       if (cleanDigits) contactUrl = `https://t.me/+${cleanDigits}`;
     }
 
-    if (contactUrl) {
+    if (contactUrl && contactUrl.startsWith("https://t.me/")) {
       secondaryRow.push({
         text: isUz ? "💬 Bog‘lanish" : "💬 Связаться",
         url: contactUrl,
@@ -599,11 +652,46 @@ export async function publishPropertyToTelegramChannel(
   const caption = buildChannelPostCaption(property, lang);
   const replyMarkup = buildChannelPostMarkup(property, lang);
 
+  // Pre-flight validation: Guarantee zero localhost / 127.0.0.1 / non-https URLs reach Telegram Bot API
+  const allButtons = replyMarkup.inline_keyboard.flat();
+  for (const btn of allButtons) {
+    const btnUrl = btn.url || "";
+    const isInvalid =
+      !btnUrl.startsWith("https://") ||
+      btnUrl.includes("localhost") ||
+      btnUrl.includes("127.0.0.1") ||
+      btnUrl.includes("0.0.0.0");
+
+    if (isInvalid) {
+      const errMsg = `Telegram inline keyboard button URL '${btnUrl}' is invalid: must be a public HTTPS URL (localhost/127.0.0.1 is prohibited)`;
+      console.error(`[TelegramChannel] ${errMsg}`);
+      try {
+        await updateFn(property.id, {
+          telegram_channel_status: "error",
+        });
+      } catch (persistErr: any) {
+        console.warn("[TelegramChannel] Could not persist channel status to database:", persistErr?.message);
+      }
+      return {
+        success: false,
+        status: "error",
+        channelId: targetChannel,
+        error: errMsg,
+        dbPersisted: false,
+      };
+    }
+  }
+
   // Select primary photo
   let photoUrl = property.main_image || property.images?.[0] || property.photos?.[0] || "";
   if (photoUrl && photoUrl.startsWith("/")) {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || SITE_URL;
+    const siteUrl = getTelegramPublicSiteUrl();
     photoUrl = `${siteUrl}${photoUrl}`;
+  }
+  // Telegram cannot fetch photos from localhost / 127.0.0.1
+  if (photoUrl && (photoUrl.includes("localhost") || photoUrl.includes("127.0.0.1") || photoUrl.includes("0.0.0.0"))) {
+    console.warn(`[TelegramChannel] Local photo URL '${photoUrl}' rejected for Telegram delivery, sending text post instead`);
+    photoUrl = "";
   }
 
   try {
