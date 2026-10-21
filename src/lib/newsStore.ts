@@ -777,7 +777,7 @@ export async function saveNewsItem(
           throw new Error(`Failed to save news item in Supabase: ${error.message}`);
         }
       } else if (data) {
-        return data as RealEstateNews;
+        return { ...(data as RealEstateNews), source_image_url: fullItem.source_image_url };
       }
     } catch (e: any) {
       if (!isTableMissingError(e)) throw e;
@@ -895,9 +895,10 @@ export async function saveNewsAsset(
 
   if (isSupabaseConfigured) {
     try {
+      const { source_origin, ...dbPayload } = fullAsset;
       const { data, error } = await supabaseAdmin
         .from("news_assets")
-        .upsert(fullAsset, { onConflict: "news_id,language" })
+        .upsert(dbPayload, { onConflict: "news_id,language" })
         .select()
         .single();
 
@@ -909,7 +910,7 @@ export async function saveNewsAsset(
           throw new Error(`Failed to save news asset in Supabase: ${error.message}`);
         }
       } else if (data) {
-        return data as NewsAsset;
+        return { ...(data as NewsAsset), source_origin: fullAsset.source_origin };
       }
     } catch (e: any) {
       if (!isTableMissingError(e)) throw e;

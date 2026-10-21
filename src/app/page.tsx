@@ -476,7 +476,7 @@ export default function HomePage() {
         />
 
         {/* Desktop-Only Floating Search & Filter Panel (Top Left) */}
-        <div data-testid="desktop-search-panel" className="hidden sm:block absolute sm:top-4 sm:left-6 sm:right-auto z-20 max-w-[calc(100vw-420px)] 2xl:max-w-6xl pointer-events-none">
+        <div data-testid="desktop-search-panel" className="hidden sm:block absolute sm:top-4 sm:left-6 sm:right-auto z-20 max-w-[calc(100vw-220px)] xl:max-w-[calc(100vw-420px)] 2xl:max-w-6xl pointer-events-none">
           <FloatingSearchPanel
             searchQuery={searchQuery}
             onSearchQueryChange={setSearchQuery}
@@ -525,7 +525,7 @@ export default function HomePage() {
         />
 
         {/* Desktop-Only Floating Action Controls (Top Right: Primary View Switcher & Map Style Switcher) */}
-        <div className="hidden sm:flex items-center gap-3 absolute sm:top-4 sm:right-6 z-20 pointer-events-auto">
+        <div className="hidden sm:flex flex-col xl:flex-row items-end xl:items-center gap-2 xl:gap-3 absolute sm:top-4 sm:right-6 z-20 pointer-events-auto">
           {/* Primary View Switcher: [ ХАРИТА | КАТАЛОГ ] */}
           <div
             data-testid="desktop-primary-view-switcher"

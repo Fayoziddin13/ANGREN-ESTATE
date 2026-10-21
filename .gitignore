@@ -19,6 +19,7 @@ yarn-error.log*
 qa-test-results.json
 .temp/
 supabase/.temp/
+/release-apk/
 
 # Environment Variables & Secrets (NEVER COMMIT)
 .env

@@ -37,21 +37,26 @@ export async function POST(
     }
 
     let lang: "uz" | "ru" | "both" = "both";
+    let preferSourceImage = false;
+    let forceAi = false;
     try {
       const body = await request.json();
       if (body.lang) lang = body.lang;
+      if (body.preferSourceImage !== undefined) preferSourceImage = Boolean(body.preferSourceImage);
+      if (body.forceAi !== undefined) forceAi = Boolean(body.forceAi);
     } catch {}
 
     const results: any = {};
 
     if (lang === "uz" || lang === "both") {
-      results.uz = await generateAndSaveNewsAsset(news, "uz");
+      results.uz = await generateAndSaveNewsAsset(news, "uz", { preferSourceImage, forceAi });
     }
     if (lang === "ru" || lang === "both") {
-      results.ru = await generateAndSaveNewsAsset(news, "ru");
+      results.ru = await generateAndSaveNewsAsset(news, "ru", { preferSourceImage, forceAi });
     }
 
-    return NextResponse.json({ success: true, assets: results });
+    const updatedNews = await getNewsById(params.id);
+    return NextResponse.json({ success: true, assets: results, news: updatedNews });
   } catch (err: any) {
     console.error("[Generate Asset API] Error:", err);
     return NextResponse.json({ success: false, error: err?.message || "Asset generation error" }, { status: 500 });

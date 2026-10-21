@@ -13,7 +13,7 @@ import {
   computeUrlHash,
 } from "./newsStore";
 import { cyrillicToUzbekLatin, translateContent } from "./translationService";
-import { safeFetchFeed } from "./sourceSecurity";
+import { safeFetchFeed, validateFeedUrlSsrf } from "./sourceSecurity";
 import type { NewsCategory, NewsSource, RealEstateNews } from "./types/news";
 
 export interface ParsedFeedItem {
@@ -125,6 +125,45 @@ export function parseRssXml(xml: string): ParsedFeedItem[] {
   }
 
   return items;
+}
+
+/**
+ * Safely fetches article HTML and extracts OpenGraph or Twitter preview image.
+ * Uses safeFetchFeed and validateFeedUrlSsrf for full SSRF defense.
+ */
+export async function extractOpenGraphImage(articleUrl: string): Promise<string | undefined> {
+  const ssrf = validateFeedUrlSsrf(articleUrl);
+  if (!ssrf.valid) return undefined;
+
+  try {
+    const res = await safeFetchFeed(articleUrl, { timeoutMs: 6000 });
+    if (!res.ok) return undefined;
+
+    const html = await res.text();
+    const ogMatch =
+      html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
+      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i) ||
+      html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i) ||
+      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:image["']/i);
+
+    if (ogMatch && ogMatch[1]) {
+      let imgUrl = ogMatch[1].trim();
+      if (imgUrl.startsWith("//")) imgUrl = `https:${imgUrl}`;
+      else if (imgUrl.startsWith("/")) {
+        try {
+          const u = new URL(articleUrl);
+          imgUrl = `${u.origin}${imgUrl}`;
+        } catch {
+          return undefined;
+        }
+      }
+      const imgSsrf = validateFeedUrlSsrf(imgUrl);
+      if (imgSsrf.valid) return imgUrl;
+    }
+  } catch {
+    // Graceful fallback if article page is protected, timed out, or blocked
+  }
+  return undefined;
 }
 
 // -------------------------------------------------------------
@@ -415,6 +454,7 @@ export async function harvestFromSingleSource(
         source_id: source.id,
         original_title: item.title,
         original_url: itemLink,
+        source_image_url: item.imageUrl,
         url_hash: urlHash,
         category,
         published_at: new Date(item.pubDate).toISOString(),

@@ -230,7 +230,7 @@ export function FloatingSearchPanel({
         )}
 
         {/* Dropdown 1: District */}
-        <div className="relative flex-1 min-w-[80px] sm:min-w-[90px] xl:min-w-[105px] 2xl:min-w-[125px] max-w-[140px]">
+        <div className="hidden xl:block relative flex-1 min-w-[80px] sm:min-w-[90px] xl:min-w-[105px] 2xl:min-w-[125px] max-w-[140px]">
           <button
             onClick={() => {
               setDistrictOpen(!districtOpen);
@@ -276,7 +276,7 @@ export function FloatingSearchPanel({
         </div>
 
         {/* Dropdown 2: Property Type */}
-        <div className="relative flex-1 min-w-[80px] sm:min-w-[90px] xl:min-w-[105px] 2xl:min-w-[125px] max-w-[140px]">
+        <div className="hidden xl:block relative flex-1 min-w-[80px] sm:min-w-[90px] xl:min-w-[105px] 2xl:min-w-[125px] max-w-[140px]">
           <button
             onClick={() => {
               setTypeOpen(!typeOpen);
@@ -322,7 +322,7 @@ export function FloatingSearchPanel({
         </div>
 
         {/* Dropdown 3: Price */}
-        <div className="relative flex-1 min-w-[75px] sm:min-w-[85px] xl:min-w-[95px] 2xl:min-w-[115px] max-w-[130px]">
+        <div className="hidden xl:block relative flex-1 min-w-[75px] sm:min-w-[85px] xl:min-w-[95px] 2xl:min-w-[115px] max-w-[130px]">
           <button
             onClick={() => {
               setPriceOpen(!priceOpen);
@@ -444,7 +444,7 @@ export function FloatingSearchPanel({
               }`}
             >
               <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
-              <span className="hidden lg:inline">{locale === "uz" ? "Filtrlar" : "Фильтры"}</span>
+              <span className="hidden sm:inline">{locale === "uz" ? "Filtrlar" : "Фильтры"}</span>
               {(advancedFilters.rooms !== "all" ||
                 advancedFilters.minArea !== "" ||
                 advancedFilters.maxArea !== "" ||

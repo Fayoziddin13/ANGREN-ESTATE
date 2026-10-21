@@ -133,9 +133,9 @@ export default function AdminLayout({
   const activeNav = navItems.find((n) => n.active) || navItems[0];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row text-slate-800 antialiased font-sans">
-      {/* Mobile Top Navigation */}
-      <div className="md:hidden sticky top-0 z-40 bg-[#167d4f] text-white px-4 py-3 flex items-center justify-between shadow-md border-b border-white/10">
+    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row text-slate-800 antialiased font-sans">
+      {/* Mobile & Tablet Top Navigation */}
+      <div className="lg:hidden sticky top-0 z-40 bg-[#167d4f] text-white px-4 py-3 flex items-center justify-between shadow-md border-b border-white/10">
         <Link href="/admin" className="flex items-center gap-2.5 group">
           <div className="relative h-8 w-[40px] shrink-0">
             <Image src="/logo-white.png" alt="ANGREN ESTATE" fill className="object-contain" priority />
@@ -168,9 +168,9 @@ export default function AdminLayout({
         </div>
       </div>
 
-      {/* Mobile Drawer Menu */}
+      {/* Mobile & Tablet Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[#0b3824] text-white px-3 py-4 space-y-1 border-b border-white/10 shadow-2xl z-30">
+        <div className="lg:hidden bg-[#0b3824] text-white px-3 py-4 space-y-1 border-b border-white/10 shadow-2xl z-30">
           <div className="px-3 py-1 text-[10px] uppercase tracking-wider font-extrabold text-[#2db477]/60">
             {locale === "uz" ? "Menyu" : "Меню"}
           </div>
@@ -213,7 +213,7 @@ export default function AdminLayout({
       )}
 
       {/* Desktop Persistent Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 bg-[#167d4f] text-white shrink-0 border-r border-white/10 shadow-2xl min-h-screen sticky top-0 h-screen select-none">
+      <aside className="hidden lg:flex flex-col w-64 bg-[#167d4f] text-white shrink-0 border-r border-white/10 shadow-2xl min-h-screen sticky top-0 h-screen select-none">
         {/* Brand Header */}
         <div className="p-4 border-b border-white/10 flex items-center justify-between">
           <Link href="/admin" className="flex items-center gap-2.5 group">
@@ -315,7 +315,7 @@ export default function AdminLayout({
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         {/* Desktop Top Header Bar */}
-        <div className="hidden md:flex items-center justify-between px-8 py-3.5 bg-white border-b border-[#dee8e3] sticky top-0 z-20 shadow-xs">
+        <div className="hidden lg:flex items-center justify-between px-8 py-3.5 bg-white border-b border-[#dee8e3] sticky top-0 z-20 shadow-xs">
           <div className="flex items-center gap-2 text-xs text-slate-600 font-medium">
             <span>Admin</span>
             <ChevronRight className="h-3 w-3 text-slate-400" />

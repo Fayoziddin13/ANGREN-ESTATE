@@ -70,6 +70,8 @@ export default function AdminSocialPage() {
   const [publishResultsReport, setPublishResultsReport] = useState<any[] | null>(null);
   const [publishLang, setPublishLang] = useState<"uz" | "ru" | "both">("uz");
   const [syncSummary, setSyncSummary] = useState<any | null>(null);
+  const [generatingAsset, setGeneratingAsset] = useState(false);
+  const [assetError, setAssetError] = useState<string | null>(null);
 
   // Manual news form state
   const [manualTitle, setManualTitle] = useState("");
@@ -136,24 +138,41 @@ export default function AdminSocialPage() {
     }
   };
 
-  // Generate Brand Asset
-  const handleGenerateAsset = async (newsId: string, lang: "uz" | "ru") => {
+  // Generate Brand Asset (AI or Source image)
+  const handleGenerateAsset = async (
+    newsId: string,
+    lang: "uz" | "ru",
+    options?: { preferSourceImage?: boolean; forceAi?: boolean }
+  ) => {
+    setGeneratingAsset(true);
+    setAssetError(null);
     try {
       const res = await fetch(`/api/admin/social/news/${newsId}/generate-asset`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lang }),
+        body: JSON.stringify({
+          lang,
+          preferSourceImage: options?.preferSourceImage,
+          forceAi: options?.forceAi,
+        }),
       });
       const data = await res.json();
       if (data.success) {
-        await loadData();
-        if (previewNews && previewNews.id === newsId) {
+        if (data.news && previewNews && previewNews.id === newsId) {
+          setPreviewNews(data.news);
+        } else if (previewNews && previewNews.id === newsId) {
           const updated = await fetch(`/api/admin/social/news/${newsId}`).then((r) => r.json());
           if (updated.success) setPreviewNews(updated.news);
         }
+        await loadData();
+      } else {
+        setAssetError(data.error || (isUz ? "Rasm yaratishda xatolik yuz berdi" : "Ошибка при генерации изображения"));
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error("Asset generation error:", e);
+      setAssetError(e?.message || (isUz ? "Tarmoq xatosi" : "Ошибка сети"));
+    } finally {
+      setGeneratingAsset(false);
     }
   };
 
@@ -1176,46 +1195,132 @@ export default function AdminSocialPage() {
 
               {/* Brand Visual Preview */}
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-extrabold text-slate-700">
-                    {isUz ? "ANGREN ESTATE brend vizuali:" : "Фирменный визуал ANGREN ESTATE:"}
-                  </span>
-                  <button
-                    onClick={() => handleGenerateAsset(previewNews.id, publishLang === "ru" ? "ru" : "uz")}
-                    className="text-xs font-bold text-emerald-700 hover:underline flex items-center gap-1"
-                  >
-                    <RefreshCw className="w-3 h-3" />
-                    {isUz ? "Qayta yaratish" : "Сгенерировать заново"}
-                  </button>
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-extrabold text-slate-700">
+                      {isUz ? "Mavzuga mos rasm vizuali:" : "Визуал к публикации:"}
+                    </span>
+                    {/* Origin Badge */}
+                    {(() => {
+                      const curAsset = publishLang === "ru" ? previewNews.assets?.ru : previewNews.assets?.uz;
+                      if (!curAsset?.public_url) return null;
+                      if (curAsset.source_origin === "ai") {
+                        return (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                            <Sparkles className="w-2.5 h-2.5 text-purple-600" />
+                            <span>AI Generatsiya</span>
+                          </span>
+                        );
+                      }
+                      if (curAsset.source_origin === "source_rss" || curAsset.source_origin === "source_og") {
+                        return (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
+                            <Globe className="w-2.5 h-2.5 text-blue-600" />
+                            <span>{isUz ? "Manba rasmi" : "Из источника"}</span>
+                          </span>
+                        );
+                      }
+                      return (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          <Building className="w-2.5 h-2.5 text-emerald-600" />
+                          <span>{isUz ? "Saralangan mavzuiy rasm" : "Тематическое фото"}</span>
+                        </span>
+                      );
+                    })()}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {/* Source image button if available */}
+                    <button
+                      type="button"
+                      disabled={generatingAsset}
+                      onClick={() => handleGenerateAsset(previewNews.id, publishLang === "ru" ? "ru" : "uz", { preferSourceImage: true })}
+                      title={isUz ? "Asl manbadagi rasmni qidirish va yuklash" : "Загрузить оригинальное изображение из источника"}
+                      className="text-[11px] font-bold text-blue-700 hover:underline flex items-center gap-1 disabled:opacity-50"
+                    >
+                      <Globe className="w-3 h-3" />
+                      <span>{isUz ? "Manba rasmi" : "Из источника"}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={generatingAsset}
+                      onClick={() => handleGenerateAsset(previewNews.id, publishLang === "ru" ? "ru" : "uz", { forceAi: true })}
+                      className="text-[11px] font-bold text-emerald-700 hover:underline flex items-center gap-1 disabled:opacity-50"
+                    >
+                      <RefreshCw className={`w-3 h-3 ${generatingAsset ? "animate-spin" : ""}`} />
+                      <span>{generatingAsset ? (isUz ? "Yaratilmoqda..." : "Генерация...") : (isUz ? "AI qayta yaratish" : "ИИ регенерация")}</span>
+                    </button>
+                  </div>
                 </div>
 
+                {assetError && (
+                  <div className="mb-2 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center justify-between">
+                    <span>⚠️ {assetError}</span>
+                    <button
+                      onClick={() => handleGenerateAsset(previewNews.id, publishLang === "ru" ? "ru" : "uz")}
+                      className="underline font-bold text-xs ml-2 shrink-0"
+                    >
+                      {isUz ? "Qayta urinish" : "Повторить"}
+                    </button>
+                  </div>
+                )}
+
                 <div className="aspect-[16/9] w-full rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md relative flex items-center justify-center">
-                  {publishLang === "ru" && previewNews.assets?.ru?.public_url ? (
-                    <img
-                      src={previewNews.assets.ru.public_url}
-                      alt="Brand card"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : previewNews.assets?.uz?.public_url ? (
-                    <img
-                      src={previewNews.assets.uz.public_url}
-                      alt="Brand card"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="text-center p-6 text-slate-400 space-y-2">
-                      <ImageIcon className="w-10 h-10 mx-auto opacity-50" />
-                      <p className="text-xs font-medium">
-                        {isUz
-                          ? "Brend vizual kartochkasi hali yaratilmagan. Nashr paytida avtomatik yaratiladi."
-                          : "Визуальная карточка будет автоматически создана при публикации."}
-                      </p>
-                      <button
-                        onClick={() => handleGenerateAsset(previewNews.id, "uz")}
-                        className="px-3 py-1.5 bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-sm"
-                      >
-                        {isUz ? "Hozir yaratish" : "Создать сейчас"}
-                      </button>
+                  {(() => {
+                    const activeAsset = publishLang === "ru" ? previewNews.assets?.ru : previewNews.assets?.uz;
+                    const isValidUrl =
+                      activeAsset?.public_url &&
+                      activeAsset.public_url.startsWith("https://") &&
+                      !activeAsset.public_url.endsWith(".svg") &&
+                      !activeAsset.storage_path?.endsWith(".svg");
+
+                    if (isValidUrl) {
+                      return (
+                        <img
+                          src={activeAsset!.public_url}
+                          alt="Brand card"
+                          className="w-full h-full object-cover"
+                        />
+                      );
+                    }
+
+                    return (
+                      <div className="text-center p-6 text-slate-400 space-y-2">
+                        <ImageIcon className="w-10 h-10 mx-auto opacity-50" />
+                        <p className="text-xs font-medium">
+                          {isUz
+                            ? "Mavzuga mos vizual rasm hali biriktirilmagan. Nashr paytida avtomatik yaratiladi yoki quyidagi tugma orqali hoziroq tayyorlang."
+                            : "Изображение еще не создано. Оно будет создано при публикации, либо создайте его прямо сейчас."}
+                        </p>
+                        <div className="flex items-center justify-center gap-2 pt-1">
+                          <button
+                            type="button"
+                            disabled={generatingAsset}
+                            onClick={() => handleGenerateAsset(previewNews.id, publishLang === "ru" ? "ru" : "uz", { forceAi: true })}
+                            className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold shadow-sm flex items-center gap-1.5 disabled:opacity-50"
+                          >
+                            <Sparkles className="w-3 h-3" />
+                            <span>{generatingAsset ? (isUz ? "Yaratilmoqda..." : "Генерация...") : (isUz ? "AI orqali yaratish" : "Создать через ИИ")}</span>
+                          </button>
+                          <button
+                            type="button"
+                            disabled={generatingAsset}
+                            onClick={() => handleGenerateAsset(previewNews.id, publishLang === "ru" ? "ru" : "uz", { preferSourceImage: true })}
+                            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold shadow-sm flex items-center gap-1.5 disabled:opacity-50"
+                          >
+                            <Globe className="w-3 h-3" />
+                            <span>{isUz ? "Manba rasmini olish" : "Взять из источника"}</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {generatingAsset && (
+                    <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs flex flex-col items-center justify-center text-white gap-2">
+                      <RefreshCw className="w-6 h-6 animate-spin text-emerald-400" />
+                      <span className="text-xs font-bold">{isUz ? "Rasm yuklanmoqda va qayta ishlanmoqda..." : "Изображение генерируется..."}</span>
                     </div>
                   )}
                 </div>

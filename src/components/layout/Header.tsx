@@ -544,6 +544,15 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
               <span>{t.navigation.signIn}</span>
             </button>
           )}
+
+          {/* Tablet Hamburger Menu Toggle (640px to 1023px) */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden flex h-8 w-8 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-white shadow-sm hover:bg-white/20 active:scale-95 transition-all ml-1"
+            aria-label="Menu"
+          >
+            {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </button>
         </div>
 
         {/* Right Controls: Mobile (Language, Currency, Hamburger) */}
@@ -577,7 +586,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
         </div>
       </div>
 
-      {/* Mobile Glass Dropdown Menu */}
+      {/* Mobile & Tablet Glass Dropdown Menu */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
@@ -585,7 +594,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
-            className="sm:hidden border-t border-white/10 bg-[#167d4f]/95 backdrop-blur-2xl px-4 pt-3 pb-6 space-y-3 shadow-float overflow-hidden"
+            className="lg:hidden border-t border-white/10 bg-[#167d4f]/95 backdrop-blur-2xl px-4 pt-3 pb-6 space-y-3 shadow-float overflow-hidden"
           >
             <nav className="flex flex-col space-y-1 text-sm font-semibold">
               {navItems.map((item) => {

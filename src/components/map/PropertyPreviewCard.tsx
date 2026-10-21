@@ -59,7 +59,7 @@ export function PropertyPreviewCard({
 
   return (
     <div
-      className={`pointer-events-auto relative w-80 sm:w-92 rounded-2xl bg-white/95 backdrop-blur-xl shadow-elevated border border-white/80 overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 ${className}`}
+      className={`pointer-events-auto relative w-80 sm:w-84 xl:w-92 max-w-[calc(100vw-3rem)] max-h-[min(540px,calc(100vh-140px))] overflow-y-auto rounded-2xl bg-white/95 backdrop-blur-xl shadow-elevated border border-white/80 overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 custom-scrollbar ${className}`}
     >
       {/* Top Close Button */}
       <button
@@ -73,7 +73,7 @@ export function PropertyPreviewCard({
       {/* Property Image with Clickable trigger for details */}
       <div
         onClick={() => onViewDetails(property)}
-        className="relative aspect-[3/4] w-full overflow-hidden bg-gray-100 cursor-pointer group"
+        className="relative aspect-[16/10] sm:aspect-[16/10] xl:aspect-[4/3] w-full overflow-hidden bg-gray-100 cursor-pointer group"
       >
         <Image
           src={property.images[0]}

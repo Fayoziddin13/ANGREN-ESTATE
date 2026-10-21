@@ -12,6 +12,9 @@ import {
 import {
   generateAndSaveNewsAsset,
   getNewsCardSvgBuffer,
+  getNewsCardImageBuffer,
+  isRasterAssetValid,
+  isValidImageBuffer,
 } from "./newsVisualGenerator";
 import {
   sendTelegramPhoto,
@@ -193,9 +196,9 @@ export async function publishNewsToTelegramChannel(
     const caption = buildNewsPostCaption(news, lang);
     const replyMarkup = buildNewsPostMarkup(news, lang);
 
-    // Get or generate brand visual
+    // 1. Validate existing asset or generate a new raster JPEG asset
     let asset = lang === "uz" ? news.assets?.uz : news.assets?.ru;
-    if (!asset) {
+    if (!isRasterAssetValid(asset)) {
       try {
         asset = await generateAndSaveNewsAsset(news, lang);
       } catch (assetErr: any) {
@@ -205,51 +208,70 @@ export async function publishNewsToTelegramChannel(
 
     let sendResult: any = null;
     let photoSendAttempted = false;
+    let lastPhotoError: string | undefined;
 
-    // 1. Try public HTTPS URL if available (never data: URI)
-    if (asset?.public_url && asset.public_url.startsWith("https://")) {
+    // A. Try public HTTPS URL if available (never data: URI, never .svg)
+    if (isRasterAssetValid(asset)) {
       photoSendAttempted = true;
       try {
-        sendResult = await sendTelegramPhoto(targetChannel, asset.public_url, caption, replyMarkup, token);
+        sendResult = await sendTelegramPhoto(targetChannel, asset!.public_url, caption, replyMarkup, token);
         if (!sendResult.ok) {
+          lastPhotoError = sendResult.description || `HTTP ${sendResult.http_status}`;
           console.warn(
             `[NewsPublisher] Remote URL photo delivery failed (code: ${sendResult.error_code || "unknown"}, desc: ${sendResult.description || "none"}). Trying multipart buffer upload.`
           );
         }
       } catch (err: any) {
+        lastPhotoError = err?.message || "URL photo delivery exception";
         console.warn("[NewsPublisher] Exception during URL photo send:", err?.message || err);
       }
     }
 
-    // 2. If URL send was not possible or failed, attempt direct multipart binary upload of SVG buffer
+    // B. If URL send was not possible or failed, attempt direct multipart binary upload of real JPEG buffer
     if (!sendResult || !sendResult.ok) {
       try {
-        const svgBuffer = getNewsCardSvgBuffer(news, lang);
-        photoSendAttempted = true;
-        sendResult = await sendTelegramPhoto(
-          targetChannel,
-          svgBuffer,
-          caption,
-          replyMarkup,
-          token,
-          "image/svg+xml"
-        );
-        if (!sendResult.ok) {
-          console.warn(
-            `[NewsPublisher] Multipart buffer photo delivery failed (code: ${sendResult.error_code || "unknown"}, desc: ${sendResult.description || "none"}).`
+        const imageBuffer = await getNewsCardImageBuffer(news, lang);
+        if (isValidImageBuffer(imageBuffer)) {
+          photoSendAttempted = true;
+          sendResult = await sendTelegramPhoto(
+            targetChannel,
+            imageBuffer,
+            caption,
+            replyMarkup,
+            token,
+            "image/jpeg"
           );
+          if (!sendResult.ok) {
+            lastPhotoError = sendResult.description || `HTTP ${sendResult.http_status}`;
+            console.warn(
+              `[NewsPublisher] Multipart buffer photo delivery failed (code: ${sendResult.error_code || "unknown"}, desc: ${sendResult.description || "none"}).`
+            );
+          }
         }
       } catch (err: any) {
+        lastPhotoError = err?.message || "Multipart buffer photo send exception";
         console.warn("[NewsPublisher] Exception during multipart buffer photo send:", err?.message || err);
       }
     }
 
-    // 3. If photo delivery (both URL and multipart) failed or was not possible, fallback to plain text message
+    // C. Strict failure handling: If photo delivery failed, do NOT falsely claim success
     if (!sendResult || !sendResult.ok) {
-      if (photoSendAttempted) {
-        console.warn("[NewsPublisher] All photo delivery methods failed. Falling back to plain text post.");
-      }
-      sendResult = await sendTelegramDirectMessage(targetChannel, caption, replyMarkup, token);
+      const errorMsg = lastPhotoError || (photoSendAttempted ? "Telegram sendPhoto xatolik berdi" : "Rasm tayyorlanmadi");
+      await recordNewsPublication({
+        news_id: news.id,
+        target_type: "channel",
+        language: lang,
+        status: "failed",
+        error_message: errorMsg,
+      });
+
+      return {
+        success: false,
+        status: "error",
+        targetType: "channel",
+        language: lang,
+        error: errorMsg,
+      };
     }
 
     // Validate result and message_id
@@ -405,12 +427,50 @@ export async function broadcastNewsToTelegramSubscribers(
     const caption = buildNewsPostCaption(news, lang);
     const replyMarkup = buildNewsPostMarkup(news, lang);
 
+    // 1. Validate existing asset or generate a new raster JPEG asset
+    let asset = lang === "uz" ? news.assets?.uz : news.assets?.ru;
+    if (!isRasterAssetValid(asset)) {
+      try {
+        asset = await generateAndSaveNewsAsset(news, lang);
+      } catch (assetErr: any) {
+        console.warn("[NewsPublisher] Could not generate asset for bot broadcast:", assetErr?.message || assetErr);
+      }
+    }
+
+    // Determine photo source: public URL or JPEG buffer
+    let photoPayload: string | Buffer | null = null;
+    if (isRasterAssetValid(asset)) {
+      photoPayload = asset!.public_url;
+    } else {
+      try {
+        const imageBuffer = await getNewsCardImageBuffer(news, lang);
+        if (isValidImageBuffer(imageBuffer)) {
+          photoPayload = imageBuffer;
+        }
+      } catch {}
+    }
+
     let sentCount = 0;
     let lastError: string | undefined;
 
     for (const sub of subscribers) {
       try {
-        const res = await sendTelegramDirectMessage(sub.telegram_user_id, caption, replyMarkup, token);
+        let res: any = null;
+        if (photoPayload) {
+          res = await sendTelegramPhoto(
+            sub.telegram_user_id,
+            photoPayload,
+            caption,
+            replyMarkup,
+            token,
+            "image/jpeg"
+          );
+        }
+        // Fallback to direct message for individual subscriber if photo delivery failed
+        if (!res || !res.ok) {
+          res = await sendTelegramDirectMessage(sub.telegram_user_id, caption, replyMarkup, token);
+        }
+
         if (res.ok && res.result?.message_id && res.result.message_id > 0) {
           sentCount++;
         } else if (!res.ok) {
