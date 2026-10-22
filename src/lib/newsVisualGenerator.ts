@@ -234,7 +234,7 @@ export function isValidImageBuffer(buffer: Buffer): boolean {
 /**
  * In-memory buffer cache to avoid re-fetching or re-generating image buffers on repeat requests.
  */
-const newsImageBufferCache = new Map<string, { buffer: Buffer; timestamp: number }>();
+export const newsImageBufferCache = new Map<string, { buffer: Buffer; timestamp: number }>();
 /**
  * Validates whether an asset is a genuine raster JPEG/PNG image (not an empty URL, data URI, or SVG).
  */

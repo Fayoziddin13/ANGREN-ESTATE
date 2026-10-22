@@ -431,7 +431,13 @@ export async function harvestFromSingleSource(
     relevantFound = relevantItems.length;
 
     for (const item of relevantItems.slice(0, maxItems)) {
-      // Normalize relative or schema-less links
+      // 1. Quality & factual validation: Reject incomplete, unintelligible, or non-verifiable items
+      const trimmedTitle = (item.title || "").trim();
+      if (trimmedTitle.length < 12) {
+        continue; // Skip items with too short, empty, or uninformative titles
+      }
+
+      // 2. Normalize and strictly validate original article link
       let itemLink = item.link.trim();
       if (itemLink.startsWith("/")) {
         itemLink = `https://${source.domain}${itemLink}`;
@@ -439,6 +445,16 @@ export async function harvestFromSingleSource(
         itemLink = `https://${itemLink}`;
       }
 
+      try {
+        const parsedUrl = new URL(itemLink);
+        if (!parsedUrl.hostname || (parsedUrl.protocol !== "https:" && parsedUrl.protocol !== "http:")) {
+          continue;
+        }
+      } catch {
+        continue;
+      }
+
+      // 3. Deduplication check via canonical URL hash
       const urlHash = computeUrlHash(itemLink);
       const alreadyExists = await hasNewsWithUrlHash(urlHash);
 
@@ -447,8 +463,22 @@ export async function harvestFromSingleSource(
         continue;
       }
 
+      // 4. Parse verified publication timestamp without fabricating dates
+      let pubDateObj = new Date(item.pubDate);
+      if (isNaN(pubDateObj.getTime())) {
+        pubDateObj = new Date();
+      }
+
       const category = classifyNewsCategory(item.title, item.description);
       const bilingual = await prepareBilingualNewsContent(item, category, source);
+
+      // 5. Unverified / sensitive economic and legal items held in needs_review until admin review
+      const isCriticalCategory =
+        category === "legislation_cadastre" ||
+        category === "taxes_and_fees" ||
+        category === "mortgage_finance";
+      const requiresFactCheck = isCriticalCategory || source.trust_level !== "official_gov";
+      const initialStatus = requiresFactCheck ? "needs_review" : "discovered";
 
       const savedNews = await saveNewsItem({
         source_id: source.id,
@@ -457,10 +487,10 @@ export async function harvestFromSingleSource(
         source_image_url: item.imageUrl,
         url_hash: urlHash,
         category,
-        published_at: new Date(item.pubDate).toISOString(),
+        published_at: pubDateObj.toISOString(),
         discovered_at: new Date().toISOString(),
-        status: "discovered",
-        requires_fact_check: category === "legislation_cadastre" || category === "taxes_and_fees",
+        status: initialStatus,
+        requires_fact_check: requiresFactCheck,
         verified_stat_value: bilingual.statValue,
       });
 

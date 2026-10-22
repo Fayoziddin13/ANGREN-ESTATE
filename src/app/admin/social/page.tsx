@@ -34,6 +34,7 @@ import {
   AlertTriangle,
   Sparkles,
   Power,
+  Upload,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { NEWS_CATEGORIES } from "@/lib/types/news";
@@ -71,7 +72,10 @@ export default function AdminSocialPage() {
   const [publishLang, setPublishLang] = useState<"uz" | "ru" | "both">("uz");
   const [syncSummary, setSyncSummary] = useState<any | null>(null);
   const [generatingAsset, setGeneratingAsset] = useState(false);
+  const [uploadingAsset, setUploadingAsset] = useState(false);
+  const [sendWithoutImage, setSendWithoutImage] = useState(false);
   const [assetError, setAssetError] = useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
   // Manual news form state
   const [manualTitle, setManualTitle] = useState("");
@@ -176,6 +180,40 @@ export default function AdminSocialPage() {
     }
   };
 
+  // Upload Custom Image Asset from PC
+  const handleUploadCustomAsset = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !previewNews) return;
+
+    e.target.value = "";
+    setUploadingAsset(true);
+    setAssetError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("lang", publishLang === "ru" ? "ru" : "uz");
+
+      const res = await fetch(`/api/admin/social/news/${previewNews.id}/upload-asset`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.success && data.news) {
+        setPreviewNews(data.news);
+        setNewsList((prev) => prev.map((n) => (n.id === data.news.id ? data.news : n)));
+        setSendWithoutImage(false); // Switch to image mode when custom image is uploaded
+      } else {
+        setAssetError(data.error || (isUz ? "Rasm yuklashda xatolik yuz berdi" : "Ошибка загрузки изображения"));
+      }
+    } catch (err: any) {
+      setAssetError(err?.message || (isUz ? "Rasm yuklashda tarmoq xatosi" : "Сетевая ошибка при загрузке"));
+    } finally {
+      setUploadingAsset(false);
+    }
+  };
+
   // Publish News to Telegram
   const handlePublish = async () => {
     if (!previewNews) return;
@@ -202,6 +240,7 @@ export default function AdminSocialPage() {
           target,
           language: publishLang,
           forceRepeat: publishForceRepeat,
+          withoutImage: sendWithoutImage,
         }),
       });
       const data = await res.json();
@@ -648,6 +687,8 @@ export default function AdminSocialPage() {
                           setPublishResultsReport(null);
                           setPublishSuccessMsg(null);
                           setPublishLang("uz");
+                          setSendWithoutImage(false);
+                          setAssetError(null);
                         }}
                         className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all active:scale-95"
                       >
@@ -1193,17 +1234,40 @@ export default function AdminSocialPage() {
                 </div>
               </div>
 
-              {/* Brand Visual Preview */}
+              {/* Brand Visual Preview & Upload */}
               <div>
+                {/* Hidden file input for uploading from computer */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleUploadCustomAsset}
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                />
+
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-extrabold text-slate-700">
                       {isUz ? "Mavzuga mos rasm vizuali:" : "Визуал к публикации:"}
                     </span>
-                    {/* Origin Badge */}
-                    {(() => {
+
+                    {/* Mode / Origin Badge */}
+                    {sendWithoutImage ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                        <FileText className="w-2.5 h-2.5 text-amber-700" />
+                        <span>{isUz ? "Faqat matn (rasmsiz)" : "Только текст (без фото)"}</span>
+                      </span>
+                    ) : (() => {
                       const curAsset = publishLang === "ru" ? previewNews.assets?.ru : previewNews.assets?.uz;
                       if (!curAsset?.public_url) return null;
+                      if (curAsset.source_origin === "custom_upload" || curAsset.asset_type === "custom_upload") {
+                        return (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            <Upload className="w-2.5 h-2.5 text-emerald-600" />
+                            <span>{isUz ? "Kompyuterdan yuklangan" : "Загружено с ПК"}</span>
+                          </span>
+                        );
+                      }
                       if (curAsset.source_origin === "ai") {
                         return (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
@@ -1223,33 +1287,68 @@ export default function AdminSocialPage() {
                       return (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                           <Building className="w-2.5 h-2.5 text-emerald-600" />
-                          <span>{isUz ? "Saralangan mavzuiy rasm" : "Тематическое фото"}</span>
+                          <span>{isUz ? "Mavzuiy rasm" : "Тематическое фото"}</span>
                         </span>
                       );
                     })()}
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    {/* Source image button if available */}
+                  {/* Visual Control Buttons */}
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {/* 1. Upload from Computer */}
                     <button
                       type="button"
-                      disabled={generatingAsset}
-                      onClick={() => handleGenerateAsset(previewNews.id, publishLang === "ru" ? "ru" : "uz", { preferSourceImage: true })}
-                      title={isUz ? "Asl manbadagi rasmni qidirish va yuklash" : "Загрузить оригинальное изображение из источника"}
-                      className="text-[11px] font-bold text-blue-700 hover:underline flex items-center gap-1 disabled:opacity-50"
+                      disabled={uploadingAsset || generatingAsset}
+                      onClick={() => fileInputRef.current?.click()}
+                      title={isUz ? "Kompyuterdan rasm tanlab yuklash (JPG, PNG, WEBP)" : "Выбрать и загрузить фото с компьютера"}
+                      className="text-[11px] font-bold text-emerald-700 hover:text-emerald-950 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-all active:scale-95 disabled:opacity-50"
+                    >
+                      <Upload className={`w-3 h-3 ${uploadingAsset ? "animate-bounce" : ""}`} />
+                      <span>{uploadingAsset ? (isUz ? "Yuklanmoqda..." : "Загрузка...") : (isUz ? "Rasm yuklash" : "Загрузить фото")}</span>
+                    </button>
+
+                    {/* 2. Toggle Text-Only (Rasmsiz) */}
+                    <button
+                      type="button"
+                      onClick={() => setSendWithoutImage(!sendWithoutImage)}
+                      className={`text-[11px] font-bold flex items-center gap-1 px-2 py-1 rounded-lg border transition-all active:scale-95 ${
+                        sendWithoutImage
+                          ? "bg-amber-100 text-amber-900 border-amber-300"
+                          : "text-slate-600 hover:bg-slate-100 border-slate-200"
+                      }`}
+                      title={isUz ? "Rasm yuklamaslik, faqat matnli post yuborish" : "Отправить только текст без фото"}
+                    >
+                      <FileText className="w-3 h-3" />
+                      <span>{sendWithoutImage ? (isUz ? "✓ Faqat matn" : "✓ Только текст") : (isUz ? "Faqat matn" : "Без фото")}</span>
+                    </button>
+
+                    {/* 3. Source Image */}
+                    <button
+                      type="button"
+                      disabled={generatingAsset || uploadingAsset}
+                      onClick={() => {
+                        setSendWithoutImage(false);
+                        handleGenerateAsset(previewNews.id, publishLang === "ru" ? "ru" : "uz", { preferSourceImage: true });
+                      }}
+                      title={isUz ? "Asl maqoladagi rasmni yuklash" : "Загрузить фото из источника"}
+                      className="text-[11px] font-bold text-blue-700 hover:text-blue-900 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-blue-50 border border-slate-200 transition-all active:scale-95 disabled:opacity-50"
                     >
                       <Globe className="w-3 h-3" />
                       <span>{isUz ? "Manba rasmi" : "Из источника"}</span>
                     </button>
 
+                    {/* 4. AI Regeneration */}
                     <button
                       type="button"
-                      disabled={generatingAsset}
-                      onClick={() => handleGenerateAsset(previewNews.id, publishLang === "ru" ? "ru" : "uz", { forceAi: true })}
-                      className="text-[11px] font-bold text-emerald-700 hover:underline flex items-center gap-1 disabled:opacity-50"
+                      disabled={generatingAsset || uploadingAsset}
+                      onClick={() => {
+                        setSendWithoutImage(false);
+                        handleGenerateAsset(previewNews.id, publishLang === "ru" ? "ru" : "uz", { forceAi: true });
+                      }}
+                      className="text-[11px] font-bold text-purple-700 hover:text-purple-900 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-purple-50 border border-slate-200 transition-all active:scale-95 disabled:opacity-50"
                     >
-                      <RefreshCw className={`w-3 h-3 ${generatingAsset ? "animate-spin" : ""}`} />
-                      <span>{generatingAsset ? (isUz ? "Yaratilmoqda..." : "Генерация...") : (isUz ? "AI qayta yaratish" : "ИИ регенерация")}</span>
+                      <Sparkles className="w-3 h-3" />
+                      <span>{generatingAsset ? (isUz ? "Yaratilmoqda..." : "Генерация...") : (isUz ? "AI orqali" : "Через ИИ")}</span>
                     </button>
                   </div>
                 </div>
@@ -1258,16 +1357,37 @@ export default function AdminSocialPage() {
                   <div className="mb-2 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center justify-between">
                     <span>⚠️ {assetError}</span>
                     <button
-                      onClick={() => handleGenerateAsset(previewNews.id, publishLang === "ru" ? "ru" : "uz")}
+                      onClick={() => fileInputRef.current?.click()}
                       className="underline font-bold text-xs ml-2 shrink-0"
                     >
-                      {isUz ? "Qayta urinish" : "Повторить"}
+                      {isUz ? "Boshqa rasm tanlash" : "Выбрать другое"}
                     </button>
                   </div>
                 )}
 
                 <div className="aspect-[16/9] w-full rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md relative flex items-center justify-center">
-                  {(() => {
+                  {sendWithoutImage ? (
+                    <div className="text-center p-6 text-slate-300 space-y-2">
+                      <FileText className="w-10 h-10 mx-auto text-amber-400 opacity-90" />
+                      <p className="text-xs font-bold text-white">
+                        {isUz
+                          ? "Post Telegram kanaliga rasmsiz, faqat matnli ko‘rinishda yuboriladi"
+                          : "Пост будет отправлен в Telegram без изображения (только текст)"}
+                      </p>
+                      <p className="text-[11px] text-slate-400 max-w-sm mx-auto">
+                        {isUz
+                          ? "Rasm yuklash majburiy emas. Agar rasm qo‘shmoqchi bo‘lsangiz, «Rasm yuklash» tugmasini bosing."
+                          : "Изображение не обязательно. Чтобы добавить, нажмите «Загрузить фото»."}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setSendWithoutImage(false)}
+                        className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold transition-all shadow-sm"
+                      >
+                        {isUz ? "Rasmli rejimga qaytish" : "Вернуть изображение"}
+                      </button>
+                    </div>
+                  ) : (() => {
                     const activeAsset = publishLang === "ru" ? previewNews.assets?.ru : previewNews.assets?.uz;
                     const isValidUrl =
                       activeAsset?.public_url &&
@@ -1277,11 +1397,31 @@ export default function AdminSocialPage() {
 
                     if (isValidUrl) {
                       return (
-                        <img
-                          src={activeAsset!.public_url}
-                          alt="Brand card"
-                          className="w-full h-full object-cover"
-                        />
+                        <div className="relative w-full h-full group">
+                          <img
+                            src={activeAsset!.public_url}
+                            alt="Brand card"
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => fileInputRef.current?.click()}
+                              className="px-3 py-1.5 bg-white/90 hover:bg-white text-slate-900 rounded-lg text-xs font-bold shadow-md flex items-center gap-1.5"
+                            >
+                              <Upload className="w-3.5 h-3.5" />
+                              <span>{isUz ? "Almashtirish" : "Заменить"}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setSendWithoutImage(true)}
+                              className="px-3 py-1.5 bg-red-600/90 hover:bg-red-700 text-white rounded-lg text-xs font-bold shadow-md flex items-center gap-1.5"
+                            >
+                              <FileText className="w-3.5 h-3.5" />
+                              <span>{isUz ? "Faqat matn" : "Удалить фото"}</span>
+                            </button>
+                          </div>
+                        </div>
                       );
                     }
 
@@ -1290,37 +1430,49 @@ export default function AdminSocialPage() {
                         <ImageIcon className="w-10 h-10 mx-auto opacity-50" />
                         <p className="text-xs font-medium">
                           {isUz
-                            ? "Mavzuga mos vizual rasm hali biriktirilmagan. Nashr paytida avtomatik yaratiladi yoki quyidagi tugma orqali hoziroq tayyorlang."
-                            : "Изображение еще не создано. Оно будет создано при публикации, либо создайте его прямо сейчас."}
+                            ? "Rasm tanlanmagan. Kompyuterdan yuklang, sun’iy intellekt orqali yarating yoki rasmsiz yuboring."
+                            : "Изображение не прикреплено. Загрузите с ПК, создайте через ИИ или отправьте только текст."}
                         </p>
-                        <div className="flex items-center justify-center gap-2 pt-1">
+                        <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
                           <button
                             type="button"
-                            disabled={generatingAsset}
-                            onClick={() => handleGenerateAsset(previewNews.id, publishLang === "ru" ? "ru" : "uz", { forceAi: true })}
+                            disabled={uploadingAsset}
+                            onClick={() => fileInputRef.current?.click()}
                             className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold shadow-sm flex items-center gap-1.5 disabled:opacity-50"
                           >
-                            <Sparkles className="w-3 h-3" />
-                            <span>{generatingAsset ? (isUz ? "Yaratilmoqda..." : "Генерация...") : (isUz ? "AI orqali yaratish" : "Создать через ИИ")}</span>
+                            <Upload className="w-3 h-3" />
+                            <span>{isUz ? "Kompyuterdan rasm tanlash" : "Загрузить с ПК"}</span>
                           </button>
                           <button
                             type="button"
                             disabled={generatingAsset}
-                            onClick={() => handleGenerateAsset(previewNews.id, publishLang === "ru" ? "ru" : "uz", { preferSourceImage: true })}
-                            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold shadow-sm flex items-center gap-1.5 disabled:opacity-50"
+                            onClick={() => handleGenerateAsset(previewNews.id, publishLang === "ru" ? "ru" : "uz", { forceAi: true })}
+                            className="px-3 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-lg text-xs font-bold shadow-sm flex items-center gap-1.5 disabled:opacity-50"
                           >
-                            <Globe className="w-3 h-3" />
-                            <span>{isUz ? "Manba rasmini olish" : "Взять из источника"}</span>
+                            <Sparkles className="w-3 h-3" />
+                            <span>{isUz ? "AI orqali yaratish" : "Создать через ИИ"}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSendWithoutImage(true)}
+                            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-bold shadow-sm flex items-center gap-1.5"
+                          >
+                            <FileText className="w-3 h-3" />
+                            <span>{isUz ? "Rasmsiz (faqat matn)" : "Без фото (текст)"}</span>
                           </button>
                         </div>
                       </div>
                     );
                   })()}
 
-                  {generatingAsset && (
-                    <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs flex flex-col items-center justify-center text-white gap-2">
+                  {(generatingAsset || uploadingAsset) && (
+                    <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-xs flex flex-col items-center justify-center text-white gap-2 z-10">
                       <RefreshCw className="w-6 h-6 animate-spin text-emerald-400" />
-                      <span className="text-xs font-bold">{isUz ? "Rasm yuklanmoqda va qayta ishlanmoqda..." : "Изображение генерируется..."}</span>
+                      <span className="text-xs font-bold">
+                        {uploadingAsset
+                          ? (isUz ? "Rasm kompyuterdan yuklanmoqda..." : "Загрузка изображения...")
+                          : (isUz ? "AI rasm tayyorlamoqda..." : "ИИ генерирует изображение...")}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -1328,9 +1480,18 @@ export default function AdminSocialPage() {
 
               {/* Telegram Post Text Mockup */}
               <div>
-                <span className="block text-xs font-extrabold text-slate-700 mb-2">
-                  {isUz ? "Telegram xabar ko‘rinishi:" : "Текст сообщения в Telegram:"}
-                </span>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-extrabold text-slate-700">
+                    {isUz ? "Telegram xabar ko‘rinishi:" : "Текст сообщения в Telegram:"}
+                  </span>
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${
+                    sendWithoutImage ? "bg-amber-100 text-amber-900" : "bg-emerald-100 text-emerald-900"
+                  }`}>
+                    {sendWithoutImage
+                      ? (isUz ? "Format: 📝 Matnli post (rasmsiz)" : "Формат: 📝 Текстовый пост")
+                      : (isUz ? "Format: 🖼 Rasmli post" : "Формат: 🖼 Пост с фото")}
+                  </span>
+                </div>
 
                 <div className="bg-[#182533] text-white p-4 rounded-2xl space-y-3 font-sans text-xs leading-relaxed shadow-inner">
                   <div className="font-bold text-emerald-400">
@@ -1339,6 +1500,12 @@ export default function AdminSocialPage() {
 
                   <div className="font-extrabold text-white text-sm">
                     📌 {publishLang === "ru" ? previewNews.translations?.ru?.title || previewNews.original_title : previewNews.translations?.uz?.title || previewNews.original_title}
+                  </div>
+
+                  <div className="text-[11px] text-slate-400 flex items-center gap-2 border-b border-slate-700/60 pb-2">
+                    <span>📅 {new Date(previewNews.published_at).toLocaleDateString(isUz ? "uz-UZ" : "ru-RU")}</span>
+                    <span>•</span>
+                    <span>📰 {previewNews.source?.name || previewNews.original_url.split("/")[2]}</span>
                   </div>
 
                   <div className="text-slate-300">
@@ -1352,10 +1519,10 @@ export default function AdminSocialPage() {
                   </div>
 
                   <div className="pt-2 border-t border-slate-700/60 text-slate-400 flex items-center justify-between text-[11px]">
-                    <span>
-                      📰 {publishLang === "ru" ? "Источник:" : "Manba:"} {previewNews.source?.name || previewNews.original_url.split("/")[2]}
+                    <span className="truncate max-w-[280px]">
+                      🔗 {isUz ? "Asl maqola:" : "Оригинал:"} {previewNews.original_url}
                     </span>
-                    <span className="text-emerald-400 font-bold">@angren_estate</span>
+                    <span className="text-emerald-400 font-bold shrink-0">@angren_estate</span>
                   </div>
 
                   {/* Inline Buttons Mockup */}
@@ -1385,13 +1552,26 @@ export default function AdminSocialPage() {
 
                       if (res.status === "published") {
                         return (
-                          <div key={idx} className="flex items-center gap-2 text-xs font-bold text-emerald-800 bg-emerald-50 p-2.5 rounded-xl border border-emerald-200">
-                            <CheckCircle className="w-4 h-4 shrink-0 text-emerald-600" />
-                            <span>
-                              {label}: {isUz ? "Muvaffaqiyatli yuborildi" : "Успешно отправлено"}
-                              {res.messageId ? ` (Telegram Post ID: ${res.messageId})` : ""}
-                              {res.recipientsCount !== undefined ? ` (${res.recipientsCount} ta obunachiga)` : ""}
-                            </span>
+                          <div key={idx} className="flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-emerald-800 bg-emerald-50 p-2.5 rounded-xl border border-emerald-200">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle className="w-4 h-4 shrink-0 text-emerald-600" />
+                              <span>
+                                {label}: {isUz ? "Muvaffaqiyatli yuborildi" : "Успешно отправлено"}
+                                {res.messageId ? ` (Telegram Post ID: #${res.messageId})` : ""}
+                                {res.recipientsCount !== undefined ? ` (${res.recipientsCount} ta obunachiga)` : ""}
+                              </span>
+                            </div>
+                            {isChannel && res.messageId && (
+                              <a
+                                href={`https://t.me/angren_estate/${res.messageId}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-950 underline shrink-0 ml-auto"
+                              >
+                                <span>{isUz ? "Telegramda ko‘rish" : "Открыть в Telegram"}</span>
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            )}
                           </div>
                         );
                       }

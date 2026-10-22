@@ -62,7 +62,7 @@ export interface NewsAsset {
   storage_path: string;
   public_url: string;
   asset_type: "generated_card" | "custom_upload" | "source_image" | "ai_generated";
-  source_origin?: "ai" | "curated" | "source_rss" | "source_og";
+  source_origin?: "ai" | "curated" | "source_rss" | "source_og" | "custom_upload";
   width: number;
   height: number;
   created_at: string;

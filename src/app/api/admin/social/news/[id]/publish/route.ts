@@ -43,6 +43,7 @@ export async function POST(
     const target = body.target || "channel"; // "channel", "bot", "both"
     const language = body.language || "uz"; // "uz", "ru", "both"
     const forceRepeat = Boolean(body.forceRepeat);
+    const withoutImage = Boolean(body.withoutImage);
 
     const languagesToPublish: Array<"uz" | "ru"> =
       language === "both" ? ["uz", "ru"] : [language as "uz" | "ru"];
@@ -51,12 +52,12 @@ export async function POST(
 
     for (const lang of languagesToPublish) {
       if (target === "channel" || target === "both") {
-        const channelRes = await publishNewsToTelegramChannel(news.id, lang, { forceRepeat });
+        const channelRes = await publishNewsToTelegramChannel(news.id, lang, { forceRepeat, withoutImage });
         publishResults.push(channelRes);
       }
 
       if (target === "bot" || target === "both") {
-        const botRes = await broadcastNewsToTelegramSubscribers(news.id, lang, { forceRepeat });
+        const botRes = await broadcastNewsToTelegramSubscribers(news.id, lang, { forceRepeat, withoutImage });
         publishResults.push(botRes);
       }
     }

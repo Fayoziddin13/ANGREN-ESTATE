@@ -41,6 +41,16 @@ export function buildNewsPostCaption(news: RealEstateNews, lang: "uz" | "ru" = "
   const takeaway = (trans?.practical_takeaway || "").trim();
   const sourceName = (news.source?.name || news.original_url.split("/")[2] || "Rasmiy manba").trim();
 
+  // Format publication date
+  const pubDate = new Date(news.published_at);
+  const formattedDate = !isNaN(pubDate.getTime())
+    ? pubDate.toLocaleDateString(isUz ? "uz-UZ" : "ru-RU", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
+    : "";
+
   const lines: string[] = [];
 
   // 1. Brand Header
@@ -51,24 +61,33 @@ export function buildNewsPostCaption(news: RealEstateNews, lang: "uz" | "ru" = "
   lines.push(`📌 ${title}`);
   lines.push("");
 
-  // 3. Summary (capped to safe limit)
+  // 3. Date & Source info
+  const metaParts: string[] = [];
+  if (formattedDate) {
+    metaParts.push(`📅 ${isUz ? "Sana:" : "Дата:"} ${formattedDate}`);
+  }
+  metaParts.push(`📰 ${isUz ? "Manba:" : "Источник:"} ${sourceName}`);
+  lines.push(metaParts.join(" | "));
+  lines.push("");
+
+  // 4. Summary (capped to safe limit)
   if (summary) {
     const cleanSummary = summary.replace(/\s+/g, " ");
-    const maxSummaryLen = 350;
+    const maxSummaryLen = 320;
     const truncated =
       cleanSummary.length > maxSummaryLen ? `${cleanSummary.slice(0, maxSummaryLen)}...` : cleanSummary;
     lines.push(truncated);
   }
 
-  // 4. Practical Takeaway
+  // 5. Practical Takeaway
   if (takeaway) {
     lines.push("");
     lines.push(`${isUz ? "💡 O‘quvchi uchun ahamiyati:" : "💡 Практическая польза:"} ${takeaway}`);
   }
 
-  // 5. Source Credit
+  // 6. Direct Source Link & Channel
   lines.push("");
-  lines.push(`${isUz ? "📰 Manba:" : "📰 Источник:"} ${sourceName}`);
+  lines.push(`🔗 ${isUz ? "Asl maqola:" : "Оригинал:"} ${news.original_url}`);
   lines.push("🌐 @angren_estate");
 
   let caption = lines.join("\n").trim();
@@ -123,17 +142,20 @@ export interface NewsPublishResult {
   error?: string;
 }
 
+export interface NewsPublishOptions {
+  forceRepeat?: boolean;
+  channelId?: string;
+  botToken?: string;
+  withoutImage?: boolean;
+}
+
 /**
  * Publish news item to Telegram Channel (@angren_estate)
  */
 export async function publishNewsToTelegramChannel(
   newsId: string,
   lang: "uz" | "ru" = "uz",
-  options?: {
-    forceRepeat?: boolean;
-    channelId?: string;
-    botToken?: string;
-  }
+  options?: NewsPublishOptions
 ): Promise<NewsPublishResult> {
   const token = options?.botToken || process.env.TELEGRAM_BOT_TOKEN;
   if (!token) {
@@ -196,7 +218,48 @@ export async function publishNewsToTelegramChannel(
     const caption = buildNewsPostCaption(news, lang);
     const replyMarkup = buildNewsPostMarkup(news, lang);
 
-    // 1. Validate existing asset or generate a new raster JPEG asset
+    // CASE 1: Text-only publication (image omitted or not requested)
+    if (options?.withoutImage) {
+      const sendResult = await sendTelegramDirectMessage(targetChannel, caption, replyMarkup, token);
+      if (!sendResult.ok) {
+        const errorMsg = sendResult.description || `HTTP ${sendResult.http_status}` || "Telegramga matnli post yuborishda xatolik";
+        await recordNewsPublication({
+          news_id: news.id,
+          target_type: "channel",
+          language: lang,
+          status: "failed",
+          error_message: errorMsg,
+        });
+
+        return {
+          success: false,
+          status: "error",
+          targetType: "channel",
+          language: lang,
+          error: errorMsg,
+        };
+      }
+
+      const messageId = sendResult.result?.message_id;
+      await recordNewsPublication({
+        news_id: news.id,
+        target_type: "channel",
+        language: lang,
+        status: "published",
+        telegram_message_id: messageId,
+      });
+
+      return {
+        success: true,
+        status: "published",
+        targetType: "channel",
+        language: lang,
+        messageId,
+      };
+    }
+
+    // CASE 2: Image publication requested
+    // Validate existing asset or generate a new raster JPEG asset
     let asset = lang === "uz" ? news.assets?.uz : news.assets?.ru;
     if (!isRasterAssetValid(asset)) {
       try {
@@ -348,6 +411,7 @@ export async function broadcastNewsToTelegramSubscribers(
   options?: {
     forceRepeat?: boolean;
     botToken?: string;
+    withoutImage?: boolean;
   }
 ): Promise<NewsPublishResult> {
   const token = options?.botToken || process.env.TELEGRAM_BOT_TOKEN;
@@ -427,27 +491,29 @@ export async function broadcastNewsToTelegramSubscribers(
     const caption = buildNewsPostCaption(news, lang);
     const replyMarkup = buildNewsPostMarkup(news, lang);
 
-    // 1. Validate existing asset or generate a new raster JPEG asset
-    let asset = lang === "uz" ? news.assets?.uz : news.assets?.ru;
-    if (!isRasterAssetValid(asset)) {
-      try {
-        asset = await generateAndSaveNewsAsset(news, lang);
-      } catch (assetErr: any) {
-        console.warn("[NewsPublisher] Could not generate asset for bot broadcast:", assetErr?.message || assetErr);
-      }
-    }
-
-    // Determine photo source: public URL or JPEG buffer
+    // Determine photo source: public URL or JPEG buffer (if image is requested)
     let photoPayload: string | Buffer | null = null;
-    if (isRasterAssetValid(asset)) {
-      photoPayload = asset!.public_url;
-    } else {
-      try {
-        const imageBuffer = await getNewsCardImageBuffer(news, lang);
-        if (isValidImageBuffer(imageBuffer)) {
-          photoPayload = imageBuffer;
+
+    if (!options?.withoutImage) {
+      let asset = lang === "uz" ? news.assets?.uz : news.assets?.ru;
+      if (!isRasterAssetValid(asset)) {
+        try {
+          asset = await generateAndSaveNewsAsset(news, lang);
+        } catch (assetErr: any) {
+          console.warn("[NewsPublisher] Could not generate asset for bot broadcast:", assetErr?.message || assetErr);
         }
-      } catch {}
+      }
+
+      if (isRasterAssetValid(asset)) {
+        photoPayload = asset!.public_url;
+      } else {
+        try {
+          const imageBuffer = await getNewsCardImageBuffer(news, lang);
+          if (isValidImageBuffer(imageBuffer)) {
+            photoPayload = imageBuffer;
+          }
+        } catch {}
+      }
     }
 
     let sentCount = 0;
