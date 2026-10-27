@@ -38,6 +38,7 @@ export async function POST(
     // 1. Resolve user and their Telegram ID
     let targetTelegramUserId: number | null = null;
     let targetUserName: string = "Foydalanuvchi";
+    let userPhone: string | undefined = undefined;
 
     // First check profiles
     const { data: profile } = await supabaseAdmin
@@ -53,6 +54,21 @@ export async function POST(
       if (profile.full_name) {
         targetUserName = profile.full_name;
       }
+      if (profile.phone) {
+        userPhone = profile.phone;
+      }
+    } else {
+      // Check auth.users if not found in profiles (e.g. Google user)
+      try {
+        const { data: auData } = await supabaseAdmin.auth.admin.getUserById(userId);
+        if (auData?.user) {
+          userPhone = auData.user.phone || auData.user.user_metadata?.phone;
+          targetUserName =
+            auData.user.user_metadata?.full_name ||
+            auData.user.user_metadata?.name ||
+            (auData.user.email ? auData.user.email.split("@")[0] : targetUserName);
+        }
+      } catch {}
     }
 
     // If not found in profile directly, check if userId itself is a Telegram ID format (e.g. tg_12345678 or pure digits)
@@ -70,6 +86,37 @@ export async function POST(
       }
     }
 
+    // Check app_settings telegram_users_registry
+    try {
+      const { data: regRow } = await supabaseAdmin
+        .from("app_settings")
+        .select("value")
+        .eq("key", "telegram_users_registry")
+        .maybeSingle();
+
+      if (Array.isArray(regRow?.value)) {
+        const normalize = (p?: string | null) => (p ? p.replace(/[\s\(\)\-\+]/g, "") : "");
+        const normUserPhone = normalize(userPhone);
+
+        for (const sub of regRow.value) {
+          const subId = Number(sub.telegram_user_id || sub.id);
+          const subPhoneNorm = normalize(sub.phone);
+
+          const matchesId = targetTelegramUserId && subId === targetTelegramUserId;
+          const matchesPhone = normUserPhone && subPhoneNorm && normUserPhone === subPhoneNorm;
+
+          if (matchesId || matchesPhone) {
+            targetTelegramUserId = subId;
+            const subName = [sub.first_name, sub.last_name].filter(Boolean).join(" ") || sub.username;
+            if (subName && targetUserName === "Foydalanuvchi") {
+              targetUserName = subName;
+            }
+            break;
+          }
+        }
+      }
+    } catch {}
+
     // Check telegram_users table as secondary fallback
     if (!targetTelegramUserId) {
       const { data: tgUser } = await supabaseAdmin
@@ -84,12 +131,12 @@ export async function POST(
       }
     }
 
-    // Check if phone matches any known telegram_users
-    if (!targetTelegramUserId && profile?.phone) {
+    // Check if phone matches any known telegram_users table
+    if (!targetTelegramUserId && userPhone) {
       const { data: tgUserByPhone } = await supabaseAdmin
         .from("telegram_users")
         .select("telegram_user_id, first_name, last_name, username")
-        .eq("phone", profile.phone)
+        .eq("phone", userPhone)
         .maybeSingle();
 
       if (tgUserByPhone?.telegram_user_id) {

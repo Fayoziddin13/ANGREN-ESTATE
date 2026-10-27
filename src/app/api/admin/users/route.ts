@@ -34,24 +34,58 @@ export async function GET(request: NextRequest) {
     const sourceFilter = searchParams.get("source") || "all";
     const applicationFilter = searchParams.get("application") || "all";
 
-    // 1. Fetch profiles
+    // 1. Fetch Supabase Auth users from auth.users (covers all Google and email registered accounts)
+    let authUsers: any[] = [];
+    try {
+      const { data: authData, error: authErr } = await supabaseAdmin.auth.admin.listUsers();
+      if (!authErr && authData?.users) {
+        authUsers = authData.users;
+      }
+    } catch (authFetchErr) {
+      console.warn("[Admin Users API] Error fetching auth.users:", authFetchErr);
+    }
+
+    // 2. Fetch public.profiles
     const { data: profiles, error: profilesErr } = await supabaseAdmin
       .from("profiles")
       .select("*")
       .order("created_at", { ascending: false });
 
     if (profilesErr) {
-      console.error("[Admin Users API] Error fetching profiles:", profilesErr);
-      return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
+      console.warn("[Admin Users API] Error fetching profiles:", profilesErr);
     }
 
-    // 2. Fetch telegram_users
-    const { data: telegramUsers } = await supabaseAdmin
-      .from("telegram_users")
-      .select("*")
-      .order("created_at", { ascending: false });
+    // 3. Fetch Telegram users registry from app_settings (telegram_users_registry)
+    let telegramSubscribers: any[] = [];
+    try {
+      const { data: regRow } = await supabaseAdmin
+        .from("app_settings")
+        .select("value")
+        .eq("key", "telegram_users_registry")
+        .maybeSingle();
 
-    // 3. Fetch leads for application tracking
+      if (Array.isArray(regRow?.value)) {
+        telegramSubscribers = regRow.value;
+      }
+    } catch (regErr) {
+      console.warn("[Admin Users API] Error reading telegram_users_registry from app_settings:", regErr);
+    }
+
+    // Secondary fallback: check telegram_users table if it exists
+    if (telegramSubscribers.length === 0) {
+      try {
+        const { data: tgUsersTable } = await supabaseAdmin
+          .from("telegram_users")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (Array.isArray(tgUsersTable)) {
+          telegramSubscribers = tgUsersTable;
+        }
+      } catch {}
+    }
+
+    // 4. Fetch leads for application tracking
     const { data: allLeads } = await supabaseAdmin
       .from("leads")
       .select("*")
@@ -59,7 +93,7 @@ export async function GET(request: NextRequest) {
 
     const leadsList: Lead[] = (allLeads as Lead[]) || [];
 
-    // 4. Fetch favorites count
+    // 5. Fetch favorites count
     const { data: allFavorites } = await supabaseAdmin
       .from("favorites")
       .select("user_id");
@@ -76,7 +110,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 5. Fetch analytics views count
+    // 6. Fetch analytics views count
     const { data: allViews } = await supabaseAdmin
       .from("analytics_events")
       .select("user_id")
@@ -94,19 +128,27 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Index telegram_users by telegram_user_id and phone
-    const tgUserById = new Map<number, any>();
-    const tgUserByPhone = new Map<string, any>();
-    if (telegramUsers) {
-      for (const tg of telegramUsers) {
-        if (tg.telegram_user_id) {
-          tgUserById.set(Number(tg.telegram_user_id), tg);
-        }
-        const norm = normalizePhone(tg.phone);
-        if (norm) {
-          tgUserByPhone.set(norm, tg);
-        }
-      }
+    // Build index of profiles by id, email, and phone
+    const profileById = new Map<string, any>();
+    const profileByEmail = new Map<string, any>();
+    const profileByPhone = new Map<string, any>();
+
+    for (const p of profiles || []) {
+      if (p.id) profileById.set(p.id, p);
+      if (p.email) profileByEmail.set(p.email.toLowerCase(), p);
+      const normP = normalizePhone(p.phone);
+      if (normP) profileByPhone.set(normP, p);
+    }
+
+    // Build index of telegram subscribers by id and phone
+    const tgSubById = new Map<number, any>();
+    const tgSubByPhone = new Map<string, any>();
+
+    for (const sub of telegramSubscribers) {
+      const numId = Number(sub.telegram_user_id || sub.id);
+      if (numId) tgSubById.set(numId, sub);
+      const norm = normalizePhone(sub.phone);
+      if (norm) tgSubByPhone.set(norm, sub);
     }
 
     // Group leads by user_id, telegram_user_id, and phone
@@ -139,9 +181,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const seenUserIds = new Set<string>();
-    const allUsers: RegisteredUser[] = [];
-
     // Helper to extract leads for a specific user
     const findUserLeads = (userId: string, tgId?: number, phone?: string): Lead[] => {
       const leadMap = new Map<string, Lead>();
@@ -158,9 +197,102 @@ export async function GET(request: NextRequest) {
       return Array.from(leadMap.values());
     };
 
-    // 6. Map profiles
+    const seenUserIds = new Set<string>();
+    const seenEmails = new Set<string>();
+    const seenPhones = new Set<string>();
+    const seenTgUserIds = new Set<number>();
+    const allUsers: RegisteredUser[] = [];
+
+    // --- PHASE 1: Process auth.users (Google & Email users) ---
+    for (const au of authUsers) {
+      const userId = au.id;
+      seenUserIds.add(userId);
+      if (au.email) seenEmails.add(au.email.toLowerCase());
+
+      const profile = profileById.get(userId) || (au.email ? profileByEmail.get(au.email.toLowerCase()) : null);
+
+      // Determine registration source
+      const isGoogle =
+        profile?.auth_provider === "google" ||
+        au.app_metadata?.provider === "google" ||
+        au.app_metadata?.providers?.includes("google") ||
+        au.user_metadata?.iss?.includes("google") ||
+        Boolean(profile?.google_id) ||
+        Boolean(au.user_metadata?.avatar_url?.includes("googleusercontent")) ||
+        Boolean(au.user_metadata?.picture?.includes("googleusercontent"));
+
+      const isTg = profile?.auth_provider === "telegram" || String(userId).startsWith("tg_");
+
+      let regSource: "google" | "telegram" | "other" = "other";
+      if (isGoogle) regSource = "google";
+      else if (isTg) regSource = "telegram";
+
+      // Resolve phone
+      const phone = profile?.phone || au.phone || au.user_metadata?.phone || undefined;
+      const normP = normalizePhone(phone);
+      if (normP) seenPhones.add(normP);
+
+      // Resolve Telegram connectivity
+      let tgUserId: number | undefined = profile?.telegram_user_id ? Number(profile.telegram_user_id) : undefined;
+      let tgUsername: string | undefined = profile?.telegram_username || undefined;
+
+      if (!tgUserId && normP && tgSubByPhone.has(normP)) {
+        const sub = tgSubByPhone.get(normP);
+        tgUserId = Number(sub.telegram_user_id);
+        if (!tgUsername && sub.username) tgUsername = sub.username;
+      }
+      if (tgUserId) seenTgUserIds.add(tgUserId);
+
+      // Resolve Google ID
+      const googleId = profile?.google_id || au.user_metadata?.sub || (isGoogle ? au.id : undefined);
+
+      // Resolve Name
+      const name =
+        profile?.full_name ||
+        au.user_metadata?.full_name ||
+        au.user_metadata?.name ||
+        (au.email ? au.email.split("@")[0] : "Foydalanuvchi");
+
+      // Resolve avatar
+      const avatarUrl =
+        profile?.avatar_url ||
+        au.user_metadata?.avatar_url ||
+        au.user_metadata?.picture ||
+        undefined;
+
+      const userLeads = findUserLeads(userId, tgUserId, phone);
+      const applications = userLeads.filter(isActualApplication);
+
+      allUsers.push({
+        id: userId,
+        name: name,
+        email: au.email || profile?.email || "",
+        phone: phone,
+        avatar_url: avatarUrl,
+        role: profile?.role === "admin" ? "admin" : "user",
+        registration_source: regSource,
+        registration_date: profile?.created_at || au.created_at || new Date().toISOString(),
+        last_activity: profile?.last_activity || au.last_sign_in_at || profile?.updated_at || au.created_at || new Date().toISOString(),
+        telegram_user_id: tgUserId,
+        telegram_username: tgUsername,
+        google_id: googleId,
+        has_submitted_application: applications.length > 0,
+        applications_count: applications.length,
+        applications: applications,
+        can_message_telegram: Boolean(tgUserId),
+        favorites_count: favoritesCountMap.get(userId) || 0,
+        viewed_properties_count: viewsCountMap.get(userId) || 0,
+        status: profile?.status === "disabled" ? "disabled" : "active",
+      });
+    }
+
+    // --- PHASE 2: Process profiles that might not have been in auth.users ---
     for (const p of profiles || []) {
+      if (seenUserIds.has(p.id) || (p.email && seenEmails.has(p.email.toLowerCase()))) {
+        continue;
+      }
       seenUserIds.add(p.id);
+      if (p.email) seenEmails.add(p.email.toLowerCase());
 
       const isTelegramId = String(p.id).startsWith("tg_");
       let tgUserId: number | undefined = p.telegram_user_id ? Number(p.telegram_user_id) : undefined;
@@ -171,18 +303,20 @@ export async function GET(request: NextRequest) {
         if (!isNaN(parsed)) tgUserId = parsed;
       }
 
-      // If phone matches a telegram user, augment telegram info
-      const normPhone = normalizePhone(p.phone);
-      if ((!tgUserId || !tgUsername) && normPhone && tgUserByPhone.has(normPhone)) {
-        const matchedTg = tgUserByPhone.get(normPhone);
-        if (!tgUserId && matchedTg.telegram_user_id) tgUserId = Number(matchedTg.telegram_user_id);
-        if (!tgUsername && matchedTg.username) tgUsername = matchedTg.username;
+      const normP = normalizePhone(p.phone);
+      if (normP) seenPhones.add(normP);
+
+      if ((!tgUserId || !tgUsername) && normP && tgSubByPhone.has(normP)) {
+        const matchedSub = tgSubByPhone.get(normP);
+        if (!tgUserId && matchedSub.telegram_user_id) tgUserId = Number(matchedSub.telegram_user_id);
+        if (!tgUsername && matchedSub.username) tgUsername = matchedSub.username;
       }
+      if (tgUserId) seenTgUserIds.add(tgUserId);
 
       let regSource: "google" | "telegram" | "other" = "other";
-      if (p.auth_provider === "telegram" || isTelegramId || (tgUserId && !p.google_id && !p.email?.includes("@gmail.com"))) {
+      if (p.auth_provider === "telegram" || isTelegramId || (tgUserId && !p.google_id && p.auth_provider !== "google")) {
         regSource = "telegram";
-      } else if (p.auth_provider === "google" || p.google_id || p.email?.includes("@gmail.com") || p.avatar_url?.includes("googleusercontent")) {
+      } else if (p.auth_provider === "google" || p.google_id || p.avatar_url?.includes("googleusercontent")) {
         regSource = "google";
       } else if (tgUserId) {
         regSource = "telegram";
@@ -214,49 +348,67 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // 7. Include telegram_users who are not in profiles yet
-    if (telegramUsers) {
-      for (const tg of telegramUsers) {
-        const syntheticId = `tg_${tg.telegram_user_id}`;
-        if (!seenUserIds.has(syntheticId)) {
-          // Check if already represented by phone
-          const normP = normalizePhone(tg.phone);
-          const alreadyIn = allUsers.some(
-            (u) =>
-              u.telegram_user_id === Number(tg.telegram_user_id) ||
-              (normP && normalizePhone(u.phone) === normP)
-          );
+    // --- PHASE 3: Process telegram_users_registry from app_settings (with deduplication) ---
+    for (const sub of telegramSubscribers) {
+      const tgNum = Number(sub.telegram_user_id || sub.id);
+      if (!tgNum) continue;
 
-          if (!alreadyIn) {
-            seenUserIds.add(syntheticId);
-            const tgFullName = [tg.first_name, tg.last_name].filter(Boolean).join(" ") || tg.username || "Telegram User";
-            const userLeads = findUserLeads(syntheticId, Number(tg.telegram_user_id), tg.phone);
-            const applications = userLeads.filter(isActualApplication);
+      const normP = normalizePhone(sub.phone);
 
-            allUsers.push({
-              id: syntheticId,
-              name: tgFullName,
-              email: tg.username ? `@${tg.username}` : `tg_${tg.telegram_user_id}@angrenestate.uz`,
-              phone: tg.phone || undefined,
-              avatar_url: undefined,
-              role: "user",
-              registration_source: "telegram",
-              registration_date: tg.created_at || new Date().toISOString(),
-              last_activity: tg.last_active_at || tg.updated_at || tg.created_at || new Date().toISOString(),
-              telegram_user_id: Number(tg.telegram_user_id),
-              telegram_username: tg.username || undefined,
-              google_id: undefined,
-              has_submitted_application: applications.length > 0,
-              applications_count: applications.length,
-              applications: applications,
-              can_message_telegram: true,
-              favorites_count: 0,
-              viewed_properties_count: 0,
-              status: "active",
-            });
+      // Check if this Telegram subscriber already matches an existing user
+      if (seenTgUserIds.has(tgNum)) {
+        continue;
+      }
+
+      if (normP && seenPhones.has(normP)) {
+        // Link to existing user record with same phone instead of duplicating
+        const existingUser = allUsers.find((u) => u.phone && normalizePhone(u.phone) === normP);
+        if (existingUser) {
+          existingUser.telegram_user_id = tgNum;
+          if (!existingUser.telegram_username && sub.username) {
+            existingUser.telegram_username = sub.username;
           }
+          existingUser.can_message_telegram = true;
+          seenTgUserIds.add(tgNum);
+          continue;
         }
       }
+
+      // Add as unique Telegram registered user
+      const syntheticId = `tg_${tgNum}`;
+      seenUserIds.add(syntheticId);
+      seenTgUserIds.add(tgNum);
+      if (normP) seenPhones.add(normP);
+
+      const tgFullName =
+        [sub.first_name, sub.last_name].filter(Boolean).join(" ") ||
+        sub.username ||
+        "Telegram foydalanuvchisi";
+
+      const userLeads = findUserLeads(syntheticId, tgNum, sub.phone);
+      const applications = userLeads.filter(isActualApplication);
+
+      allUsers.push({
+        id: syntheticId,
+        name: tgFullName,
+        email: sub.username ? `@${sub.username}` : `tg_${tgNum}@angrenestate.uz`,
+        phone: sub.phone || undefined,
+        avatar_url: undefined,
+        role: "user",
+        registration_source: "telegram",
+        registration_date: sub.registered_at || sub.created_at || new Date().toISOString(),
+        last_activity: sub.updated_at || sub.registered_at || sub.created_at || new Date().toISOString(),
+        telegram_user_id: tgNum,
+        telegram_username: sub.username || undefined,
+        google_id: undefined,
+        has_submitted_application: applications.length > 0,
+        applications_count: applications.length,
+        applications: applications,
+        can_message_telegram: true,
+        favorites_count: 0,
+        viewed_properties_count: 0,
+        status: "active",
+      });
     }
 
     // Calculate overall stats before filtering

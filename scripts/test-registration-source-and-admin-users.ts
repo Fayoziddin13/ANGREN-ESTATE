@@ -123,14 +123,23 @@ async function runTests() {
   assert(isActualApplication(generalInquiryLead) === true, "Property inquiry lead is classified as application");
 
   // 3. User registration source classification
-  function resolveUserSource(profile: any): "google" | "telegram" | "other" {
-    if (profile.auth_provider === "telegram" || String(profile.id).startsWith("tg_") || (profile.telegram_user_id && !profile.google_id && !profile.email?.includes("@gmail.com"))) {
-      return "telegram";
-    }
-    if (profile.auth_provider === "google" || profile.google_id || profile.email?.includes("@gmail.com") || profile.avatar_url?.includes("googleusercontent")) {
-      return "google";
-    }
-    if (profile.telegram_user_id) return "telegram";
+  function resolveUserSource(profile: any, au?: any): "google" | "telegram" | "other" {
+    const isGoogle =
+      profile?.auth_provider === "google" ||
+      au?.app_metadata?.provider === "google" ||
+      au?.app_metadata?.providers?.includes("google") ||
+      au?.user_metadata?.iss?.includes("google") ||
+      Boolean(profile?.google_id) ||
+      Boolean(au?.user_metadata?.avatar_url?.includes("googleusercontent")) ||
+      Boolean(au?.user_metadata?.picture?.includes("googleusercontent"));
+
+    const isTg =
+      profile?.auth_provider === "telegram" ||
+      String(profile?.id || au?.id).startsWith("tg_") ||
+      (profile?.telegram_user_id && !isGoogle);
+
+    if (isGoogle) return "google";
+    if (isTg) return "telegram";
     return "other";
   }
 
@@ -142,6 +151,21 @@ async function runTests() {
   };
   assert(resolveUserSource(googleProfile) === "google", "Google profile is resolved as source google");
 
+  const googleAuthUserWithoutProfile = {
+    id: "c0d5c995-0a5f-4182-8dab-1ab2588be11d",
+    email: "fayoziddin.18@gmail.com",
+    app_metadata: { provider: "google", providers: ["google"] },
+    user_metadata: { iss: "https://accounts.google.com" },
+  };
+  assert(resolveUserSource(null, googleAuthUserWithoutProfile) === "google", "Google auth.user without public.profiles row is correctly resolved as source google");
+
+  const emailAuthUser = {
+    id: "2ae96f82-35f7-43c2-aa06-60772f0d07d6",
+    email: "admin.angren@gmail.com",
+    app_metadata: { provider: "email", providers: ["email"] },
+  };
+  assert(resolveUserSource(null, emailAuthUser) === "other", "Email auth user is resolved as source other (Sayt) without false-positive google match");
+
   const tgProfile = {
     id: "tg_987654321",
     email: "@farhod_angren",
@@ -150,7 +174,66 @@ async function runTests() {
   };
   assert(resolveUserSource(tgProfile) === "telegram", "Telegram profile is resolved as source telegram");
 
-  // 4. Admin Direct Telegram Messaging Guardrails
+  // 4. Registry deduplication and user merging
+  function mergeRegistryUsers(
+    authUsers: any[],
+    registrySubscribers: any[]
+  ) {
+    const normalizePhone = (p?: string | null) => (p ? p.replace(/[\s\(\)\-\+]/g, "") : "");
+    const merged: any[] = [];
+    const seenPhones = new Set<string>();
+    const seenTgIds = new Set<number>();
+
+    for (const au of authUsers) {
+      const pNorm = normalizePhone(au.phone);
+      if (pNorm) seenPhones.add(pNorm);
+      merged.push({ ...au });
+    }
+
+    for (const sub of registrySubscribers) {
+      const tgNum = Number(sub.telegram_user_id);
+      const subPhoneNorm = normalizePhone(sub.phone);
+
+      if (seenTgIds.has(tgNum)) continue;
+
+      if (subPhoneNorm && seenPhones.has(subPhoneNorm)) {
+        const existing = merged.find((m) => normalizePhone(m.phone) === subPhoneNorm);
+        if (existing) {
+          existing.telegram_user_id = tgNum;
+          existing.can_message_telegram = true;
+          seenTgIds.add(tgNum);
+          continue;
+        }
+      }
+
+      seenTgIds.add(tgNum);
+      if (subPhoneNorm) seenPhones.add(subPhoneNorm);
+      merged.push({
+        id: `tg_${tgNum}`,
+        name: [sub.first_name, sub.last_name].filter(Boolean).join(" ") || sub.username,
+        phone: sub.phone,
+        telegram_user_id: tgNum,
+        registration_source: "telegram",
+        can_message_telegram: true,
+      });
+    }
+
+    return merged;
+  }
+
+  const testAuth = [
+    { id: "au-1", name: "Alisher", phone: "+998901234567", email: "alisher@gmail.com", registration_source: "google" },
+  ];
+  const testSubscribers = [
+    { telegram_user_id: 111, phone: "+998 90 123-45-67", username: "alisher_tg", first_name: "Alisher" }, // Matches phone
+    { telegram_user_id: 222, phone: "+998912345678", username: "bobur_tg", first_name: "Bobur" }, // Distinct
+  ];
+  const mergedList = mergeRegistryUsers(testAuth, testSubscribers);
+  assert(mergedList.length === 2, "Duplicate user with matching phone is merged rather than duplicated");
+  assert(mergedList[0].telegram_user_id === 111, "Matched auth user is enriched with Telegram ID");
+  assert(mergedList[1].id === "tg_222", "Distinct telegram subscriber is added as unique user");
+
+  // 5. Admin Direct Telegram Messaging Guardrails
   function validateTelegramMessagingCapability(user: { telegram_user_id?: number; can_message_telegram?: boolean }): { canSend: boolean; errorReason?: string } {
     if (!user.telegram_user_id) {
       return {
