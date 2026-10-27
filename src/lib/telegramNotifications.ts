@@ -337,10 +337,8 @@ export function buildPropertyNotificationMarkup(propertyId: string, lang: "uz" |
     inline_keyboard: [
       [
         {
-          text: isUz ? "Obyektni ko‘rish →" : "Открыть объект →",
-          web_app: {
-            url: openUrl,
-          },
+          text: isUz ? "Obyektni ochish →" : "Открыть объект →",
+          url: openUrl,
         },
       ],
     ],
@@ -349,7 +347,7 @@ export function buildPropertyNotificationMarkup(propertyId: string, lang: "uz" |
 
 /**
  * Send notification to a single subscriber.
- * Strictly text-only message (NO photo, NO storage downloads).
+ * Formatted identically to Telegram channel posts (photo, title, price, params, address, open button).
  * Handles blocked/deactivated users by updating notifications_enabled = false.
  */
 export async function dispatchNotificationToUser(
@@ -357,11 +355,65 @@ export async function dispatchNotificationToUser(
   property: Property
 ): Promise<{ status: "sent" | "failed" | "blocked"; messageId?: number; error?: string }> {
   const lang = user.language === "ru" ? "ru" : "uz";
-  const text = buildPropertyNotificationText(property, lang);
-  const replyMarkup = buildPropertyNotificationMarkup(property.id, lang);
+  const caption = buildChannelPostCaption(property, lang);
+  const replyMarkup = buildChannelPostMarkup(property, lang);
 
-  // Pure text message delivery
-  const res = await sendTelegramDirectMessage(user.telegram_user_id, text, replyMarkup);
+  // Resolve photo candidate
+  const rawPhoto = resolvePropertyPhotoUrl(property);
+  const resolvedPhoto = resolveCanonicalPhotoUrl(rawPhoto);
+  const photoUrl = resolvedPhoto.url;
+
+  let res: {
+    ok: boolean;
+    result?: any;
+    description?: string;
+    error_code?: number;
+    http_status?: number;
+  };
+
+  if (photoUrl && resolvedPhoto.isValidPublicHttps) {
+    try {
+      res = await sendTelegramPhoto(user.telegram_user_id, photoUrl, caption, replyMarkup);
+
+      if (!res.ok && isTelegramPhotoSpecificError(res.description)) {
+        try {
+          const dlController = new AbortController();
+          const dlTimeout = setTimeout(() => dlController.abort(), 6000);
+          const dlResp = await fetch(photoUrl, {
+            signal: dlController.signal,
+            headers: { "User-Agent": "AngrenEstate-Server/1.0" },
+          });
+          clearTimeout(dlTimeout);
+
+          if (dlResp.ok) {
+            const arrayBuf = await dlResp.arrayBuffer();
+            const buffer = Buffer.from(arrayBuf);
+            const contentType = dlResp.headers.get("content-type") || "image/jpeg";
+            if (buffer.length > 0 && buffer.length <= 10 * 1024 * 1024) {
+              res = await sendTelegramPhoto(
+                user.telegram_user_id,
+                buffer,
+                caption,
+                replyMarkup,
+                undefined,
+                contentType
+              );
+            }
+          }
+        } catch {
+          // Ignore error and fall back to text
+        }
+
+        if (!res.ok) {
+          res = await sendTelegramDirectMessage(user.telegram_user_id, caption, replyMarkup);
+        }
+      }
+    } catch {
+      res = await sendTelegramDirectMessage(user.telegram_user_id, caption, replyMarkup);
+    }
+  } else {
+    res = await sendTelegramDirectMessage(user.telegram_user_id, caption, replyMarkup);
+  }
 
   if (res.ok) {
     return { status: "sent", messageId: res.result?.message_id };
@@ -796,11 +848,11 @@ export function buildChannelPostMarkup(property: Property, lang: "uz" | "ru" = "
   const isUz = lang === "uz";
   const rows: Array<Array<{ text: string; url: string }>> = [];
 
-  // Button A: «Obyektni ko‘rish» (HTTPS URL directly opens object page)
+  // Button A: «Obyektni ochish» (HTTPS URL directly opens object page)
   const openUrl = buildPropertyPublicUrl(property.id);
   rows.push([
     {
-      text: isUz ? "Obyektni ko‘rish →" : "Посмотреть объект →",
+      text: isUz ? "Obyektni ochish →" : "Открыть объект →",
       url: openUrl,
     },
   ]);

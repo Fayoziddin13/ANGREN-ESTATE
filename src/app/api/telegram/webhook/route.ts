@@ -4,6 +4,7 @@ import {
   editTelegramWelcomeMessage,
   answerTelegramCallback,
   sendTelegramAppMessage,
+  sendTelegramArizaPromptMessage,
   upsertTelegramUser,
   setTelegramUserNotifications,
   getTelegramUser,
@@ -386,6 +387,28 @@ export async function POST(req: NextRequest) {
             });
           }
         }
+      } else if (
+        text.startsWith("/ariza") ||
+        text.toLowerCase() === "ariza" ||
+        text.toLowerCase() === "заявка" ||
+        text.toLowerCase() === "elon berish" ||
+        text.toLowerCase() === "e'lon berish" ||
+        text.toLowerCase() === "e’lon berish"
+      ) {
+        if (!isRegistered) {
+          if (existingUser?.last_reg_message_id) {
+            await deleteTelegramMessage(chatId, existingUser.last_reg_message_id, token);
+          }
+          const promptRes = await sendContactRequestMessage(chatId, effectiveLang, token);
+          if (senderId) {
+            await upsertTelegramUser({
+              id: senderId,
+              last_reg_message_id: promptRes.result?.message_id || null,
+            });
+          }
+        } else {
+          await sendTelegramArizaPromptMessage(chatId, effectiveLang, token, siteUrl);
+        }
       } else if (text.length > 0 && message.chat.type === "private") {
         // User sent an inquiry, application or custom message via Telegram Bot
         const now = new Date().toISOString();
@@ -454,6 +477,11 @@ export async function POST(req: NextRequest) {
             : "✅ Sizning arizangiz qabul qilindi! Mutaxassisimiz tez orada siz bilan bog‘lanadi.";
 
         await sendTelegramDirectMessage(chatId, replyText, undefined, token);
+
+        // If user is not yet registered, invite them to share their phone number
+        if (!isRegistered) {
+          await sendContactRequestMessage(chatId, effectiveLang, token);
+        }
       }
     }
 

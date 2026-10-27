@@ -222,6 +222,10 @@ export async function setTelegramBotCommands(botToken?: string) {
             command: "app",
             description: "ANGREN ESTATE Mini App",
           },
+          {
+            command: "ariza",
+            description: "Ariza qoldirish / Оставить заявку",
+          },
         ],
       }),
     }
@@ -314,6 +318,8 @@ export function getTelegramWelcomePayload(
       "Смотрите объявления о продаже и аренде, фильтруйте и знакомьтесь с подробной информацией.";
 
   const appUrl = isUz ? `${webAppUrl}?lang=uz` : `${webAppUrl}?lang=ru`;
+  const siteUrl = isUz ? `${webAppUrl}/uz` : `${webAppUrl}/ru`;
+  const arizaUrl = isUz ? `${webAppUrl}?action=ariza&lang=uz` : `${webAppUrl}?action=ariza&lang=ru`;
 
   const inline_keyboard = [
     [
@@ -321,6 +327,20 @@ export function getTelegramWelcomePayload(
         text: isUz ? "🏠 Mini App'ni ochish" : "🏠 Открыть Mini App",
         web_app: {
           url: appUrl,
+        },
+      },
+    ],
+    [
+      {
+        text: isUz ? "🌐 Saytga o‘tish" : "🌐 Перейти на сайт",
+        url: siteUrl,
+      },
+    ],
+    [
+      {
+        text: isUz ? "📝 Ariza qoldirish" : "📝 Оставить заявку",
+        web_app: {
+          url: arizaUrl,
         },
       },
     ],
@@ -433,13 +453,29 @@ export function getTelegramRegistrationSuccessPayload(
       "на единой платформе.";
 
   const appUrl = isUz ? `${webAppUrl}?lang=uz` : `${webAppUrl}?lang=ru`;
+  const siteUrl = isUz ? `${webAppUrl}/uz` : `${webAppUrl}/ru`;
+  const arizaUrl = isUz ? `${webAppUrl}?action=ariza&lang=uz` : `${webAppUrl}?action=ariza&lang=ru`;
 
   const inline_keyboard = [
     [
       {
-        text: isUz ? "🏠 ANGREN ESTATE Mini App'ni ochish" : "🏠 Открыть ANGREN ESTATE Mini App",
+        text: isUz ? "🏠 Mini App'ni ochish" : "🏠 Открыть Mini App",
         web_app: {
           url: appUrl,
+        },
+      },
+    ],
+    [
+      {
+        text: isUz ? "🌐 Saytga o‘tish" : "🌐 Перейти на сайт",
+        url: siteUrl,
+      },
+    ],
+    [
+      {
+        text: isUz ? "📝 Ariza qoldirish" : "📝 Оставить заявку",
+        web_app: {
+          url: arizaUrl,
         },
       },
     ],
@@ -454,6 +490,62 @@ export function getTelegramRegistrationSuccessPayload(
   const reply_markup = { inline_keyboard };
 
   return { text, reply_markup };
+}
+
+/**
+ * Generate ariza prompt message payload with Mini App deep link
+ */
+export function getTelegramArizaPromptPayload(
+  lang: "uz" | "ru" = "uz",
+  webAppUrl: string = "https://angrenestate.uz"
+) {
+  const isUz = lang === "uz";
+  const text = isUz
+    ? "📝 ANGREN ESTATE orqali e’lon berish yoki ariza qoldirish uchun quyidagi tugmani bosing:"
+    : "📝 Чтобы подать объявление или оставить заявку через ANGREN ESTATE, нажмите кнопку ниже:";
+  const arizaUrl = isUz ? `${webAppUrl}?action=ariza&lang=uz` : `${webAppUrl}?action=ariza&lang=ru`;
+  const inline_keyboard = [
+    [
+      {
+        text: isUz ? "📝 Ariza qoldirish" : "📝 Оставить заявку",
+        web_app: {
+          url: arizaUrl,
+        },
+      },
+    ],
+  ];
+  return { text, reply_markup: { inline_keyboard } };
+}
+
+/**
+ * Send Ariza prompt message with Mini App button
+ */
+export async function sendTelegramArizaPromptMessage(
+  chatId: number | string,
+  userLanguageCode: string = "uz",
+  botToken?: string,
+  webAppUrl: string = "https://angrenestate.uz"
+) {
+  const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not configured");
+
+  const lang = userLanguageCode.startsWith("ru") ? "ru" : "uz";
+  const { text, reply_markup } = getTelegramArizaPromptPayload(lang, webAppUrl);
+
+  const response = await fetch(
+    `https://api.telegram.org/bot${token}/sendMessage`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        reply_markup,
+      }),
+    }
+  );
+
+  return await response.json();
 }
 
 /**

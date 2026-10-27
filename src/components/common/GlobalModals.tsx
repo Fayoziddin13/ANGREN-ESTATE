@@ -61,12 +61,33 @@ export function GlobalModals() {
     window.addEventListener("angren_open_saved_searches", handleOpenSavedSearches);
     window.addEventListener("angren_open_listing_modal", handleOpenListing);
 
+    // Auto-open listing modal if URL search params specify action=ariza or modal=ariza
+    if (typeof window !== "undefined") {
+      try {
+        const sp = new URLSearchParams(window.location.search);
+        const action = sp.get("action");
+        const modal = sp.get("modal");
+        const ariza = sp.get("ariza");
+        if (
+          action === "ariza" ||
+          action === "listing" ||
+          modal === "ariza" ||
+          modal === "listing" ||
+          ariza === "1"
+        ) {
+          setIsListingModalOpen(true);
+        }
+      } catch {
+        // ignore search params parsing error
+      }
+    }
+
     return () => {
       window.removeEventListener("angren_open_compare", handleOpenCompare);
       window.removeEventListener("angren_open_saved_searches", handleOpenSavedSearches);
       window.removeEventListener("angren_open_listing_modal", handleOpenListing);
     };
-  }, []);
+  }, [pathname]);
 
   // Do not render floating compare widgets on admin pages
   if (pathname?.startsWith("/admin")) {
