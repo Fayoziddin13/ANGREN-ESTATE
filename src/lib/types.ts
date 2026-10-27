@@ -354,16 +354,28 @@ export interface Lead {
   realtor?: Realtor;
   property?: Property;
   metadata?: LeadMetadata;
+  registration_source?: "google" | "telegram" | "direct" | string;
+  ip_hash?: string;
+  user_id?: string;
 }
 
 export interface RegisteredUser {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   avatar_url?: string;
   role: "admin" | "user";
+  registration_source: "google" | "telegram" | "other";
   registration_date: string;
   last_activity: string;
+  telegram_user_id?: number;
+  telegram_username?: string;
+  google_id?: string;
+  has_submitted_application: boolean;
+  applications_count: number;
+  applications?: Lead[];
+  can_message_telegram?: boolean;
   favorites_count: number;
   viewed_properties_count: number;
   status: "active" | "disabled";

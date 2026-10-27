@@ -54,7 +54,7 @@ export function AuthModal() {
 
           {/* Google OAuth Button */}
           <button
-            onClick={handleGoogleLogin}
+            onClick={() => handleGoogleLogin()}
             disabled={loading}
             className="group relative flex w-full items-center justify-center gap-3 rounded-2xl border border-brand-border bg-white px-5 py-3.5 text-sm font-semibold text-brand-text shadow-subtle hover:border-brand-primary/40 hover:bg-brand-canvas active:scale-[0.99] transition-all disabled:opacity-60"
           >

@@ -81,6 +81,8 @@ export async function GET(request: Request) {
             .update({
               full_name: fullName,
               avatar_url: avatarUrl,
+              auth_provider: "google",
+              google_id: u.user_metadata?.sub || u.id,
               last_activity: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             })
@@ -98,6 +100,8 @@ export async function GET(request: Request) {
               email: u.email || "",
               full_name: fullName,
               avatar_url: avatarUrl,
+              auth_provider: "google",
+              google_id: u.user_metadata?.sub || u.id,
               role: "user",
               status: "active",
               last_activity: new Date().toISOString(),

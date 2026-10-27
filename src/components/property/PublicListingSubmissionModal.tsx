@@ -32,6 +32,54 @@ export function PublicListingSubmissionModal({ isOpen, onClose }: PublicListingS
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+
+  // Helper to persist draft across Google OAuth redirects or Telegram handoff
+  const saveDraft = () => {
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.setItem(
+          "angren_pending_listing_draft",
+          JSON.stringify({
+            dealType,
+            propertyType,
+            location,
+            rooms,
+            area,
+            price,
+            currency,
+            description,
+            clientName,
+            clientPhone,
+            preferredChannel,
+          })
+        );
+      } catch {}
+    }
+  };
+
+  // Restore draft if user previously entered data or returned from Google OAuth
+  useEffect(() => {
+    if (isOpen && typeof window !== "undefined") {
+      try {
+        const rawDraft = sessionStorage.getItem("angren_pending_listing_draft");
+        if (rawDraft) {
+          const d = JSON.parse(rawDraft);
+          if (d.dealType) setDealType(d.dealType);
+          if (d.propertyType) setPropertyType(d.propertyType);
+          if (d.location) setLocation(d.location);
+          if (d.rooms) setRooms(d.rooms);
+          if (d.area) setArea(d.area);
+          if (d.price) setPrice(d.price);
+          if (d.currency) setCurrency(d.currency);
+          if (d.description) setDescription(d.description);
+          if (d.clientName) setClientName(d.clientName);
+          if (d.clientPhone) setClientPhone(d.clientPhone);
+          if (d.preferredChannel) setPreferredChannel(d.preferredChannel);
+        }
+      } catch {}
+    }
+  }, [isOpen]);
 
   // Pre-fill user profile info when user logs in or opens modal
   useEffect(() => {
@@ -57,6 +105,7 @@ export function PublicListingSubmissionModal({ isOpen, onClose }: PublicListingS
     if (isOpen) {
       setErrorMsg(null);
       setIsSuccess(false);
+      setShowAuthPrompt(false);
     }
   }, [isOpen]);
 
@@ -115,6 +164,17 @@ export function PublicListingSubmissionModal({ isOpen, onClose }: PublicListingS
       return;
     }
 
+    // Validate authentication before calling server or submitting
+    const tgInitData = typeof window !== "undefined" ? (window as any).Telegram?.WebApp?.initData : undefined;
+    const isTgAuth = isTelegram && (Boolean(telegramUser?.id) || Boolean(tgInitData));
+    const isAuthenticated = Boolean(user) || isTgAuth;
+
+    if (!isAuthenticated) {
+      saveDraft();
+      setShowAuthPrompt(true);
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -136,6 +196,8 @@ export function PublicListingSubmissionModal({ isOpen, onClose }: PublicListingS
           price: price ? Number(price) : undefined,
           currency,
           preferred_channel: preferredChannel,
+          telegram_init_data: tgInitData || undefined,
+          user_id: user?.id || undefined,
           metadata: {
             lead_type: "property_listing_request",
             source: isTelegram ? "Telegram Mini App - E'lon qoldirish" : "Public Website - E'lon qoldirish",
@@ -150,9 +212,19 @@ export function PublicListingSubmissionModal({ isOpen, onClose }: PublicListingS
 
       const data = await res.json();
       if (data.success) {
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.removeItem("angren_pending_listing_draft");
+          } catch {}
+        }
         setIsSuccess(true);
       } else {
-        setErrorMsg(data.error || (locale === "uz" ? "Ariza yuborishda xatolik yuz berdi" : "Произошла ошибка при отправке заявки"));
+        if (data.error === "REGISTRATION_REQUIRED" || data.error === "INVALID_TELEGRAM_SIGNATURE") {
+          saveDraft();
+          setShowAuthPrompt(true);
+        } else {
+          setErrorMsg(data.error || (locale === "uz" ? "Ariza yuborishda xatolik yuz berdi" : "Произошла ошибка при отправке заявки"));
+        }
       }
     } catch (err: any) {
       console.error("Listing submission error:", err);
@@ -199,7 +271,98 @@ export function PublicListingSubmissionModal({ isOpen, onClose }: PublicListingS
 
         {/* Body */}
         <div className="overflow-y-auto px-5 sm:px-6 py-4 space-y-4">
-          {isSuccess ? (
+          {showAuthPrompt ? (
+            <div className="py-4 space-y-5 animate-in fade-in duration-200">
+              <div className="text-center space-y-2">
+                <div className="h-14 w-14 mx-auto rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center">
+                  <ShieldCheck className="h-8 w-8 text-[#167d4f]" />
+                </div>
+                <h3 className="text-base sm:text-lg font-black text-slate-900">
+                  {locale === "uz" ? "Arizani yuborish uchun ro‘yxatdan o‘ting" : "Для отправки заявки зарегистрируйтесь"}
+                </h3>
+                <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
+                  {locale === "uz"
+                    ? "Siz to‘ldirgan ma’lumotlar saqlab qolindi. E'lon beruvchini tasdiqlash uchun ro‘yxatdan o‘tish usulini tanlang."
+                    : "Введенные данные сохранены. Выберите способ регистрации для подтверждения заявки."}
+                </p>
+              </div>
+
+              {/* Saved draft summary preview */}
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-2">
+                <div className="flex items-center justify-between text-slate-500 font-semibold text-[11px]">
+                  <span>{locale === "uz" ? "Saqlangan ariza qoralamasi" : "Сохраненный черновик"}</span>
+                  <span className="text-[#167d4f] font-bold">
+                    {dealType === "rent" ? (locale === "uz" ? "Ijara" : "Аренда") : (locale === "uz" ? "Sotuv" : "Продажа")}
+                  </span>
+                </div>
+                <div className="font-bold text-slate-900 text-sm">
+                  {propertyType.toUpperCase()} — {location}
+                </div>
+                <div className="flex items-center gap-3 text-slate-600 text-[11px] pt-1.5 border-t border-slate-200/80">
+                  <span>👤 {clientName}</span>
+                  <span>📞 {clientPhone}</span>
+                </div>
+              </div>
+
+              {/* Registration options */}
+              <div className="space-y-2.5 pt-1">
+                {/* Option 1: Google */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    saveDraft();
+                    handleGoogleLogin("/?action=ariza");
+                  }}
+                  className="w-full py-3 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:scale-98 text-slate-800 font-bold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center gap-3"
+                >
+                  <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                    <path
+                      fill="#4285F4"
+                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                    />
+                    <path
+                      fill="#EA4335"
+                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                    />
+                  </svg>
+                  <span>{locale === "uz" ? "Google orqali ro‘yxatdan o‘tish / kirish" : "Войти через Google"}</span>
+                </button>
+
+                {/* Option 2: Telegram */}
+                <a
+                  href="https://t.me/angrenestate_bot?start=ariza"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    saveDraft();
+                  }}
+                  className="w-full py-3 px-4 rounded-xl bg-[#229ED9] hover:bg-[#1e8ec3] active:scale-98 text-white font-bold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center gap-2.5"
+                >
+                  <Send className="w-4 h-4 shrink-0" />
+                  <span>{locale === "uz" ? "Telegram bot orqali davom etish" : "Продолжить через Telegram бот"}</span>
+                </a>
+              </div>
+
+              {/* Back to editing */}
+              <div className="pt-2 text-center">
+                <button
+                  type="button"
+                  onClick={() => setShowAuthPrompt(false)}
+                  className="text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
+                >
+                  {locale === "uz" ? "← Qoralamani tahrirlashga qaytish" : "← Вернуться к черновику"}
+                </button>
+              </div>
+            </div>
+          ) : isSuccess ? (
             <div className="py-8 text-center space-y-4">
               <div className="h-16 w-16 mx-auto rounded-full bg-emerald-100 text-[#167d4f] flex items-center justify-center">
                 <CheckCircle2 className="h-10 w-10 text-[#167d4f]" />
@@ -271,7 +434,10 @@ export function PublicListingSubmissionModal({ isOpen, onClose }: PublicListingS
                   </div>
                   <button
                     type="button"
-                    onClick={handleGoogleLogin}
+                    onClick={() => {
+                      saveDraft();
+                      handleGoogleLogin("/?action=ariza");
+                    }}
                     disabled={authLoading}
                     className="inline-flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-800 text-xs font-bold transition-all shadow-2xs shrink-0 active:scale-95 disabled:opacity-60"
                   >

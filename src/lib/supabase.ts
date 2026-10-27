@@ -92,17 +92,25 @@ export async function testSupabaseConnection(): Promise<{
   }
 }
 
-export async function signInWithGoogle() {
+export async function signInWithGoogle(customPath?: string) {
   if (!isSupabaseConfigured) {
     console.info("[Supabase Auth] Live credentials not configured yet. Simulating Google Auth.");
     return { error: null, data: { url: null } };
   }
 
-  const currentPath = typeof window !== "undefined" ? window.location.pathname : "/";
+  const currentPath =
+    customPath ||
+    (typeof window !== "undefined"
+      ? `${window.location.pathname}${window.location.search}`
+      : "/");
+
   return await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: typeof window !== "undefined" ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(currentPath)}` : undefined,
+      redirectTo:
+        typeof window !== "undefined"
+          ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(currentPath)}`
+          : undefined,
     },
   });
 }

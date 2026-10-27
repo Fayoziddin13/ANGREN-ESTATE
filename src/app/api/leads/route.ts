@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import crypto from "crypto";
+import { createServerClient } from "@supabase/ssr";
 import { supabaseAdmin } from "@/lib/supabaseServer";
 import { sendApplicationToAdminTelegram } from "@/lib/telegramNotifications";
+import { validateTelegramInitData } from "@/lib/telegramServer";
 
 const DEDUP_WINDOW_MS = 60 * 1000; // 60 seconds deduplication window
 const INQUIRY_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes rate limit window for inquiries
@@ -129,6 +132,107 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Server-Side Authentication & Registration Verification for Listing Requests
+    let verifiedRegistrationSource: "google" | "telegram" | null = null;
+    let verifiedUserId: string | null = null;
+    let verifiedTelegramUserId: number | null = null;
+    let verifiedTelegramUsername: string | null = null;
+    let verifiedGoogleId: string | null = null;
+    let verifiedEmail: string | null = null;
+
+    if (isListingRequest) {
+      // 1. Check Telegram Mini App initData
+      const tgInitData = body.telegram_init_data || body.initData || metadata?.telegram_init_data;
+      if (tgInitData && typeof tgInitData === "string") {
+        const tgVal = validateTelegramInitData(tgInitData);
+        if (!tgVal.valid || !tgVal.user) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: "INVALID_TELEGRAM_SIGNATURE",
+              message: "Telegram imzosi noto‘g‘ri yoki soxtalashtirilgan. Haqiqiy Telegram orqali kiring.",
+            },
+            { status: 401 }
+          );
+        }
+
+        const validUser = tgVal.user;
+        verifiedRegistrationSource = "telegram";
+        verifiedTelegramUserId = validUser.id;
+        verifiedTelegramUsername = validUser.username || null;
+        verifiedUserId = `tg_${validUser.id}`;
+      } else {
+        // 2. Check Google / Supabase session
+        let authUser: any = null;
+        try {
+          const cookieStore = cookies();
+          const supabase = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
+            {
+              cookies: {
+                get(name: string) {
+                  return cookieStore.get(name)?.value;
+                },
+                set() {},
+                remove() {},
+              },
+            }
+          );
+          const { data: sessionData } = await supabase.auth.getUser();
+          if (sessionData?.user) {
+            authUser = sessionData.user;
+          }
+        } catch {}
+
+        if (!authUser) {
+          const authHeader = req.headers.get("authorization");
+          if (authHeader?.startsWith("Bearer ")) {
+            const token = authHeader.replace("Bearer ", "").trim();
+            const { data: tokenUser } = await supabaseAdmin.auth.getUser(token);
+            if (tokenUser?.user) {
+              authUser = tokenUser.user;
+            }
+          }
+        }
+
+        if (!authUser && (body.user_id || metadata?.user_id)) {
+          const claimedId = String(body.user_id || metadata?.user_id).trim();
+          const { data: profile } = await supabaseAdmin
+            .from("profiles")
+            .select("id, email, phone, status, role, full_name, auth_provider, google_id")
+            .eq("id", claimedId)
+            .maybeSingle();
+
+          if (profile && profile.status !== "disabled") {
+            authUser = {
+              id: profile.id,
+              email: profile.email,
+              user_metadata: { sub: profile.google_id || profile.id, full_name: profile.full_name },
+            };
+          }
+        }
+
+        if (authUser) {
+          verifiedRegistrationSource = "google";
+          verifiedUserId = authUser.id;
+          verifiedEmail = authUser.email || null;
+          verifiedGoogleId = authUser.user_metadata?.sub || authUser.id;
+        }
+      }
+
+      if (!verifiedRegistrationSource) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "REGISTRATION_REQUIRED",
+            message: "Arizani yuborish uchun Google yoki Telegram orqali ro‘yxatdan o‘tgan bo‘lishingiz shart.",
+          },
+          { status: 401 }
+        );
+      }
+    }
+
     const ipHash = computeIpHash(req);
 
     // Rate Limiting for general inquiries: Max 5 inquiries per 10 minutes per IP
@@ -241,6 +345,12 @@ export async function POST(req: NextRequest) {
 
     const leadMetadata = {
       ...(typeof metadata === "object" && metadata !== null ? metadata : {}),
+      registration_source: verifiedRegistrationSource || (type === "telegram" ? "telegram" : "direct"),
+      user_id: verifiedUserId || metadata?.user_id || null,
+      google_id: verifiedGoogleId || metadata?.google_id || null,
+      user_email: verifiedEmail || metadata?.user_email || null,
+      telegram_user_id: verifiedTelegramUserId || metadata?.telegram_user_id || null,
+      telegram_username: verifiedTelegramUsername || metadata?.telegram_username || null,
       ...(isListingRequest
         ? {
             lead_type: "property_listing_request",
@@ -272,7 +382,7 @@ export async function POST(req: NextRequest) {
       message: message ? String(message).trim().slice(0, 1000) : (isListingRequest ? String(body.description || metadata?.description || "").trim().slice(0, 1000) : null),
       notes: null,
       device: typeof device === "string" ? device.slice(0, 50) : "Desktop",
-      traffic_source: isListingRequest && (!traffic_source || traffic_source === "Direct") ? "Listing Request" : (typeof traffic_source === "string" ? traffic_source.slice(0, 50) : "Direct"),
+      traffic_source: isListingRequest ? "Listing Request" : (typeof traffic_source === "string" ? traffic_source.slice(0, 50) : "Direct"),
       ip_hash: ipHash,
       metadata: leadMetadata,
       created_at: new Date().toISOString(),
@@ -311,12 +421,18 @@ export async function POST(req: NextRequest) {
     // Dispatch real-time Telegram notification to admin bot
     try {
       const applicantPhone = normalizedPhone || String(client_phone || "").trim();
+      const sourceLabel = isListingRequest
+        ? (verifiedRegistrationSource === "google"
+            ? "Google orqali ro‘yxatdan o‘tgan mijoz (E'lon berish)"
+            : (verifiedRegistrationSource === "telegram"
+                ? "Telegram orqali ro‘yxatdan o‘tgan mijoz (Mini App - E'lon)"
+                : (metadata?.submitted_from === "/kontaktlar" ? "Sayt (Aloqa sahifasi - E'lon)" : "Sayt (E'lon berish)")))
+        : (isGeneralInquiry ? "Sayt (Aloqa sahifasi)" : "Sayt (Obyekt murojaati)");
+
       const notificationPayload = {
         client_name: String(client_name || "").trim() || "Ko‘rsatilmagan",
         client_phone: applicantPhone,
-        source: isListingRequest
-          ? (metadata?.submitted_from === "/kontaktlar" ? "Sayt (Aloqa sahifasi - E'lon)" : "Sayt (E'lon berish)")
-          : (isGeneralInquiry ? "Sayt (Aloqa sahifasi)" : "Sayt (Obyekt murojaati)"),
+        source: sourceLabel,
         property_title: propertyTitle || undefined,
         location: (body.location || metadata?.location || "").trim() || undefined,
         deal_type: body.deal_type || metadata?.deal_type || undefined,
@@ -326,8 +442,8 @@ export async function POST(req: NextRequest) {
         price: body.price || metadata?.price || undefined,
         currency: body.currency || metadata?.currency || "USD",
         description: (message || body.description || metadata?.description || "").trim() || undefined,
-        telegram_username: metadata?.telegram_username ? String(metadata.telegram_username).trim() : null,
-        telegram_user_id: metadata?.telegram_user_id ? String(metadata.telegram_user_id).trim() : null,
+        telegram_username: (verifiedTelegramUsername || metadata?.telegram_username) ? String(verifiedTelegramUsername || metadata.telegram_username).trim() : null,
+        telegram_user_id: (verifiedTelegramUserId || metadata?.telegram_user_id) ? String(verifiedTelegramUserId || metadata.telegram_user_id).trim() : null,
         created_at: newLeadRow.created_at,
       };
 
@@ -336,14 +452,31 @@ export async function POST(req: NextRequest) {
       console.warn("[Leads API] Admin Telegram notification failed non-critically:", notifErr?.message || notifErr);
     }
 
-    // If authenticated user had no profile phone, update it so admin can contact them
-    if (metadata?.user_id && normalizedPhone) {
+    // If authenticated user had profile, update phone and auth credentials in profiles table
+    const targetUserId = verifiedUserId || metadata?.user_id;
+    if (targetUserId && normalizedPhone) {
       try {
+        const profileUpdates: any = {
+          phone: normalizedPhone,
+          updated_at: new Date().toISOString(),
+        };
+        if (verifiedRegistrationSource) {
+          profileUpdates.auth_provider = verifiedRegistrationSource;
+        }
+        if (verifiedGoogleId) {
+          profileUpdates.google_id = verifiedGoogleId;
+        }
+        if (verifiedTelegramUserId) {
+          profileUpdates.telegram_user_id = verifiedTelegramUserId;
+        }
+        if (verifiedTelegramUsername) {
+          profileUpdates.telegram_username = verifiedTelegramUsername;
+        }
+
         await supabaseAdmin
           .from("profiles")
-          .update({ phone: normalizedPhone, updated_at: new Date().toISOString() })
-          .eq("id", metadata.user_id)
-          .is("phone", null);
+          .update(profileUpdates)
+          .eq("id", targetUserId);
       } catch {
         // Non-blocking profile phone update
       }

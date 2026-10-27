@@ -191,6 +191,37 @@ export async function POST(req: NextRequest) {
           last_reg_message_id: null,
         });
 
+        // Non-destructively sync to profiles table for unified admin view
+        try {
+          const profileUserId = `tg_${senderId}`;
+          const contactFullName =
+            [contact.first_name || fromUser?.first_name, contact.last_name || fromUser?.last_name]
+              .filter(Boolean)
+              .join(" ") ||
+            fromUser?.username ||
+            "Telegram User";
+          const syntheticEmail = fromUser?.username ? `@${fromUser.username}` : `tg_${senderId}@angrenestate.uz`;
+
+          await supabaseAdmin.from("profiles").upsert(
+            {
+              id: profileUserId,
+              email: syntheticEmail,
+              full_name: contactFullName,
+              phone: phone,
+              auth_provider: "telegram",
+              telegram_user_id: senderId,
+              telegram_username: fromUser?.username || null,
+              role: "user",
+              status: "active",
+              last_activity: now,
+              updated_at: now,
+            },
+            { onConflict: "id" }
+          );
+        } catch (syncErr) {
+          console.warn("[Telegram Webhook] Profile sync warning:", syncErr);
+        }
+
         // Record lead in public.leads and notify admin bot
         try {
           const contactName =

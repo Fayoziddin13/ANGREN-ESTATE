@@ -10,7 +10,7 @@ interface AuthContextType {
   isAuthModalOpen: boolean;
   openAuthModal: () => void;
   closeAuthModal: () => void;
-  handleGoogleLogin: () => Promise<void>;
+  handleGoogleLogin: (customPath?: string) => Promise<void>;
   handleTelegramLogin: (initData: string) => Promise<boolean>;
   handleLogout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -140,9 +140,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const openAuthModal = () => setIsAuthModalOpen(true);
   const closeAuthModal = () => setIsAuthModalOpen(false);
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = async (customPath?: string) => {
     try {
-      await signInWithGoogle();
+      await signInWithGoogle(customPath);
     } catch (err) {
       console.error("[AuthContext] Google sign in error:", err);
     }

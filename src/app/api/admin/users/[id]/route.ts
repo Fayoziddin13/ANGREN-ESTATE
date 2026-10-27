@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/lib/supabaseServer";
 
 export const dynamic = "force-dynamic";
 
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const VALID_USER_ID_REGEX = /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|tg_\d+|\d+|[a-zA-Z0-9_\-\.]+)$/i;
 
 export async function PATCH(
   request: NextRequest,
@@ -17,9 +17,9 @@ export async function PATCH(
     }
 
     const userId = params?.id;
-    if (!userId || !UUID_REGEX.test(userId)) {
+    if (!userId || !VALID_USER_ID_REGEX.test(userId)) {
       return NextResponse.json(
-        { error: "Invalid user UUID format" },
+        { error: "Invalid user ID format" },
         { status: 400 }
       );
     }
