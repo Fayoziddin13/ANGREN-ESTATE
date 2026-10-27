@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { supabaseAdmin } from "@/lib/supabaseServer";
+import { sendApplicationToAdminTelegram } from "@/lib/telegramNotifications";
 
 const DEDUP_WINDOW_MS = 60 * 1000; // 60 seconds deduplication window
 const INQUIRY_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes rate limit window for inquiries
@@ -86,6 +87,8 @@ export async function POST(req: NextRequest) {
 
     const property_id = (isGeneralInquiry || isListingRequest) ? null : rawPropertyId;
 
+    let normalizedPhone: string | null = null;
+
     // Strict validation for inquiries & listing requests
     if (type === "inquiry" || isListingRequest) {
       const name = String(client_name || "").trim();
@@ -98,12 +101,14 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      if (!/^\+?\d{9,15}$/.test(phone)) {
+      if (!phone || !/^\+?\d{9,15}$/.test(phone)) {
         return NextResponse.json(
-          { success: false, error: "client_phone must be a valid phone number" },
+          { success: false, error: "Aloqa telefon raqami kiritilishi shart (+998901234567)" },
           { status: 400 }
         );
       }
+
+      normalizedPhone = phone.startsWith("+") ? phone : `+${phone}`;
 
       if (isListingRequest) {
         const locationVal = String(body.location || metadata?.location || "").trim();
@@ -263,7 +268,7 @@ export async function POST(req: NextRequest) {
       property_title: propertyTitle || null,
       property_slug: propertySlug || null,
       client_name: client_name ? String(client_name).trim().slice(0, 100) : null,
-      client_phone: client_phone ? String(client_phone).trim().slice(0, 50) : null,
+      client_phone: normalizedPhone || (client_phone ? String(client_phone).trim().slice(0, 50) : null),
       message: message ? String(message).trim().slice(0, 1000) : (isListingRequest ? String(body.description || metadata?.description || "").trim().slice(0, 1000) : null),
       notes: null,
       device: typeof device === "string" ? device.slice(0, 50) : "Desktop",
@@ -300,6 +305,47 @@ export async function POST(req: NextRequest) {
         });
       } catch (rpcErr: any) {
         // Non-blocking counter increment
+      }
+    }
+
+    // Dispatch real-time Telegram notification to admin bot
+    try {
+      const applicantPhone = normalizedPhone || String(client_phone || "").trim();
+      const notificationPayload = {
+        client_name: String(client_name || "").trim() || "Ko‘rsatilmagan",
+        client_phone: applicantPhone,
+        source: isListingRequest
+          ? (metadata?.submitted_from === "/kontaktlar" ? "Sayt (Aloqa sahifasi - E'lon)" : "Sayt (E'lon berish)")
+          : (isGeneralInquiry ? "Sayt (Aloqa sahifasi)" : "Sayt (Obyekt murojaati)"),
+        property_title: propertyTitle || undefined,
+        location: (body.location || metadata?.location || "").trim() || undefined,
+        deal_type: body.deal_type || metadata?.deal_type || undefined,
+        property_type: body.property_type || metadata?.property_type || undefined,
+        rooms: body.rooms || metadata?.rooms || undefined,
+        area: body.area || metadata?.area || undefined,
+        price: body.price || metadata?.price || undefined,
+        currency: body.currency || metadata?.currency || "USD",
+        description: (message || body.description || metadata?.description || "").trim() || undefined,
+        telegram_username: metadata?.telegram_username ? String(metadata.telegram_username).trim() : null,
+        telegram_user_id: metadata?.telegram_user_id ? String(metadata.telegram_user_id).trim() : null,
+        created_at: newLeadRow.created_at,
+      };
+
+      await sendApplicationToAdminTelegram(notificationPayload);
+    } catch (notifErr: any) {
+      console.warn("[Leads API] Admin Telegram notification failed non-critically:", notifErr?.message || notifErr);
+    }
+
+    // If authenticated user had no profile phone, update it so admin can contact them
+    if (metadata?.user_id && normalizedPhone) {
+      try {
+        await supabaseAdmin
+          .from("profiles")
+          .update({ phone: normalizedPhone, updated_at: new Date().toISOString() })
+          .eq("id", metadata.user_id)
+          .is("phone", null);
+      } catch {
+        // Non-blocking profile phone update
       }
     }
 

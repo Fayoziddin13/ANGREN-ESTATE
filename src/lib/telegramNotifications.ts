@@ -1225,3 +1225,254 @@ export async function publishPropertyToTelegramChannel(
     inFlightChannelPublishes.delete(property.id);
   }
 }
+
+// =============================================================================
+// ADMIN DIRECT NOTIFICATIONS (New Applications & Leads)
+// =============================================================================
+
+export interface NewApplicationNotificationData {
+  client_name: string;
+  client_phone: string;
+  source: string; // e.g. "Sayt (E'lon berish)", "Telegram Bot", "Sayt (Aloqa)"
+  property_title?: string;
+  location?: string;
+  deal_type?: string;
+  property_type?: string;
+  rooms?: string | number;
+  area?: string | number;
+  price?: string | number;
+  currency?: string;
+  description?: string;
+  telegram_username?: string | null;
+  telegram_user_id?: string | number | null;
+  created_at?: string;
+}
+
+/**
+ * Resolves one or more Telegram Chat IDs belonging to the administrator(s).
+ * Priority:
+ * 1. process.env.TELEGRAM_ADMIN_CHAT_ID or process.env.ADMIN_TELEGRAM_CHAT_ID (comma-separated or single)
+ * 2. Look up app_settings (site_settings: admin_telegram, admin_phone)
+ * 3. Match against telegram_users_registry to find corresponding numeric telegram_user_id
+ */
+export async function getAdminTelegramChatIds(): Promise<Array<number | string>> {
+  const chatIds = new Set<number | string>();
+
+  // 1. Check environment variables
+  const envIds =
+    process.env.TELEGRAM_ADMIN_CHAT_ID ||
+    process.env.ADMIN_TELEGRAM_CHAT_ID ||
+    process.env.TELEGRAM_ADMIN_CHAT;
+
+  if (envIds) {
+    envIds
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .forEach((id) => {
+        const num = Number(id);
+        chatIds.add(isNaN(num) ? id : num);
+      });
+  }
+
+  // 2. Query site_settings & telegram_users_registry from database
+  try {
+    const { data: siteSettingsRow } = await supabaseAdmin
+      .from("app_settings")
+      .select("value")
+      .eq("key", "site_settings")
+      .maybeSingle();
+
+    const siteSettings = siteSettingsRow?.value || {};
+    const adminTgHandle = String(siteSettings.admin_telegram || "")
+      .trim()
+      .replace(/^@/, "")
+      .toLowerCase();
+    const adminPhone = String(siteSettings.admin_phone || "").replace(/[^\d+]/g, "");
+
+    const { data: regRow } = await supabaseAdmin
+      .from("app_settings")
+      .select("value")
+      .eq("key", "telegram_users_registry")
+      .maybeSingle();
+
+    const registry = Array.isArray(regRow?.value) ? regRow.value : [];
+    for (const u of registry) {
+      const uTg = String(u.username || "").toLowerCase();
+      const uPhone = String(u.phone || "").replace(/[^\d+]/g, "");
+      const uId = u.telegram_user_id || u.id;
+
+      if (!uId) continue;
+
+      if (adminTgHandle && uTg === adminTgHandle) {
+        chatIds.add(uId);
+      } else if (adminPhone && uPhone && uPhone === adminPhone) {
+        chatIds.add(uId);
+      } else if (uTg === "angrenestateuz_admin" || uTg.includes("admin")) {
+        chatIds.add(uId);
+      }
+    }
+  } catch (err: any) {
+    console.warn("[TelegramNotifications] Could not query admin chat IDs from settings:", err?.message || err);
+  }
+
+  return Array.from(chatIds);
+}
+
+/**
+ * Format the admin Telegram notification message text and quick-action buttons.
+ * Guarantees zero hallucination: omits telegram_username and telegram_user_id if not present.
+ */
+export function formatApplicationNotificationMessage(data: NewApplicationNotificationData): {
+  messageText: string;
+  buttons: Array<{ text: string; url: string }>;
+} {
+  const now = data.created_at ? new Date(data.created_at) : new Date();
+  const formattedTime = !isNaN(now.getTime())
+    ? now.toLocaleDateString("ru-RU", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : new Date().toISOString();
+
+  const lines: string[] = [];
+  lines.push("🏛 YANGI ARIZA / E’LON SO‘ROVI");
+  lines.push("━━━━━━━━━━━━━━━━━━━━");
+  lines.push(`👤 Arizachi: ${data.client_name || "Ko‘rsatilmagan"}`);
+  lines.push(`📞 Aloqa telefoni: ${data.client_phone}`);
+
+  // Property & Listing details
+  const hasListingDetails = Boolean(
+    data.deal_type || data.property_type || data.location || data.rooms || data.area || data.price
+  );
+
+  if (hasListingDetails) {
+    lines.push("");
+    if (data.location) {
+      lines.push(`📍 Manzil / Mo‘ljal: ${data.location}`);
+    }
+    if (data.deal_type) {
+      const isRent = data.deal_type === "rent" || data.deal_type === "ijara";
+      lines.push(`🏷 Bitim turi: ${isRent ? "Ijara" : "Sotuv"}`);
+    }
+    if (data.property_type) {
+      const typeMap: Record<string, string> = {
+        apartment: "Kvartira",
+        kvartira: "Kvartira",
+        house: "Hovli / Uy",
+        hovli: "Hovli / Uy",
+        uy_hovli: "Hovli / Uy",
+        land: "Yer uchastkasi",
+        yer: "Yer uchastkasi",
+        yer_uchastkasi: "Yer uchastkasi",
+        commercial: "Tijorat ko‘chmas mulki",
+        tijorat: "Tijorat ko‘chmas mulki",
+        dala_hovli: "Dala hovli",
+        other: "Boshqa",
+        boshqa: "Boshqa",
+      };
+      lines.push(`🏢 Mulk turi: ${typeMap[data.property_type] || data.property_type}`);
+    }
+    if (data.rooms) {
+      lines.push(`🚪 Xonalar soni: ${data.rooms}`);
+    }
+    if (data.area) {
+      lines.push(`📐 Maydoni: ${data.area} m²`);
+    }
+    if (data.price) {
+      const curr = data.currency || "USD";
+      lines.push(`💰 Narxi: ${data.price} ${curr}`);
+    }
+  }
+
+  if (data.description && data.description.trim()) {
+    lines.push("");
+    lines.push(`📝 Qo‘shimcha ma’lumot:\n${data.description.trim()}`);
+  }
+
+  lines.push("");
+  lines.push(`🌐 Manba: ${data.source}`);
+
+  // ONLY include Telegram username & ID if genuinely present (NEVER invent!)
+  if (data.telegram_username && String(data.telegram_username).trim()) {
+    const cleanUname = String(data.telegram_username).trim().replace(/^@/, "");
+    lines.push(`💬 Telegram: @${cleanUname}`);
+  }
+  if (data.telegram_user_id) {
+    lines.push(`🆔 Telegram user ID: ${data.telegram_user_id}`);
+  }
+
+  lines.push(`📅 Yuborilgan vaqt: ${formattedTime}`);
+
+  const messageText = lines.join("\n");
+
+  // Build inline quick-action buttons
+  const cleanPhone = String(data.client_phone).replace(/[^\d+]/g, "");
+  const buttons: Array<{ text: string; url: string }> = [];
+  if (cleanPhone && cleanPhone.length >= 9) {
+    buttons.push({
+      text: "📞 Qo‘ng‘iroq qilish",
+      url: `tel:${cleanPhone}`,
+    });
+  }
+  if (data.telegram_username && String(data.telegram_username).trim()) {
+    const cleanUname = String(data.telegram_username).trim().replace(/^@/, "");
+    buttons.push({
+      text: "💬 Telegramda yozish",
+      url: `https://t.me/${cleanUname}`,
+    });
+  }
+
+  return { messageText, buttons };
+}
+
+/**
+ * Format and dispatch an incoming application / lead notification directly to the admin Telegram bot chat.
+ */
+export async function sendApplicationToAdminTelegram(
+  data: NewApplicationNotificationData,
+  options?: { botToken?: string; targetChatIds?: Array<number | string> }
+): Promise<{ sent: boolean; recipientsCount: number; errors: string[] }> {
+  const token = options?.botToken || process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) {
+    return { sent: false, recipientsCount: 0, errors: ["TELEGRAM_BOT_TOKEN is not configured"] };
+  }
+
+  const targets =
+    options?.targetChatIds && options.targetChatIds.length > 0
+      ? options.targetChatIds
+      : await getAdminTelegramChatIds();
+
+  if (targets.length === 0) {
+    console.warn("[TelegramNotifications] No admin Telegram chat ID configured or found. Application saved to DB.");
+    return { sent: false, recipientsCount: 0, errors: ["No admin Telegram chat ID found"] };
+  }
+
+  const { messageText, buttons } = formatApplicationNotificationMessage(data);
+  const replyMarkup = buttons.length > 0 ? { inline_keyboard: [buttons] } : undefined;
+
+  let sentCount = 0;
+  const errors: string[] = [];
+
+  for (const chatId of targets) {
+    try {
+      const res = await sendTelegramDirectMessage(chatId, messageText, replyMarkup, token);
+      if (res.ok) {
+        sentCount++;
+      } else {
+        errors.push(`Chat ${chatId}: ${res.description || `HTTP ${res.http_status}`}`);
+      }
+    } catch (sendErr: any) {
+      errors.push(`Chat ${chatId}: ${sendErr?.message || String(sendErr)}`);
+    }
+  }
+
+  return {
+    sent: sentCount > 0,
+    recipientsCount: sentCount,
+    errors,
+  };
+}

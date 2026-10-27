@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { X, Plus, CheckCircle2, Phone, Send, Building2, Home, MapPin, DollarSign, Layers, ShieldCheck, AlertCircle } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
+import { useTelegram } from "@/context/TelegramContext";
 
 interface PublicListingSubmissionModalProps {
   isOpen: boolean;
@@ -24,9 +26,31 @@ export function PublicListingSubmissionModal({ isOpen, onClose }: PublicListingS
   const [clientPhone, setClientPhone] = useState("+998 ");
   const [preferredChannel, setPreferredChannel] = useState<"phone" | "telegram">("phone");
 
+  const { user, handleGoogleLogin, loading: authLoading } = useAuth();
+  const { isTelegram, telegramUser } = useTelegram();
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  // Pre-fill user profile info when user logs in or opens modal
+  useEffect(() => {
+    if (user) {
+      if (!clientName.trim() && user.full_name) {
+        setClientName(user.full_name);
+      }
+      if (user.phone && (!clientPhone || clientPhone.trim() === "+998" || clientPhone.trim() === "+998 ")) {
+        setClientPhone(user.phone);
+      }
+    } else if (isTelegram && telegramUser) {
+      if (!clientName.trim()) {
+        const tgName = [telegramUser.first_name, telegramUser.last_name].filter(Boolean).join(" ");
+        if (tgName || telegramUser.username) {
+          setClientName(tgName || telegramUser.username || "");
+        }
+      }
+    }
+  }, [user, isTelegram, telegramUser, isOpen]);
 
   // Reset or initialize on open
   useEffect(() => {
@@ -50,6 +74,14 @@ export function PublicListingSubmissionModal({ isOpen, onClose }: PublicListingS
 
   if (!isOpen) return null;
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value;
+    if (!val.startsWith("+")) {
+      val = "+" + val.replace(/[^\d]/g, "");
+    }
+    setClientPhone(val);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
@@ -60,10 +92,14 @@ export function PublicListingSubmissionModal({ isOpen, onClose }: PublicListingS
       return;
     }
 
-    // Validate phone
+    // MANDATORY phone number validation (Google users MUST provide phone too)
     const cleanPhone = clientPhone.replace(/[\s\(\)\-]/g, "");
-    if (!/^\+?\d{9,15}$/.test(cleanPhone)) {
-      setErrorMsg(locale === "uz" ? "Telefon raqami noto‘g‘ri kiritildi (+998901234567)" : "Некорректный номер телефона (+998901234567)");
+    if (!cleanPhone || cleanPhone === "+998" || !/^\+?\d{9,15}$/.test(cleanPhone)) {
+      setErrorMsg(
+        locale === "uz"
+          ? "Aloqa telefon raqamingizni to‘liq va to‘g‘ri kiriting (+998901234567)"
+          : "Укажите контактный номер телефона в правильном формате (+998901234567)"
+      );
       return;
     }
 
@@ -82,13 +118,15 @@ export function PublicListingSubmissionModal({ isOpen, onClose }: PublicListingS
     setIsSubmitting(true);
 
     try {
+      const normalizedPhone = cleanPhone.startsWith("+") ? cleanPhone : `+${cleanPhone}`;
+
       const res = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: "property_listing_request",
           client_name: clientName.trim(),
-          client_phone: cleanPhone,
+          client_phone: normalizedPhone,
           message: description.trim(),
           location: location.trim(),
           deal_type: dealType,
@@ -100,7 +138,12 @@ export function PublicListingSubmissionModal({ isOpen, onClose }: PublicListingS
           preferred_channel: preferredChannel,
           metadata: {
             lead_type: "property_listing_request",
-            source: "Public Website - E'lon qoldirish",
+            source: isTelegram ? "Telegram Mini App - E'lon qoldirish" : "Public Website - E'lon qoldirish",
+            user_id: user?.id || null,
+            user_email: user?.email || null,
+            user_google_name: user?.full_name || null,
+            telegram_username: isTelegram && telegramUser?.username ? telegramUser.username : undefined,
+            telegram_user_id: isTelegram && telegramUser?.id ? telegramUser.id : undefined,
           },
         }),
       });
@@ -188,6 +231,58 @@ export function PublicListingSubmissionModal({ isOpen, onClose }: PublicListingS
                 <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 flex items-center gap-2 text-rose-800 text-xs font-bold">
                   <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
                   <span>{errorMsg}</span>
+                </div>
+              )}
+
+              {/* Google Auth Banner */}
+              {user ? (
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-emerald-50/80 border border-emerald-200 text-xs">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="h-7 w-7 rounded-full bg-white flex items-center justify-center shrink-0 shadow-xs border border-emerald-100">
+                      <svg className="h-4 w-4" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                      </svg>
+                    </div>
+                    <div className="truncate">
+                      <div className="font-bold text-emerald-950 truncate">{user.full_name || user.email}</div>
+                      <div className="text-[11px] text-emerald-700">
+                        {locale === "uz" ? "Google orqali tizimga kirilgan" : "Вы вошли через Google"}
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md shrink-0">
+                    {locale === "uz" ? "Faol" : "В сети"}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200/90 gap-2.5">
+                  <div className="text-xs text-slate-700">
+                    <span className="font-bold text-slate-900">
+                      {locale === "uz" ? "Tezkor to‘ldirish:" : "Быстрый вход:"}
+                    </span>{" "}
+                    <span className="text-slate-500">
+                      {locale === "uz"
+                        ? "Google orqali kirib ma'lumotlarni avtomatik to‘ldiring"
+                        : "Войдите через Google для автозаполнения профиля"}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleGoogleLogin}
+                    disabled={authLoading}
+                    className="inline-flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-800 text-xs font-bold transition-all shadow-2xs shrink-0 active:scale-95 disabled:opacity-60"
+                  >
+                    <svg className="h-4 w-4" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                    </svg>
+                    <span>{locale === "uz" ? "Google orqali kirish" : "Войти через Google"}</span>
+                  </button>
                 </div>
               )}
 
@@ -378,16 +473,21 @@ export function PublicListingSubmissionModal({ isOpen, onClose }: PublicListingS
 
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    {locale === "uz" ? "Telefon raqamingiz *" : "Номер телефона *"}
+                    {locale === "uz" ? "Telefon raqamingiz * (Majburiy)" : "Номер телефона * (Обязательно)"}
                   </label>
                   <input
                     type="tel"
                     required
                     value={clientPhone}
-                    onChange={(e) => setClientPhone(e.target.value)}
+                    onChange={handlePhoneChange}
                     placeholder="+998 90 123 45 67"
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-[#167d4f] outline-none"
                   />
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    {locale === "uz"
+                      ? "Admin siz bilan bog‘lanishi uchun telefon raqami kiritilishi shart (SMS tasdiqlash talab etilmaydi)."
+                      : "Номер телефона обязателен для связи администратора (SMS-подтверждение не требуется)."}
+                  </p>
                 </div>
               </div>
 

@@ -14,6 +14,8 @@ import {
   deleteTelegramMessage,
   normalizePhoneNumber,
 } from "@/lib/telegramServer";
+import { supabaseAdmin } from "@/lib/supabaseServer";
+import { sendApplicationToAdminTelegram } from "@/lib/telegramNotifications";
 import type { TelegramSubscriber } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -188,6 +190,66 @@ export async function POST(req: NextRequest) {
           last_reg_message_id: null,
         });
 
+        // Record lead in public.leads and notify admin bot
+        try {
+          const contactName =
+            [contact.first_name, contact.last_name].filter(Boolean).join(" ") ||
+            fromUser?.first_name ||
+            fromUser?.username ||
+            "Telegram foydalanuvchisi";
+
+          const windowStart = new Date(Date.now() - 60000).toISOString();
+
+          // Deduplicate within 60s
+          const { data: existingLeads } = await supabaseAdmin
+            .from("leads")
+            .select("id")
+            .eq("type", "telegram")
+            .eq("client_phone", phone)
+            .gte("created_at", windowStart)
+            .limit(1);
+
+          if (!existingLeads || existingLeads.length === 0) {
+            await supabaseAdmin.from("leads").insert([
+              {
+                property_id: null,
+                realtor_id: null,
+                type: "telegram",
+                status: "new",
+                property_title: "Telegram bot orqali murojaat (Kontakt)",
+                property_slug: "telegram-kontakt",
+                client_name: contactName,
+                client_phone: phone,
+                message: "Foydalanuvchi Telegram bot orqali kontaktini yubordi va ro‘yxatdan o‘tdi.",
+                notes: null,
+                device: "Telegram App",
+                traffic_source: "Telegram",
+                ip_hash: `tg_${senderId}`,
+                metadata: {
+                  source: "Telegram Bot",
+                  telegram_username: fromUser?.username || null,
+                  telegram_user_id: senderId || null,
+                  registration_step: "contact_shared",
+                },
+                created_at: now,
+                updated_at: now,
+              },
+            ]);
+
+            await sendApplicationToAdminTelegram({
+              client_name: contactName,
+              client_phone: phone,
+              source: "Telegram Bot",
+              description: "Foydalanuvchi Telegram bot orqali kontaktini yubordi va ro‘yxatdan o‘tdi.",
+              telegram_username: fromUser?.username || null,
+              telegram_user_id: senderId || null,
+              created_at: now,
+            });
+          }
+        } catch (leadErr: any) {
+          console.warn("[Telegram Webhook] Lead creation error on contact share:", leadErr?.message || leadErr);
+        }
+
         return NextResponse.json({ ok: true });
       }
 
@@ -291,10 +353,9 @@ export async function POST(req: NextRequest) {
             });
           }
         }
-      } else if (text.startsWith("/start") || message.chat.type === "private") {
+      } else if (text.startsWith("/start")) {
         if (!isRegistered) {
           // FIRST /start: ONLY REGISTRATION!
-          // No site info, no Mini App button, no language switcher.
           if (existingUser?.last_reg_message_id) {
             await deleteTelegramMessage(chatId, existingUser.last_reg_message_id, token);
           }
@@ -310,7 +371,6 @@ export async function POST(req: NextRequest) {
           }
         } else {
           // SUBSEQUENT /start: Welcome + Mini App + Language!
-          // Delete old welcome message so chat has NO DUPLICATES and stays in single clean state
           if (existingUser?.last_welcome_message_id) {
             await deleteTelegramMessage(chatId, existingUser.last_welcome_message_id, token);
           }
@@ -326,6 +386,74 @@ export async function POST(req: NextRequest) {
             });
           }
         }
+      } else if (text.length > 0 && message.chat.type === "private") {
+        // User sent an inquiry, application or custom message via Telegram Bot
+        const now = new Date().toISOString();
+        const contactName =
+          [fromUser?.first_name, fromUser?.last_name].filter(Boolean).join(" ") ||
+          fromUser?.username ||
+          "Telegram foydalanuvchisi";
+        const contactPhone = existingUser?.phone || null;
+
+        // Deduplication check: same user text message within 60s
+        const windowStart = new Date(Date.now() - 60000).toISOString();
+        try {
+          const { data: existingMsgLeads } = await supabaseAdmin
+            .from("leads")
+            .select("id")
+            .eq("type", "telegram")
+            .eq("ip_hash", `tg_${senderId}`)
+            .gte("created_at", windowStart)
+            .limit(1);
+
+          if (!existingMsgLeads || existingMsgLeads.length === 0) {
+            await supabaseAdmin.from("leads").insert([
+              {
+                property_id: null,
+                realtor_id: null,
+                type: "telegram",
+                status: "new",
+                property_title: "Telegram bot orqali ariza / xabar",
+                property_slug: "telegram-ariza",
+                client_name: contactName,
+                client_phone: contactPhone,
+                message: text,
+                notes: null,
+                device: "Telegram App",
+                traffic_source: "Telegram",
+                ip_hash: `tg_${senderId}`,
+                metadata: {
+                  source: "Telegram Bot",
+                  telegram_username: fromUser?.username || null,
+                  telegram_user_id: senderId || null,
+                  raw_message: text,
+                },
+                created_at: now,
+                updated_at: now,
+              },
+            ]);
+
+            await sendApplicationToAdminTelegram({
+              client_name: contactName,
+              client_phone: contactPhone || "Ko‘rsatilmagan (Telegram orqali)",
+              source: "Telegram Bot",
+              description: text,
+              telegram_username: fromUser?.username || null,
+              telegram_user_id: senderId || null,
+              created_at: now,
+            });
+          }
+        } catch (leadSaveErr: any) {
+          console.warn("[Telegram Webhook] Error recording text lead:", leadSaveErr?.message || leadSaveErr);
+        }
+
+        // Send polite confirmation message to the user
+        const replyText =
+          effectiveLang === "ru"
+            ? "✅ Ваша заявка принята! Наш специалист свяжется с вами в ближайшее время."
+            : "✅ Sizning arizangiz qabul qilindi! Mutaxassisimiz tez orada siz bilan bog‘lanadi.";
+
+        await sendTelegramDirectMessage(chatId, replyText, undefined, token);
       }
     }
 

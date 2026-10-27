@@ -37,6 +37,7 @@ import { Lead } from "@/lib/types";
 type StatusTab = "all" | "new" | "in_progress" | "contacted" | "completed" | "cancelled";
 type DealFilter = "all" | "sale" | "rent";
 type PropTypeFilter = "all" | "kvartira" | "uy_hovli" | "dala_hovli" | "tijorat" | "yer_uchastkasi" | "boshqa";
+type ChannelFilter = "all" | "property_listing_request" | "telegram" | "inquiry" | "phone";
 
 interface ListingStats {
   total: number;
@@ -65,6 +66,7 @@ export default function AdminArizalarPage() {
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<StatusTab>("all");
+  const [channelFilter, setChannelFilter] = useState<ChannelFilter>("all");
   const [dealFilter, setDealFilter] = useState<DealFilter>("all");
   const [propTypeFilter, setPropTypeFilter] = useState<PropTypeFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -87,14 +89,14 @@ export default function AdminArizalarPage() {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // Fetch listing requests from /api/admin/leads?type=property_listing_request
+  // Fetch all leads from /api/admin/leads (same database source as Analytics)
   const fetchRequests = async (isManualRefresh = false) => {
     if (isManualRefresh) setIsRefreshing(true);
     else setIsLoading(true);
     setError(null);
 
     try {
-      const res = await fetch("/api/admin/leads?type=property_listing_request&limit=100", {
+      const res = await fetch("/api/admin/leads?limit=200", {
         cache: "no-store",
       });
 
@@ -112,23 +114,25 @@ export default function AdminArizalarPage() {
         const list: Lead[] = data.leads || [];
         setRequests(list);
 
-        // Compute exact stats for listing requests
+        // Compute exact stats consistent with public.leads
         const s: ListingStats = {
-          total: list.length,
-          new: 0,
-          in_progress: 0,
-          contacted: 0,
-          completed: 0,
-          cancelled: 0,
+          total: data.stats?.total ?? list.length,
+          new: data.stats?.new ?? 0,
+          in_progress: data.stats?.in_progress ?? 0,
+          contacted: data.stats?.contacted ?? 0,
+          completed: data.stats?.completed ?? 0,
+          cancelled: data.stats?.cancelled ?? 0,
         };
 
-        for (const item of list) {
-          const st = item.status === "closed" ? "completed" : item.status;
-          if (st === "new") s.new++;
-          else if (st === "in_progress") s.in_progress++;
-          else if (st === "contacted") s.contacted++;
-          else if (st === "completed") s.completed++;
-          else if (st === "cancelled") s.cancelled++;
+        if (!data.stats) {
+          for (const item of list) {
+            const st = item.status === "closed" ? "completed" : item.status;
+            if (st === "new") s.new++;
+            else if (st === "in_progress") s.in_progress++;
+            else if (st === "contacted") s.contacted++;
+            else if (st === "completed") s.completed++;
+            else if (st === "cancelled") s.cancelled++;
+          }
         }
         setStats(s);
       } else {
@@ -228,18 +232,45 @@ export default function AdminArizalarPage() {
       }
 
       const meta = item.metadata || {};
-      const dealType = meta.deal_type || "sale";
-      const propType = meta.property_type || "kvartira";
-      const location = meta.location || "";
+      const dealType = meta.deal_type;
+      const propType = meta.property_type;
+      const location = meta.location || item.property_title || "";
       const desc = item.message || meta.description || "";
 
-      // Deal filter
-      if (dealFilter !== "all" && dealType !== dealFilter) {
-        return false;
+      // Channel filter
+      if (channelFilter !== "all") {
+        const isListing =
+          item.type === "property_listing_request" ||
+          meta.lead_type === "property_listing_request" ||
+          meta.request_type === "property_listing_request";
+        const isTelegram =
+          item.type === "telegram" ||
+          meta.preferred_channel === "telegram" ||
+          Boolean(meta.telegram_username) ||
+          Boolean(meta.telegram_user_id);
+        const isInquiry = item.type === "inquiry";
+        const isPhone = item.type === "phone";
+
+        if (channelFilter === "property_listing_request" && !isListing) return false;
+        if (channelFilter === "telegram" && !isTelegram) return false;
+        if (channelFilter === "inquiry" && !isInquiry) return false;
+        if (channelFilter === "phone" && !isPhone) return false;
+      }
+
+      // Deal filter (applies when dealType is present or if filtering listing request)
+      if (dealFilter !== "all") {
+        if (dealType) {
+          if (dealType !== dealFilter) return false;
+        } else if (item.type === "property_listing_request") {
+          if (dealFilter !== "sale") return false;
+        } else {
+          return false;
+        }
       }
 
       // Property type filter
       if (propTypeFilter !== "all") {
+        if (!propType) return false;
         if (propTypeFilter === "kvartira" && !["kvartira", "apartment"].includes(propType)) return false;
         if (propTypeFilter === "uy_hovli" && !["uy_hovli", "hovli", "house"].includes(propType)) return false;
         if (propTypeFilter === "dala_hovli" && !["dala_hovli", "dacha"].includes(propType)) return false;
@@ -256,12 +287,16 @@ export default function AdminArizalarPage() {
         const matchesLoc = location.toLowerCase().includes(q) || false;
         const matchesDesc = desc.toLowerCase().includes(q) || false;
         const matchesNotes = item.notes?.toLowerCase().includes(q) || false;
-        return matchesClient || matchesPhone || matchesLoc || matchesDesc || matchesNotes;
+        const matchesTg =
+          String(meta.telegram_username || "").toLowerCase().includes(q) ||
+          String(meta.telegram_user_id || "").includes(q);
+        const matchesEmail = String(meta.user_email || "").toLowerCase().includes(q);
+        return matchesClient || matchesPhone || matchesLoc || matchesDesc || matchesNotes || matchesTg || matchesEmail;
       }
 
       return true;
     });
-  }, [requests, statusFilter, dealFilter, propTypeFilter, searchQuery]);
+  }, [requests, statusFilter, channelFilter, dealFilter, propTypeFilter, searchQuery]);
 
   // Format date helper
   const formatDate = (isoStr: string) => {
@@ -298,12 +333,12 @@ export default function AdminArizalarPage() {
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                {locale === "uz" ? "Arizalar — E'lon berish so‘rovlari" : "Заявки на размещение объявлений"}
+                {locale === "uz" ? "Arizalar va Murojaatlar" : "Заявки и обращения"}
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 font-medium">
                 {locale === "uz"
-                  ? "Mijozlar tomonidan saytdan yuborilgan ko‘chmas mulk joylashtirish arizalari"
-                  : "Заявки от пользователей на публикацию объектов недвижимости"}
+                  ? "Sayt va Telegram bot orqali kelib tushgan ko‘chmas mulk hamda murojaat arizalari"
+                  : "Заявки на размещение и обращения от клиентов через сайт и Telegram"}
               </p>
             </div>
           </div>
@@ -499,14 +534,14 @@ export default function AdminArizalarPage() {
         {/* Search & Sub-filters */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-3 pt-2 border-t border-slate-100">
           {/* Search */}
-          <div className="md:col-span-6 relative">
+          <div className="md:col-span-4 relative">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               type="text"
               placeholder={
                 locale === "uz"
-                  ? "Mijoz ismi, telefon, lokatsiya yoki matn bo‘yicha qidirish..."
-                  : "Поиск по имени, телефону, локации или описанию..."
+                  ? "Mijoz, telefon, lokatsiya, telegram..."
+                  : "Поиск по имени, телефону, локации, telegram..."
               }
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -522,14 +557,29 @@ export default function AdminArizalarPage() {
             )}
           </div>
 
-          {/* Deal type filter */}
+          {/* Channel (Manba) filter */}
           <div className="md:col-span-3">
+            <select
+              value={channelFilter}
+              onChange={(e) => setChannelFilter(e.target.value as ChannelFilter)}
+              className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 bg-slate-50/50 text-xs font-semibold text-slate-800 focus:outline-hidden focus:border-[#167d4f] focus:bg-white transition-all"
+            >
+              <option value="all">{locale === "uz" ? "Barcha manbalar (Sayt / TG)" : "Все источники (Сайт / ТГ)"}</option>
+              <option value="property_listing_request">{locale === "uz" ? "E'lon berish (Sayt)" : "Заявки на объект"}</option>
+              <option value="telegram">{locale === "uz" ? "Telegram bot arizalari" : "Заявки из Telegram"}</option>
+              <option value="inquiry">{locale === "uz" ? "Sayt murojaatlari (Savol)" : "Вопросы с сайта"}</option>
+              <option value="phone">{locale === "uz" ? "Qo‘ng‘iroq so‘rovlari" : "Заказ звонка"}</option>
+            </select>
+          </div>
+
+          {/* Deal type filter */}
+          <div className="md:col-span-2">
             <select
               value={dealFilter}
               onChange={(e) => setDealFilter(e.target.value as DealFilter)}
               className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 bg-slate-50/50 text-xs font-semibold text-slate-800 focus:outline-hidden focus:border-[#167d4f] focus:bg-white transition-all"
             >
-              <option value="all">{locale === "uz" ? "Barcha bitimlar (Sotuv / Ijara)" : "Все сделки (Продажа / Аренда)"}</option>
+              <option value="all">{locale === "uz" ? "Barcha bitimlar" : "Все сделки"}</option>
               <option value="sale">{locale === "uz" ? "Sotuv" : "Продажа"}</option>
               <option value="rent">{locale === "uz" ? "Ijara" : "Аренда"}</option>
             </select>
@@ -607,11 +657,24 @@ export default function AdminArizalarPage() {
               <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
                 {filteredRequests.map((item) => {
                   const meta = item.metadata || {};
-                  const dealType = meta.deal_type || "sale";
-                  const propType = meta.property_type || "kvartira";
-                  const location = meta.location || item.property_title || "-";
+                  const isListing =
+                    item.type === "property_listing_request" ||
+                    meta.lead_type === "property_listing_request" ||
+                    meta.request_type === "property_listing_request";
+                  const isTelegram =
+                    item.type === "telegram" ||
+                    meta.preferred_channel === "telegram" ||
+                    Boolean(meta.telegram_username) ||
+                    Boolean(meta.telegram_user_id);
+                  const isInquiry = item.type === "inquiry";
+                  const isPhone = item.type === "phone";
+                  const tgUsername = meta.telegram_username;
+                  const userEmail = meta.user_email;
+
+                  const dealType = meta.deal_type || (isListing ? "sale" : undefined);
+                  const propType = meta.property_type;
+                  const location = meta.location || item.property_title || (isTelegram ? "Telegram Bot" : "-");
                   const description = item.message || meta.description || "-";
-                  const channel = meta.preferred_channel || "phone";
 
                   return (
                     <tr
@@ -625,40 +688,91 @@ export default function AdminArizalarPage() {
                           <span className="font-bold text-slate-900 text-xs">
                             {item.client_name || (locale === "uz" ? "Nomsiz mijoz" : "Без имени")}
                           </span>
-                          <a
-                            href={`tel:${item.client_phone}`}
-                            onClick={(e) => e.stopPropagation()}
-                            className="text-[11px] font-semibold text-[#167d4f] hover:underline inline-flex items-center gap-1 mt-0.5"
-                          >
-                            <Phone className="h-3 w-3" />
-                            <span>{item.client_phone || "-"}</span>
-                          </a>
-                          {channel === "telegram" && (
-                            <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-sky-600 mt-0.5">
+                          {item.client_phone ? (
+                            <a
+                              href={`tel:${item.client_phone}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-[11px] font-semibold text-[#167d4f] hover:underline inline-flex items-center gap-1 mt-0.5"
+                            >
+                              <Phone className="h-3 w-3" />
+                              <span>{item.client_phone}</span>
+                            </a>
+                          ) : (
+                            <span className="text-[11px] text-slate-400 mt-0.5">-</span>
+                          )}
+                          {tgUsername && (
+                            <a
+                              href={`https://t.me/${String(tgUsername).replace(/^@/, "")}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-flex items-center gap-0.5 text-[10px] font-bold text-sky-600 hover:underline mt-0.5"
+                            >
                               <Send className="h-2.5 w-2.5" />
-                              <span>Telegram</span>
+                              <span>@{String(tgUsername).replace(/^@/, "")}</span>
+                            </a>
+                          )}
+                          {userEmail && (
+                            <span className="text-[10px] text-slate-400 truncate max-w-[140px] mt-0.5" title={userEmail}>
+                              {userEmail}
                             </span>
                           )}
                         </div>
                       </td>
 
-                      {/* Deal & Prop Type */}
+                      {/* Source & Deal / Prop Type */}
                       <td className="py-3.5 px-4">
                         <div className="flex flex-col gap-1 items-start">
-                          <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-extrabold border ${
-                              dealType === "rent"
-                                ? "bg-blue-50 text-blue-700 border-blue-200"
-                                : "bg-[#eaf5f0]/60 text-[#167d4f] border-[#bdd1c8]"
-                            }`}
-                          >
-                            {dealType === "rent"
-                              ? locale === "uz" ? "Ijara" : "Аренда"
-                              : locale === "uz" ? "Sotuv" : "Продажа"}
-                          </span>
-                          <span className="text-[11px] font-semibold text-slate-600">
-                            {formatPropertyType(propType, locale)}
-                          </span>
+                          {isTelegram ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold border bg-sky-50 text-sky-700 border-sky-200">
+                              <Send className="h-2.5 w-2.5" />
+                              <span>Telegram</span>
+                            </span>
+                          ) : isListing ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold border bg-[#eaf5f0]/60 text-[#167d4f] border-[#bdd1c8]">
+                              <ClipboardList className="h-2.5 w-2.5" />
+                              <span>{locale === "uz" ? "E'lon berish" : "Объявление"}</span>
+                            </span>
+                          ) : isInquiry ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold border bg-amber-50 text-amber-700 border-amber-200">
+                              <MessageSquare className="h-2.5 w-2.5" />
+                              <span>{locale === "uz" ? "Murojaat" : "Вопрос"}</span>
+                            </span>
+                          ) : isPhone ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold border bg-purple-50 text-purple-700 border-purple-200">
+                              <Phone className="h-2.5 w-2.5" />
+                              <span>{locale === "uz" ? "Qo‘ng‘iroq" : "Звонок"}</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold border bg-slate-100 text-slate-700 border-slate-200">
+                              <span>{item.type || "Ariza"}</span>
+                            </span>
+                          )}
+
+                          {dealType ? (
+                            <div className="flex items-center gap-1">
+                              <span
+                                className={`inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-extrabold border ${
+                                  dealType === "rent"
+                                    ? "bg-blue-50 text-blue-700 border-blue-200"
+                                    : "bg-[#eaf5f0]/60 text-[#167d4f] border-[#bdd1c8]"
+                                }`}
+                              >
+                                {dealType === "rent"
+                                  ? locale === "uz" ? "Ijara" : "Аренда"
+                                  : locale === "uz" ? "Sotuv" : "Продажа"}
+                              </span>
+                              {propType && (
+                                <span className="text-[10px] font-semibold text-slate-600">
+                                  {formatPropertyType(propType, locale)}
+                                </span>
+                              )}
+                            </div>
+                          ) : propType ? (
+                            <span className="text-[10px] font-semibold text-slate-600">
+                              {formatPropertyType(propType, locale)}
+                            </span>
+                          ) : null}
                         </div>
                       </td>
 
@@ -763,9 +877,22 @@ export default function AdminArizalarPage() {
           <div className="lg:hidden space-y-3">
             {filteredRequests.map((item) => {
               const meta = item.metadata || {};
-              const dealType = meta.deal_type || "sale";
-              const propType = meta.property_type || "kvartira";
-              const location = meta.location || item.property_title || "-";
+              const isListing =
+                item.type === "property_listing_request" ||
+                meta.lead_type === "property_listing_request" ||
+                meta.request_type === "property_listing_request";
+              const isTelegram =
+                item.type === "telegram" ||
+                meta.preferred_channel === "telegram" ||
+                Boolean(meta.telegram_username) ||
+                Boolean(meta.telegram_user_id);
+              const isInquiry = item.type === "inquiry";
+              const isPhone = item.type === "phone";
+              const tgUsername = meta.telegram_username;
+
+              const dealType = meta.deal_type || (isListing ? "sale" : undefined);
+              const propType = meta.property_type;
+              const location = meta.location || item.property_title || (isTelegram ? "Telegram Bot" : "-");
               const description = item.message || meta.description || "-";
 
               return (
@@ -780,25 +907,59 @@ export default function AdminArizalarPage() {
                         {item.client_name || (locale === "uz" ? "Nomsiz mijoz" : "Без имени")}
                       </div>
                       <div className="text-xs text-slate-400 mt-0.5">{formatDate(item.created_at)}</div>
+                      {tgUsername && (
+                        <div className="inline-flex items-center gap-0.5 text-[10px] font-bold text-sky-600 mt-0.5">
+                          <Send className="h-2.5 w-2.5" />
+                          <span>@{String(tgUsername).replace(/^@/, "")}</span>
+                        </div>
+                      )}
                     </div>
                     <StatusBadge status={item.status} locale={locale} />
                   </div>
 
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-extrabold border ${
-                        dealType === "rent"
-                          ? "bg-blue-50 text-blue-700 border-blue-200"
-                          : "bg-[#eaf5f0]/60 text-[#167d4f] border-[#bdd1c8]"
-                      }`}
-                    >
-                      {dealType === "rent"
-                        ? locale === "uz" ? "Ijara" : "Аренда"
-                        : locale === "uz" ? "Sotuv" : "Продажа"}
-                    </span>
-                    <span className="text-xs font-bold text-slate-700">
-                      {formatPropertyType(propType, locale)}
-                    </span>
+                    {/* Source Badge */}
+                    {isTelegram ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold border bg-sky-50 text-sky-700 border-sky-200">
+                        <Send className="h-2.5 w-2.5" />
+                        <span>Telegram</span>
+                      </span>
+                    ) : isListing ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold border bg-[#eaf5f0]/60 text-[#167d4f] border-[#bdd1c8]">
+                        <ClipboardList className="h-2.5 w-2.5" />
+                        <span>{locale === "uz" ? "E'lon berish" : "Объявление"}</span>
+                      </span>
+                    ) : isInquiry ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold border bg-amber-50 text-amber-700 border-amber-200">
+                        <MessageSquare className="h-2.5 w-2.5" />
+                        <span>{locale === "uz" ? "Murojaat" : "Вопрос"}</span>
+                      </span>
+                    ) : isPhone ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold border bg-purple-50 text-purple-700 border-purple-200">
+                        <Phone className="h-2.5 w-2.5" />
+                        <span>{locale === "uz" ? "Qo‘ng‘iroq" : "Звонок"}</span>
+                      </span>
+                    ) : null}
+
+                    {dealType && (
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-extrabold border ${
+                          dealType === "rent"
+                            ? "bg-blue-50 text-blue-700 border-blue-200"
+                            : "bg-[#eaf5f0]/60 text-[#167d4f] border-[#bdd1c8]"
+                        }`}
+                      >
+                        {dealType === "rent"
+                          ? locale === "uz" ? "Ijara" : "Аренда"
+                          : locale === "uz" ? "Sotuv" : "Продажа"}
+                      </span>
+                    )}
+
+                    {propType && (
+                      <span className="text-xs font-bold text-slate-700">
+                        {formatPropertyType(propType, locale)}
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-1.5 text-xs text-slate-600">
@@ -903,40 +1064,87 @@ export default function AdminArizalarPage() {
                   <div>
                     <span className="text-xs text-slate-500">{locale === "uz" ? "Telefon" : "Телефон"}:</span>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <a
-                        href={`tel:${selectedRequest.client_phone}`}
-                        className="text-sm font-bold text-[#167d4f] hover:underline flex items-center gap-1.5"
-                      >
-                        <Phone className="h-3.5 w-3.5" />
-                        <span>{selectedRequest.client_phone || "-"}</span>
-                      </a>
+                      {selectedRequest.client_phone ? (
+                        <a
+                          href={`tel:${selectedRequest.client_phone}`}
+                          className="text-sm font-bold text-[#167d4f] hover:underline flex items-center gap-1.5"
+                        >
+                          <Phone className="h-3.5 w-3.5" />
+                          <span>{selectedRequest.client_phone}</span>
+                        </a>
+                      ) : (
+                        <span className="text-xs text-slate-400">-</span>
+                      )}
                     </div>
                   </div>
+
+                  {selectedRequest.metadata?.user_email && (
+                    <div>
+                      <span className="text-xs text-slate-500">{locale === "uz" ? "Google hisob" : "Аккаунт Google"}:</span>
+                      <div className="text-xs font-bold text-slate-900 mt-0.5">{selectedRequest.metadata.user_email}</div>
+                    </div>
+                  )}
+
+                  {(selectedRequest.metadata?.telegram_username || selectedRequest.metadata?.telegram_user_id || selectedRequest.type === "telegram") && (
+                    <div>
+                      <span className="text-xs text-slate-500">Telegram:</span>
+                      <div className="text-xs font-bold text-sky-600 flex items-center gap-1.5 flex-wrap mt-0.5">
+                        {selectedRequest.metadata?.telegram_username ? (
+                          <a
+                            href={`https://t.me/${String(selectedRequest.metadata.telegram_username).replace(/^@/, "")}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="hover:underline flex items-center gap-1"
+                          >
+                            <Send className="h-3 w-3" />
+                            <span>@{String(selectedRequest.metadata.telegram_username).replace(/^@/, "")}</span>
+                          </a>
+                        ) : (
+                          <span>Telegram Bot</span>
+                        )}
+                        {selectedRequest.metadata?.telegram_user_id && (
+                          <span className="text-slate-400 font-normal text-[11px]">(ID: {selectedRequest.metadata.telegram_user_id})</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   <div>
-                    <span className="text-xs text-slate-500">{locale === "uz" ? "Qulay aloqa usuli" : "Способ связи"}:</span>
-                    <div className="text-xs font-bold text-slate-800 capitalize">
-                      {selectedRequest.metadata?.preferred_channel === "telegram" ? "Telegram" : "Telefon"}
+                    <span className="text-xs text-slate-500">{locale === "uz" ? "Ariza manbasi" : "Источник заявки"}:</span>
+                    <div className="text-xs font-bold text-slate-800 capitalize mt-0.5">
+                      {selectedRequest.type === "telegram" || selectedRequest.metadata?.telegram_username
+                        ? "Telegram Bot"
+                        : selectedRequest.type === "property_listing_request" || selectedRequest.metadata?.lead_type === "property_listing_request"
+                        ? locale === "uz" ? "Sayt (E'lon berish)" : "Сайт (Подать объявление)"
+                        : selectedRequest.type === "inquiry"
+                        ? locale === "uz" ? "Sayt (Murojaat)" : "Сайт (Вопрос/Обращение)"
+                        : selectedRequest.type === "phone"
+                        ? locale === "uz" ? "Qo‘ng‘iroq buyurtmasi" : "Заказ звонка"
+                        : selectedRequest.type || "Sayt"}
                     </div>
                   </div>
+
                   <div>
-                    <span className="text-xs text-slate-500">{locale === "uz" ? "Qurilma va manba" : "Устройство и источник"}:</span>
-                    <div className="text-xs font-semibold text-slate-700">
-                      {selectedRequest.device || "Desktop"} ({selectedRequest.traffic_source || "Listing Request"})
+                    <span className="text-xs text-slate-500">{locale === "uz" ? "Qurilma / Manzil" : "Устройство"}:</span>
+                    <div className="text-xs font-semibold text-slate-700 mt-0.5">
+                      {selectedRequest.device || "Desktop"} ({selectedRequest.traffic_source || "Web"})
                     </div>
                   </div>
                 </div>
 
                 <div className="pt-2 flex items-center gap-2">
-                  <a
-                    href={`tel:${selectedRequest.client_phone}`}
-                    className="flex-1 py-2.5 px-4 rounded-xl bg-[#167d4f] hover:bg-[#167d4f] text-white text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition-colors"
-                  >
-                    <Phone className="h-4 w-4" />
-                    <span>{locale === "uz" ? "Qo‘ng‘iroq qilish" : "Позвонить клиенту"}</span>
-                  </a>
-                  {selectedRequest.metadata?.preferred_channel === "telegram" && (
+                  {selectedRequest.client_phone && (
                     <a
-                      href={`https://t.me/${selectedRequest.client_phone?.replace(/[^0-9]/g, "")}`}
+                      href={`tel:${selectedRequest.client_phone}`}
+                      className="flex-1 py-2.5 px-4 rounded-xl bg-[#167d4f] hover:bg-[#167d4f] text-white text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition-colors"
+                    >
+                      <Phone className="h-4 w-4" />
+                      <span>{locale === "uz" ? "Qo‘ng‘iroq qilish" : "Позвонить клиенту"}</span>
+                    </a>
+                  )}
+                  {selectedRequest.metadata?.telegram_username ? (
+                    <a
+                      href={`https://t.me/${String(selectedRequest.metadata.telegram_username).replace(/^@/, "")}`}
                       target="_blank"
                       rel="noreferrer"
                       className="py-2.5 px-4 rounded-xl bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors"
@@ -944,42 +1152,56 @@ export default function AdminArizalarPage() {
                       <Send className="h-4 w-4" />
                       <span>Telegram</span>
                     </a>
-                  )}
+                  ) : selectedRequest.client_phone ? (
+                    <a
+                      href={`https://t.me/${selectedRequest.client_phone.replace(/[^0-9]/g, "")}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="py-2.5 px-4 rounded-xl bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors"
+                    >
+                      <Send className="h-4 w-4" />
+                      <span>Telegram</span>
+                    </a>
+                  ) : null}
                 </div>
               </div>
 
-              {/* Section 2: Property Information */}
+              {/* Section 2: Property or Inquiry Information */}
               <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/70 space-y-3">
                 <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
-                  {locale === "uz" ? "Ko‘chmas mulk ma'lumotlari" : "Информация об объекте"}
+                  {locale === "uz" ? "Ariza va obyekt tafsilotlari" : "Детали заявки и объекта"}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <span className="text-xs text-slate-500">{locale === "uz" ? "Bitim turi" : "Тип сделки"}:</span>
-                    <div className="mt-0.5">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-black border ${
-                          selectedRequest.metadata?.deal_type === "rent"
-                            ? "bg-blue-50 text-blue-700 border-blue-200"
-                            : "bg-[#eaf5f0]/60 text-[#167d4f] border-[#bdd1c8]"
-                        }`}
-                      >
-                        {selectedRequest.metadata?.deal_type === "rent"
-                          ? locale === "uz" ? "Ijara" : "Аренда"
-                          : locale === "uz" ? "Sotuv" : "Продажа"}
-                      </span>
+                  {selectedRequest.metadata?.deal_type && (
+                    <div>
+                      <span className="text-xs text-slate-500">{locale === "uz" ? "Bitim turi" : "Тип сделки"}:</span>
+                      <div className="mt-0.5">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-black border ${
+                            selectedRequest.metadata?.deal_type === "rent"
+                              ? "bg-blue-50 text-blue-700 border-blue-200"
+                              : "bg-[#eaf5f0]/60 text-[#167d4f] border-[#bdd1c8]"
+                          }`}
+                        >
+                          {selectedRequest.metadata?.deal_type === "rent"
+                            ? locale === "uz" ? "Ijara" : "Аренда"
+                            : locale === "uz" ? "Sotuv" : "Продажа"}
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  <div>
-                    <span className="text-xs text-slate-500">{locale === "uz" ? "Ob'ekt turi" : "Тип объекта"}:</span>
-                    <div className="text-xs font-bold text-slate-800 mt-1">
-                      {formatPropertyType(selectedRequest.metadata?.property_type, locale)}
+                  {selectedRequest.metadata?.property_type && (
+                    <div>
+                      <span className="text-xs text-slate-500">{locale === "uz" ? "Ob'ekt turi" : "Тип объекта"}:</span>
+                      <div className="text-xs font-bold text-slate-800 mt-1">
+                        {formatPropertyType(selectedRequest.metadata?.property_type, locale)}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <div className="sm:col-span-2">
-                    <span className="text-xs text-slate-500">{locale === "uz" ? "Manzil va hudud" : "Адрес и локация"}:</span>
+                    <span className="text-xs text-slate-500">{locale === "uz" ? "Manzil yoki lokatsiya" : "Адрес или локация"}:</span>
                     <div className="text-sm font-bold text-slate-900 flex items-center gap-1.5 mt-0.5">
                       <MapPin className="h-4 w-4 text-[#167d4f] shrink-0" />
                       <span>{selectedRequest.metadata?.location || selectedRequest.property_title || "-"}</span>
@@ -987,7 +1209,7 @@ export default function AdminArizalarPage() {
                   </div>
 
                   <div className="sm:col-span-2">
-                    <span className="text-xs text-slate-500">{locale === "uz" ? "Mijoz tavsifi" : "Описание от клиента"}:</span>
+                    <span className="text-xs text-slate-500">{locale === "uz" ? "Ariza matni / tavsif" : "Текст заявки / описание"}:</span>
                     <div className="mt-1.5 p-3 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-800 leading-relaxed whitespace-pre-wrap">
                       {selectedRequest.message || selectedRequest.metadata?.description || "-"}
                     </div>
