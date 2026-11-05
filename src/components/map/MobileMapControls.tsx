@@ -30,7 +30,7 @@ export function MobileMapControls({
   return (
     <div
       data-testid="mobile-map-controls"
-      className={`sm:hidden absolute top-3 left-3 right-3 z-20 flex flex-col items-center gap-2 pointer-events-auto ${className}`}
+      className={`sm:hidden absolute top-3 left-3 right-3 z-20 flex flex-col items-center gap-2 pointer-events-none ${className}`}
     >
       {/* 1. Compact Elongated Search Pill [ 🔍 Mavze, ko‘cha yoki obyekt qidirish ] */}
       <div
@@ -39,7 +39,7 @@ export function MobileMapControls({
         role="button"
         tabIndex={0}
         aria-label={locale === "uz" ? "Qidiruv va filtrlarni ochish" : "Открыть поиск и фильтры"}
-        className="w-full flex items-center justify-between h-10 px-3.5 rounded-2xl bg-white/95 backdrop-blur-xl shadow-elevated border border-white/90 cursor-pointer active:scale-[0.99] transition-all"
+        className="w-full flex items-center justify-between h-10 px-3.5 rounded-2xl bg-white/95 backdrop-blur-xl shadow-elevated border border-white/90 cursor-pointer active:scale-[0.99] transition-all pointer-events-auto"
       >
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <Search className="h-4 w-4 text-[#167d4f] shrink-0" />
@@ -85,10 +85,10 @@ export function MobileMapControls({
       </div>
 
       {/* 2. Permanent Segmented Control [ XARITA ] [ KATALOG ] - Balanced towards the right */}
-      <div className="w-full flex justify-end">
+      <div className="w-full flex justify-end pointer-events-none">
         <div
           data-testid="mobile-primary-view-switcher"
-          className="flex items-center p-1 rounded-2xl bg-white/95 backdrop-blur-xl shadow-elevated border border-white/90 w-[240px]"
+          className="flex items-center p-1 rounded-2xl bg-white/95 backdrop-blur-xl shadow-elevated border border-white/90 w-[240px] pointer-events-auto"
         >
         <button
           type="button"

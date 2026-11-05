@@ -26,7 +26,7 @@ import {
   getPropertyStatusLabel,
 } from "@/lib/propertyFormatters";
 
-const ANGREN_CENTER: [number, number] = [70.085182, 41.012277];
+const ANGREN_CENTER: [number, number] = [70.1340, 41.0185];
 
 export default function AdminMapManagementPage() {
   const { locale } = useLanguage();
@@ -92,7 +92,7 @@ export default function AdminMapManagementPage() {
         ],
       },
       center: ANGREN_CENTER,
-      zoom: 13.2,
+      zoom: 12.8,
     });
 
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
@@ -201,7 +201,7 @@ export default function AdminMapManagementPage() {
   };
 
   const recenterAngren = () => {
-    mapRef.current?.flyTo({ center: ANGREN_CENTER, zoom: 13.2 });
+    mapRef.current?.flyTo({ center: ANGREN_CENTER, zoom: 12.8 });
   };
 
   const filtered = properties.filter((p) => {

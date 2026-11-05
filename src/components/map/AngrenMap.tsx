@@ -157,12 +157,17 @@ export function AngrenMap({
 
     const initialCam = getMapCamera();
     const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-    const targetDefaultZoom = isMobile ? 13.6 : DEFAULT_ZOOM;
-    const initialCenterLngLat: [number, number] = [
-      initialCam.center[1] > 50 ? initialCam.center[1] : initialCam.center[0],
-      initialCam.center[0] < 50 ? initialCam.center[0] : initialCam.center[1],
-    ];
-    const initialZoom = initialCam?.zoom || targetDefaultZoom;
+    const targetDefaultZoom = isMobile ? 12.3 : DEFAULT_ZOOM;
+    const hasSavedCam =
+      typeof window !== "undefined" &&
+      Boolean(sessionStorage.getItem("angren_map_camera_v2"));
+    const initialZoom = hasSavedCam && initialCam?.zoom ? initialCam.zoom : targetDefaultZoom;
+    const initialCenterLngLat: [number, number] = hasSavedCam && initialCam?.center
+      ? [
+          initialCam.center[1] > 50 ? initialCam.center[1] : initialCam.center[0],
+          initialCam.center[0] < 50 ? initialCam.center[0] : initialCam.center[1],
+        ]
+      : [ANGREN_CENTER[1], ANGREN_CENTER[0]];
     const initialPitch = initialCam?.pitch !== undefined ? initialCam.pitch : DEFAULT_MAP_PITCH_3D;
     const initialBearing = initialCam?.bearing || 0;
     const initialDim = initialCam?.dimension || "3d";
@@ -234,12 +239,22 @@ export function AngrenMap({
       bearing: initialBearing,
       minZoom: ANGREN_MIN_ZOOM,
       maxZoom: ANGREN_MAX_ZOOM,
-      maxBounds: [
-        [ANGREN_RESTRICT_BOUNDS[0][1], ANGREN_RESTRICT_BOUNDS[0][0]], // SW [lng, lat]
-        [ANGREN_RESTRICT_BOUNDS[1][1], ANGREN_RESTRICT_BOUNDS[1][0]], // NE [lng, lat]
-      ],
+      dragPan: true,
+      dragRotate: true,
+      scrollZoom: true,
+      touchZoomRotate: true,
+      doubleClickZoom: true,
+      keyboard: true,
       attributionControl: false,
     });
+
+    // Explicitly guarantee all interactive pan and drag handlers are active
+    map.dragPan.enable();
+    map.scrollZoom.enable();
+    map.dragRotate.enable();
+    map.touchZoomRotate.enable();
+    map.doubleClickZoom.enable();
+    map.keyboard.enable();
 
     mapRef.current = map;
 
@@ -774,7 +789,7 @@ export function AngrenMap({
   const handleResetCenter = () => {
     if (!mapRef.current) return;
     const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-    const targetZoom = isMobile ? 13.6 : DEFAULT_ZOOM;
+    const targetZoom = isMobile ? 12.3 : DEFAULT_ZOOM;
     const targetPitch = dimension === "3d" ? DEFAULT_MAP_PITCH_3D : DEFAULT_MAP_PITCH_2D;
     mapRef.current.flyTo({
       center: [ANGREN_CENTER[1], ANGREN_CENTER[0]],

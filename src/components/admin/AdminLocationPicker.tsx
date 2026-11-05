@@ -103,7 +103,11 @@ export function AdminLocationPicker({
     };
 
     const initialCenter: [number, number] =
-      lng && lat ? [lng, lat] : ANGREN_CENTER;
+      lng && lat
+        ? [lng, lat]
+        : ANGREN_CENTER[0] > 50
+        ? [ANGREN_CENTER[0], ANGREN_CENTER[1]]
+        : [ANGREN_CENTER[1], ANGREN_CENTER[0]];
 
     const map = new maplibregl.Map({
       container: containerRef.current,

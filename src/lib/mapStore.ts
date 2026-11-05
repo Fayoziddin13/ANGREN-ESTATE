@@ -14,24 +14,25 @@ export interface MapCameraState {
 }
 
 const MAP_MODE_KEY = "angren_map_style_v1";
-const MAP_CAMERA_KEY = "angren_map_camera_v1";
+const MAP_CAMERA_KEY = "angren_map_camera_v2";
 const MAP_DIMENSION_KEY = "angren_map_dimension_v1";
 const MAP_MODE_EVENT = "angren_map_mode_change";
 const MAP_DIMENSION_EVENT = "angren_map_dimension_change";
 
-// Angren official center point
-export const DEFAULT_ANGREN_CENTER: [number, number] = [41.012277, 70.085182];
-export const DEFAULT_MAP_ZOOM = 13.8;
+// Angren urban residential center (Central districts, 5-, 6-, 7-mavze, Dukent, Geolog)
+export const DEFAULT_ANGREN_CENTER: [number, number] = [41.0185, 70.1340];
+export const DEFAULT_MAP_ZOOM = 12.8;
 export const DEFAULT_MAP_PITCH_3D = 45;
 export const DEFAULT_MAP_PITCH_2D = 0;
 
-// Angren City geographic navigation boundaries [South-West [lat, lng], North-East [lat, lng]]
+// Angren geographic region envelope for coordinate validation [South-West [lat, lng], North-East [lat, lng]]
+// Generous provincial envelope covering Angren urban area, Dukent, Yangiobod, Krasnogorsk, Ohangaron valley corridor
 export const ANGREN_RESTRICT_BOUNDS: [[number, number], [number, number]] = [
-  [40.9400, 69.9800], // Southwest: Qorabog', A373 gateway, southern riverbank
-  [41.1000, 70.2800], // Northeast: Dukent, northern foothills, eastern districts
+  [40.5000, 69.2000], // Southwest: Regional valley envelope including Olmaliq/Ohangaron corridor
+  [41.6000, 70.9000], // Northeast: Regional foothills, Dukent, Yangiobod, Chatkal foothills
 ];
 
-export const ANGREN_MIN_ZOOM = 12.0;
+export const ANGREN_MIN_ZOOM = 11.5;
 export const ANGREN_MAX_ZOOM = 18.5;
 
 export function normalizeCameraCenter(c: [number, number]): [number, number] {
