@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { phoneHref } from "@/lib/phone";
 import Image from "next/image";
 import { X, Heart, MapPin, Maximize2, Bed, Bath, ArrowRight, Phone, Send, Layers, Calendar } from "lucide-react";
 import { Property } from "@/lib/types";
@@ -222,7 +223,7 @@ export function PropertyPreviewCard({
         {/* Call & Telegram Quick Links */}
         <div className="flex items-center gap-2 pt-0.5">
           <a
-            href={`tel:${property.contact_phone}`}
+            href={phoneHref(property.contact_phone)}
             onClick={() =>
               trackEvent("phone_click", {
                 property_id: property.id,

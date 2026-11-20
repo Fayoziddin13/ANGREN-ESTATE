@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { harvestAllActiveSources } from "@/lib/newsHarvester";
 
 export const dynamic = "force-dynamic";
+
+function safeEqual(a: string, b: string): boolean {
+  const left = Buffer.from(a);
+  const right = Buffer.from(b);
+  return left.length === right.length && crypto.timingSafeEqual(left, right);
+}
 
 /**
  * Scheduled Cron Job for Automatic Real Estate News Synchronization.
@@ -10,7 +17,10 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get("authorization");
-    const cronSecret = process.env.CRON_SECRET || process.env.ADMIN_JWT_SECRET;
+    // Vercel Cron sends `Authorization: Bearer ${CRON_SECRET}`. The admin session
+    // signing key is deliberately NOT reused here (one secret per purpose).
+    const cronSecret = process.env.CRON_SECRET;
+    const isAuthorized = Boolean(cronSecret) && safeEqual(authHeader || "", `Bearer ${cronSecret}`);
 
     // In production, ensure cron secret is configured (503 if missing) and check Authorization (401 if invalid)
     if (process.env.NODE_ENV === "production") {
@@ -20,13 +30,13 @@ export async function GET(request: NextRequest) {
           { status: 503 }
         );
       }
-      if (authHeader !== `Bearer ${cronSecret}`) {
+      if (!isAuthorized) {
         return NextResponse.json(
           { success: false, error: "Unauthorized cron request" },
           { status: 401 }
         );
       }
-    } else if (cronSecret && authHeader && authHeader !== `Bearer ${cronSecret}`) {
+    } else if (cronSecret && authHeader && !isAuthorized) {
       return NextResponse.json(
         { success: false, error: "Unauthorized cron request" },
         { status: 401 }

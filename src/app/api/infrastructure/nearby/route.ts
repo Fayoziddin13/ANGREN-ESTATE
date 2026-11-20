@@ -56,7 +56,14 @@ export async function GET(request: NextRequest) {
     const now = Date.now();
     const cached = cache.get(cacheKey);
     if (cached && cached.expiresAt > now) {
-      return NextResponse.json(cached.data);
+      return NextResponse.json(cached.data, {
+        headers: {
+          "Cache-Control":
+            cached.data.source === "OpenStreetMap"
+              ? "public, s-maxage=86400, stale-while-revalidate=604800"
+              : "public, s-maxage=3600, stale-while-revalidate=86400",
+        },
+      });
     }
 
     let summaries: InfrastructureSummary[] = [];
@@ -101,7 +108,16 @@ export async function GET(request: NextRequest) {
       expiresAt: now + CACHE_TTL_MS,
     });
 
-    return NextResponse.json(responseData);
+    // Infrastructure around a fixed point changes rarely: let the CDN serve repeat
+    // visits instantly. Fallback results are cached briefly so OSM can be retried.
+    return NextResponse.json(responseData, {
+      headers: {
+        "Cache-Control":
+          source === "OpenStreetMap"
+            ? "public, s-maxage=86400, stale-while-revalidate=604800"
+            : "public, s-maxage=3600, stale-while-revalidate=86400",
+      },
+    });
   } catch (error: any) {
     console.error("[api/infrastructure/nearby] Internal error:", error);
     return NextResponse.json(

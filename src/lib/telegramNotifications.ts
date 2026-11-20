@@ -11,39 +11,19 @@ import {
 import { supabaseAdmin } from "./supabaseServer";
 import { isSupabaseConfigured } from "./supabase";
 import { updateProperty } from "./properties";
+import { PRODUCTION_SITE_URL, getPublicSiteUrl } from "./siteUrl";
 
-export const PRODUCTION_SITE_URL = "https://angrenestate.uz";
+export { PRODUCTION_SITE_URL };
 export const SITE_URL = PRODUCTION_SITE_URL;
 
 /**
  * Resolve a secure, public HTTPS base URL for Telegram channel posts and inline buttons.
  * Telegram Bot API strictly prohibits local URLs (localhost, 127.0.0.1, http://)
  * in public channel inline keyboards and photo endpoints.
- *
- * Rules:
- * - Must start with 'https://'
- * - Must NOT contain 'localhost', '127.0.0.1', or '0.0.0.0'
- * - If candidate from env (NEXT_PUBLIC_SITE_URL, SITE_URL) fails any check,
- *   safely falls back to canonical production domain 'https://angrenestate.uz'.
+ * Shares the rules of getPublicSiteUrl() (https only, never localhost).
  */
 export function getTelegramPublicSiteUrl(): string {
-  const envUrl = (
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.SITE_URL ||
-    ""
-  ).trim();
-
-  if (
-    envUrl &&
-    envUrl.startsWith("https://") &&
-    !envUrl.includes("localhost") &&
-    !envUrl.includes("127.0.0.1") &&
-    !envUrl.includes("0.0.0.0")
-  ) {
-    return envUrl.replace(/\/+$/, "");
-  }
-
-  return PRODUCTION_SITE_URL;
+  return getPublicSiteUrl();
 }
 
 /**
@@ -1348,6 +1328,11 @@ export async function getAdminTelegramChatIds(): Promise<Array<number | string>>
       .eq("key", "telegram_users_registry")
       .maybeSingle();
 
+    // Only exact matches against the admin-configured handle / phone are allowed.
+    // Telegram usernames are unique and contact phones are verified by Telegram
+    // (the webhook rejects unsigned updates), so neither can be claimed by a stranger.
+    // Never match by substring (e.g. any username containing "admin"): that would
+    // forward every client's name and phone to arbitrary Telegram users.
     const registry = Array.isArray(regRow?.value) ? regRow.value : [];
     for (const u of registry) {
       const uTg = String(u.username || "").toLowerCase();
@@ -1359,8 +1344,6 @@ export async function getAdminTelegramChatIds(): Promise<Array<number | string>>
       if (adminTgHandle && uTg === adminTgHandle) {
         chatIds.add(uId);
       } else if (adminPhone && uPhone && uPhone === adminPhone) {
-        chatIds.add(uId);
-      } else if (uTg === "angrenestateuz_admin" || uTg.includes("admin")) {
         chatIds.add(uId);
       }
     }

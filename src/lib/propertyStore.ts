@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Property, PropertyStatus } from "./types";
+import { fetchJsonShared } from "./sharedFetch";
 
 const PROPERTY_CHANGE_EVENT = "angren_estate_property_change";
 
@@ -18,14 +19,14 @@ export function useProperties(options?: { adminMode?: boolean }) {
         (typeof window !== "undefined" && window.location.pathname.startsWith("/admin"));
 
       const endpoint = isAdminRoute ? "/api/admin/properties" : "/api/properties";
-      const res = await fetch(endpoint, {
+      const res = await fetchJsonShared(endpoint, {
         headers: {
           "Cache-Control": "no-cache",
         },
       });
 
       if (res.ok) {
-        const data = await res.json();
+        const data = res.data;
         if (data.success && Array.isArray(data.properties)) {
           setProperties(data.properties);
           setIsLoaded(true);
@@ -35,11 +36,11 @@ export function useProperties(options?: { adminMode?: boolean }) {
 
       // If admin endpoint failed (e.g. not authenticated or unexpected), try public endpoint
       if (isAdminRoute) {
-        const publicRes = await fetch("/api/properties", {
+        const publicRes = await fetchJsonShared("/api/properties", {
           headers: { "Cache-Control": "no-cache" },
         });
         if (publicRes.ok) {
-          const publicData = await publicRes.json();
+          const publicData = publicRes.data;
           if (publicData.success && Array.isArray(publicData.properties)) {
             setProperties(publicData.properties);
             setIsLoaded(true);

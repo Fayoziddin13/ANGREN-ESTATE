@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { fetchJsonShared } from "@/lib/sharedFetch";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Property, HududItem } from "@/lib/types";
@@ -46,6 +47,11 @@ interface AngrenMapProps {
 export const ANGREN_CENTER: [number, number] = DEFAULT_ANGREN_CENTER;
 export const DEFAULT_ZOOM = DEFAULT_MAP_ZOOM;
 const CLUSTER_ZOOM_THRESHOLD = 13.5;
+
+function hasValidCoordinates(p: Property): boolean {
+  const c = (p as any)?.coordinates;
+  return Boolean(c) && Number.isFinite(c.lat) && Number.isFinite(c.lng);
+}
 
 function getPropertyIconSvg(type: string): string {
   switch (type) {
@@ -101,10 +107,9 @@ export function AngrenMap({
 
   // Dynamic Hududs list from API
   useEffect(() => {
-    fetch("/api/hududs")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.success && Array.isArray(d.hududs) && d.hududs.length > 0) {
+    fetchJsonShared("/api/hududs")
+      .then(({ data: d }) => {
+        if (d?.success && Array.isArray(d.hududs) && d.hududs.length > 0) {
           setHududList(d.hududs);
         }
       })
@@ -430,15 +435,22 @@ export function AngrenMap({
   }, [mapMode, isMapReady]);
 
   // 3. Grid-based clustering logic
+  // Listings without valid coordinates cannot be placed on the map; skipping them
+  // prevents a single malformed record from crashing the whole map page.
+  const mappableProperties = useMemo(
+    () => properties.filter((p) => hasValidCoordinates(p)),
+    [properties]
+  );
+
   const { clusters, individualProps } = useMemo(() => {
     if (currentZoom >= CLUSTER_ZOOM_THRESHOLD) {
-      return { clusters: [], individualProps: properties };
+      return { clusters: [], individualProps: mappableProperties };
     }
 
     const clusterGrid: { [key: string]: Property[] } = {};
     const gridSize = currentZoom < 12.5 ? 0.03 : 0.015;
 
-    properties.forEach((prop) => {
+    mappableProperties.forEach((prop) => {
       const gridX = Math.floor(prop.coordinates.lng / gridSize);
       const gridY = Math.floor(prop.coordinates.lat / gridSize);
       const key = `${gridX}_${gridY}`;
@@ -460,7 +472,7 @@ export function AngrenMap({
     });
 
     return { clusters: clustersList, individualProps: singles };
-  }, [properties, currentZoom]);
+  }, [mappableProperties, currentZoom]);
 
   // 4. Render Markers and Clusters
   useEffect(() => {
@@ -611,7 +623,7 @@ export function AngrenMap({
 
   // 6. Center on selected property
   useEffect(() => {
-    if (!selectedProperty || !mapRef.current) return;
+    if (!selectedProperty || !mapRef.current || !hasValidCoordinates(selectedProperty)) return;
     mapRef.current.flyTo({
       center: [selectedProperty.coordinates.lng, selectedProperty.coordinates.lat],
       zoom: 14.8,

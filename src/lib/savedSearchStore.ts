@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { SavedSearch, SavedSearchFilter, InAppNotification, Property } from "./types";
 import { useAuth } from "@/context/AuthContext";
+import { getApiAuthHeaders } from "./authHeaders";
 
 const STORAGE_KEY = "angren_estate_saved_searches_v1";
 const NOTIFICATIONS_KEY = "angren_estate_notifications_v1";
@@ -29,8 +30,9 @@ export function useSavedSearches() {
 
       if (user?.id) {
         try {
-          const res = await fetch(`/api/user/saved-searches?userId=${user.id}`, {
+          const res = await fetch("/api/user/saved-searches", {
             cache: "no-store",
+            headers: await getApiAuthHeaders(),
           });
           if (res.ok) {
             const data = await res.json();
@@ -119,8 +121,8 @@ export function useSavedSearches() {
     try {
       await fetch("/api/user/saved-searches", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id, search: newSearch }),
+        headers: { "Content-Type": "application/json", ...(await getApiAuthHeaders()) },
+        body: JSON.stringify({ search: newSearch }),
       });
     } catch (e) {
       console.warn("[SavedSearchStore] Server save warning:", e);
@@ -141,8 +143,9 @@ export function useSavedSearches() {
 
     if (user?.id) {
       try {
-        await fetch(`/api/user/saved-searches?userId=${user.id}&id=${id}`, {
+        await fetch(`/api/user/saved-searches?id=${encodeURIComponent(id)}`, {
           method: "DELETE",
+          headers: await getApiAuthHeaders(),
         });
       } catch (e) {
         console.warn("[SavedSearchStore] Server delete warning:", e);

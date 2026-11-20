@@ -42,3 +42,7 @@ Thumbs.db
 *.pem
 .idea/
 .vscode/
+
+# Runtime data written by the Telegram bot in local dev (contains personal data)
+/data/telegram_users.json
+/data/telegram_property_notifications.json

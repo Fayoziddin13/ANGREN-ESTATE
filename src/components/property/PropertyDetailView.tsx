@@ -56,6 +56,7 @@ import { trackEvent } from "@/lib/analytics";
 import { formatPropertyPrice } from "@/lib/currency";
 import { recordPublicLead } from "@/lib/leadClient";
 import { formatPublishedDate } from "@/lib/dateFormat";
+import { formatPhoneDisplay, phoneHref } from "@/lib/phone";
 import {
   getPropertyTitle,
   getPropertyDescription,
@@ -665,8 +666,8 @@ export default function PropertyDetailView({
                   (property.longitude ?? property.coordinates?.lng) && (
                     <div className="pt-6 border-t border-gray-100">
                       <PropertyInfrastructureSection
-                        latitude={property.latitude ?? property.coordinates.lat}
-                        longitude={property.longitude ?? property.coordinates.lng}
+                        latitude={property.latitude ?? property.coordinates?.lat}
+                        longitude={property.longitude ?? property.coordinates?.lng}
                       />
                     </div>
                   )}
@@ -746,25 +747,27 @@ export default function PropertyDetailView({
                     {/* Uy egasi telefoni (agar xaridorlarga ko‘rsatish ruxsat etilgan bo‘lsa) */}
                     {property.owner_phone_visible && property.owner_phone && (
                       <a
-                        href={`tel:${property.owner_phone}`}
+                        href={phoneHref(property.owner_phone)}
                         className="w-full py-3 px-4 rounded-xl border-2 border-emerald-600 bg-emerald-50/80 hover:bg-emerald-100 text-emerald-800 text-xs sm:text-sm font-bold shadow-xs flex items-center justify-center gap-2 transition-all active:scale-98"
                       >
                         <Phone className="w-4 h-4 text-emerald-700" />
                         <span>
                           {locale === "uz" ? "Uy egasi telefoni: " : "Телефон владельца: "}
-                          {property.owner_phone}
+                          {formatPhoneDisplay(property.owner_phone)}
                         </span>
                       </a>
                     )}
 
-                    <a
-                      href={`tel:${property.contact_phone}`}
-                      onClick={handleCallClick}
-                      className="w-full py-3 px-4 rounded-xl bg-[#167d4f] hover:bg-[#167d4f] text-white text-xs sm:text-sm font-bold shadow-md flex items-center justify-center gap-2 transition-all active:scale-98"
-                    >
-                      <Phone className="w-4 h-4" />
-                      <span>{property.contact_phone}</span>
-                    </a>
+                    {property.contact_phone && (
+                      <a
+                        href={phoneHref(property.contact_phone)}
+                        onClick={handleCallClick}
+                        className="w-full py-3 px-4 rounded-xl bg-[#167d4f] hover:bg-[#167d4f] text-white text-xs sm:text-sm font-bold shadow-md flex items-center justify-center gap-2 transition-all active:scale-98"
+                      >
+                        <Phone className="w-4 h-4" />
+                        <span>{formatPhoneDisplay(property.contact_phone)}</span>
+                      </a>
+                    )}
 
                     {property.contact_telegram && (
                       <a
@@ -805,12 +808,12 @@ export default function PropertyDetailView({
                 <div className="p-3.5 rounded-xl bg-[#eaf5f0]/40 border border-[#2db477]/30 text-xs text-gray-600 space-y-1">
                   <div className="font-bold text-[#167d4f] flex items-center gap-1.5">
                     <ShieldCheck className="w-4 h-4 text-[#167d4f]" />
-                    <span>{locale === "uz" ? "Xavfsiz bitim kafolati" : "Гарантия безопасной сделки"}</span>
+                    <span>{locale === "uz" ? "Xavfsiz bitim uchun maslahat" : "Советы для безопасной сделки"}</span>
                   </div>
                   <p className="text-[11px] text-gray-600">
                     {locale === "uz"
-                      ? "Barcha hujjatlar va kadastr ma’lumotlari mutaxassislar tomonidan to‘liq tekshirilgan."
-                      : "Все документы и кадастровые данные полностью проверены специалистами."}
+                      ? "Pul to‘lashdan oldin obyektni ko‘zdan kechiring, egalik hujjatlari va kadastr ma’lumotlarini tekshiring. Savollar bo‘lsa, rieltorimiz yordam beradi."
+                      : "Перед оплатой осмотрите объект, проверьте документы о праве собственности и кадастровые данные. Если есть вопросы, наш риелтор поможет."}
                   </p>
                 </div>
               </div>

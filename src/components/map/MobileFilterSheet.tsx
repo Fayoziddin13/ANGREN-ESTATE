@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { fetchJsonShared } from "@/lib/sharedFetch";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -73,10 +74,9 @@ export function MobileFilterSheet({
   const [hududList, setHududList] = useState<HududItem[]>(DEFAULT_ANGREN_HUDUDS);
 
   useEffect(() => {
-    fetch("/api/hududs")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.success && Array.isArray(d.hududs) && d.hududs.length > 0) {
+    fetchJsonShared("/api/hududs")
+      .then(({ data: d }) => {
+        if (d?.success && Array.isArray(d.hududs) && d.hududs.length > 0) {
           setHududList(d.hududs);
         }
       })

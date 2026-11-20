@@ -103,7 +103,7 @@ export function mapRowToProperty(row: any): Property {
       bargain_allowed: Boolean((row as any).bargain_allowed ?? amens?.bargain_allowed ?? false),
       area_sqm: Number(row.area_sqm || row.area || 0),
       area: Number(row.area || row.area_sqm || 0),
-      area_sotikh: row.area_sotikh ? Number(row.area_sotikh) : row.id === "prop-3" ? 6 : undefined,
+      area_sotikh: row.area_sotikh ? Number(row.area_sotikh) : undefined,
       living_area_sqm: row.living_area_sqm ? Number(row.living_area_sqm) : undefined,
       living_area: row.living_area ? Number(row.living_area) : undefined,
       rooms: Number(row.rooms || 1),
@@ -126,20 +126,20 @@ export function mapRowToProperty(row: any): Property {
       polygon_coordinates: row.polygon_coordinates || row.polygon || undefined,
       utilities: utils,
       amenities: amens,
-      contact_phone: row.contact_phone || "+998 90 123 45 67",
+      // Never invent a number: fall back to the assigned realtor, else leave empty.
+      contact_phone: row.contact_phone || realtor?.phone || "",
       contact_telegram: row.contact_telegram || row.telegram || undefined,
       telegram: row.telegram || row.contact_telegram || undefined,
       owner_phone: row.owner_phone || amens?.owner_phone || undefined,
       owner_phone_visible: Boolean(row.owner_phone_visible ?? amens?.owner_phone_visible ?? false),
       realtor_id: row.realtor_id || undefined,
       realtor: realtor,
-      facade_m: row.facade_m ? Number(row.facade_m) : amens?.facade_m ? Number(amens.facade_m) : row.id === "prop-3" ? 15 : undefined,
-      depth_m: row.depth_m ? Number(row.depth_m) : amens?.depth_m ? Number(amens.depth_m) : row.id === "prop-3" ? 40 : undefined,
+      facade_m: row.facade_m ? Number(row.facade_m) : amens?.facade_m ? Number(amens.facade_m) : undefined,
+      depth_m: row.depth_m ? Number(row.depth_m) : amens?.depth_m ? Number(amens.depth_m) : undefined,
       dimensions:
         row.dimensions ||
         amens?.dimensions ||
-        ((row.facade_m || amens?.facade_m) && (row.depth_m || amens?.depth_m) ? `${row.facade_m || amens?.facade_m} × ${row.depth_m || amens?.depth_m} m` : undefined) ||
-        (row.id === "prop-3" ? "15 × 40 m" : undefined),
+        ((row.facade_m || amens?.facade_m) && (row.depth_m || amens?.depth_m) ? `${row.facade_m || amens?.facade_m} × ${row.depth_m || amens?.depth_m} m` : undefined),
       views_count: Number(row.views_count || 0),
       favorites_count: Number(row.favorites_count || 0),
       contacts_count: Number(row.contacts_count || 0),
@@ -296,7 +296,7 @@ export function mapPropertyToDb(data: any): Record<string, any> {
     images: photos,
     main_image: mainImage,
     video_url: data.video_url || null,
-    contact_phone: data.contact_phone || "+998 90 123 45 67",
+    contact_phone: data.contact_phone || data.realtor?.phone || "",
     contact_telegram: data.contact_telegram || data.telegram || null,
     telegram: data.telegram || data.contact_telegram || null,
     realtor_id: isValidUuid(data.realtor_id) ? data.realtor_id : null,
@@ -364,37 +364,49 @@ export function sanitizePublicProperty(property: Property): Property {
  * Public rule: ONLY status === 'published' is returned.
  * Draft and archived properties are filtered out by Supabase RLS and query filters.
  */
+/**
+ * Make free text safe to embed in a PostgREST `or=(...)` filter string.
+ * Commas, parentheses, quotes and backslashes would otherwise start new
+ * conditions or break the filter syntax.
+ */
+function sanitizeFilterTerm(value: string): string {
+  return value.replace(/[,()"'\\*%]/g, " ").replace(/\s+/g, " ").trim().slice(0, 100);
+}
+
 export async function getPublishedProperties(filters?: PropertyFilterParams): Promise<Property[]> {
   if (isSupabaseConfigured) {
     try {
-      let query = supabase
+      // Read on the server with the service role and sanitize before returning, so
+      // public pages never depend on anon access to private columns (owner phone).
+      let query = supabaseAdmin
         .from("properties")
         .select("*, realtors(*)")
         .eq("status", "published");
 
       const dealType = filters?.deal_type || filters?.transaction_type;
-      if (dealType && dealType !== "all") {
+      if (dealType === "sale" || dealType === "rent") {
         query = query.or(`deal_type.eq.${dealType},transaction_type.eq.${dealType}`);
       }
       if (filters?.property_type && filters.property_type !== "all") {
         query = query.eq("property_type", filters.property_type);
       }
-      if (filters?.rooms) {
+      if (filters?.rooms && Number.isFinite(filters.rooms)) {
         query = query.eq("rooms", filters.rooms);
       }
-      if (filters?.price_min) {
+      if (filters?.price_min && Number.isFinite(filters.price_min)) {
         query = query.gte("price", filters.price_min);
       }
-      if (filters?.price_max) {
+      if (filters?.price_max && Number.isFinite(filters.price_max)) {
         query = query.lte("price", filters.price_max);
       }
       if (filters?.district && filters.district !== "all") {
-        query = query.or(
-          `district.ilike.%${filters.district}%,district_name_uz.ilike.%${filters.district}%,neighborhood.ilike.%${filters.district}%`
-        );
+        const d = sanitizeFilterTerm(filters.district);
+        if (d) {
+          query = query.or(`district.ilike.%${d}%,district_name_uz.ilike.%${d}%,neighborhood.ilike.%${d}%`);
+        }
       }
       if (filters?.search_query) {
-        const q = filters.search_query.trim();
+        const q = sanitizeFilterTerm(filters.search_query);
         if (q) {
           query = query.or(
             `title_uz.ilike.%${q}%,title_ru.ilike.%${q}%,address_uz.ilike.%${q}%,address_ru.ilike.%${q}%,neighborhood.ilike.%${q}%,district_name_uz.ilike.%${q}%,district_name_ru.ilike.%${q}%`
@@ -404,7 +416,14 @@ export async function getPublishedProperties(filters?: PropertyFilterParams): Pr
 
       const { data, error } = await query.order("created_at", { ascending: false });
       if (!error && data) {
-        return data.map(mapRowToProperty).map(sanitizePublicProperty);
+        return data
+          .map((row: any) => {
+            // Keep the previous public behaviour: inactive realtors were hidden by RLS.
+            const r = Array.isArray(row.realtors) ? row.realtors[0] : row.realtors;
+            return r && r.is_active === false ? { ...row, realtors: null } : row;
+          })
+          .map(mapRowToProperty)
+          .map(sanitizePublicProperty);
       }
       console.warn("[Supabase] getPublishedProperties error:", error?.message);
     } catch (err) {
@@ -484,10 +503,12 @@ export async function getPropertyById(
 export async function getPropertyBySlug(slug: string): Promise<Property | null> {
   if (isSupabaseConfigured) {
     try {
+      const safeSlug = sanitizeFilterTerm(slug).replace(/\s/g, "");
+      if (!safeSlug) return null;
       const { data, error } = await supabase
         .from("properties")
         .select("*, realtors(*)")
-        .or(`slug.eq.${slug},id.eq.${slug}`)
+        .or(`slug.eq.${safeSlug},id.eq.${safeSlug}`)
         .single();
 
       if (!error && data) {

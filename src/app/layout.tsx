@@ -8,6 +8,7 @@ import { TelegramProvider } from "@/context/TelegramContext";
 import { TelegramMiniAppGuard } from "@/components/telegram/TelegramMiniAppGuard";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { GlobalModals } from "@/components/common/GlobalModals";
+import { getPublicSiteUrl } from "@/lib/siteUrl";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -15,8 +16,11 @@ export const viewport: Viewport = {
   maximumScale: 1,
 };
 
+// Defaults only. Indexable routes set their own canonical/Open Graph via
+// buildPageMetadata(); nothing URL-specific may live here, because every page
+// that lacks its own value would inherit it.
 export const metadata: Metadata = {
-  metadataBase: new URL("https://angrenestate.uz"),
+  metadataBase: new URL(getPublicSiteUrl()),
   title: "ANGREN ESTATE — Angren ko‘chmas mulki yagona xaritada",
   description: "Angren shahrining eng yaxshi kvartira, hovli va tijorat binolari. Sotuv va ijara.",
   keywords: ["angren ko‘chmas mulk", "kvartira", "hovli", "ijara", "sotuv", "angren estate"],
@@ -27,7 +31,6 @@ export const metadata: Metadata = {
   openGraph: {
     title: "ANGREN ESTATE — Angren ko‘chmas mulki yagona xaritada",
     description: "Angren shahrining eng yaxshi kvartira, hovli va tijorat binolari. Sotuv va ijara.",
-    url: "https://angrenestate.uz",
     siteName: "ANGREN ESTATE",
     images: [
       {
@@ -39,13 +42,6 @@ export const metadata: Metadata = {
     ],
     locale: "uz_UZ",
     type: "website",
-  },
-  alternates: {
-    canonical: "https://angrenestate.uz",
-    languages: {
-      uz: "https://angrenestate.uz",
-      ru: "https://angrenestate.uz",
-    },
   },
 };
 

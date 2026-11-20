@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { acquireActionLock } from "@/lib/actionLock";
 import { getAdminSessionServer, verifyAdminSessionToken } from "@/lib/admin-auth";
 import { getPropertyById } from "@/lib/properties";
 import { broadcastPropertyToTelegramSubscribers } from "@/lib/telegramNotifications";
@@ -89,6 +90,17 @@ export async function POST(
       forceRepeat = Boolean(body?.forceRepeat);
     } catch {
       // Empty body is acceptable (defaults to forceRepeat = false)
+    }
+
+    // Prevent a second parallel broadcast (double click) from messaging everyone twice.
+    if (!(await acquireActionLock(`tg-broadcast:${propertyId}`, 90))) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Bu e’lon bo‘yicha tarqatma allaqachon bajarilmoqda. Biroz kutib, qayta urinib ko‘ring.",
+        },
+        { status: 409 }
+      );
     }
 
     const result = await broadcastPropertyToTelegramSubscribers(property, { forceRepeat });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { fetchJsonShared } from "./sharedFetch";
 import { Realtor, AdminContactInfo } from "./types";
 
 export const defaultAdminContact: AdminContactInfo = {
@@ -202,10 +203,9 @@ export function useAdminContact() {
 
   useEffect(() => {
     let mounted = true;
-    fetch("/api/content", { cache: "no-store" })
-      .then((res) => res.json())
-      .then((data) => {
-        if (mounted && data.success && data.content?.contacts) {
+    fetchJsonShared("/api/content", { cache: "no-store" })
+      .then(({ data }) => {
+        if (mounted && data?.success && data.content?.contacts) {
           const c = data.content.contacts;
           setContact({
             name: c.office_title_uz || defaultAdminContact.name,

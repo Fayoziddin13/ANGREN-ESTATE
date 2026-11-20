@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { phoneHref } from "@/lib/phone";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -360,7 +361,7 @@ export function MobileBottomSheet({
           {/* Action Row: Call, Telegram, Favorite */}
           <div className="flex items-center gap-2">
             <a
-              href={`tel:${property.contact_phone}`}
+              href={phoneHref(property.contact_phone)}
               onClick={() =>
                 trackEvent("phone_click", {
                   property_id: property.id,

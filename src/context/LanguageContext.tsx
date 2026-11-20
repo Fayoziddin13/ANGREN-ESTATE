@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { fetchJsonShared } from "@/lib/sharedFetch";
 import { Locale } from "@/lib/types";
 import { dictionaries, Dictionary } from "@/locales";
 
@@ -35,15 +36,18 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Sync document title and meta description on locale switch
+  // Sync the home page title and meta description on locale switch.
+  // Every other route has its own server-rendered title/description (Metadata API);
+  // overwriting them here replaced property titles with the generic home title.
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (window.location.pathname !== "/") return;
 
     const syncSEO = async () => {
       try {
-        const res = await fetch("/api/content", { cache: "no-store" });
+        const res = await fetchJsonShared("/api/content", { cache: "no-store" });
         if (res.ok) {
-          const data = await res.json();
+          const data = res.data;
           if (data.success && data.content?.seo) {
             const seo = data.content.seo;
             const title = locale === "ru" ? seo.site_title_ru : seo.site_title_uz;

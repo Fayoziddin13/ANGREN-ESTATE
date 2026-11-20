@@ -47,6 +47,7 @@ import { PropertyPhotoGalleryModal } from "./PropertyPhotoGalleryModal";
 import { formatPropertyPrice } from "@/lib/currency";
 import { recordPublicLead } from "@/lib/leadClient";
 import { trackEvent } from "@/lib/analytics";
+import { formatPhoneDisplay, phoneHref } from "@/lib/phone";
 import {
   getPropertyTitle,
   getPropertyDescription,
@@ -384,7 +385,7 @@ export function PropertyDetailModal({
                   ) : (
                     <>
                       <a
-                        href={`tel:${property.realtor?.phone || property.contact_phone}`}
+                        href={phoneHref(property.realtor?.phone || property.contact_phone)}
                         onClick={handleCallClick}
                         className="flex items-center justify-center gap-1.5 rounded-xl bg-[#167d4f] px-4 py-2 text-xs font-bold text-white shadow-card hover:bg-[#167d4f] active:scale-[0.98] transition-all shrink-0"
                       >
@@ -649,8 +650,8 @@ export function PropertyDetailModal({
               (property.longitude ?? property.coordinates?.lng) && (
                 <div className="pt-2 border-t border-gray-100 min-w-0">
                   <PropertyInfrastructureSection
-                    latitude={property.latitude ?? property.coordinates.lat}
-                    longitude={property.longitude ?? property.coordinates.lng}
+                    latitude={property.latitude ?? property.coordinates?.lat}
+                    longitude={property.longitude ?? property.coordinates?.lng}
                   />
                 </div>
               )}
@@ -686,7 +687,7 @@ export function PropertyDetailModal({
                       {property.realtor?.name || "ANGREN ESTATE Eksperti"}
                     </p>
                     <p className="text-xs text-[#167d4f] font-semibold truncate">
-                      {property.realtor?.phone || property.contact_phone}
+                      {formatPhoneDisplay(property.realtor?.phone || property.contact_phone)}
                     </p>
                   </div>
                 </div>
@@ -705,13 +706,13 @@ export function PropertyDetailModal({
               {property.owner_phone_visible && property.owner_phone && (
                 <div className="pt-1">
                   <a
-                    href={`tel:${property.owner_phone}`}
+                    href={phoneHref(property.owner_phone)}
                     className="w-full py-2.5 px-3 rounded-xl border-2 border-emerald-600 bg-emerald-50/80 hover:bg-emerald-100 text-emerald-800 text-xs sm:text-sm font-bold shadow-xs flex items-center justify-center gap-2 transition-all active:scale-98"
                   >
                     <Phone className="w-3.5 h-3.5 text-emerald-700" />
                     <span>
                       {locale === "uz" ? "Uy egasi telefoni: " : "Телефон владельца: "}
-                      {property.owner_phone}
+                      {formatPhoneDisplay(property.owner_phone)}
                     </span>
                   </a>
                 </div>
@@ -720,7 +721,7 @@ export function PropertyDetailModal({
               {/* Action Buttons: Call, Telegram, Instagram */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-[#2db477]/20">
                 <a
-                  href={`tel:${property.realtor?.phone || property.contact_phone}`}
+                  href={phoneHref(property.realtor?.phone || property.contact_phone)}
                   onClick={handleCallClick}
                   className="w-full py-2.5 px-3 rounded-xl bg-[#167d4f] hover:bg-[#167d4f] text-white text-xs font-bold shadow-sm flex items-center justify-center gap-1.5 transition-all active:scale-98"
                 >

@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { fetchJsonShared } from "./sharedFetch";
 import { SiteSettingsData, CMSSiteSettingsSection } from "./types";
 
 export const defaultSiteSettings: SiteSettingsData = {
@@ -55,9 +56,9 @@ export function useSiteSettings() {
         } catch {}
       }
 
-      const res = await fetch("/api/content", { cache: "no-store" });
+      const res = await fetchJsonShared("/api/content", { cache: "no-store" });
       if (res.ok) {
-        const data = await res.json();
+        const data = res.data;
         if (data.success && data.content) {
           const s = data.content.settings || {};
           const c = data.content.contacts || {};

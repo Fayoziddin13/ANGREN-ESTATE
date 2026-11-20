@@ -23,6 +23,7 @@ import {
   Tag,
 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
+import { getSupabaseAuthHeaders, getTelegramInitData } from "@/lib/authHeaders";
 import { Footer } from "@/components/layout/Footer";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { useLanguage } from "@/context/LanguageContext";
@@ -84,11 +85,13 @@ export default function ContactsPage() {
 
     setIsSubmitting(true);
     try {
+      const authHeaders = await getSupabaseAuthHeaders();
       const res = await fetch("/api/leads", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders },
         body: JSON.stringify({
           type: "property_listing_request",
+          telegram_init_data: getTelegramInitData(),
           client_name: name,
           client_phone: phone,
           location,
@@ -125,7 +128,7 @@ export default function ContactsPage() {
           channel: "phone",
         });
       } else {
-        setErrorMessage(json.error || (locale === "uz" ? "Xatolik yuz berdi" : "Произошла ошибка"));
+        setErrorMessage(json.message || json.error || (locale === "uz" ? "Xatolik yuz berdi" : "Произошла ошибка"));
       }
     } catch (err: any) {
       setErrorMessage(err?.message || (locale === "uz" ? "Tarmoq xatosi" : "Ошибка сети"));

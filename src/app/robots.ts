@@ -1,7 +1,8 @@
 import { MetadataRoute } from "next";
+import { getPublicSiteUrl } from "@/lib/siteUrl";
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://angrenestate.uz";
+  const baseUrl = getPublicSiteUrl();
 
   return {
     rules: [

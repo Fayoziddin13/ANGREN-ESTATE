@@ -17,9 +17,36 @@ import {
 } from "@/lib/telegramServer";
 import { supabaseAdmin } from "@/lib/supabaseServer";
 import { sendApplicationToAdminTelegram } from "@/lib/telegramNotifications";
+import {
+  isAuthenticTelegramWebhookRequest,
+  TELEGRAM_SECRET_HEADER,
+} from "@/lib/telegramWebhookSecret";
 import type { TelegramSubscriber } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+
+// Per-instance memory of recently processed update_ids (bounded).
+const recentUpdateIds = new Map<number, number>();
+const RECENT_UPDATE_TTL_MS = 10 * 60 * 1000;
+const RECENT_UPDATE_MAX = 1000;
+
+function wasUpdateRecentlyProcessed(updateId: number): boolean {
+  const now = Date.now();
+  const seenAt = recentUpdateIds.get(updateId);
+  if (seenAt && now - seenAt < RECENT_UPDATE_TTL_MS) return true;
+
+  recentUpdateIds.set(updateId, now);
+  if (recentUpdateIds.size > RECENT_UPDATE_MAX) {
+    for (const [id, ts] of recentUpdateIds) {
+      if (now - ts >= RECENT_UPDATE_TTL_MS || recentUpdateIds.size > RECENT_UPDATE_MAX) {
+        recentUpdateIds.delete(id);
+      } else {
+        break;
+      }
+    }
+  }
+  return false;
+}
 
 export async function GET() {
   const isConfigured = Boolean(process.env.TELEGRAM_BOT_TOKEN);
@@ -39,8 +66,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: "Bot not configured" }, { status: 503 });
     }
 
+    // Reject anything that is not a genuine Telegram delivery (Bot API secret_token).
+    // Telegram keeps undelivered updates queued, so a non-2xx here loses nothing while
+    // the webhook is being re-registered with the secret.
+    if (!isAuthenticTelegramWebhookRequest(req.headers.get(TELEGRAM_SECRET_HEADER), token)) {
+      console.warn("[Telegram Webhook] Rejected request without a valid secret token header");
+      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    }
+
     const update = await req.json();
     const siteUrl = "https://angrenestate.uz";
+
+    // Telegram re-delivers an update when our response is slow; skip ones this
+    // instance already processed so users don't get duplicate replies/leads.
+    if (typeof update?.update_id === "number" && wasUpdateRecentlyProcessed(update.update_id)) {
+      return NextResponse.json({ ok: true, duplicate: true });
+    }
 
     // 1. Handle callback_query
     if (update?.callback_query) {

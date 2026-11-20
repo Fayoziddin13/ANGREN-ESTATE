@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { acquireActionLock } from "@/lib/actionLock";
 import { getAdminSessionServer, verifyAdminSessionToken } from "@/lib/admin-auth";
 import { getPropertyById } from "@/lib/properties";
 import { publishPropertyToTelegramChannel } from "@/lib/telegramNotifications";
@@ -85,6 +86,17 @@ export async function POST(
       forceRepeat = Boolean(body?.forceRepeat);
     } catch {
       // Empty body is acceptable (defaults to forceRepeat = false)
+    }
+
+    // Prevent duplicate channel posts from double clicks / parallel requests.
+    if (!(await acquireActionLock(`tg-channel:${propertyId}`, 30))) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Bu e’lon hozirgina kanalga yuborilmoqda. 30 soniyadan keyin qayta urinib ko‘ring.",
+        },
+        { status: 409 }
+      );
     }
 
     const result = await publishPropertyToTelegramChannel(property, { forceRepeat });
