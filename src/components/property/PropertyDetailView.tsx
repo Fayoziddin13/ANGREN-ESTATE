@@ -232,17 +232,17 @@ export default function PropertyDetailView({
 
       <main className="flex-1 pb-20">
         {/* Breadcrumbs Bar */}
-        <div className="bg-white border-b border-gray-200/80">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-xs font-semibold text-gray-500 truncate">
-              <Link href="/" className="hover:text-[#167d4f] flex items-center gap-1">
+        <div className="bg-white/80 backdrop-blur-xl backdrop-saturate-150 border-b border-gray-200/70">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-3.5 flex items-center justify-between gap-3 sm:gap-4">
+            <div className="flex min-w-0 flex-1 items-center gap-2 text-xs font-semibold text-gray-500">
+              <Link href="/" className="hover:text-[#167d4f] flex shrink-0 items-center gap-1">
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>{locale === "uz" ? "Xarita" : "Карта"}</span>
               </Link>
-              <span>/</span>
-              <span>{isSale ? (locale === "uz" ? "Sotuv" : "Продажа") : locale === "uz" ? "Ijara" : "Аренда"}</span>
-              <span>/</span>
-              <span className="text-gray-900 font-bold truncate">{locale === "uz" ? "Angren," : "г. Ангрен,"} {district}</span>
+              <span className="hidden sm:inline text-gray-300">/</span>
+              <span className="hidden sm:inline shrink-0">{isSale ? (locale === "uz" ? "Sotuv" : "Продажа") : locale === "uz" ? "Ijara" : "Аренда"}</span>
+              <span className="text-gray-300">/</span>
+              <span className="min-w-0 text-gray-900 font-bold truncate">{locale === "uz" ? "Angren," : "г. Ангрен,"} {district}</span>
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
@@ -258,7 +258,8 @@ export default function PropertyDetailView({
                     );
                   }
                 }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-colors shadow-sm ${
+                aria-label={locale === "uz" ? "Solishtirishga qo‘shish" : "Добавить в сравнение"}
+                className={`lg-press flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-semibold transition-colors shadow-sm ${
                   isCompared
                     ? "bg-[#eaf5f0]/60 border-[#2db477] text-[#167d4f]"
                     : "border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
@@ -266,27 +267,31 @@ export default function PropertyDetailView({
                 title={locale === "uz" ? "Solishtirishga qo‘shish" : "Добавить в сравнение"}
               >
                 <Scale className="w-3.5 h-3.5 text-[#167d4f]" />
-                <span>{isCompared ? (locale === "uz" ? "Solishtirishda" : "В сравнении") : (locale === "uz" ? "Solishtirish" : "Сравнить")}</span>
+                <span className="hidden sm:inline">{isCompared ? (locale === "uz" ? "Solishtirishda" : "В сравнении") : (locale === "uz" ? "Solishtirish" : "Сравнить")}</span>
               </button>
 
               <button
                 onClick={handleShare}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold transition-colors shadow-sm"
+                aria-label={locale === "uz" ? "Ulashish" : "Поделиться"}
+                title={locale === "uz" ? "Ulashish" : "Поделиться"}
+                className="lg-press flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold transition-colors shadow-sm"
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-[#167d4f]" /> : <Share2 className="w-3.5 h-3.5" />}
-                <span>{copied ? (locale === "uz" ? "Nusxalandi" : "Скопировано") : locale === "uz" ? "Ulashish" : "Поделиться"}</span>
+                <span className="hidden sm:inline">{copied ? (locale === "uz" ? "Nusxalandi" : "Скопировано") : locale === "uz" ? "Ulashish" : "Поделиться"}</span>
               </button>
 
               <button
                 onClick={() => toggleFavorite(property)}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm ${
+                aria-label={favorited ? (locale === "uz" ? "Saqlangan" : "В избранном") : locale === "uz" ? "Saqlash" : "В избранное"}
+                title={favorited ? (locale === "uz" ? "Saqlangan" : "В избранном") : locale === "uz" ? "Saqlash" : "В избранное"}
+                className={`lg-press flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm ${
                   favorited
                     ? "bg-red-50 border-red-200 text-red-600"
                     : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
                 }`}
               >
                 <Heart className={`w-3.5 h-3.5 ${favorited ? "fill-red-500 text-red-500" : ""}`} />
-                <span>{favorited ? (locale === "uz" ? "Saqlangan" : "В избранном") : locale === "uz" ? "Saqlash" : "В избранное"}</span>
+                <span className="hidden sm:inline">{favorited ? (locale === "uz" ? "Saqlangan" : "В избранном") : locale === "uz" ? "Saqlash" : "В избранное"}</span>
               </button>
             </div>
           </div>
@@ -679,7 +684,7 @@ export default function PropertyDetailView({
               {/* Contact Card */}
               <div className="sticky top-28 p-5 sm:p-6 rounded-2xl bg-white border border-[#dee8e3] shadow-elevated space-y-5">
                 <div className="flex items-center gap-3.5 pb-4 border-b border-gray-100">
-                  <div className="relative w-13 h-13 rounded-2xl bg-[#167d4f] text-white flex items-center justify-center font-bold text-base border-2 border-[#167d4f] shadow-sm overflow-hidden shrink-0">
+                  <div className="relative w-[52px] h-[52px] rounded-2xl bg-[#167d4f] text-white flex items-center justify-center font-bold text-base border-2 border-[#167d4f] shadow-sm overflow-hidden shrink-0">
                     {property.realtor && property.realtor.is_active && (property.realtor.photo_url || property.realtor.avatar_url) ? (
                       <Image
                         src={property.realtor.photo_url || property.realtor.avatar_url || ""}
@@ -750,10 +755,12 @@ export default function PropertyDetailView({
                         href={phoneHref(property.owner_phone)}
                         className="w-full py-3 px-4 rounded-xl border-2 border-emerald-600 bg-emerald-50/80 hover:bg-emerald-100 text-emerald-800 text-xs sm:text-sm font-bold shadow-xs flex items-center justify-center gap-2 transition-all active:scale-98"
                       >
-                        <Phone className="w-4 h-4 text-emerald-700" />
-                        <span>
-                          {locale === "uz" ? "Uy egasi telefoni: " : "Телефон владельца: "}
-                          {formatPhoneDisplay(property.owner_phone)}
+                        <Phone className="w-4 h-4 shrink-0 text-emerald-700" />
+                        <span className="flex flex-col items-start leading-tight">
+                          <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700/80">
+                            {locale === "uz" ? "Uy egasi telefoni" : "Телефон владельца"}
+                          </span>
+                          <span className="whitespace-nowrap">{formatPhoneDisplay(property.owner_phone)}</span>
                         </span>
                       </a>
                     )}

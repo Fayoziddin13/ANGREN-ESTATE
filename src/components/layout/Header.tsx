@@ -169,8 +169,8 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
     <header
       className={`sticky top-0 z-40 w-full transition-all duration-300 pt-[env(safe-area-inset-top,0px)] ${
         isScrolled
-          ? "bg-[#167d4f]/95 backdrop-blur-2xl backdrop-saturate-150 shadow-elevated border-b border-white/10"
-          : "bg-[#167d4f]/90 backdrop-blur-xl backdrop-saturate-150 shadow-sm border-b border-white/10"
+          ? "lg-glass-brand border-x-0 border-t-0 shadow-elevated"
+          : "lg-glass-brand border-x-0 border-t-0"
       }`}
     >
       {announcement?.is_active && (
@@ -208,7 +208,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
               }
             }
           }}
-          className="flex items-center gap-2.5 sm:gap-3 group shrink-0 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
+          className="flex min-w-0 items-center gap-2 sm:gap-3 group shrink-0 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
           title="ANGREN ESTATE"
         >
           <div className="relative h-9 sm:h-10 w-[46px] sm:w-[50px] flex items-center justify-center shrink-0">
@@ -225,7 +225,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
             <span className="font-extrabold tracking-wider text-xs sm:text-sm text-white leading-none whitespace-nowrap">
               {t.common.brandName}
             </span>
-            <span className="silver-metallic-text text-[9px] sm:text-[10px] font-bold tracking-[0.18em] uppercase leading-none mt-1 whitespace-nowrap">
+            <span className="silver-metallic-text text-[9px] sm:text-[10px] font-bold !tracking-[0.08em] sm:!tracking-[0.18em] uppercase leading-none mt-1 whitespace-nowrap">
               {t.common.brandSubtitle}
             </span>
           </div>
@@ -240,28 +240,28 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                 key={item.label}
                 href={item.href}
                 onClick={item.onClick}
-                className={`relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 group ${
+                className={`relative flex items-center gap-1.5 whitespace-nowrap px-2.5 xl:px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 group ${
                   item.active
                     ? "text-white font-bold"
                     : "text-white/80 hover:text-white hover:bg-white/10"
                 }`}
               >
                 <Icon
-                  className={`h-4 w-4 transition-transform duration-200 group-hover:-translate-y-0.5 ${
+                  className={`relative z-10 hidden xl:block h-4 w-4 transition-transform duration-200 group-hover:-translate-y-0.5 ${
                     item.active
                       ? "text-white"
                       : "text-white/70 group-hover:text-white"
                   }`}
                 />
-                <span className="transition-transform duration-200 group-hover:-translate-y-0.5">
+                <span className="relative z-10 transition-transform duration-200 group-hover:-translate-y-0.5">
                   {item.label}
                 </span>
 
-                {/* Elegant underline indicator for active item */}
+                {/* Liquid glass pill that glides to the active item */}
                 {item.active && (
                   <motion.div
                     layoutId="activeHeaderNav"
-                    className="absolute bottom-0 left-2 right-2 h-0.5 bg-white rounded-full shadow-sm"
+                    className="absolute inset-0 rounded-xl bg-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_4px_12px_-6px_rgba(0,0,0,0.3)]"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
@@ -276,7 +276,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
           {compareCount > 0 && (
             <button
               onClick={() => window.dispatchEvent(new Event("angren_open_compare"))}
-              className="flex items-center gap-1.5 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-white/20 hover:border-white/30 transition-all active:scale-95"
+              className="flex items-center gap-1.5 rounded-2xl lg-glass-chip px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-white/20 hover:border-white/30 transition-all active:scale-95"
               title={locale === "uz" ? "Obyektlarni solishtirish" : "Сравнение объектов"}
             >
               <Scale className="h-3.5 w-3.5 text-[#2db477]" />
@@ -289,7 +289,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
           {/* Quick Trigger: Saved Searches & Alerts */}
           <button
             onClick={() => window.dispatchEvent(new Event("angren_open_saved_searches"))}
-            className="relative flex items-center gap-1.5 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-white/20 hover:border-white/30 transition-all active:scale-95"
+            className="relative flex items-center gap-1.5 rounded-2xl lg-glass-chip px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-white/20 hover:border-white/30 transition-all active:scale-95"
             title={locale === "uz" ? "Saqlangan qidiruvlar va bildirishnomalar" : "Сохранённые поиски и уведомления"}
           >
             <Bookmark className="h-3.5 w-3.5 text-white/80" />
@@ -304,7 +304,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
           <div className="relative" ref={langRef}>
             <button
               onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-              className="flex items-center gap-1.5 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-white/20 hover:border-white/30 transition-all active:scale-95"
+              className="flex items-center gap-1.5 rounded-2xl lg-glass-chip px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-white/20 hover:border-white/30 transition-all active:scale-95"
             >
               <Globe className="h-3.5 w-3.5 text-white/80" />
               <span>{locale.toUpperCase()}</span>
@@ -322,7 +322,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -6, scale: 0.96 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute right-0 mt-2 w-36 overflow-hidden rounded-2xl border border-white/15 bg-[#167d4f]/95 backdrop-blur-2xl p-1.5 shadow-float z-50"
+                  className="absolute right-0 mt-2 w-36 overflow-hidden rounded-2xl lg-glass-brand p-1.5 shadow-float z-50"
                 >
                   <button
                     onClick={() => {
@@ -365,7 +365,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
           <div className="relative" ref={currRef}>
             <button
               onClick={() => setCurrDropdownOpen(!currDropdownOpen)}
-              className="flex items-center gap-1.5 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-white/20 hover:border-white/30 transition-all active:scale-95"
+              className="flex items-center gap-1.5 rounded-2xl lg-glass-chip px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-white/20 hover:border-white/30 transition-all active:scale-95"
             >
               <span>{currency}</span>
               <ChevronDown
@@ -382,7 +382,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -6, scale: 0.96 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute right-0 mt-2 w-36 overflow-hidden rounded-2xl border border-white/15 bg-[#167d4f]/95 backdrop-blur-2xl p-1.5 shadow-float z-50"
+                  className="absolute right-0 mt-2 w-36 overflow-hidden rounded-2xl lg-glass-brand p-1.5 shadow-float z-50"
                 >
                   <button
                     onClick={() => {
@@ -426,7 +426,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
             <div className="relative" ref={userRef}>
               <button
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                className="flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md p-1.5 pr-3 text-xs font-semibold text-white hover:bg-white/20 transition-all shadow-sm active:scale-95"
+                className="flex items-center gap-2 rounded-2xl lg-glass-chip p-1.5 pr-3 text-xs font-semibold text-white hover:bg-white/20 transition-all shadow-sm active:scale-95"
               >
                 <div className="h-7 w-7 rounded-xl bg-white text-brand-primary flex items-center justify-center font-black text-xs shadow-sm">
                   {user.full_name?.charAt(0) || <User className="h-3.5 w-3.5" />}
@@ -442,7 +442,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -6, scale: 0.96 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute right-0 mt-2 w-48 rounded-2xl border border-white/15 bg-[#167d4f]/95 backdrop-blur-2xl p-2 shadow-float z-50 text-white"
+                    className="absolute right-0 mt-2 w-48 rounded-2xl lg-glass-brand p-2 shadow-float z-50 text-white"
                   >
                     <div className="px-3 py-2 border-b border-white/10 text-xs">
                       <p className="font-semibold text-white truncate">
@@ -520,7 +520,9 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
           ) : (
             <button
               onClick={openAuthModal}
-              className="flex items-center gap-2 rounded-2xl bg-white text-brand-dark px-4 py-2 text-xs font-extrabold shadow-sm hover:bg-[#eaf5f0]/60 hover:shadow-card hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all"
+              aria-label={t.navigation.signIn}
+              title={t.navigation.signIn}
+              className="flex items-center gap-2 whitespace-nowrap rounded-2xl bg-white text-brand-dark px-4 lg:px-2.5 xl:px-4 py-2 text-xs font-extrabold shadow-[inset_0_1px_0_rgba(255,255,255,1),0_4px_14px_-6px_rgba(0,0,0,0.35)] hover:bg-[#eaf5f0] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all"
             >
               {/* Google 4-Color SVG Icon */}
               <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
@@ -541,7 +543,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                   d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.36 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98Z"
                 />
               </svg>
-              <span>{t.navigation.signIn}</span>
+              <span className="lg:hidden xl:inline">{t.navigation.signIn}</span>
             </button>
           )}
 
@@ -560,7 +562,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
           {/* Mobile Language Button */}
           <button
             onClick={() => setLocale(locale === "ru" ? "uz" : "ru")}
-            className="flex items-center gap-1 rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm active:scale-95 transition-all"
+            className="flex items-center gap-1 rounded-full lg-glass-chip px-2.5 py-1 text-[11px] font-bold text-white shadow-sm active:scale-95 transition-all"
           >
             <Globe className="h-3 w-3 text-white/80" />
             <span>{locale.toUpperCase()}</span>
@@ -570,7 +572,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
           {/* Mobile Currency Button */}
           <button
             onClick={() => setCurrency(currency === "UZS" ? "USD" : "UZS")}
-            className="flex items-center gap-1 rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm active:scale-95 transition-all"
+            className="flex items-center gap-1 rounded-full lg-glass-chip px-2.5 py-1 text-[11px] font-bold text-white shadow-sm active:scale-95 transition-all"
           >
             <span>{currency}</span>
           </button>
@@ -578,7 +580,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
           {/* Mobile Hamburger Menu Toggle */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white shadow-sm hover:bg-white/20 active:scale-95 transition-all"
+            className="flex h-8 w-8 items-center justify-center rounded-full lg-glass-chip text-white hover:bg-white/20 active:scale-95 transition-all"
             aria-label="Menu"
           >
             {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -594,7 +596,7 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
-            className="lg:hidden border-t border-white/10 bg-[#167d4f]/95 backdrop-blur-2xl px-4 pt-3 pb-6 space-y-3 shadow-float overflow-hidden"
+            className="lg:hidden lg-glass-brand border-x-0 border-b-0 px-4 pt-3 pb-6 space-y-3 shadow-float overflow-hidden"
           >
             <nav className="flex flex-col space-y-1 text-sm font-semibold">
               {navItems.map((item) => {

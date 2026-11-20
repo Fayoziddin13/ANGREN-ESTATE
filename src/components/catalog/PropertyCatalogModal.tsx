@@ -1,5 +1,6 @@
 "use client";
 
+import { LiquidThumb } from "@/components/ui/LiquidThumb";
 import React, { useMemo, useState } from "react";
 import Image from "next/image";
 import {
@@ -114,32 +115,35 @@ export function PropertyCatalogModal({
           <div className="flex items-center p-1 rounded-2xl bg-slate-100 border border-slate-200/80">
             <button
               onClick={() => onTransactionChange("all")}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              className={`relative isolate px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 transactionType === "all"
-                  ? "bg-white text-slate-900 shadow-xs"
+                  ? "text-white"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
+              {transactionType === "all" && <LiquidThumb id="catalog-transactionType" />}
               {locale === "uz" ? "Barchasi" : "Все"}
             </button>
             <button
               onClick={() => onTransactionChange("sale")}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              className={`relative isolate px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 transactionType === "sale"
-                  ? "bg-[#167d4f] text-white shadow-xs"
+                  ? "text-white"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
+              {transactionType === "sale" && <LiquidThumb id="catalog-transactionType" />}
               {locale === "uz" ? "Sotuv" : "Продажа"}
             </button>
             <button
               onClick={() => onTransactionChange("rent")}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              className={`relative isolate px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 transactionType === "rent"
-                  ? "bg-[#1D4ED8] text-white shadow-xs"
+                  ? "text-white"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
+              {transactionType === "rent" && <LiquidThumb id="catalog-transactionType" />}
               {locale === "uz" ? "Ijara" : "Аренда"}
             </button>
           </div>
@@ -176,12 +180,13 @@ export function PropertyCatalogModal({
               <button
                 key={cat.id}
                 onClick={() => onTypeChange(cat.id as PropertyType | "all")}
-                className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all ${
+                className={`relative isolate px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all ${
                   isActive
-                    ? "bg-[#167d4f] text-white shadow-xs"
+                    ? "text-white"
                     : "bg-slate-100 hover:bg-slate-200 text-slate-700"
                 }`}
               >
+                {isActive && <LiquidThumb id="catalog-isActive" />}
                 {locale === "uz" ? cat.label_uz : cat.label_ru}
               </button>
             );
@@ -288,7 +293,7 @@ export function PropertyCatalogModal({
                   <div
                     key={property.id}
                     onClick={() => onViewDetails(property)}
-                    className="group flex flex-col rounded-3xl bg-white border border-[#dee8e3] shadow-card hover:shadow-elevated transition-all duration-300 overflow-hidden cursor-pointer active:scale-[0.99]"
+                    className="group flex flex-col rounded-3xl lg-card lg-hover-lift lg-press overflow-hidden cursor-pointer lg-fade-up"
                   >
                     {/* Image Area */}
                     <div className="relative aspect-[16/10] w-full bg-slate-100 overflow-hidden">
@@ -297,7 +302,7 @@ export function PropertyCatalogModal({
                         alt={title}
                         fill
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
                       />
 
                       {/* Transaction, Marketing & Type Badges */}

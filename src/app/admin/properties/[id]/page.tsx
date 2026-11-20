@@ -2805,7 +2805,7 @@ export default function EditPropertyPage() {
 
       {/* Safe Archive Confirmation Modal */}
       {archiveModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#0b3824]/45 backdrop-blur-md backdrop-saturate-150 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center gap-3">
               <div className="h-11 w-11 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0">
@@ -2900,7 +2900,7 @@ export default function EditPropertyPage() {
 
       {/* Test Telegram Notification Modal */}
       {testModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#0b3824]/45 backdrop-blur-md backdrop-saturate-150 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center gap-3">
               <div className="h-11 w-11 rounded-2xl bg-[#eaf5f0] border border-[#bdd1c8] flex items-center justify-center shrink-0">
@@ -2989,7 +2989,7 @@ export default function EditPropertyPage() {
 
       {/* Confirmation Modal for Re-publishing to Telegram Channel */}
       {confirmRePublishModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#0b3824]/45 backdrop-blur-md backdrop-saturate-150 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center gap-3">
               <div className="h-11 w-11 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0">

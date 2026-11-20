@@ -135,7 +135,7 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row text-slate-800 antialiased font-sans">
       {/* Mobile & Tablet Top Navigation */}
-      <div className="lg:hidden sticky top-0 z-40 bg-[#167d4f] text-white px-4 py-3 flex items-center justify-between shadow-md border-b border-white/10">
+      <div className="lg:hidden sticky top-0 z-40 lg-glass-brand border-x-0 border-t-0 text-white px-4 py-3 flex items-center justify-between">
         <Link href="/admin" className="flex items-center gap-2.5 group">
           <div className="relative h-8 w-[40px] shrink-0">
             <Image src="/logo-white.png" alt="ANGREN ESTATE" fill className="object-contain" priority />
@@ -184,7 +184,7 @@ export default function AdminLayout({
                 className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
                   item.active
                     ? "bg-[#167d4f] text-white font-bold"
-                    : "text-white/90/70 hover:bg-white/10 hover:text-white"
+                    : "text-white/75 hover:bg-white/10 hover:text-white"
                 }`}
               >
                 <Icon className="h-4 w-4 text-[#2db477] shrink-0" />
@@ -213,7 +213,7 @@ export default function AdminLayout({
       )}
 
       {/* Desktop Persistent Sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 bg-[#167d4f] text-white shrink-0 border-r border-white/10 shadow-2xl min-h-screen sticky top-0 h-screen select-none">
+      <aside className="hidden lg:flex flex-col w-64 bg-gradient-to-b from-[#1b8d5a] via-[#167d4f] to-[#11683f] text-white shrink-0 border-r border-white/10 shadow-[inset_-1px_0_0_rgba(255,255,255,0.08),8px_0_32px_-16px_rgba(11,56,36,0.45)] min-h-screen sticky top-0 h-screen select-none">
         {/* Brand Header */}
         <div className="p-4 border-b border-white/10 flex items-center justify-between">
           <Link href="/admin" className="flex items-center gap-2.5 group">
@@ -242,15 +242,15 @@ export default function AdminLayout({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all ${
+                className={`lg-press flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all ${
                   item.active
-                    ? "bg-[#167d4f] text-white shadow-sm border border-white/15 translate-x-1 font-bold"
-                    : "text-white/80 hover:bg-white/10 hover:text-white"
+                    ? "bg-white/[0.16] text-white border border-white/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.28),0_8px_18px_-12px_rgba(0,0,0,0.55)] font-bold"
+                    : "text-white/80 border border-transparent hover:bg-white/10 hover:text-white"
                 }`}
               >
                 <Icon
                   className={`h-4 w-4 shrink-0 ${
-                    item.active ? "text-[#2db477]" : "text-white/60"
+                    item.active ? "text-white" : "text-white/60"
                   }`}
                 />
                 <span className="truncate">{item.label}</span>
@@ -315,7 +315,7 @@ export default function AdminLayout({
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         {/* Desktop Top Header Bar */}
-        <div className="hidden lg:flex items-center justify-between px-8 py-3.5 bg-white border-b border-[#dee8e3] sticky top-0 z-20 shadow-xs">
+        <div className="hidden lg:flex items-center justify-between px-8 py-3.5 bg-white/80 backdrop-blur-xl backdrop-saturate-150 border-b border-[#dee8e3]/80 sticky top-0 z-20 shadow-xs">
           <div className="flex items-center gap-2 text-xs text-slate-600 font-medium">
             <span>Admin</span>
             <ChevronRight className="h-3 w-3 text-slate-400" />

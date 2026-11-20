@@ -227,3 +227,267 @@ body.is-telegram {
 }
 
 
+
+/* =========================================================================
+   LIQUID GLASS DESIGN LAYER (visual only — no layout or behaviour changes)
+   Brand colours stay the same; this adds depth, light and motion.
+   ========================================================================= */
+
+/* --- Entrance animations -------------------------------------------------
+   The codebase uses tailwindcss-animate class names (animate-in, fade-in,
+   zoom-in-95, slide-in-from-*), but that plugin was never installed, so modals,
+   menus and toasts appeared with no motion. These lightweight equivalents use
+   the individual `translate` / `scale` properties, which compose with Tailwind
+   transform utilities instead of overriding them (centred modals stay put). */
+@keyframes lg-enter {
+  from {
+    opacity: var(--lg-enter-opacity, 1);
+    translate: var(--lg-enter-x, 0) var(--lg-enter-y, 0);
+    scale: var(--lg-enter-scale, 1);
+  }
+}
+
+.animate-in {
+  animation: lg-enter 0.42s var(--ease-ios-spring) both;
+}
+.fade-in { --lg-enter-opacity: 0; }
+.zoom-in-95 { --lg-enter-scale: 0.95; }
+.slide-in-from-top-2 { --lg-enter-y: -0.5rem; }
+.slide-in-from-top-4 { --lg-enter-y: -1rem; }
+.slide-in-from-bottom-4 { --lg-enter-y: 1rem; }
+.slide-in-from-bottom-5 { --lg-enter-y: 1.25rem; }
+.slide-in-from-right-4 { --lg-enter-x: 1rem; }
+
+@keyframes lg-fade-up {
+  from { opacity: 0; translate: 0 10px; }
+}
+@keyframes lg-shimmer {
+  from { background-position: -200% 0; }
+  to { background-position: 200% 0; }
+}
+
+@layer base {
+  /* Calm, consistent interaction feedback everywhere (utilities still win). */
+  a,
+  button,
+  [role="button"],
+  summary {
+    -webkit-tap-highlight-color: transparent;
+    /* No transform here: framer-motion drives transforms on some buttons. */
+    transition-property: color, background-color, border-color, box-shadow, opacity, filter;
+    transition-timing-function: var(--ease-ios-spring);
+    transition-duration: 220ms;
+  }
+
+  /* Visible, on-brand keyboard focus (mouse clicks are unaffected). */
+  :focus-visible {
+    outline: 2px solid rgba(45, 180, 119, 0.7);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: rgba(45, 180, 119, 0.22);
+  }
+}
+
+@layer components {
+  /* Frosted light glass: floating panels, search bars, sheets, cards on maps. */
+  .lg-glass {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.82) 0%, rgba(255, 255, 255, 0.68) 100%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    backdrop-filter: blur(22px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.3),
+      0 12px 32px -14px rgba(11, 56, 36, 0.28),
+      0 2px 8px -3px rgba(11, 56, 36, 0.1);
+  }
+
+  /* Brand-tinted glass: header, dock, primary floating toolbars. */
+  .lg-glass-brand {
+    /* Mostly opaque so the brand green (#167d4f) reads true over light content. */
+    background: linear-gradient(180deg, rgba(25, 136, 87, 0.95) 0%, rgba(22, 125, 79, 0.93) 100%);
+    -webkit-backdrop-filter: blur(24px) saturate(170%);
+    backdrop-filter: blur(24px) saturate(170%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.06),
+      0 14px 34px -16px rgba(11, 56, 36, 0.5);
+  }
+
+  /* Small translucent pill on a brand background (header controls). */
+  .lg-glass-chip {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.08) 100%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    backdrop-filter: blur(14px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 2px 6px -2px rgba(0, 0, 0, 0.18);
+  }
+
+  /* Light-surface card with a soft specular edge. */
+  .lg-card {
+    background: #ffffff;
+    border: 1px solid rgba(222, 232, 227, 0.9);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 1),
+      0 1px 2px rgba(11, 56, 36, 0.04),
+      0 8px 24px -14px rgba(11, 56, 36, 0.18);
+  }
+
+  /* Gentle lift on hover (pointer devices only), spring press on tap. */
+  /* Shared so combining lift + press never cancels either transition. */
+  .lg-hover-lift,
+  .lg-press {
+    transition:
+      translate 0.3s var(--ease-ios-spring),
+      scale 0.25s var(--ease-ios-spring),
+      box-shadow 0.3s var(--ease-ios-spring),
+      background-color 0.2s ease,
+      opacity 0.2s ease;
+  }
+  @media (hover: hover) {
+    .lg-hover-lift:hover {
+      translate: 0 -2px;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 1),
+        0 2px 4px rgba(11, 56, 36, 0.05),
+        0 18px 36px -18px rgba(11, 56, 36, 0.32);
+    }
+  }
+  .lg-press:active {
+    scale: 0.97;
+  }
+
+  /* Primary brand button with a subtle glossy highlight. */
+  .lg-btn-primary {
+    background: linear-gradient(180deg, #1b8d5a 0%, #167d4f 100%);
+    color: #ffffff;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.25),
+      0 6px 16px -8px rgba(22, 125, 79, 0.6);
+  }
+  @media (hover: hover) {
+    .lg-btn-primary:hover {
+      filter: brightness(1.06);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        0 10px 22px -10px rgba(22, 125, 79, 0.7);
+    }
+  }
+
+  .lg-fade-up {
+    animation: lg-fade-up 0.5s var(--ease-ios-spring) both;
+  }
+
+  .lg-skeleton {
+    background: linear-gradient(90deg, #eef3f0 25%, #f7faf8 37%, #eef3f0 63%);
+    background-size: 400% 100%;
+    animation: lg-shimmer 1.6s ease-in-out infinite;
+  }
+}
+
+/* Browsers without backdrop-filter get solid, still-readable surfaces. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .lg-glass { background: rgba(255, 255, 255, 0.97); }
+  .lg-glass-brand { background: #167d4f; }
+  .lg-glass-chip { background: rgba(255, 255, 255, 0.16); }
+}
+
+/* Solid brand buttons/links get a soft glossy highlight and depth (same colour). */
+@layer components {
+  button.bg-\[\#167d4f\],
+  a.bg-\[\#167d4f\],
+  button.bg-brand-primary,
+  a.bg-brand-primary {
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 55%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.24),
+      0 6px 16px -8px rgba(22, 125, 79, 0.55);
+  }
+}
+
+/* Map price pins & clusters: a glassy rim so they read cleanly on satellite tiles. */
+.angren-pin-body {
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 4px 14px rgba(0, 0, 0, 0.35),
+    0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.angren-cluster-inner {
+  background: linear-gradient(180deg, #1b8d5a 0%, #167d4f 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 6px 16px rgba(0, 0, 0, 0.35);
+}
+
+/* Slightly lighter, SF-Symbols-like icon weight for default lucide icons.
+   Kept outside @layer: the class is set by lucide-react, not by our sources,
+   so Tailwind would purge it from a layer. */
+.lucide[stroke-width="2"] {
+  stroke-width: 1.85;
+}
+
+/* =========================================================================
+   LIQUID MOTION — selection thumbs, page entrance, press feedback.
+   Kept outside @layer: some class names are built at runtime and would be
+   purged from a Tailwind layer.
+   ========================================================================= */
+
+/* Glass "thumb" that glides between options of a segmented control. */
+.lg-thumb {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.lg-thumb-brand {
+  background: linear-gradient(180deg, #1b8d5a 0%, #167d4f 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.08),
+    0 6px 14px -6px rgba(22, 125, 79, 0.55);
+}
+.lg-thumb-light {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.12) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 12px -6px rgba(0, 0, 0, 0.3);
+}
+.lg-thumb-white {
+  background: #ffffff;
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    0 1px 2px rgba(11, 56, 36, 0.08),
+    0 6px 14px -8px rgba(11, 56, 36, 0.25);
+}
+
+/* Calm page entrance on navigation. Opacity only: a transform here would
+   re-anchor fixed toolbars/sheets inside <main> while it plays. */
+@keyframes lg-page-enter {
+  from { opacity: 0; }
+}
+main,
+.lg-page-enter {
+  animation: lg-page-enter 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+
+/* Gentle, uniform press feedback for every button (independent `scale`
+   property, so it never fights framer-motion or Tailwind transforms). */
+button,
+[role="button"] {
+  transition-property: color, background-color, border-color, box-shadow, opacity, filter, scale;
+  transition-duration: 220ms;
+  transition-timing-function: var(--ease-ios-spring);
+}
+button:not(:disabled):active,
+[role="button"]:active {
+  scale: 0.98;
+}
+
+/* Glass surfaces catch a little more light while pressed. */
+.lg-glass-chip:active,
+.lg-glass:active {
+  filter: brightness(1.04);
+}

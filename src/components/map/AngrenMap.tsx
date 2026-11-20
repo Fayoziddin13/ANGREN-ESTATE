@@ -867,10 +867,10 @@ export function AngrenMap({
           onClick={handleToggleDimension}
           data-testid="map-toggle-3d"
           title={locale === "uz" ? (dimension === "3d" ? "2D rejimga o'tish" : "3D perspektivaga o'tish") : (dimension === "3d" ? "Переключить в 2D" : "Включить 3D")}
-          className={`hidden sm:flex sm:h-10 sm:w-10 flex-col items-center justify-center rounded-2xl backdrop-blur-xl shadow-elevated border transition-all active:scale-95 ${
+          className={`hidden sm:flex sm:h-10 sm:w-10 flex-col items-center justify-center rounded-2xl border transition-all active:scale-95 ${
             dimension === "3d"
-              ? "bg-[#167d4f] text-white border-[#167d4f] ring-2 ring-[#2db477]/40"
-              : "bg-white/90 text-gray-700 hover:text-[#167d4f] border-white/80 hover:bg-white"
+              ? "lg-btn-primary border-transparent"
+              : "lg-glass text-gray-700 hover:text-[#167d4f]"
           }`}
         >
           <Box className="h-4 w-4" />
@@ -890,10 +890,10 @@ export function AngrenMap({
               ? "Переключить на схему"
               : "Включить спутник"
           }
-          className={`hidden sm:flex sm:h-10 sm:w-10 flex-col items-center justify-center rounded-2xl backdrop-blur-xl shadow-elevated border transition-all active:scale-95 ${
+          className={`hidden sm:flex sm:h-10 sm:w-10 flex-col items-center justify-center rounded-2xl border transition-all active:scale-95 ${
             mapMode === "satellite"
-              ? "bg-blue-600 text-white border-blue-600 ring-2 ring-blue-400/40"
-              : "bg-white/90 text-gray-700 hover:text-blue-600 border-white/80 hover:bg-white"
+              ? "lg-btn-primary border-transparent"
+              : "lg-glass text-gray-700 hover:text-[#167d4f]"
           }`}
         >
           <Layers className="h-4 w-4" />
@@ -908,12 +908,12 @@ export function AngrenMap({
           disabled={geoLoading}
           data-testid="map-user-location"
           title={locale === "uz" ? "Mening joylashuvim" : "Моё местоположение"}
-          className="hidden sm:flex sm:h-10 sm:w-10 items-center justify-center rounded-2xl bg-white/90 backdrop-blur-xl text-gray-700 hover:text-blue-600 shadow-elevated border border-white/80 hover:bg-white transition-all active:scale-95"
+          className="hidden sm:flex sm:h-10 sm:w-10 items-center justify-center rounded-2xl lg-glass text-gray-700 hover:text-[#167d4f] hover:bg-white transition-all active:scale-95"
         >
           {geoLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+            <Loader2 className="h-4 w-4 animate-spin text-[#167d4f]" />
           ) : (
-            <Navigation className="h-4 w-4 text-blue-600" />
+            <Navigation className="h-4 w-4 text-[#167d4f]" />
           )}
         </button>
 
@@ -922,13 +922,13 @@ export function AngrenMap({
           onClick={handleResetCenter}
           data-testid="map-reset-center"
           title={locale === "uz" ? "Angren markaziga qaytish" : "Центр Ангрена"}
-          className="hidden sm:flex sm:h-10 sm:w-10 items-center justify-center rounded-2xl bg-white/90 backdrop-blur-xl text-gray-700 hover:text-[#167d4f] shadow-elevated border border-white/80 hover:bg-white transition-all active:scale-95"
+          className="hidden sm:flex sm:h-10 sm:w-10 items-center justify-center rounded-2xl lg-glass text-gray-700 hover:text-[#167d4f] hover:bg-white transition-all active:scale-95"
         >
           <LocateFixed className="h-4 w-4" />
         </button>
 
         {/* Zoom Controls (Always visible on mobile & desktop) */}
-        <div className="flex flex-col rounded-2xl bg-white/95 backdrop-blur-xl shadow-elevated border border-white/80 overflow-hidden">
+        <div className="flex flex-col rounded-2xl lg-glass overflow-hidden">
           <button
             onClick={handleZoomIn}
             data-testid="map-zoom-in"

@@ -1,5 +1,6 @@
 "use client";
 
+import { LiquidThumb } from "@/components/ui/LiquidThumb";
 import React, { useState, useEffect, useRef } from "react";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -234,22 +235,24 @@ export default function AdminMapManagementPage() {
           <div className="bg-white/95 backdrop-blur-md rounded-2xl p-1 shadow-elevated border border-slate-200 flex items-center gap-1 text-xs font-bold">
             <button
               onClick={() => setMapMode("standard")}
-              className={`px-3 py-1.5 rounded-xl transition-all ${
+              className={`relative isolate px-3 py-1.5 rounded-xl transition-all ${
                 mapMode === "standard"
-                  ? "bg-[#167d4f] text-white shadow-xs"
+                  ? "text-white"
                   : "text-slate-600 hover:bg-slate-100"
               }`}
             >
+              {mapMode === "standard" && <LiquidThumb id="adm-map-mapMode" />}
               {locale === "uz" ? "Sxema" : "Схема"}
             </button>
             <button
               onClick={() => setMapMode("satellite")}
-              className={`px-3 py-1.5 rounded-xl transition-all ${
+              className={`relative isolate px-3 py-1.5 rounded-xl transition-all ${
                 mapMode === "satellite"
-                  ? "bg-[#167d4f] text-white shadow-xs"
+                  ? "text-white"
                   : "text-slate-600 hover:bg-slate-100"
               }`}
             >
+              {mapMode === "satellite" && <LiquidThumb id="adm-map-mapMode" />}
               {locale === "uz" ? "Sun’iy yo‘ldosh" : "Спутник"}
             </button>
           </div>

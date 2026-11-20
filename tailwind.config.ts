@@ -45,6 +45,10 @@ const config: Config = {
         ],
       },
       boxShadow: {
+        // `shadow-xs` is used ~180 times but only exists in Tailwind v4; define it
+        // so those elements get the intended hairline depth.
+        "2xs": "0 1px 1px 0 rgba(14, 51, 36, 0.04)",
+        xs: "0 1px 2px 0 rgba(14, 51, 36, 0.05)",
         subtle: "0 1px 3px 0 rgba(14, 51, 36, 0.04), 0 1px 2px -1px rgba(14, 51, 36, 0.03)",
         card: "0 4px 20px -2px rgba(14, 51, 36, 0.06), 0 2px 6px -1px rgba(14, 51, 36, 0.03)",
         elevated: "0 12px 32px -4px rgba(14, 51, 36, 0.08), 0 4px 12px -2px rgba(14, 51, 36, 0.04)",
@@ -53,6 +57,15 @@ const config: Config = {
       borderRadius: {
         "2xl": "1.25rem",
         "3xl": "1.75rem",
+      },
+      // `active:scale-98` / `scale-99` press feedback is used across buttons but
+      // these steps are not in Tailwind's default scale.
+      scale: {
+        "98": "0.98",
+        "99": "0.99",
+      },
+      transitionTimingFunction: {
+        spring: "cubic-bezier(0.16, 1, 0.3, 1)",
       },
     },
   },

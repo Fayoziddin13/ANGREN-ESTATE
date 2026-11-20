@@ -1,5 +1,6 @@
 "use client";
 
+import { LiquidThumb } from "@/components/ui/LiquidThumb";
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
@@ -167,12 +168,13 @@ export default function AdminAnalyticsPage() {
               <button
                 key={t.id}
                 onClick={() => setTimeRange(t.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                className={`relative isolate px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                   timeRange === t.id
-                    ? "bg-[#167d4f] text-white shadow-xs"
+                    ? "text-white"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                 }`}
               >
+                {timeRange === t.id && <LiquidThumb id="adm-analytics-timeRange" />}
                 {locale === "uz" ? t.uz : t.ru}
               </button>
             ))}

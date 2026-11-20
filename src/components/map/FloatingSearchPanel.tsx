@@ -1,5 +1,6 @@
 "use client";
 
+import { LiquidThumb } from "@/components/ui/LiquidThumb";
 import React, { useState, useEffect } from "react";
 import { fetchJsonShared } from "@/lib/sharedFetch";
 import { MapPin, Home, Coins, ChevronDown, RotateCcw, Check, Search, X, SlidersHorizontal, Bookmark, Plus } from "lucide-react";
@@ -164,39 +165,42 @@ export function FloatingSearchPanel({
 
   return (
     <div
-      className={`pointer-events-auto w-fit max-w-full rounded-2xl bg-white/90 backdrop-blur-xl p-1.5 sm:p-2 shadow-elevated border border-white/80 transition-all ${className}`}
+      className={`pointer-events-auto w-fit max-w-full rounded-2xl lg-glass p-1.5 sm:p-2 transition-all ${className}`}
     >
       <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 xl:gap-2">
         {/* Transaction Pill Switcher: [ Barchasi | Sotuv | Ijara ] */}
         <div className="flex items-center h-9 rounded-xl bg-gray-100/90 p-1 shrink-0 border border-gray-200/60">
           <button
             onClick={() => onTransactionChange("all")}
-            className={`h-7 rounded-lg px-2.5 xl:px-3 text-[11.5px] font-bold transition-all ${
+            className={`relative isolate h-7 rounded-lg px-2.5 xl:px-3 text-[11.5px] font-bold transition-all ${
               transactionType === "all"
-                ? "bg-[#167d4f] text-white shadow-card"
+                ? "text-white"
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
+            {transactionType === "all" && <LiquidThumb id="search-transactionType" />}
             {t.common.all}
           </button>
           <button
             onClick={() => onTransactionChange("sale")}
-            className={`h-7 rounded-lg px-2.5 xl:px-3 text-[11.5px] font-bold transition-all ${
+            className={`relative isolate h-7 rounded-lg px-2.5 xl:px-3 text-[11.5px] font-bold transition-all ${
               transactionType === "sale"
-                ? "bg-[#167d4f] text-white shadow-card"
+                ? "text-white"
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
+            {transactionType === "sale" && <LiquidThumb id="search-transactionType" />}
             {t.popular.saleBadge}
           </button>
           <button
             onClick={() => onTransactionChange("rent")}
-            className={`h-7 rounded-lg px-2.5 xl:px-3 text-[11.5px] font-bold transition-all ${
+            className={`relative isolate h-7 rounded-lg px-2.5 xl:px-3 text-[11.5px] font-bold transition-all ${
               transactionType === "rent"
-                ? "bg-[#167d4f] text-white shadow-card"
+                ? "text-white"
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
+            {transactionType === "rent" && <LiquidThumb id="search-transactionType" />}
             {t.popular.rentBadge}
           </button>
         </div>
@@ -251,7 +255,7 @@ export function FloatingSearchPanel({
           </button>
 
           {districtOpen && (
-            <div className="absolute top-full left-0 mt-1.5 w-48 rounded-2xl border border-white/80 bg-white/95 backdrop-blur-xl p-1.5 shadow-elevated z-50 animate-in fade-in">
+            <div className="absolute top-full left-0 mt-1.5 w-48 rounded-2xl border border-white/80 lg-glass p-1.5 z-50 animate-in fade-in">
               {districts.map((d) => (
                 <button
                   key={d.key}
@@ -297,7 +301,7 @@ export function FloatingSearchPanel({
           </button>
 
           {typeOpen && (
-            <div className="absolute top-full left-0 mt-1.5 w-52 rounded-2xl border border-white/80 bg-white/95 backdrop-blur-xl p-1.5 shadow-elevated z-50 animate-in fade-in">
+            <div className="absolute top-full left-0 mt-1.5 w-52 rounded-2xl border border-white/80 lg-glass p-1.5 z-50 animate-in fade-in">
               {propertyTypes.map((pt) => (
                 <button
                   key={pt.key}
@@ -343,7 +347,7 @@ export function FloatingSearchPanel({
           </button>
 
           {priceOpen && (
-            <div className="absolute top-full left-0 sm:left-auto sm:right-0 mt-1.5 w-56 rounded-2xl border border-white/80 bg-white/95 backdrop-blur-xl p-1.5 shadow-elevated z-50 animate-in fade-in">
+            <div className="absolute top-full left-0 sm:left-auto sm:right-0 mt-1.5 w-56 rounded-2xl border border-white/80 lg-glass p-1.5 z-50 animate-in fade-in">
               {priceOptions.map((po) => (
                 <button
                   key={po.key}

@@ -32,7 +32,7 @@ export function CollapsiblePropertyList({
   if (!isOpen) return null;
 
   return (
-    <div className="hidden lg:flex flex-col fixed top-24 right-6 bottom-6 w-96 z-30 pointer-events-auto rounded-3xl bg-white/90 backdrop-blur-xl shadow-elevated border border-white/80 overflow-hidden animate-in slide-in-from-right-4 duration-300">
+    <div className="hidden lg:flex flex-col fixed top-24 right-6 bottom-6 w-96 z-30 pointer-events-auto rounded-3xl lg-glass overflow-hidden animate-in slide-in-from-right-4 duration-300">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-gray-100 p-4">
         <div className="flex items-center gap-2">
@@ -99,7 +99,7 @@ export function CollapsiblePropertyList({
                       {priceDisplay}
                     </span>
                     {hasBargain && (
-                      <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-[#eaf5f0] text-[#167d4f] border border-[#bdd1c8]">
+                      <span className="inline-flex items-center px-1.5 py-px rounded-full text-[9px] font-bold bg-[#eaf5f0] text-[#167d4f] border border-[#bdd1c8]">
                         {bargainBadge}
                       </span>
                     )}

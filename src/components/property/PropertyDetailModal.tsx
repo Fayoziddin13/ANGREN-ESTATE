@@ -160,7 +160,7 @@ export function PropertyDetailModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ type: "spring", damping: 26, stiffness: 320 }}
-          className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-3xl bg-white/95 backdrop-blur-xl shadow-elevated border border-white/80 z-10 flex flex-col my-auto min-w-0 mx-auto"
+          className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-3xl lg-glass z-10 flex flex-col my-auto min-w-0 mx-auto"
         >
           {/* Floating Top Close & Actions Bar */}
           <div className="sticky top-0 z-30 flex items-center justify-between gap-2 p-3 sm:p-4 px-3 sm:px-6 bg-white/85 backdrop-blur-md border-b border-gray-100 min-w-0">

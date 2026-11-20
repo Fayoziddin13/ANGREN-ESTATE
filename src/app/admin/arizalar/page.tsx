@@ -773,7 +773,7 @@ export default function AdminArizalarPage() {
                           {dealType ? (
                             <div className="flex items-center gap-1">
                               <span
-                                className={`inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-extrabold border ${
+                                className={`inline-flex items-center px-1.5 py-px rounded text-[9px] font-extrabold border ${
                                   dealType === "rent"
                                     ? "bg-blue-50 text-blue-700 border-blue-200"
                                     : "bg-[#eaf5f0]/60 text-[#167d4f] border-[#bdd1c8]"
@@ -1479,7 +1479,7 @@ export default function AdminArizalarPage() {
 
       {/* Safe Ariza Archive Confirmation Modal */}
       {archiveConfirmRequest && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#0b3824]/45 backdrop-blur-md backdrop-saturate-150 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center gap-3">
               <div className="h-11 w-11 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center shrink-0">
