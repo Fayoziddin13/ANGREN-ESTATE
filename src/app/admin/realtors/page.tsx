@@ -831,7 +831,7 @@ export default function AdminRealtorsPage() {
                             </span>
                             <span className="text-slate-300">•</span>
                             <span
-                              className={`px-1.5 py-0.2 rounded text-[10px] font-bold uppercase ${
+                              className={`px-1.5 py-px rounded text-[10px] font-bold uppercase ${
                                 prop.status === "published"
                                   ? "bg-[#eaf5f0] text-[#167d4f]"
                                   : prop.status === "draft"
@@ -1330,7 +1330,7 @@ export default function AdminRealtorsPage() {
 
       {/* Deactivate Realtor Confirmation Modal */}
       {deactivateConfirmRealtor && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#0b3824]/45 backdrop-blur-md backdrop-saturate-150 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center gap-3">
               <div className="h-11 w-11 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0">

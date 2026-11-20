@@ -39,7 +39,7 @@ export function MobileMapControls({
         role="button"
         tabIndex={0}
         aria-label={locale === "uz" ? "Qidiruv va filtrlarni ochish" : "Открыть поиск и фильтры"}
-        className="w-full flex items-center justify-between h-10 px-3.5 rounded-2xl bg-white/95 backdrop-blur-xl shadow-elevated border border-white/90 cursor-pointer active:scale-[0.99] transition-all pointer-events-auto"
+        className="w-full flex items-center justify-between h-10 px-3.5 rounded-2xl lg-glass cursor-pointer active:scale-[0.99] transition-all pointer-events-auto"
       >
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <Search className="h-4 w-4 text-[#167d4f] shrink-0" />
@@ -88,7 +88,7 @@ export function MobileMapControls({
       <div className="w-full flex justify-end pointer-events-none">
         <div
           data-testid="mobile-primary-view-switcher"
-          className="flex items-center p-1 rounded-2xl bg-white/95 backdrop-blur-xl shadow-elevated border border-white/90 w-[240px] pointer-events-auto"
+          className="flex items-center p-1 rounded-2xl lg-glass w-[240px] pointer-events-auto"
         >
         <button
           type="button"
@@ -96,7 +96,7 @@ export function MobileMapControls({
           onClick={() => onViewChange("map")}
           className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
             activeView === "map"
-              ? "bg-[#167d4f] text-white shadow-card"
+              ? "lg-btn-primary"
               : "text-slate-600 hover:text-slate-900 active:bg-slate-100/60"
           }`}
         >
@@ -110,14 +110,14 @@ export function MobileMapControls({
           onClick={() => onViewChange("catalog")}
           className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
             activeView === "catalog"
-              ? "bg-[#167d4f] text-white shadow-card"
+              ? "lg-btn-primary"
               : "text-slate-600 hover:text-slate-900 active:bg-slate-100/60"
           }`}
         >
           <Layers className="h-3.5 w-3.5" />
           <span>{locale === "uz" ? "KATALOG" : "КАТАЛОГ"}</span>
           <span
-            className={`text-[9.5px] font-extrabold px-1.5 py-0.2 rounded-full ${
+            className={`text-[9.5px] font-extrabold px-1.5 py-px rounded-full ${
               activeView === "catalog"
                 ? "bg-white text-[#167d4f]"
                 : "bg-[#eaf5f0] text-[#167d4f]"

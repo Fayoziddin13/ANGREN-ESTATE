@@ -60,7 +60,7 @@ export function PropertyPreviewCard({
 
   return (
     <div
-      className={`pointer-events-auto relative w-80 sm:w-84 xl:w-92 max-w-[calc(100vw-3rem)] max-h-[min(540px,calc(100vh-140px))] overflow-y-auto rounded-2xl bg-white/95 backdrop-blur-xl shadow-elevated border border-white/80 overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 custom-scrollbar ${className}`}
+      className={`pointer-events-auto relative w-80 sm:w-[336px] xl:w-[368px] max-w-[calc(100vw-3rem)] max-h-[min(540px,calc(100vh-140px))] overflow-y-auto rounded-2xl lg-glass overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 custom-scrollbar ${className}`}
     >
       {/* Top Close Button */}
       <button

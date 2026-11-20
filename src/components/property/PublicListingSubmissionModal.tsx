@@ -240,7 +240,7 @@ export function PublicListingSubmissionModal({ isOpen, onClose }: PublicListingS
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#0b3824]/45 backdrop-blur-md backdrop-saturate-150 animate-in fade-in"
       onClick={onClose}
     >
       <div

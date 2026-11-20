@@ -92,7 +92,7 @@ export function AdvancedFiltersModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl max-h-[90vh] flex flex-col rounded-3xl bg-white/95 backdrop-blur-2xl shadow-float border border-white/80 overflow-hidden">
+      <div className="relative w-full max-w-xl max-h-[90vh] flex flex-col rounded-3xl lg-glass overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white/80 shrink-0">
           <div className="flex items-center gap-2">

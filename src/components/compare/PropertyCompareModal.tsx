@@ -303,7 +303,7 @@ export function PropertyCompareModal({
                             {formatPriceValue(p).primary}
                           </span>
                           {formatPriceValue(p).hasBargain && (
-                            <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-[#eaf5f0] text-[#167d4f] border border-[#bdd1c8]">
+                            <span className="inline-flex items-center px-1.5 py-px rounded-full text-[9px] font-bold bg-[#eaf5f0] text-[#167d4f] border border-[#bdd1c8]">
                               {formatPriceValue(p).bargainBadge}
                             </span>
                           )}

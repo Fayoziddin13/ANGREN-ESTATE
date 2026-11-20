@@ -908,7 +908,7 @@ export function AngrenMap({
           disabled={geoLoading}
           data-testid="map-user-location"
           title={locale === "uz" ? "Mening joylashuvim" : "Моё местоположение"}
-          className="hidden sm:flex sm:h-10 sm:w-10 items-center justify-center rounded-2xl bg-white/90 backdrop-blur-xl text-gray-700 hover:text-blue-600 shadow-elevated border border-white/80 hover:bg-white transition-all active:scale-95"
+          className="hidden sm:flex sm:h-10 sm:w-10 items-center justify-center rounded-2xl lg-glass text-gray-700 hover:text-blue-600 hover:bg-white transition-all active:scale-95"
         >
           {geoLoading ? (
             <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
@@ -922,13 +922,13 @@ export function AngrenMap({
           onClick={handleResetCenter}
           data-testid="map-reset-center"
           title={locale === "uz" ? "Angren markaziga qaytish" : "Центр Ангрена"}
-          className="hidden sm:flex sm:h-10 sm:w-10 items-center justify-center rounded-2xl bg-white/90 backdrop-blur-xl text-gray-700 hover:text-[#167d4f] shadow-elevated border border-white/80 hover:bg-white transition-all active:scale-95"
+          className="hidden sm:flex sm:h-10 sm:w-10 items-center justify-center rounded-2xl lg-glass text-gray-700 hover:text-[#167d4f] hover:bg-white transition-all active:scale-95"
         >
           <LocateFixed className="h-4 w-4" />
         </button>
 
         {/* Zoom Controls (Always visible on mobile & desktop) */}
-        <div className="flex flex-col rounded-2xl bg-white/95 backdrop-blur-xl shadow-elevated border border-white/80 overflow-hidden">
+        <div className="flex flex-col rounded-2xl lg-glass overflow-hidden">
           <button
             onClick={handleZoomIn}
             data-testid="map-zoom-in"

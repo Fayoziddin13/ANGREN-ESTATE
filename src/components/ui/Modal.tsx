@@ -36,7 +36,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+            className="fixed inset-0 bg-[#0b3824]/30 backdrop-blur-md backdrop-saturate-150"
           />
 
           <motion.div
@@ -44,7 +44,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
             transition={{ type: "spring", damping: 25, stiffness: 350 }}
-            className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white p-6 shadow-float border border-brand-border/80 z-10"
+            className="relative w-full max-w-md overflow-hidden rounded-3xl lg-glass !bg-white/90 p-6 z-10"
           >
             <div className="flex items-center justify-between pb-4">
               {title ? (

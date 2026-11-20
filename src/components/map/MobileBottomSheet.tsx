@@ -88,16 +88,22 @@ export function MobileBottomSheet({
     return (
       <div
         data-testid="mobile-map-control-row"
-        className="sm:hidden fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] left-3 right-3 z-30 pointer-events-auto flex items-center justify-between gap-2 px-2.5 sm:px-3 py-1.5 rounded-2xl bg-[#167d4f] shadow-elevated border border-[#145d3c]/60 backdrop-blur-xl"
+        className="sm:hidden fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] left-3 right-3 z-30 pointer-events-auto flex items-center justify-between gap-2 px-2.5 sm:px-3 py-1.5 rounded-2xl lg-glass-brand"
       >
         {/* Object count badge + [+ E'lon] button on the left */}
         <div className="flex items-center gap-1.5 shrink min-w-0">
           <div
             data-testid="mobile-object-count-badge"
-            className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl bg-white/10 border border-white/15 text-white shrink min-w-0"
+            title={t.mapSection.objectsOnMap(totalCount)}
+            aria-label={t.mapSection.objectsOnMap(totalCount)}
+            className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl bg-white/[0.12] border border-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] text-white shrink min-w-0"
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-            <span className="text-[11px] font-bold tracking-tight text-white whitespace-nowrap truncate">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 animate-pulse shrink-0" />
+            {/* Phones show the short form so it is never cut off ("25 ta ..."). */}
+            <span className="text-[11px] font-bold tracking-tight text-white whitespace-nowrap min-[480px]:hidden">
+              {totalCount} {locale === "uz" ? "ta" : "шт."}
+            </span>
+            <span className="hidden min-[480px]:inline text-[11px] font-bold tracking-tight text-white whitespace-nowrap truncate">
               {t.mapSection.objectsOnMap(totalCount)}
             </span>
           </div>
@@ -125,7 +131,7 @@ export function MobileBottomSheet({
             onClick={handleToggle3D}
             aria-label="3D"
             title="3D"
-            className={`h-10 w-10 rounded-xl flex items-center justify-center transition-all active:scale-95 ${
+            className={`lg-press h-10 w-10 rounded-xl flex items-center justify-center transition-all active:scale-95 ${
               mapDimension === "3d"
                 ? "bg-white/30 text-white shadow-sm ring-2 ring-white border border-white/40"
                 : "bg-white/10 hover:bg-white/15 active:bg-white/20 text-white border border-white/10"
@@ -153,7 +159,7 @@ export function MobileBottomSheet({
             onClick={handleToggleMode}
             aria-label={locale === "uz" ? "Xarita" : "Карта"}
             title={locale === "uz" ? "Xarita" : "Карта"}
-            className={`h-10 w-10 rounded-xl flex items-center justify-center transition-all active:scale-95 ${
+            className={`lg-press h-10 w-10 rounded-xl flex items-center justify-center transition-all active:scale-95 ${
               activeMapMode === "satellite"
                 ? "bg-white/30 text-white shadow-sm ring-2 ring-white border border-white/40"
                 : "bg-white/10 hover:bg-white/15 active:bg-white/20 text-white border border-white/10"
@@ -215,7 +221,7 @@ export function MobileBottomSheet({
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 28, stiffness: 300 }}
-        className="sm:hidden fixed bottom-16 left-0 right-0 z-30 pointer-events-auto rounded-t-3xl bg-white/95 backdrop-blur-xl shadow-float border-t border-white/80 overflow-hidden"
+        className="sm:hidden fixed bottom-16 left-0 right-0 z-30 pointer-events-auto rounded-t-3xl lg-glass overflow-hidden"
       >
         {/* iOS Drag Handle Bar */}
         <div className="flex items-center justify-center pt-2.5 pb-1">
@@ -244,7 +250,7 @@ export function MobileBottomSheet({
                 >
                   {badgeText}
                 </span>
-                <span className="rounded-lg bg-black/60 backdrop-blur-sm px-1.5 py-0.5 text-[9px] font-semibold text-white shadow-xs">
+                <span className="rounded-lg bg-[#0b3824]/45 backdrop-blur-md backdrop-saturate-150 px-1.5 py-0.5 text-[9px] font-semibold text-white shadow-xs">
                   {getPropertyTypeLabel(property.property_type, locale)}
                 </span>
                 {isHouse && property.area_sotikh && (

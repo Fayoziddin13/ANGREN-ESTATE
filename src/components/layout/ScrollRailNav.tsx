@@ -71,7 +71,7 @@ export function ScrollRailNav() {
         data-testid="scroll-rail-nav"
         className="hidden md:flex fixed right-4 top-1/2 -translate-y-1/2 z-30 pointer-events-none select-none flex-col items-center"
       >
-        <div className="pointer-events-auto flex flex-col items-center rounded-full bg-white/90 backdrop-blur-xl shadow-elevated border border-white/80 overflow-hidden transition-all duration-300 hover:shadow-float p-1 gap-1">
+        <div className="pointer-events-auto flex flex-col items-center rounded-full lg-glass overflow-hidden transition-all duration-300 hover:shadow-float p-1 gap-1">
           {/* UP Button (↑) */}
           <button
             onClick={scrollToTop}

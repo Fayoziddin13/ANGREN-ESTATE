@@ -406,7 +406,7 @@ export default function AdminPropertiesPage() {
                 <th className="py-3.5 px-4 text-center">{locale === "uz" ? "Ko‘rishlar" : "Просмотры"}</th>
                 <th className="py-3.5 px-4 text-center">{locale === "uz" ? "Aloqalar" : "Контакты"}</th>
                 <th className="py-3.5 px-4">{locale === "uz" ? "Sana" : "Дата"}</th>
-                <th className="py-3.5 px-4 text-right">{locale === "uz" ? "Amallar" : "Действия"}</th>
+                <th className="py-3.5 px-4 text-right sticky right-0 z-10 bg-slate-50 shadow-[-10px_0_14px_-12px_rgba(15,23,42,0.25)]">{locale === "uz" ? "Amallar" : "Действия"}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -418,7 +418,7 @@ export default function AdminPropertiesPage() {
                 </tr>
               ) : (
                 filtered.map((prop) => (
-                  <tr key={prop.id} className="hover:bg-slate-50/60 transition-colors">
+                  <tr key={prop.id} className="group/row hover:bg-slate-50/60 transition-colors">
                     {/* Object Details & Photo */}
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">
@@ -602,8 +602,8 @@ export default function AdminPropertiesPage() {
                       {new Date(prop.created_at).toLocaleDateString()}
                     </td>
 
-                    {/* Actions Menu */}
-                    <td className="py-3.5 px-4 text-right relative">
+                    {/* Actions Menu — sticky so actions stay visible on narrower screens */}
+                    <td className="py-3.5 px-4 text-right sticky right-0 z-[1] bg-white group-hover/row:bg-slate-50 transition-colors shadow-[-10px_0_14px_-12px_rgba(15,23,42,0.25)]">
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => handleOpenTelegramModal(prop)}
@@ -771,7 +771,7 @@ export default function AdminPropertiesPage() {
 
       {/* Property Quick Preview Modal */}
       {previewProperty && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#0b3824]/45 backdrop-blur-md backdrop-saturate-150 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="font-extrabold text-slate-900 text-base">
@@ -829,7 +829,7 @@ export default function AdminPropertiesPage() {
 
       {/* Safe Archive Confirmation Modal */}
       {archiveConfirmProperty && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#0b3824]/45 backdrop-blur-md backdrop-saturate-150 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center gap-3">
               <div className="h-11 w-11 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0">
@@ -992,7 +992,7 @@ export default function AdminPropertiesPage() {
 
       {/* Telegram Bot Broadcast Confirmation Modal */}
       {telegramBroadcastProperty && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#0b3824]/45 backdrop-blur-md backdrop-saturate-150 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center gap-3">
               <div className="h-11 w-11 rounded-2xl bg-[#0088cc]/10 border border-[#0088cc]/20 flex items-center justify-center shrink-0">
@@ -1077,7 +1077,7 @@ export default function AdminPropertiesPage() {
 
       {/* Telegram Channel Publish Modal */}
       {channelModalProperty && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#0b3824]/45 backdrop-blur-md backdrop-saturate-150 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center gap-3">
               <div className="h-11 w-11 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center shrink-0">

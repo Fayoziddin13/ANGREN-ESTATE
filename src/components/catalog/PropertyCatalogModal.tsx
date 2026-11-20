@@ -288,7 +288,7 @@ export function PropertyCatalogModal({
                   <div
                     key={property.id}
                     onClick={() => onViewDetails(property)}
-                    className="group flex flex-col rounded-3xl bg-white border border-[#dee8e3] shadow-card hover:shadow-elevated transition-all duration-300 overflow-hidden cursor-pointer active:scale-[0.99]"
+                    className="group flex flex-col rounded-3xl lg-card lg-hover-lift lg-press overflow-hidden cursor-pointer lg-fade-up"
                   >
                     {/* Image Area */}
                     <div className="relative aspect-[16/10] w-full bg-slate-100 overflow-hidden">
@@ -297,7 +297,7 @@ export function PropertyCatalogModal({
                         alt={title}
                         fill
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
                       />
 
                       {/* Transaction, Marketing & Type Badges */}

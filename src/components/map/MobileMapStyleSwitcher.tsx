@@ -77,7 +77,7 @@ export function MobileMapStyleSwitcher({
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.92, y: 6 }}
                 transition={{ duration: 0.18, ease: "easeOut" }}
-                className="absolute bottom-full right-0 mb-2.5 p-1.5 rounded-2xl bg-white/95 backdrop-blur-xl shadow-float border border-white/90 flex flex-col gap-1 min-w-[155px] z-50"
+                className="absolute bottom-full right-0 mb-2.5 p-1.5 rounded-2xl lg-glass flex flex-col gap-1 min-w-[155px] z-50"
               >
                 {/* Standard / Sxema Option */}
                 <button
@@ -132,7 +132,7 @@ export function MobileMapStyleSwitcher({
                 : "bg-white/95 text-[#167d4f] border-white/90 hover:bg-white"
             }`}
           >
-            <Layers className="h-4.5 w-4.5 transition-transform" />
+            <Layers className="h-[18px] w-[18px] transition-transform" />
             {/* Subtle active mode indicator dot when satellite is active and menu is closed */}
             {mapMode === "satellite" && !isOpen && (
               <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-emerald-300 ring-2 ring-[#167d4f]" />

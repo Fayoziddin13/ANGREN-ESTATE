@@ -180,11 +180,11 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Row 1: Primary Inventory & Engagement KPIs */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
         {/* Total Properties */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-2">
+        <div className="rounded-2xl p-4 lg-card lg-hover-lift lg-fade-up space-y-2" style={{ animationDelay: "0ms" }}>
           <div className="flex items-center justify-between text-slate-600">
-            <span className="text-[11px] font-bold uppercase tracking-wider">
+            <span className="min-w-0 truncate text-[11px] font-bold uppercase tracking-wider">
               {locale === "uz" ? "Jami obyektlar" : "Всего объектов"}
             </span>
             <Building2 className="h-4 w-4 text-[#167d4f]" />
@@ -199,9 +199,9 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Drafts */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-2">
+        <div className="rounded-2xl p-4 lg-card lg-hover-lift lg-fade-up space-y-2" style={{ animationDelay: "40ms" }}>
           <div className="flex items-center justify-between text-slate-600">
-            <span className="text-[11px] font-bold uppercase tracking-wider">
+            <span className="min-w-0 truncate text-[11px] font-bold uppercase tracking-wider">
               {locale === "uz" ? "Qoralamalar" : "Черновики"}
             </span>
             <AlertCircle className="h-4 w-4 text-amber-600" />
@@ -215,9 +215,9 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Sold / Rented */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-2">
+        <div className="rounded-2xl p-4 lg-card lg-hover-lift lg-fade-up space-y-2" style={{ animationDelay: "80ms" }}>
           <div className="flex items-center justify-between text-slate-600">
-            <span className="text-[11px] font-bold uppercase tracking-wider">
+            <span className="min-w-0 truncate text-[11px] font-bold uppercase tracking-wider">
               {locale === "uz" ? "Bitimlar" : "Сделки"}
             </span>
             <CheckCircle2 className="h-4 w-4 text-blue-600" />
@@ -233,9 +233,9 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Views */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-2">
+        <div className="rounded-2xl p-4 lg-card lg-hover-lift lg-fade-up space-y-2" style={{ animationDelay: "120ms" }}>
           <div className="flex items-center justify-between text-slate-600">
-            <span className="text-[11px] font-bold uppercase tracking-wider">
+            <span className="min-w-0 truncate text-[11px] font-bold uppercase tracking-wider">
               {locale === "uz" ? "Ko‘rishlar" : "Просмотры"}
             </span>
             <Eye className="h-4 w-4 text-purple-600" />
@@ -250,9 +250,9 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Contacts Clicks (Phone + Telegram) */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-2">
+        <div className="rounded-2xl p-4 lg-card lg-hover-lift lg-fade-up space-y-2" style={{ animationDelay: "160ms" }}>
           <div className="flex items-center justify-between text-slate-600">
-            <span className="text-[11px] font-bold uppercase tracking-wider">
+            <span className="min-w-0 truncate text-[11px] font-bold uppercase tracking-wider">
               {locale === "uz" ? "Aloqa so‘rovlari" : "Контакты"}
             </span>
             <PhoneCall className="h-4 w-4 text-[#167d4f]" />
@@ -266,9 +266,9 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Registered Users */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-2">
+        <div className="rounded-2xl p-4 lg-card lg-hover-lift lg-fade-up space-y-2" style={{ animationDelay: "200ms" }}>
           <div className="flex items-center justify-between text-slate-600">
-            <span className="text-[11px] font-bold uppercase tracking-wider">
+            <span className="min-w-0 truncate text-[11px] font-bold uppercase tracking-wider">
               {locale === "uz" ? "Foydalanuvchilar" : "Пользователи"}
             </span>
             <Users className="h-4 w-4 text-slate-700" />
@@ -306,14 +306,19 @@ export default function AdminDashboardPage() {
               {viewsData.map((val, idx) => {
                 const heightPercent = Math.round((val / maxViews) * 100);
                 return (
-                  <div key={idx} className="flex-1 flex flex-col items-center gap-2 group">
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">
-                      {val}
+                  <div key={idx} className="flex-1 h-full flex flex-col items-center gap-2 group">
+                    {/* The bar area needs a definite height: a % height inside an
+                        auto-height column resolved to 0, so no bars were drawn. */}
+                    <div className="relative flex-1 w-full flex items-end justify-center">
+                      <div
+                        style={{ height: `${val > 0 ? Math.max(heightPercent, 3) : 0}%` }}
+                        className="relative w-full max-w-[64px] bg-gradient-to-t from-[#167d4f] to-[#2db477] rounded-t-xl shadow-xs transition-[height,filter] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:brightness-110"
+                      >
+                        <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">
+                          {val}
+                        </span>
+                      </div>
                     </div>
-                    <div
-                      style={{ height: `${heightPercent}%` }}
-                      className="w-full bg-gradient-to-t from-[#167d4f] to-[#2db477] rounded-t-xl group-hover:from-[#167d4f] group-hover:to-[#2db477] transition-all shadow-xs"
-                    />
                     <span className="text-[10px] font-bold text-slate-600 mt-2 truncate max-w-[48px]">
                       {timeLabels[idx]}
                     </span>

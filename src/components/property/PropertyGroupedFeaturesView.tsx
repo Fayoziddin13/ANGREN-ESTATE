@@ -145,12 +145,13 @@ export function PropertyGroupedFeaturesView({
                 <div
                   key={item.key}
                   data-testid={`feature-item-${item.key}`}
-                  className="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-2xl bg-white border border-slate-100/90 shadow-2xs hover:border-[#bdd1c8] transition-all min-w-0"
+                  className="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-2xl lg-card hover:border-[#bdd1c8] transition-all min-w-0"
                 >
                   <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-slate-50 border border-slate-200/60 shrink-0">
                     {getFeatureIcon(item.iconName)}
                   </div>
-                  <span className="text-xs font-bold text-slate-800 truncate">
+                  {/* Two lines instead of an ellipsis: long names like "Shahar isitish tizimi" stay readable */}
+                  <span className="min-w-0 text-xs font-bold leading-snug text-slate-800 line-clamp-2 break-words">
                     {locale === "uz" ? item.labelUz : item.labelRu}
                   </span>
                 </div>

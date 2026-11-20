@@ -164,7 +164,7 @@ export function FloatingSearchPanel({
 
   return (
     <div
-      className={`pointer-events-auto w-fit max-w-full rounded-2xl bg-white/90 backdrop-blur-xl p-1.5 sm:p-2 shadow-elevated border border-white/80 transition-all ${className}`}
+      className={`pointer-events-auto w-fit max-w-full rounded-2xl lg-glass p-1.5 sm:p-2 transition-all ${className}`}
     >
       <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 xl:gap-2">
         {/* Transaction Pill Switcher: [ Barchasi | Sotuv | Ijara ] */}
@@ -251,7 +251,7 @@ export function FloatingSearchPanel({
           </button>
 
           {districtOpen && (
-            <div className="absolute top-full left-0 mt-1.5 w-48 rounded-2xl border border-white/80 bg-white/95 backdrop-blur-xl p-1.5 shadow-elevated z-50 animate-in fade-in">
+            <div className="absolute top-full left-0 mt-1.5 w-48 rounded-2xl border border-white/80 lg-glass p-1.5 z-50 animate-in fade-in">
               {districts.map((d) => (
                 <button
                   key={d.key}
@@ -297,7 +297,7 @@ export function FloatingSearchPanel({
           </button>
 
           {typeOpen && (
-            <div className="absolute top-full left-0 mt-1.5 w-52 rounded-2xl border border-white/80 bg-white/95 backdrop-blur-xl p-1.5 shadow-elevated z-50 animate-in fade-in">
+            <div className="absolute top-full left-0 mt-1.5 w-52 rounded-2xl border border-white/80 lg-glass p-1.5 z-50 animate-in fade-in">
               {propertyTypes.map((pt) => (
                 <button
                   key={pt.key}
@@ -343,7 +343,7 @@ export function FloatingSearchPanel({
           </button>
 
           {priceOpen && (
-            <div className="absolute top-full left-0 sm:left-auto sm:right-0 mt-1.5 w-56 rounded-2xl border border-white/80 bg-white/95 backdrop-blur-xl p-1.5 shadow-elevated z-50 animate-in fade-in">
+            <div className="absolute top-full left-0 sm:left-auto sm:right-0 mt-1.5 w-56 rounded-2xl border border-white/80 lg-glass p-1.5 z-50 animate-in fade-in">
               {priceOptions.map((po) => (
                 <button
                   key={po.key}

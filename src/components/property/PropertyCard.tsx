@@ -84,7 +84,7 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
   return (
     <div
       onClick={handleCardClick}
-      className="group relative flex flex-col overflow-hidden rounded-2xl bg-white border border-[#dee8e3] shadow-card hover:shadow-elevated transition-all duration-200 cursor-pointer"
+      className="group relative flex flex-col overflow-hidden rounded-2xl lg-card lg-hover-lift lg-press cursor-pointer"
     >
       
       {/* Property Image Container — 3:4 Vertical Aspect Ratio with Cover & Fullscreen Gallery Trigger */}
@@ -99,7 +99,7 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
           alt={title}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
         />
 
         {/* Photo Counter Badge & View Fullscreen Indicator */}

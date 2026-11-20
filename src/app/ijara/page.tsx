@@ -454,7 +454,7 @@ export default function RentPage() {
           {/* Primary View Switcher: [ ХАРИТА | КАТАЛОГ ] */}
           <div
             data-testid="desktop-primary-view-switcher"
-            className="flex items-center p-1 rounded-2xl bg-white/95 backdrop-blur-xl shadow-elevated border border-white/90 transition-all"
+            className="flex items-center p-1 rounded-2xl lg-glass transition-all"
           >
             <button
               type="button"
@@ -494,7 +494,7 @@ export default function RentPage() {
           </div>
 
           {/* Segmented Map Switcher: [ Sxema | Satellite ] */}
-          <div data-testid="map-mode-switcher" className="flex items-center p-1 rounded-2xl bg-white/90 backdrop-blur-xl shadow-elevated border border-white/80 transition-all">
+          <div data-testid="map-mode-switcher" className="flex items-center p-1 rounded-2xl lg-glass transition-all">
             <button
               data-testid="map-mode-standard"
               onClick={() => setMapMode("standard")}
