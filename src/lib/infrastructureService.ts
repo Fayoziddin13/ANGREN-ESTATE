@@ -500,6 +500,9 @@ export function getInfrastructureAround(
   return summaries.sort((a, b) => a.items[0].distanceMeters - b.items[0].distanceMeters);
 }
 
+const OVERPASS_ENDPOINT_TIMEOUT_MS = 5000;
+const OVERPASS_TOTAL_BUDGET_MS = 9000;
+
 export const OVERPASS_ENDPOINTS = [
   "https://lz4.overpass-api.de/api/interpreter",
   "https://z.overpass-api.de/api/interpreter",
@@ -686,7 +689,13 @@ export async function fetchNearbyPOIsFromOverpass(
 );
 out center 60;`;
 
+  // Overall time budget: without it, five slow mirrors × 8 s kept the property page
+  // waiting ~18–40 s before falling back to verified local POIs.
+  const deadline = Date.now() + OVERPASS_TOTAL_BUDGET_MS;
+
   for (const ep of OVERPASS_ENDPOINTS) {
+    const remaining = deadline - Date.now();
+    if (remaining < 1000) break;
     try {
       const res = await fetch(ep, {
         method: "POST",
@@ -696,7 +705,7 @@ out center 60;`;
           Accept: "application/json",
         },
         body: "data=" + encodeURIComponent(query),
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(Math.min(OVERPASS_ENDPOINT_TIMEOUT_MS, remaining)),
       });
 
       if (!res.ok) continue;

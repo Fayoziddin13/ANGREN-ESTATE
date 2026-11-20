@@ -13,10 +13,7 @@ import {
   RotateCcw,
   Sparkles,
   MapPin,
-  Lock,
   KeyRound,
-  Eye,
-  EyeOff,
   AlertTriangle,
   Globe,
   Sliders,
@@ -38,14 +35,10 @@ export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState<"general" | "map" | "contacts" | "security">("general");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Password change state
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [passwordLoading, setPasswordLoading] = useState(false);
-  const [passwordError, setPasswordError] = useState<string | null>(null);
-  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
+  // Telegram webhook re-registration state
+  const [tgSetupLoading, setTgSetupLoading] = useState(false);
+  const [tgSetupError, setTgSetupError] = useState<string | null>(null);
+  const [tgSetupSuccess, setTgSetupSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (isLoaded) {
@@ -87,33 +80,29 @@ export default function AdminSettingsPage() {
     }
   };
 
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setPasswordError(null);
-    setPasswordSuccess(null);
-    setPasswordLoading(true);
+  const handleTelegramSetup = async () => {
+    setTgSetupError(null);
+    setTgSetupSuccess(null);
+    setTgSetupLoading(true);
 
     try {
-      const res = await fetch("/api/admin/auth/change-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
-      });
+      const res = await fetch("/api/admin/telegram/setup", { method: "POST" });
       const data = await res.json();
 
-      if (!res.ok) {
-        setPasswordError(data.error || "Xatolik yuz berdi");
+      if (!res.ok || !data.success) {
+        setTgSetupError(data.error || (locale === "uz" ? "Xatolik yuz berdi" : "Произошла ошибка"));
       } else {
-        setPasswordSuccess(data.message || "Parol muvaffaqiyatli yangilandi");
-        setCurrentPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
-        showToast(locale === "uz" ? "Parol yangilandi" : "Пароль обновлен");
+        const msg =
+          locale === "uz"
+            ? "Webhook, menyu tugmasi va buyruqlar qayta sozlandi"
+            : "Webhook, кнопка меню и команды перенастроены";
+        setTgSetupSuccess(msg);
+        showToast(msg);
       }
     } catch {
-      setPasswordError("Server bilan ulanishda xatolik yuz berdi");
+      setTgSetupError(locale === "uz" ? "Server bilan ulanishda xatolik yuz berdi" : "Ошибка связи с сервером");
     } finally {
-      setPasswordLoading(false);
+      setTgSetupLoading(false);
     }
   };
 
@@ -481,103 +470,64 @@ export default function AdminSettingsPage() {
             </div>
           </div>
 
-          {/* Change Admin Password Card */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
+          {/* Admin Password Info Card */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
             <div>
               <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
                 <KeyRound className="w-5 h-5 text-[#167d4f]" />
-                {locale === "uz" ? "Admin Parolini O‘zgartirish" : "Смена пароля администратора"}
+                {locale === "uz" ? "Admin paroli" : "Пароль администратора"}
               </h2>
               <p className="text-xs text-slate-600 font-medium mt-1">
                 {locale === "uz"
-                  ? "Admin login hisobi: admin@angrenestate.uz"
-                  : "Учетная запись администратора: admin@angrenestate.uz"}
+                  ? "Parol server sozlamalarida (Vercel → Environment Variables → ADMIN_PASSWORD) saqlanadi. Uni bu sahifadan o‘zgartirib bo‘lmaydi: yangi qiymatni Vercel’da kiriting va qayta deploy qiling."
+                  : "Пароль хранится в настройках сервера (Vercel → Environment Variables → ADMIN_PASSWORD). Изменить его с этой страницы нельзя: задайте новое значение в Vercel и выполните повторный деплой."}
+              </p>
+            </div>
+          </div>
+
+          {/* Telegram Webhook Card */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+            <div>
+              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Send className="w-5 h-5 text-[#167d4f]" />
+                {locale === "uz" ? "Telegram webhook’ni qayta sozlash" : "Перенастройка Telegram webhook"}
+              </h2>
+              <p className="text-xs text-slate-600 font-medium mt-1">
+                {locale === "uz"
+                  ? "Webhook maxfiy kalit bilan himoyalangan. Deploydan keyin yoki bot javob bermay qolsa, shu tugmani bir marta bosing: webhook, Mini App menyu tugmasi va buyruqlar qayta ro‘yxatdan o‘tkaziladi."
+                  : "Webhook защищён секретным ключом. После деплоя или если бот перестал отвечать, нажмите кнопку один раз: webhook, кнопка Mini App и команды будут зарегистрированы заново."}
               </p>
             </div>
 
-            {passwordError && (
+            {tgSetupError && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-xs font-semibold text-red-700 flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 flex-shrink-0 text-red-600" />
-                <span>{passwordError}</span>
+                <span>{tgSetupError}</span>
               </div>
             )}
 
-            {passwordSuccess && (
+            {tgSetupSuccess && (
               <div className="p-4 bg-[#eaf5f0]/60 border border-[#bdd1c8] rounded-xl text-xs font-semibold text-[#167d4f] flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-[#167d4f]" />
-                <span>{passwordSuccess}</span>
+                <span>{tgSetupSuccess}</span>
               </div>
             )}
 
-            <form onSubmit={handleChangePassword} className="space-y-4 max-w-lg">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  {locale === "uz" ? "Joriy Parol" : "Текущий пароль"}
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    required
-                    placeholder="••••••••••••"
-                    className="w-full bg-white border border-slate-300 rounded-xl pl-4 pr-11 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#167d4f] focus:ring-1 focus:ring-[#167d4f]"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  {locale === "uz" ? "Yangi Parol" : "Новый пароль"}
-                </label>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                  placeholder="••••••••••••"
-                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#167d4f] focus:ring-1 focus:ring-[#167d4f]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  {locale === "uz" ? "Yangi Parolni Qayta Kiriting" : "Повторите новый пароль"}
-                </label>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  placeholder="••••••••••••"
-                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#167d4f] focus:ring-1 focus:ring-[#167d4f]"
-                />
-              </div>
-
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={passwordLoading}
-                  className="w-full py-3 px-5 bg-[#167d4f] hover:bg-[#167d4f] disabled:opacity-50 text-white text-sm font-bold rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2"
-                >
-                  <Lock className="w-4 h-4" />
-                  {passwordLoading
-                    ? locale === "uz"
-                      ? "Tekshirilmoqda..."
-                      : "Проверка..."
-                    : locale === "uz"
-                    ? "Parolni Yangilash"
-                    : "Обновить пароль"}
-                </button>
-              </div>
-            </form>
+            <button
+              type="button"
+              onClick={handleTelegramSetup}
+              disabled={tgSetupLoading}
+              className="w-full max-w-lg py-3 px-5 bg-[#167d4f] hover:bg-[#167d4f] disabled:opacity-50 text-white text-sm font-bold rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2"
+            >
+              <RotateCcw className="w-4 h-4" />
+              {tgSetupLoading
+                ? locale === "uz"
+                  ? "Sozlanmoqda..."
+                  : "Настройка..."
+                : locale === "uz"
+                ? "Webhook’ni qayta sozlash"
+                : "Перенастроить webhook"}
+            </button>
           </div>
         </div>
       )}

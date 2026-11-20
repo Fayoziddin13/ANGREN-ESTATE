@@ -145,6 +145,9 @@ export default function AdminPropertiesPage() {
             : "Объект успешно опубликован в канале @angren_estate!"
         );
         setChannelModalProperty(null);
+      } else if (res.status === 409) {
+        // A publish for this listing is already in progress — not a failure.
+        showToast(data?.error || (locale === "uz" ? "Amal bajarilmoqda, biroz kuting" : "Операция уже выполняется"));
       } else {
         channelModalProperty.telegram_channel_status = "error";
         showToast(

@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { fetchJsonShared } from "./sharedFetch";
 import {
   CMSContent,
   CMSFullPayload,
@@ -178,9 +179,9 @@ export function useCMS() {
         } catch {}
       }
 
-      const res = await fetch("/api/content", { cache: "no-store" });
+      const res = await fetchJsonShared("/api/content", { cache: "no-store" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+      const data = res.data;
       if (data.success && data.content) {
         setFullPayload(data.content);
       }

@@ -5,6 +5,7 @@ import { X, Plus, CheckCircle2, Phone, Send, Building2, Home, MapPin, DollarSign
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import { useTelegram } from "@/context/TelegramContext";
+import { getSupabaseAuthHeaders } from "@/lib/authHeaders";
 
 interface PublicListingSubmissionModalProps {
   isOpen: boolean;
@@ -180,9 +181,10 @@ export function PublicListingSubmissionModal({ isOpen, onClose }: PublicListingS
     try {
       const normalizedPhone = cleanPhone.startsWith("+") ? cleanPhone : `+${cleanPhone}`;
 
+      const authHeaders = await getSupabaseAuthHeaders();
       const res = await fetch("/api/leads", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders },
         body: JSON.stringify({
           type: "property_listing_request",
           client_name: clientName.trim(),

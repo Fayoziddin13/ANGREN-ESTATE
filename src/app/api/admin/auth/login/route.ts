@@ -7,15 +7,38 @@ import {
   resetRateLimit,
   ADMIN_COOKIE_NAME,
 } from "@/lib/admin-auth";
+import { supabaseAdmin, isSupabaseConfigured } from "@/lib/supabaseServer";
+import { getTrustedClientIp, hashForRateLimit } from "@/lib/requestIdentity";
 
 export async function POST(request: NextRequest) {
   try {
-    const ip =
-      request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-      request.headers.get("x-real-ip") ||
-      "127.0.0.1";
+    const ip = getTrustedClientIp(request);
 
-    // 1. Rate Limit Check
+    // 1a. Shared rate limit across all serverless instances (the in-memory store
+    // below is per-instance only). Counts every attempt: 10 per IP per 15 minutes.
+    if (isSupabaseConfigured) {
+      try {
+        const { data: allowed, error: rlError } = await supabaseAdmin.rpc("check_rate_limit", {
+          p_key: `admin_login:${hashForRateLimit(ip)}`,
+          p_max: 10,
+          p_window_seconds: 900,
+        });
+        if (!rlError && allowed === false) {
+          return NextResponse.json(
+            {
+              error: "Too many login attempts. Please try again later.",
+              retryAfterSec: 900,
+              locked: true,
+            },
+            { status: 429, headers: { "Retry-After": "900" } }
+          );
+        }
+      } catch {
+        // Fall back to the in-memory limiter below
+      }
+    }
+
+    // 1b. Per-instance rate limit check
     const rateCheck = checkRateLimit(ip);
     if (!rateCheck.allowed) {
       return NextResponse.json(

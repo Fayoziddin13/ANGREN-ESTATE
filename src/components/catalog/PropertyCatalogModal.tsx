@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import Image from "next/image";
 import {
   ArrowLeft,
@@ -23,6 +23,8 @@ import { useCurrency } from "@/context/CurrencyContext";
 import { useFavorites } from "@/lib/favoriteStore";
 import { formatPublishedDate } from "@/lib/dateFormat";
 import { formatPropertyPrice } from "@/lib/currency";
+
+type CatalogSortMode = "default" | "newest" | "price_asc" | "price_desc" | "area_desc";
 
 interface PropertyCatalogModalProps {
   isOpen: boolean;
@@ -52,6 +54,41 @@ export function PropertyCatalogModal({
   const { locale, t } = useLanguage();
   const { currency, exchangeRate } = useCurrency();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const [sortMode, setSortMode] = useState<CatalogSortMode>("default");
+
+  // Sorting (previously the catalog could not be ordered by price, date or area).
+  // "default" keeps the order provided by the page.
+  const sortedProperties = useMemo(() => {
+    if (sortMode === "default") return properties;
+    const rate = exchangeRate || 12800;
+    const usdPrice = (p: Property) => {
+      const usd = Number(p.price_usd) || Number(p.price_uzs || p.price || 0) / rate;
+      return usd > 0 ? usd : null; // negotiable / missing price
+    };
+    const publishedTime = (p: Property) =>
+      new Date((p as any).published_at || p.created_at || 0).getTime() || 0;
+    const list = [...properties];
+    switch (sortMode) {
+      case "newest":
+        return list.sort((a, b) => publishedTime(b) - publishedTime(a));
+      case "price_asc":
+      case "price_desc":
+        return list.sort((a, b) => {
+          const pa = usdPrice(a);
+          const pb = usdPrice(b);
+          if (pa === null && pb === null) return 0;
+          if (pa === null) return 1; // listings without a price go last
+          if (pb === null) return -1;
+          return sortMode === "price_asc" ? pa - pb : pb - pa;
+        });
+      case "area_desc":
+        return list.sort(
+          (a, b) => Number(b.area_sqm || b.area || 0) - Number(a.area_sqm || a.area || 0)
+        );
+      default:
+        return list;
+    }
+  }, [properties, sortMode, exchangeRate]);
 
   if (!isOpen) return null;
 
@@ -162,11 +199,30 @@ export function PropertyCatalogModal({
                 ? `Angren shahri bo‘yicha ${properties.length} ta faol e’lon`
                 : `Найдено ${properties.length} активных объявлений в Ангрене`}
             </span>
-            {searchQuery && (
-              <span className="italic">
-                "{searchQuery}" {locale === "uz" ? "bo‘yicha qidiruv" : "поиск"}
-              </span>
-            )}
+            <div className="flex items-center gap-3">
+              {searchQuery && (
+                <span className="italic">
+                  "{searchQuery}" {locale === "uz" ? "bo‘yicha qidiruv" : "поиск"}
+                </span>
+              )}
+              {properties.length > 1 && (
+                <label className="flex items-center gap-1.5">
+                  <span className="sr-only sm:not-sr-only">{locale === "uz" ? "Saralash:" : "Сортировка:"}</span>
+                  <select
+                    value={sortMode}
+                    onChange={(e) => setSortMode(e.target.value as CatalogSortMode)}
+                    className="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-700 focus:outline-none focus:border-[#167d4f]"
+                    aria-label={locale === "uz" ? "Saralash" : "Сортировка"}
+                  >
+                    <option value="default">{locale === "uz" ? "Tavsiya etilgan" : "Рекомендуемые"}</option>
+                    <option value="newest">{locale === "uz" ? "Eng yangilari" : "Сначала новые"}</option>
+                    <option value="price_asc">{locale === "uz" ? "Arzonroq" : "Сначала дешевле"}</option>
+                    <option value="price_desc">{locale === "uz" ? "Qimmatroq" : "Сначала дороже"}</option>
+                    <option value="area_desc">{locale === "uz" ? "Kattaroq maydon" : "Больше площадь"}</option>
+                  </select>
+                </label>
+              )}
+            </div>
           </div>
 
           {/* Empty State */}
@@ -197,7 +253,7 @@ export function PropertyCatalogModal({
           ) : (
             /* Properties Grid */
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-              {properties.map((property) => {
+              {sortedProperties.map((property) => {
                 const isFavorited = isFavorite(property.id);
                 const isSale = property.transaction_type === "sale";
                 const isHouse =

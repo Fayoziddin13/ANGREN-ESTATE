@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { getAdminSessionServer } from "@/lib/admin-auth";
 import {
   setTelegramMenuButton,
   setTelegramBotCommands,
@@ -11,13 +12,23 @@ import {
 
 export const dynamic = "force-dynamic";
 
+const SITE_URL = "https://angrenestate.uz";
+const WEBHOOK_URL = `${SITE_URL}/api/telegram/webhook`;
+
+/**
+ * Admin-only Telegram bot diagnostics and configuration.
+ * Lives under /api/admin so the middleware admin-session check applies;
+ * the route re-checks the session as defense in depth.
+ */
 export async function GET() {
+  const session = await getAdminSessionServer();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) {
-    return NextResponse.json({
-      configured: false,
-      site_url: "https://angrenestate.uz",
-    });
+    return NextResponse.json({ configured: false, site_url: SITE_URL });
   }
 
   try {
@@ -30,7 +41,7 @@ export async function GET() {
 
     return NextResponse.json({
       configured: true,
-      site_url: "https://angrenestate.uz",
+      site_url: SITE_URL,
       bot: botInfo?.result
         ? {
             id: botInfo.result.id,
@@ -44,14 +55,20 @@ export async function GET() {
       menuButton: menuButton?.result || menuButton,
     });
   } catch (err: any) {
-    return NextResponse.json({
-      configured: true,
-      error: err.message,
-    });
+    return NextResponse.json({ configured: true, error: err.message }, { status: 500 });
   }
 }
 
-export async function POST(req: NextRequest) {
+/**
+ * Re-registers the webhook (with the secret token), the Mini App menu button
+ * and the bot commands. Run once after every deploy that changes the webhook secret.
+ */
+export async function POST() {
+  const session = await getAdminSessionServer();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const token = process.env.TELEGRAM_BOT_TOKEN;
     if (!token) {
@@ -61,31 +78,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const webAppUrl = "https://angrenestate.uz";
-    const webhookUrl = "https://angrenestate.uz/api/telegram/webhook";
-
-    // 1. Configure Webhook
-    const webhookResult = await setTelegramWebhook(token, webhookUrl);
-
-    // 2. Configure Menu Button (🏠 ANGREN ESTATE)
-    const menuResult = await setTelegramMenuButton(token, webAppUrl);
-
-    // 3. Configure Commands (/start, /app)
+    const webhookResult = await setTelegramWebhook(token, WEBHOOK_URL);
+    const menuResult = await setTelegramMenuButton(token, SITE_URL);
     const commandsResult = await setTelegramBotCommands(token);
 
     return NextResponse.json({
       success: true,
-      webAppUrl,
-      webhookUrl,
+      webAppUrl: SITE_URL,
+      webhookUrl: WEBHOOK_URL,
       webhook: webhookResult,
       menuButton: menuResult,
       commands: commandsResult,
     });
   } catch (err: any) {
     console.error("[Telegram Setup API] Error:", err);
-    return NextResponse.json(
-      { success: false, error: err.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }

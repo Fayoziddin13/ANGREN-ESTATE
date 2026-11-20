@@ -296,6 +296,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 6b. Listing views counter (properties.views_count was never incremented).
+    // Counted at most once per session per listing per 30 minutes. Failures are
+    // ignored so analytics never breaks if the DB function is not deployed yet.
+    if (event_type === "property_view" && property_id) {
+      try {
+        const { data: firstView, error: rlErr } = await supabaseAdmin.rpc("check_rate_limit", {
+          p_key: `pv:${sessionId}:${property_id}`,
+          p_max: 1,
+          p_window_seconds: 1800,
+        });
+        if (!rlErr && firstView === true) {
+          await supabaseAdmin.rpc("increment_property_views", { p_property_id: property_id });
+        }
+      } catch {
+        // Non-blocking
+      }
+    }
+
     // 7. Response with Set-Cookie
     const response = NextResponse.json(
       { success: true, event_id: inserted?.id },

@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 
@@ -16,35 +17,45 @@ if (fs.existsSync(envPath)) {
 const botToken = process.env.TELEGRAM_BOT_TOKEN;
 const siteUrl = 'https://angrenestate.uz';
 
+// Must match getTelegramWebhookSecret() in src/lib/telegramWebhookSecret.ts.
+// The production server uses TELEGRAM_WEBHOOK_SECRET from Vercel when it is set,
+// otherwise a value derived from the bot token. This script cannot see Vercel's
+// env, so it never derives silently: without a local TELEGRAM_WEBHOOK_SECRET it
+// requires --derived-secret, confirming production does not set one either.
+// Preferred: admin panel → Sozlamalar → Xavfsizlik → "Webhook’ni qayta sozlash",
+// which always uses the server's own configuration.
+function getWebhookSecret(token) {
+  const explicit = (process.env.TELEGRAM_WEBHOOK_SECRET || '').trim();
+  if (explicit) {
+    if (!/^[A-Za-z0-9_-]{16,256}$/.test(explicit)) {
+      throw new Error('TELEGRAM_WEBHOOK_SECRET must be 16-256 chars of A-Z a-z 0-9 _ -');
+    }
+    return explicit;
+  }
+  if (!process.argv.includes('--derived-secret')) {
+    throw new Error(
+      'TELEGRAM_WEBHOOK_SECRET is not set locally. If it is set in Vercel, copy the same value into .env.local; ' +
+        'if Vercel does not set it either, re-run with --derived-secret. ' +
+        'Safer option: use the admin panel button "Webhook’ni qayta sozlash".'
+    );
+  }
+  return crypto
+    .createHmac('sha256', token)
+    .update('angren-estate:telegram-webhook-secret:v1')
+    .digest('base64url');
+}
+
 console.log('--- ANGREN ESTATE Telegram Bot Setup ---');
 console.log('Site URL:', siteUrl);
 
 async function main() {
   if (!botToken) {
-    console.log('TELEGRAM_BOT_TOKEN not found in local .env.local.');
-    console.log('Triggering production Telegram setup on https://angrenestate.uz/api/telegram/setup ...');
-    try {
-      const prodRes = await fetch('https://angrenestate.uz/api/telegram/setup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      const prodData = await prodRes.json();
-      if (prodData.success) {
-        console.log('Production Telegram setup succeeded:');
-        console.log('- Webhook:', prodData.webhookUrl, '->', prodData.webhook?.ok ? 'OK' : prodData.webhook?.description);
-        console.log('- Menu Button:', prodData.menuButton?.ok ? 'OK' : prodData.menuButton?.description);
-        console.log('- Commands:', prodData.commands?.ok ? 'OK' : prodData.commands?.description);
-        return;
-      } else {
-        console.error('Production setup error:', prodData.error);
-        process.exitCode = 1;
-        return;
-      }
-    } catch (err) {
-      console.error('Network error during production setup:', err.message);
-      process.exitCode = 1;
-      return;
-    }
+    console.log('TELEGRAM_BOT_TOKEN not found in .env.local.');
+    console.log('Either add it locally, or sign in to the admin panel and use');
+    console.log('Sozlamalar → Xavfsizlik → "Telegram webhook’ni qayta sozlash"');
+    console.log('(POST /api/admin/telegram/setup, admin session required).');
+    process.exitCode = 1;
+    return;
   }
 
   try {
@@ -56,7 +67,7 @@ async function main() {
     }
     console.log(`Verified Bot: @${meData.result.username} (${meData.result.first_name})`);
 
-    // 2. Set Webhook
+    // 2. Set Webhook (with secret token so the server can verify Telegram deliveries)
     console.log('Configuring Webhook...');
     const hookRes = await fetch(`https://api.telegram.org/bot${botToken}/setWebhook`, {
       method: 'POST',
@@ -64,6 +75,8 @@ async function main() {
       body: JSON.stringify({
         url: `${siteUrl}/api/telegram/webhook`,
         allowed_updates: ['message', 'callback_query'],
+        drop_pending_updates: false,
+        secret_token: getWebhookSecret(botToken),
       }),
     });
     const hookData = await hookRes.json();
@@ -77,7 +90,7 @@ async function main() {
       body: JSON.stringify({
         menu_button: {
           type: 'web_app',
-          text: 'ANGREN ESTATE',
+          text: '🏠 ANGREN ESTATE',
           web_app: {
             url: siteUrl,
           },
@@ -87,7 +100,7 @@ async function main() {
     const menuData = await menuRes.json();
     console.log('setChatMenuButton result:', menuData.ok ? 'SUCCESS' : menuData.description);
 
-    // 4. Set Bot Commands
+    // 4. Set Bot Commands (same list as setTelegramBotCommands in src/lib/telegramServer.ts)
     console.log('Registering bot commands...');
     const cmdRes = await fetch(`https://api.telegram.org/bot${botToken}/setMyCommands`, {
       method: 'POST',
@@ -96,6 +109,7 @@ async function main() {
         commands: [
           { command: 'start', description: 'Boshlash / Запустить бота' },
           { command: 'app', description: 'ANGREN ESTATE Mini App' },
+          { command: 'ariza', description: 'Ariza qoldirish / Оставить заявку' },
         ],
       }),
     });

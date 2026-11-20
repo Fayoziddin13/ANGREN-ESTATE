@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { supabaseAdmin } from "./supabaseServer";
 import { isSupabaseConfigured } from "./supabase";
+import { getTelegramWebhookSecret } from "./telegramWebhookSecret";
 import {
   TelegramSubscriber,
   TelegramPropertyNotificationRecord,
@@ -146,6 +147,9 @@ export async function setTelegramWebhook(
   const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
   if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not configured");
 
+  const secretToken = getTelegramWebhookSecret(token);
+  if (!secretToken) throw new Error("Telegram webhook secret could not be derived");
+
   const response = await fetch(
     `https://api.telegram.org/bot${token}/setWebhook`,
     {
@@ -155,6 +159,7 @@ export async function setTelegramWebhook(
         url: webhookUrl,
         allowed_updates: ["message", "callback_query"],
         drop_pending_updates: false,
+        secret_token: secretToken,
       }),
     }
   );
@@ -881,7 +886,11 @@ export async function upsertTelegramUser(
           last_name: user.last_name || existing.last_name || undefined,
           phone: effectivePhone,
           language: user.language || existing.language || lang,
-          notifications_enabled: true,
+          // Respect a previous mute: only an explicit value may change it.
+          notifications_enabled:
+            user.notifications_enabled !== undefined
+              ? user.notifications_enabled
+              : existing.notifications_enabled ?? true,
           registered_at: effectiveRegAt,
           is_registered: Boolean(effectivePhone || effectiveRegAt),
           last_welcome_message_id: user.last_welcome_message_id !== undefined ? (user.last_welcome_message_id || undefined) : undefined,
@@ -898,7 +907,7 @@ export async function upsertTelegramUser(
             last_name: subscriber.last_name || null,
             phone: subscriber.phone || null,
             language: subscriber.language,
-            notifications_enabled: true,
+            notifications_enabled: subscriber.notifications_enabled,
             registered_at: subscriber.registered_at || null,
             updated_at: now,
           })
@@ -973,8 +982,9 @@ export async function upsertTelegramUser(
     }
   }
 
-  // 3. Mirror to local file for dev resilience
-  try {
+  // 3. Mirror to local file only when Supabase is not configured (local dev).
+  // In production the filesystem is read-only and this only added latency.
+  if (!isSupabaseConfigured) try {
     const localList = await readLocalSubscribers();
     const existingIdx = localList.findIndex((u) => u.telegram_user_id === user.id);
     if (existingIdx !== -1) {
@@ -1050,21 +1060,24 @@ export async function setTelegramUserNotifications(
     } catch (e: any) {}
   }
 
-  const localList = await readLocalSubscribers();
-  const target = localList.find((u) => u.telegram_user_id === telegramUserId);
-  if (target) {
-    target.notifications_enabled = enabled;
-    target.updated_at = now;
-  } else {
-    localList.push({
-      telegram_user_id: telegramUserId,
-      language: "uz",
-      notifications_enabled: enabled,
-      created_at: now,
-      updated_at: now,
-    });
+  // Local file mirror only in local/dev mode (read-only filesystem in production).
+  if (!isSupabaseConfigured) {
+    const localList = await readLocalSubscribers();
+    const target = localList.find((u) => u.telegram_user_id === telegramUserId);
+    if (target) {
+      target.notifications_enabled = enabled;
+      target.updated_at = now;
+    } else {
+      localList.push({
+        telegram_user_id: telegramUserId,
+        language: "uz",
+        notifications_enabled: enabled,
+        created_at: now,
+        updated_at: now,
+      });
+    }
+    await writeLocalSubscribers(localList);
   }
-  await writeLocalSubscribers(localList);
   return true;
 }
 
@@ -1320,20 +1333,22 @@ export async function recordTelegramNotification(record: {
     } catch (e) {}
   }
 
-  // Local mirror
-  const localList = await readLocalNotifications();
-  const existingIdx = localList.findIndex(
-    (r) => r.property_id === record.property_id && r.telegram_user_id === record.telegram_user_id
-  );
-  if (existingIdx !== -1) {
-    localList[existingIdx] = {
-      ...localList[existingIdx],
-      ...entry,
-    };
-  } else {
-    localList.push(entry);
+  // Local mirror only in local/dev mode (read-only filesystem in production).
+  if (!isSupabaseConfigured) {
+    const localList = await readLocalNotifications();
+    const existingIdx = localList.findIndex(
+      (r) => r.property_id === record.property_id && r.telegram_user_id === record.telegram_user_id
+    );
+    if (existingIdx !== -1) {
+      localList[existingIdx] = {
+        ...localList[existingIdx],
+        ...entry,
+      };
+    } else {
+      localList.push(entry);
+    }
+    await writeLocalNotifications(localList);
   }
-  await writeLocalNotifications(localList);
 
   return entry;
 }

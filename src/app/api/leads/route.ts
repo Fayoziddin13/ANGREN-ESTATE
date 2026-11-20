@@ -196,20 +196,20 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        if (!authUser && (body.user_id || metadata?.user_id)) {
-          const claimedId = String(body.user_id || metadata?.user_id).trim();
+        // Identity comes only from a verified Supabase session (cookie or Bearer JWT).
+        // A client-supplied user_id is never trusted: profile IDs are guessable
+        // (e.g. tg_<telegram_id>) and accepting them let anyone act as any user.
+        if (authUser) {
           const { data: profile } = await supabaseAdmin
             .from("profiles")
-            .select("id, email, phone, status, role, full_name, auth_provider, google_id")
-            .eq("id", claimedId)
+            .select("status")
+            .eq("id", authUser.id)
             .maybeSingle();
-
-          if (profile && profile.status !== "disabled") {
-            authUser = {
-              id: profile.id,
-              email: profile.email,
-              user_metadata: { sub: profile.google_id || profile.id, full_name: profile.full_name },
-            };
+          if (profile?.status === "disabled") {
+            return NextResponse.json(
+              { success: false, error: "ACCOUNT_DISABLED", message: "Hisob ma’muriyat tomonidan bloklangan" },
+              { status: 403 }
+            );
           }
         }
 
@@ -343,14 +343,26 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Identity fields are taken only from server-verified values; any client-sent
+    // copies are dropped so a lead cannot be attributed to someone else.
+    const {
+      user_id: _clientUserId,
+      google_id: _clientGoogleId,
+      user_email: _clientEmail,
+      telegram_user_id: _clientTgId,
+      telegram_username: _clientTgUsername,
+      registration_source: _clientRegSource,
+      ...clientMetadata
+    } = typeof metadata === "object" && metadata !== null ? metadata : ({} as Record<string, any>);
+
     const leadMetadata = {
-      ...(typeof metadata === "object" && metadata !== null ? metadata : {}),
+      ...clientMetadata,
       registration_source: verifiedRegistrationSource || (type === "telegram" ? "telegram" : "direct"),
-      user_id: verifiedUserId || metadata?.user_id || null,
-      google_id: verifiedGoogleId || metadata?.google_id || null,
-      user_email: verifiedEmail || metadata?.user_email || null,
-      telegram_user_id: verifiedTelegramUserId || metadata?.telegram_user_id || null,
-      telegram_username: verifiedTelegramUsername || metadata?.telegram_username || null,
+      user_id: verifiedUserId,
+      google_id: verifiedGoogleId,
+      user_email: verifiedEmail,
+      telegram_user_id: verifiedTelegramUserId,
+      telegram_username: verifiedTelegramUsername,
       ...(isListingRequest
         ? {
             lead_type: "property_listing_request",
@@ -442,8 +454,8 @@ export async function POST(req: NextRequest) {
         price: body.price || metadata?.price || undefined,
         currency: body.currency || metadata?.currency || "USD",
         description: (message || body.description || metadata?.description || "").trim() || undefined,
-        telegram_username: (verifiedTelegramUsername || metadata?.telegram_username) ? String(verifiedTelegramUsername || metadata.telegram_username).trim() : null,
-        telegram_user_id: (verifiedTelegramUserId || metadata?.telegram_user_id) ? String(verifiedTelegramUserId || metadata.telegram_user_id).trim() : null,
+        telegram_username: verifiedTelegramUsername ? String(verifiedTelegramUsername).trim() : null,
+        telegram_user_id: verifiedTelegramUserId ? String(verifiedTelegramUserId) : null,
         created_at: newLeadRow.created_at,
       };
 
@@ -452,8 +464,8 @@ export async function POST(req: NextRequest) {
       console.warn("[Leads API] Admin Telegram notification failed non-critically:", notifErr?.message || notifErr);
     }
 
-    // If authenticated user had profile, update phone and auth credentials in profiles table
-    const targetUserId = verifiedUserId || metadata?.user_id;
+    // Only a server-verified user may have their own profile phone updated.
+    const targetUserId = verifiedUserId;
     if (targetUserId && normalizedPhone) {
       try {
         const profileUpdates: any = {

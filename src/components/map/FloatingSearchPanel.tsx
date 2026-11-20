@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { fetchJsonShared } from "@/lib/sharedFetch";
 import { MapPin, Home, Coins, ChevronDown, RotateCcw, Check, Search, X, SlidersHorizontal, Bookmark, Plus } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCurrency } from "@/context/CurrencyContext";
@@ -60,10 +61,9 @@ export function FloatingSearchPanel({
   const [hududList, setHududList] = useState<HududItem[]>(DEFAULT_ANGREN_HUDUDS);
 
   useEffect(() => {
-    fetch("/api/hududs")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.success && Array.isArray(d.hududs) && d.hududs.length > 0) {
+    fetchJsonShared("/api/hududs")
+      .then(({ data: d }) => {
+        if (d?.success && Array.isArray(d.hududs) && d.hududs.length > 0) {
           setHududList(d.hududs);
         }
       })
