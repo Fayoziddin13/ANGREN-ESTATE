@@ -1,5 +1,6 @@
 "use client";
 
+import { LiquidThumb } from "@/components/ui/LiquidThumb";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -167,12 +168,13 @@ export default function AdminDashboardPage() {
             <button
               key={filter.key}
               onClick={() => setDateFilter(filter.key)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
+              className={`relative isolate px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
                 dateFilter === filter.key
-                  ? "bg-[#167d4f] text-white shadow-xs"
+                  ? "text-white"
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
               }`}
             >
+              {dateFilter === filter.key && <LiquidThumb id="adm-dash-dateFilter" />}
               {filter.label}
             </button>
           ))}

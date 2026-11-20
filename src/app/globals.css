@@ -429,3 +429,65 @@ body.is-telegram {
 .lucide[stroke-width="2"] {
   stroke-width: 1.85;
 }
+
+/* =========================================================================
+   LIQUID MOTION — selection thumbs, page entrance, press feedback.
+   Kept outside @layer: some class names are built at runtime and would be
+   purged from a Tailwind layer.
+   ========================================================================= */
+
+/* Glass "thumb" that glides between options of a segmented control. */
+.lg-thumb {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.lg-thumb-brand {
+  background: linear-gradient(180deg, #1b8d5a 0%, #167d4f 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.08),
+    0 6px 14px -6px rgba(22, 125, 79, 0.55);
+}
+.lg-thumb-light {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.12) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 12px -6px rgba(0, 0, 0, 0.3);
+}
+.lg-thumb-white {
+  background: #ffffff;
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    0 1px 2px rgba(11, 56, 36, 0.08),
+    0 6px 14px -8px rgba(11, 56, 36, 0.25);
+}
+
+/* Calm page entrance on navigation. Opacity only: a transform here would
+   re-anchor fixed toolbars/sheets inside <main> while it plays. */
+@keyframes lg-page-enter {
+  from { opacity: 0; }
+}
+main,
+.lg-page-enter {
+  animation: lg-page-enter 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+
+/* Gentle, uniform press feedback for every button (independent `scale`
+   property, so it never fights framer-motion or Tailwind transforms). */
+button,
+[role="button"] {
+  transition-property: color, background-color, border-color, box-shadow, opacity, filter, scale;
+  transition-duration: 220ms;
+  transition-timing-function: var(--ease-ios-spring);
+}
+button:not(:disabled):active,
+[role="button"]:active {
+  scale: 0.98;
+}
+
+/* Glass surfaces catch a little more light while pressed. */
+.lg-glass-chip:active,
+.lg-glass:active {
+  filter: brightness(1.04);
+}

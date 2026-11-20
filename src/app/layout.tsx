@@ -9,6 +9,7 @@ import { TelegramMiniAppGuard } from "@/components/telegram/TelegramMiniAppGuard
 import { AuthModal } from "@/components/auth/AuthModal";
 import { GlobalModals } from "@/components/common/GlobalModals";
 import { getPublicSiteUrl } from "@/lib/siteUrl";
+import { MotionProvider } from "@/components/common/MotionProvider";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -59,6 +60,7 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased selection:bg-brand-light selection:text-brand-dark">
+        <MotionProvider>
         <LanguageProvider>
           <CurrencyProvider>
             <AuthProvider>
@@ -72,6 +74,7 @@ export default function RootLayout({
             </AuthProvider>
           </CurrencyProvider>
         </LanguageProvider>
+        </MotionProvider>
       </body>
     </html>
   );

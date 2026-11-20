@@ -1,5 +1,6 @@
 "use client";
 
+import { LiquidThumb } from "@/components/ui/LiquidThumb";
 import React from "react";
 import { Search, Map, Layers, SlidersHorizontal, X } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
@@ -94,12 +95,13 @@ export function MobileMapControls({
           type="button"
           data-testid="mobile-view-map"
           onClick={() => onViewChange("map")}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
+          className={`relative isolate flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
             activeView === "map"
-              ? "lg-btn-primary"
+              ? "text-white"
               : "text-slate-600 hover:text-slate-900 active:bg-slate-100/60"
           }`}
         >
+          {activeView === "map" && <LiquidThumb id="mctrl-activeView" />}
           <Map className="h-3.5 w-3.5" />
           <span>{locale === "uz" ? "XARITA" : "КАРТА"}</span>
         </button>
@@ -108,12 +110,13 @@ export function MobileMapControls({
           type="button"
           data-testid="mobile-view-catalog"
           onClick={() => onViewChange("catalog")}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
+          className={`relative isolate flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
             activeView === "catalog"
-              ? "lg-btn-primary"
+              ? "text-white"
               : "text-slate-600 hover:text-slate-900 active:bg-slate-100/60"
           }`}
         >
+          {activeView === "catalog" && <LiquidThumb id="mctrl-activeView" />}
           <Layers className="h-3.5 w-3.5" />
           <span>{locale === "uz" ? "KATALOG" : "КАТАЛОГ"}</span>
           <span

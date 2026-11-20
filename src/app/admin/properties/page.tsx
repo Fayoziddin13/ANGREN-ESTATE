@@ -1,5 +1,6 @@
 "use client";
 
+import { LiquidThumb } from "@/components/ui/LiquidThumb";
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -331,12 +332,13 @@ export default function AdminPropertiesPage() {
           <button
             key={tab.key}
             onClick={() => setSelectedStatus(tab.key)}
-            className={`px-3.5 py-2 rounded-xl transition-all whitespace-nowrap flex items-center gap-2 ${
+            className={`relative isolate px-3.5 py-2 rounded-xl transition-all whitespace-nowrap flex items-center gap-2 ${
               selectedStatus === tab.key
-                ? "bg-[#167d4f] text-white shadow-xs"
+                ? "text-white"
                 : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
             }`}
           >
+            {selectedStatus === tab.key && <LiquidThumb id="adm-props-selectedStatus" />}
             <span>{tab.label}</span>
             <span
               className={`px-1.5 py-0.5 rounded-full text-[10px] ${

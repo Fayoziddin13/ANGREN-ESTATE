@@ -1,5 +1,6 @@
 "use client";
 
+import { LiquidThumb } from "@/components/ui/LiquidThumb";
 import React, { useState, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Header } from "@/components/layout/Header";
@@ -460,12 +461,13 @@ export default function BuyPage() {
               type="button"
               data-testid="view-mode-map-desktop"
               onClick={() => setActiveView("map")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+              className={`relative isolate flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
                 activeView === "map"
-                  ? "bg-[#167d4f] text-white shadow-card"
+                  ? "text-white"
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/60"
               }`}
             >
+              {activeView === "map" && <LiquidThumb id="buy-activeView" />}
               <Map className="h-3.5 w-3.5" />
               <span>{locale === "uz" ? "XARITA" : "КАРТА"}</span>
             </button>
@@ -473,12 +475,13 @@ export default function BuyPage() {
               type="button"
               data-testid="view-mode-catalog-desktop"
               onClick={() => setActiveView("catalog")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+              className={`relative isolate flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
                 activeView === "catalog"
-                  ? "bg-[#167d4f] text-white shadow-card"
+                  ? "text-white"
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/60"
               }`}
             >
+              {activeView === "catalog" && <LiquidThumb id="buy-activeView" />}
               <Layers className="h-3.5 w-3.5" />
               <span>{locale === "uz" ? "KATALOG" : "КАТАЛОГ"}</span>
               <span
@@ -498,24 +501,26 @@ export default function BuyPage() {
             <button
               data-testid="map-mode-standard"
               onClick={() => setMapMode("standard")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              className={`relative isolate flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 mapMode === "standard"
-                  ? "bg-[#167d4f] text-white shadow-card"
+                  ? "text-white"
                   : "text-gray-600 hover:text-gray-900 hover:bg-white/60"
               }`}
             >
+              {mapMode === "standard" && <LiquidThumb id="buy-mapMode" />}
               <Map className="h-3.5 w-3.5" />
               <span>{t.mapSection.standard}</span>
             </button>
             <button
               data-testid="map-mode-satellite"
               onClick={() => setMapMode("satellite")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              className={`relative isolate flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 mapMode === "satellite"
-                  ? "bg-[#167d4f] text-white shadow-card"
+                  ? "text-white"
                   : "text-gray-600 hover:text-gray-900 hover:bg-white/60"
               }`}
             >
+              {mapMode === "satellite" && <LiquidThumb id="buy-mapMode" />}
               <Layers className="h-3.5 w-3.5" />
               <span>{t.mapSection.satellite}</span>
             </button>

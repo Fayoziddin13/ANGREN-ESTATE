@@ -1,5 +1,6 @@
 "use client";
 
+import { LiquidThumb } from "@/components/ui/LiquidThumb";
 import React, { useState, useEffect } from "react";
 import { fetchJsonShared } from "@/lib/sharedFetch";
 import { MapPin, Home, Coins, ChevronDown, RotateCcw, Check, Search, X, SlidersHorizontal, Bookmark, Plus } from "lucide-react";
@@ -171,32 +172,35 @@ export function FloatingSearchPanel({
         <div className="flex items-center h-9 rounded-xl bg-gray-100/90 p-1 shrink-0 border border-gray-200/60">
           <button
             onClick={() => onTransactionChange("all")}
-            className={`h-7 rounded-lg px-2.5 xl:px-3 text-[11.5px] font-bold transition-all ${
+            className={`relative isolate h-7 rounded-lg px-2.5 xl:px-3 text-[11.5px] font-bold transition-all ${
               transactionType === "all"
-                ? "bg-[#167d4f] text-white shadow-card"
+                ? "text-white"
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
+            {transactionType === "all" && <LiquidThumb id="search-transactionType" />}
             {t.common.all}
           </button>
           <button
             onClick={() => onTransactionChange("sale")}
-            className={`h-7 rounded-lg px-2.5 xl:px-3 text-[11.5px] font-bold transition-all ${
+            className={`relative isolate h-7 rounded-lg px-2.5 xl:px-3 text-[11.5px] font-bold transition-all ${
               transactionType === "sale"
-                ? "bg-[#167d4f] text-white shadow-card"
+                ? "text-white"
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
+            {transactionType === "sale" && <LiquidThumb id="search-transactionType" />}
             {t.popular.saleBadge}
           </button>
           <button
             onClick={() => onTransactionChange("rent")}
-            className={`h-7 rounded-lg px-2.5 xl:px-3 text-[11.5px] font-bold transition-all ${
+            className={`relative isolate h-7 rounded-lg px-2.5 xl:px-3 text-[11.5px] font-bold transition-all ${
               transactionType === "rent"
-                ? "bg-[#167d4f] text-white shadow-card"
+                ? "text-white"
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
+            {transactionType === "rent" && <LiquidThumb id="search-transactionType" />}
             {t.popular.rentBadge}
           </button>
         </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { LiquidThumb } from "@/components/ui/LiquidThumb";
 import React, { useState, useEffect } from "react";
 import { fetchJsonShared } from "@/lib/sharedFetch";
 import { motion, AnimatePresence } from "framer-motion";
@@ -244,36 +245,39 @@ export function MobileFilterSheet({
                     type="button"
                     data-testid="mobile-filter-tab-all"
                     onClick={() => onTransactionChange("all")}
-                    className={`py-2 rounded-xl text-xs font-bold transition-all ${
+                    className={`relative isolate py-2 rounded-xl text-xs font-bold transition-all ${
                       transactionType === "all"
-                        ? "bg-[#167d4f] text-white shadow-sm"
+                        ? "text-white"
                         : "text-slate-600 hover:text-slate-900"
                     }`}
                   >
+                    {transactionType === "all" && <LiquidThumb id="msheet-transactionType" />}
                     {t.common.all}
                   </button>
                   <button
                     type="button"
                     data-testid="mobile-filter-tab-sale"
                     onClick={() => onTransactionChange("sale")}
-                    className={`py-2 rounded-xl text-xs font-bold transition-all ${
+                    className={`relative isolate py-2 rounded-xl text-xs font-bold transition-all ${
                       transactionType === "sale"
-                        ? "bg-[#167d4f] text-white shadow-sm"
+                        ? "text-white"
                         : "text-slate-600 hover:text-slate-900"
                     }`}
                   >
+                    {transactionType === "sale" && <LiquidThumb id="msheet-transactionType" />}
                     {t.popular.saleBadge}
                   </button>
                   <button
                     type="button"
                     data-testid="mobile-filter-tab-rent"
                     onClick={() => onTransactionChange("rent")}
-                    className={`py-2 rounded-xl text-xs font-bold transition-all ${
+                    className={`relative isolate py-2 rounded-xl text-xs font-bold transition-all ${
                       transactionType === "rent"
-                        ? "bg-[#167d4f] text-white shadow-sm"
+                        ? "text-white"
                         : "text-slate-600 hover:text-slate-900"
                     }`}
                   >
+                    {transactionType === "rent" && <LiquidThumb id="msheet-transactionType" />}
                     {t.popular.rentBadge}
                   </button>
                 </div>

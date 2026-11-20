@@ -133,7 +133,7 @@ export function MobileBottomSheet({
             title="3D"
             className={`lg-press h-10 w-10 rounded-xl flex items-center justify-center transition-all active:scale-95 ${
               mapDimension === "3d"
-                ? "bg-white/30 text-white shadow-sm ring-2 ring-white border border-white/40"
+                ? "bg-white/[0.24] text-white border border-white/45 shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_6px_14px_-8px_rgba(0,0,0,0.45)]"
                 : "bg-white/10 hover:bg-white/15 active:bg-white/20 text-white border border-white/10"
             }`}
           >
@@ -161,7 +161,7 @@ export function MobileBottomSheet({
             title={locale === "uz" ? "Xarita" : "Карта"}
             className={`lg-press h-10 w-10 rounded-xl flex items-center justify-center transition-all active:scale-95 ${
               activeMapMode === "satellite"
-                ? "bg-white/30 text-white shadow-sm ring-2 ring-white border border-white/40"
+                ? "bg-white/[0.24] text-white border border-white/45 shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_6px_14px_-8px_rgba(0,0,0,0.45)]"
                 : "bg-white/10 hover:bg-white/15 active:bg-white/20 text-white border border-white/10"
             }`}
           >
