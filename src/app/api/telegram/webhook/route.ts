@@ -440,6 +440,7 @@ export async function POST(req: NextRequest) {
             await upsertTelegramUser({
               id: senderId,
               last_reg_message_id: promptRes.result?.message_id || null,
+              notifications_enabled: true,
             });
           }
         } else {
@@ -456,6 +457,9 @@ export async function POST(req: NextRequest) {
               id: senderId,
               last_welcome_message_id: welcomeRes.result?.message_id || null,
               last_reg_message_id: null,
+              // The mute confirmation tells users "send /start to turn notifications
+              // back on", so /start is the explicit opt-in.
+              notifications_enabled: true,
             });
           }
         }

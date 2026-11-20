@@ -17,10 +17,28 @@ if (fs.existsSync(envPath)) {
 const botToken = process.env.TELEGRAM_BOT_TOKEN;
 const siteUrl = 'https://angrenestate.uz';
 
-// Must match getTelegramWebhookSecret() in src/lib/telegramWebhookSecret.ts
+// Must match getTelegramWebhookSecret() in src/lib/telegramWebhookSecret.ts.
+// The production server uses TELEGRAM_WEBHOOK_SECRET from Vercel when it is set,
+// otherwise a value derived from the bot token. This script cannot see Vercel's
+// env, so it never derives silently: without a local TELEGRAM_WEBHOOK_SECRET it
+// requires --derived-secret, confirming production does not set one either.
+// Preferred: admin panel → Sozlamalar → Xavfsizlik → "Webhook’ni qayta sozlash",
+// which always uses the server's own configuration.
 function getWebhookSecret(token) {
   const explicit = (process.env.TELEGRAM_WEBHOOK_SECRET || '').trim();
-  if (explicit && /^[A-Za-z0-9_-]{16,256}$/.test(explicit)) return explicit;
+  if (explicit) {
+    if (!/^[A-Za-z0-9_-]{16,256}$/.test(explicit)) {
+      throw new Error('TELEGRAM_WEBHOOK_SECRET must be 16-256 chars of A-Z a-z 0-9 _ -');
+    }
+    return explicit;
+  }
+  if (!process.argv.includes('--derived-secret')) {
+    throw new Error(
+      'TELEGRAM_WEBHOOK_SECRET is not set locally. If it is set in Vercel, copy the same value into .env.local; ' +
+        'if Vercel does not set it either, re-run with --derived-secret. ' +
+        'Safer option: use the admin panel button "Webhook’ni qayta sozlash".'
+    );
+  }
   return crypto
     .createHmac('sha256', token)
     .update('angren-estate:telegram-webhook-secret:v1')

@@ -360,19 +360,21 @@ export function MobileBottomSheet({
 
           {/* Action Row: Call, Telegram, Favorite */}
           <div className="flex items-center gap-2">
-            <a
-              href={phoneHref(property.contact_phone)}
-              onClick={() =>
-                trackEvent("phone_click", {
-                  property_id: property.id,
-                  metadata: { phone: property.contact_phone },
-                })
-              }
-              className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white/90 py-2 text-xs font-bold text-gray-700 shadow-sm active:scale-[0.98]"
-            >
-              <Phone className="h-3.5 w-3.5 text-brand-primary" />
-              <span>{t.propertyCard.call}</span>
-            </a>
+            {property.contact_phone && (
+              <a
+                href={phoneHref(property.contact_phone)}
+                onClick={() =>
+                  trackEvent("phone_click", {
+                    property_id: property.id,
+                    metadata: { phone: property.contact_phone },
+                  })
+                }
+                className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white/90 py-2 text-xs font-bold text-gray-700 shadow-sm active:scale-[0.98]"
+              >
+                <Phone className="h-3.5 w-3.5 text-brand-primary" />
+                <span>{t.propertyCard.call}</span>
+              </a>
+            )}
             <a
               href={`https://t.me/${property.contact_telegram ? property.contact_telegram.replace("@", "") : "angrenestate"}`}
               target="_blank"

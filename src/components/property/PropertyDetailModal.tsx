@@ -384,14 +384,16 @@ export function PropertyDetailModal({
                     </span>
                   ) : (
                     <>
-                      <a
-                        href={phoneHref(property.realtor?.phone || property.contact_phone)}
-                        onClick={handleCallClick}
-                        className="flex items-center justify-center gap-1.5 rounded-xl bg-[#167d4f] px-4 py-2 text-xs font-bold text-white shadow-card hover:bg-[#167d4f] active:scale-[0.98] transition-all shrink-0"
-                      >
-                        <Phone className="h-3.5 w-3.5" />
-                        <span>{t.propertyDetail.call}</span>
-                      </a>
+                      {(property.realtor?.phone || property.contact_phone) && (
+                        <a
+                          href={phoneHref(property.realtor?.phone || property.contact_phone)}
+                          onClick={handleCallClick}
+                          className="flex items-center justify-center gap-1.5 rounded-xl bg-[#167d4f] px-4 py-2 text-xs font-bold text-white shadow-card hover:bg-[#167d4f] active:scale-[0.98] transition-all shrink-0"
+                        >
+                          <Phone className="h-3.5 w-3.5" />
+                          <span>{t.propertyDetail.call}</span>
+                        </a>
+                      )}
                       {(property.realtor?.telegram || property.contact_telegram) && (
                         <a
                           href={`https://t.me/${(property.realtor?.telegram || property.contact_telegram || "").replace("@", "")}`}
@@ -720,14 +722,16 @@ export function PropertyDetailModal({
 
               {/* Action Buttons: Call, Telegram, Instagram */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-[#2db477]/20">
-                <a
-                  href={phoneHref(property.realtor?.phone || property.contact_phone)}
-                  onClick={handleCallClick}
-                  className="w-full py-2.5 px-3 rounded-xl bg-[#167d4f] hover:bg-[#167d4f] text-white text-xs font-bold shadow-sm flex items-center justify-center gap-1.5 transition-all active:scale-98"
-                >
-                  <Phone className="w-3.5 h-3.5" />
-                  <span>{locale === "uz" ? "Qo‘ng‘iroq" : "Позвонить"}</span>
-                </a>
+                {(property.realtor?.phone || property.contact_phone) && (
+                  <a
+                    href={phoneHref(property.realtor?.phone || property.contact_phone)}
+                    onClick={handleCallClick}
+                    className="w-full py-2.5 px-3 rounded-xl bg-[#167d4f] hover:bg-[#167d4f] text-white text-xs font-bold shadow-sm flex items-center justify-center gap-1.5 transition-all active:scale-98"
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                    <span>{locale === "uz" ? "Qo‘ng‘iroq" : "Позвонить"}</span>
+                  </a>
+                )}
 
                 {(property.realtor?.telegram || property.contact_telegram) && (
                   <a
