@@ -176,33 +176,40 @@ export function verifyAdminSessionToken(token: string): { valid: boolean; sessio
 }
 
 // 4. Verify Credentials Function
-export function authenticateAdmin(identifier: string, passwordAttempt: string): { success: boolean; username: string; email: string } | null {
-  const configuredPassword = process.env.ADMIN_PASSWORD;
-  if (!configuredPassword || configuredPassword.trim() === "") {
-    console.warn("[AdminAuth] Login attempt rejected: ADMIN_PASSWORD is not configured in environment.");
-    return null;
-  }
-
-  const cleanId = identifier.trim().toLowerCase();
-  const validEmail = (process.env.ADMIN_EMAIL || DEFAULT_ADMIN_EMAIL).toLowerCase();
-  const validUsername = (process.env.ADMIN_USERNAME || DEFAULT_ADMIN_USERNAME).toLowerCase();
-
-  const isIdMatch = cleanId === validEmail || cleanId === validUsername;
-  if (!isIdMatch) {
-    return null;
-  }
-
-  const { hash: expectedHash } = hashPassword(configuredPassword, defaultSalt);
-  const isPasswordValid = verifyPassword(passwordAttempt, expectedHash, defaultSalt);
-  if (!isPasswordValid) {
-    return null;
-  }
-
+export function getAdminIdentity(): { username: string; email: string } {
   return {
-    success: true,
     username: process.env.ADMIN_USERNAME || DEFAULT_ADMIN_USERNAME,
     email: process.env.ADMIN_EMAIL || DEFAULT_ADMIN_EMAIL,
   };
+}
+
+export function adminIdentityMatches(identifier: string): boolean {
+  const cleanId = identifier.trim().toLowerCase();
+  const { username, email } = getAdminIdentity();
+  return cleanId === email.toLowerCase() || cleanId === username.toLowerCase();
+}
+
+/** Checks a password against ADMIN_PASSWORD (the environment fallback credential). */
+export function verifyEnvAdminPassword(passwordAttempt: string): boolean {
+  const configuredPassword = process.env.ADMIN_PASSWORD;
+  if (!configuredPassword || configuredPassword.trim() === "") {
+    console.warn("[AdminAuth] Login attempt rejected: ADMIN_PASSWORD is not configured in environment.");
+    return false;
+  }
+  const { hash: expectedHash } = hashPassword(configuredPassword, defaultSalt);
+  return verifyPassword(passwordAttempt, expectedHash, defaultSalt);
+}
+
+export function authenticateAdmin(identifier: string, passwordAttempt: string): { success: boolean; username: string; email: string } | null {
+  if (!adminIdentityMatches(identifier)) {
+    return null;
+  }
+
+  if (!verifyEnvAdminPassword(passwordAttempt)) {
+    return null;
+  }
+
+  return { success: true, ...getAdminIdentity() };
 }
 
 // 5. Server Helper to Read Session from Next.js Headers/Cookies

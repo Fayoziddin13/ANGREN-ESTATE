@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
-import { X, RotateCcw, Check, SlidersHorizontal, Bed, Maximize2, Layers, Sparkles, Flame, ShieldCheck } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { X, RotateCcw, Check, SlidersHorizontal, Bed, Maximize2, Layers, Sparkles, Flame, ShieldCheck, Sofa } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { RenovationType } from "@/lib/types";
 
@@ -57,6 +58,27 @@ interface AdvancedFiltersModalProps {
   totalFilteredCount: number;
 }
 
+// Shared look of the modal controls (compact, one height everywhere).
+const INPUT_CLS =
+  "w-full h-9 px-3 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/25";
+const CHIP_BASE =
+  "h-8 px-2 rounded-xl text-[11.5px] font-bold border transition-colors truncate";
+const CHIP_ON = "bg-brand-primary text-white border-brand-primary shadow-sm";
+const CHIP_OFF = "bg-white text-gray-700 border-gray-200 hover:bg-gray-50";
+const TOGGLE_BASE =
+  "flex h-8 items-center justify-between gap-1 px-2.5 rounded-xl border text-[11.5px] font-bold transition-colors min-w-0";
+const TOGGLE_ON = "bg-brand-light border-brand-primary text-brand-primary";
+const TOGGLE_OFF = "bg-white text-gray-600 border-gray-200 hover:bg-gray-50";
+
+function SectionLabel({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="mb-2 flex items-center gap-1.5 text-xs font-extrabold text-gray-900">
+      {icon}
+      <span className="truncate">{children}</span>
+    </div>
+  );
+}
+
 export function AdvancedFiltersModal({
   isOpen,
   onClose,
@@ -65,10 +87,34 @@ export function AdvancedFiltersModal({
   onReset,
   totalFilteredCount,
 }: AdvancedFiltersModalProps) {
-  const { locale, t } = useLanguage();
+  const { locale } = useLanguage();
   const { currency, exchangeRate } = useCurrency();
+  const [mounted, setMounted] = useState(false);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
-  if (!isOpen) return null;
+  useEffect(() => setMounted(true), []);
+
+  // While open: lock page scroll behind the dialog and close on Escape.
+  useEffect(() => {
+    if (!isOpen) return;
+    const { body, documentElement } = document;
+    const prevBody = body.style.overflow;
+    const prevHtml = documentElement.style.overflow;
+    body.style.overflow = "hidden";
+    documentElement.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onCloseRef.current();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      body.style.overflow = prevBody;
+      documentElement.style.overflow = prevHtml;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [isOpen]);
+
+  if (!isOpen || !mounted) return null;
 
   const handleUtilityToggle = (key: keyof AdvancedFilterState["utilities"]) => {
     onChangeFilters({
@@ -90,43 +136,61 @@ export function AdvancedFiltersModal({
     });
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl max-h-[90vh] flex flex-col rounded-3xl lg-glass overflow-hidden">
+  const titleId = "advanced-filters-title";
+
+  // Rendered into <body>: the search panels use backdrop-filter / transforms,
+  // which would otherwise become the containing block of this fixed overlay
+  // and squeeze it into the toolbar.
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[90] flex items-end sm:items-center justify-center sm:p-4 bg-black/45 backdrop-blur-sm animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full sm:max-w-3xl max-h-[92dvh] sm:max-h-[min(88dvh,760px)] flex flex-col rounded-t-3xl sm:rounded-3xl bg-white border border-white/80 shadow-[0_24px_60px_-12px_rgba(15,60,40,0.35)] overflow-hidden animate-in slide-in-from-bottom-4 duration-200"
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white/80 shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-light text-brand-primary">
+        <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-gray-100 bg-white shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-brand-light text-brand-primary">
               <SlidersHorizontal className="h-4 w-4" />
             </div>
-            <h2 className="text-base font-extrabold text-brand-dark">
+            <h2 id={titleId} className="truncate text-base font-extrabold text-brand-dark">
               {locale === "uz" ? "Kengaytirilgan filtrlar" : "Расширенные фильтры"}
             </h2>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+            aria-label={locale === "uz" ? "Yopish" : "Закрыть"}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Scrollable Filters Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs divide-y divide-gray-100">
+        {/* Filters body: two columns from md, scrolls only when the screen is too short */}
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 sm:px-5 py-4 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-xs">
           {/* Narx oralig'i (Min / Max Custom Price) */}
-          <div className="space-y-2.5 pt-1">
-            <div className="flex items-center justify-between">
-              <label className="font-extrabold text-gray-900 flex items-center gap-1.5 text-xs">
-                <Coins className="h-3.5 w-3.5 text-brand-primary" />
-                <span>{locale === "uz" ? `Narx oralig‘i (${currency})` : `Диапазон цен (${currency})`}</span>
-              </label>
-              <span className="text-[10px] text-gray-400 font-medium">
+          <section>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 text-xs font-extrabold text-gray-900 min-w-0">
+                <Coins className="h-3.5 w-3.5 shrink-0 text-brand-primary" />
+                <span className="truncate">{locale === "uz" ? `Narx oralig‘i (${currency})` : `Диапазон цен (${currency})`}</span>
+              </div>
+              <span className="shrink-0 text-[10px] text-gray-400 font-medium">
                 {currency === "USD" ? "$ USD" : (locale === "uz" ? "so‘m (UZS)" : "сум (UZS)")}
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               <input
                 type="number"
+                inputMode="numeric"
+                aria-label={locale === "uz" ? "Minimal narx" : "Минимальная цена"}
                 placeholder={
                   currency === "USD"
                     ? locale === "uz" ? "Min $ (masalan: 20000)" : "От $ (напр.: 20000)"
@@ -149,10 +213,12 @@ export function AdvancedFiltersModal({
                     onChangeFilters({ ...filters, minPrice: inUzs });
                   }
                 }}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/30 text-xs font-semibold"
+                className={INPUT_CLS}
               />
               <input
                 type="number"
+                inputMode="numeric"
+                aria-label={locale === "uz" ? "Maksimal narx" : "Максимальная цена"}
                 placeholder={
                   currency === "USD"
                     ? locale === "uz" ? "Max $ (masalan: 60000)" : "До $ (напр.: 60000)"
@@ -175,43 +241,40 @@ export function AdvancedFiltersModal({
                     onChangeFilters({ ...filters, maxPrice: inUzs });
                   }
                 }}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/30 text-xs font-semibold"
+                className={INPUT_CLS}
               />
             </div>
-          </div>
+          </section>
+
           {/* 1. Xonalar soni (Rooms) */}
-          <div className="space-y-2.5 pt-1">
-            <label className="font-extrabold text-gray-900 flex items-center gap-1.5 text-xs">
-              <Bed className="h-3.5 w-3.5 text-brand-primary" />
-              <span>{locale === "uz" ? "Xonalar soni" : "Количество комнат"}</span>
-            </label>
-            <div className="grid grid-cols-6 gap-2">
+          <section>
+            <SectionLabel icon={<Bed className="h-3.5 w-3.5 shrink-0 text-brand-primary" />}>
+              {locale === "uz" ? "Xonalar soni" : "Количество комнат"}
+            </SectionLabel>
+            <div className="grid grid-cols-6 gap-1.5">
               {(["all", 1, 2, 3, 4, 5] as const).map((r) => (
                 <button
                   key={String(r)}
                   type="button"
                   onClick={() => onChangeFilters({ ...filters, rooms: r })}
-                  className={`py-2 rounded-xl text-xs font-bold border transition-all ${
-                    filters.rooms === r
-                      ? "bg-brand-primary text-white border-brand-primary shadow-sm"
-                      : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
-                  }`}
+                  className={`${CHIP_BASE} ${filters.rooms === r ? CHIP_ON : CHIP_OFF}`}
                 >
                   {r === "all" ? (locale === "uz" ? "Barchasi" : "Все") : `${r}${r === 5 ? "+" : ""}`}
                 </button>
               ))}
             </div>
-          </div>
+          </section>
 
           {/* 2. Maydon (m²) */}
-          <div className="space-y-2.5 pt-4">
-            <label className="font-extrabold text-gray-900 flex items-center gap-1.5 text-xs">
-              <Maximize2 className="h-3.5 w-3.5 text-brand-primary" />
-              <span>{locale === "uz" ? "Maydoni (m²)" : "Площадь (м²)"}</span>
-            </label>
-            <div className="grid grid-cols-2 gap-3">
+          <section>
+            <SectionLabel icon={<Maximize2 className="h-3.5 w-3.5 shrink-0 text-brand-primary" />}>
+              {locale === "uz" ? "Maydoni (m²)" : "Площадь (м²)"}
+            </SectionLabel>
+            <div className="grid grid-cols-2 gap-2">
               <input
                 type="number"
+                inputMode="numeric"
+                aria-label={locale === "uz" ? "Minimal maydon" : "Минимальная площадь"}
                 placeholder={locale === "uz" ? "Min m² (masalan: 40)" : "От м² (напр.: 40)"}
                 value={filters.minArea}
                 onChange={(e) =>
@@ -220,10 +283,12 @@ export function AdvancedFiltersModal({
                     minArea: e.target.value ? Number(e.target.value) : "",
                   })
                 }
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
+                className={INPUT_CLS}
               />
               <input
                 type="number"
+                inputMode="numeric"
+                aria-label={locale === "uz" ? "Maksimal maydon" : "Максимальная площадь"}
                 placeholder={locale === "uz" ? "Max m² (masalan: 120)" : "До м² (напр.: 120)"}
                 value={filters.maxArea}
                 onChange={(e) =>
@@ -232,20 +297,21 @@ export function AdvancedFiltersModal({
                     maxArea: e.target.value ? Number(e.target.value) : "",
                   })
                 }
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
+                className={INPUT_CLS}
               />
             </div>
-          </div>
+          </section>
 
           {/* 3. Qavat (Floor) */}
-          <div className="space-y-2.5 pt-4">
-            <label className="font-extrabold text-gray-900 flex items-center gap-1.5 text-xs">
-              <Layers className="h-3.5 w-3.5 text-brand-primary" />
-              <span>{locale === "uz" ? "Qavat" : "Этаж"}</span>
-            </label>
-            <div className="grid grid-cols-2 gap-3">
+          <section>
+            <SectionLabel icon={<Layers className="h-3.5 w-3.5 shrink-0 text-brand-primary" />}>
+              {locale === "uz" ? "Qavat" : "Этаж"}
+            </SectionLabel>
+            <div className="grid grid-cols-2 gap-2">
               <input
                 type="number"
+                inputMode="numeric"
+                aria-label={locale === "uz" ? "Minimal qavat" : "Минимальный этаж"}
                 placeholder={locale === "uz" ? "Min qavat (masalan: 1)" : "От этажа (напр.: 1)"}
                 value={filters.minFloor}
                 onChange={(e) =>
@@ -254,10 +320,12 @@ export function AdvancedFiltersModal({
                     minFloor: e.target.value ? Number(e.target.value) : "",
                   })
                 }
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
+                className={INPUT_CLS}
               />
               <input
                 type="number"
+                inputMode="numeric"
+                aria-label={locale === "uz" ? "Maksimal qavat" : "Максимальный этаж"}
                 placeholder={locale === "uz" ? "Max qavat (masalan: 5)" : "До этажа (напр.: 5)"}
                 value={filters.maxFloor}
                 onChange={(e) =>
@@ -266,18 +334,17 @@ export function AdvancedFiltersModal({
                     maxFloor: e.target.value ? Number(e.target.value) : "",
                   })
                 }
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
+                className={INPUT_CLS}
               />
             </div>
-          </div>
+          </section>
 
           {/* 4. Ta'mir holati (Renovation) */}
-          <div className="space-y-2.5 pt-4">
-            <label className="font-extrabold text-gray-900 flex items-center gap-1.5 text-xs">
-              <Sparkles className="h-3.5 w-3.5 text-brand-primary" />
-              <span>{locale === "uz" ? "Ta’mir holati" : "Состояние ремонта"}</span>
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <section>
+            <SectionLabel icon={<Sparkles className="h-3.5 w-3.5 shrink-0 text-brand-primary" />}>
+              {locale === "uz" ? "Ta’mir holati" : "Состояние ремонта"}
+            </SectionLabel>
+            <div className="grid grid-cols-2 gap-1.5">
               {[
                 { key: "all", label: locale === "uz" ? "Barchasi" : "Все" },
                 { key: "euro", label: locale === "uz" ? "Yevro" : "Евроремонт" },
@@ -287,57 +354,45 @@ export function AdvancedFiltersModal({
                 <button
                   key={renov.key}
                   type="button"
+                  title={renov.label}
                   onClick={() => onChangeFilters({ ...filters, renovation: renov.key as any })}
-                  className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all truncate ${
-                    filters.renovation === renov.key
-                      ? "bg-brand-primary text-white border-brand-primary shadow-sm"
-                      : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
-                  }`}
+                  className={`${CHIP_BASE} ${filters.renovation === renov.key ? CHIP_ON : CHIP_OFF}`}
                 >
                   {renov.label}
                 </button>
               ))}
             </div>
-          </div>
+          </section>
 
           {/* 5. Mebel (Furniture) */}
-          <div className="space-y-2.5 pt-4">
-            <label className="font-extrabold text-gray-900 text-xs">
+          <section>
+            <SectionLabel icon={<Sofa className="h-3.5 w-3.5 shrink-0 text-brand-primary" />}>
               {locale === "uz" ? "Mebel bilan ta’minlanganligi" : "Меблировка"}
-            </label>
-            <div className="grid grid-cols-2 gap-2">
+            </SectionLabel>
+            <div className="grid grid-cols-2 gap-1.5">
               <button
                 type="button"
                 onClick={() => onChangeFilters({ ...filters, furniture: "all" })}
-                className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
-                  filters.furniture === "all"
-                    ? "bg-brand-primary text-white border-brand-primary shadow-sm"
-                    : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
-                }`}
+                className={`${CHIP_BASE} ${filters.furniture === "all" ? CHIP_ON : CHIP_OFF}`}
               >
                 {locale === "uz" ? "Farqi yo‘q" : "Не имеет значения"}
               </button>
               <button
                 type="button"
                 onClick={() => onChangeFilters({ ...filters, furniture: true })}
-                className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
-                  filters.furniture === true
-                    ? "bg-brand-primary text-white border-brand-primary shadow-sm"
-                    : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
-                }`}
+                className={`${CHIP_BASE} ${filters.furniture === true ? CHIP_ON : CHIP_OFF}`}
               >
                 {locale === "uz" ? "Faqat mebel bilan" : "Только с мебелью"}
               </button>
             </div>
-          </div>
+          </section>
 
           {/* 6. Kommunikatsiyalar (Utilities) */}
-          <div className="space-y-2.5 pt-4">
-            <label className="font-extrabold text-gray-900 flex items-center gap-1.5 text-xs">
-              <Flame className="h-3.5 w-3.5 text-brand-primary" />
-              <span>{locale === "uz" ? "Kommunikatsiyalar" : "Коммуникации"}</span>
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <section>
+            <SectionLabel icon={<Flame className="h-3.5 w-3.5 shrink-0 text-brand-primary" />}>
+              {locale === "uz" ? "Kommunikatsiyalar" : "Коммуникации"}
+            </SectionLabel>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
               {[
                 { key: "gas", label: locale === "uz" ? "Gaz" : "Газ" },
                 { key: "water", label: locale === "uz" ? "Suv" : "Вода" },
@@ -350,28 +405,25 @@ export function AdvancedFiltersModal({
                   <button
                     key={u.key}
                     type="button"
+                    title={u.label}
+                    aria-pressed={active}
                     onClick={() => handleUtilityToggle(u.key as any)}
-                    className={`flex items-center justify-between p-2.5 rounded-xl border text-xs font-bold transition-all ${
-                      active
-                        ? "bg-brand-light border-brand-primary text-brand-primary"
-                        : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
-                    }`}
+                    className={`${TOGGLE_BASE} ${active ? TOGGLE_ON : TOGGLE_OFF}`}
                   >
-                    <span>{u.label}</span>
-                    {active && <Check className="h-3.5 w-3.5 text-brand-primary" />}
+                    <span className="truncate">{u.label}</span>
+                    {active && <Check className="h-3.5 w-3.5 shrink-0 text-brand-primary" />}
                   </button>
                 );
               })}
             </div>
-          </div>
+          </section>
 
           {/* 7. Qulayliklar (Amenities) */}
-          <div className="space-y-2.5 pt-4">
-            <label className="font-extrabold text-gray-900 flex items-center gap-1.5 text-xs">
-              <ShieldCheck className="h-3.5 w-3.5 text-brand-primary" />
-              <span>{locale === "uz" ? "Qulayliklar" : "Удобства"}</span>
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <section>
+            <SectionLabel icon={<ShieldCheck className="h-3.5 w-3.5 shrink-0 text-brand-primary" />}>
+              {locale === "uz" ? "Qulayliklar" : "Удобства"}
+            </SectionLabel>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
               {[
                 { key: "parking", label: locale === "uz" ? "Avtoturargoh" : "Парковка" },
                 { key: "elevator", label: locale === "uz" ? "Lift" : "Лифт" },
@@ -384,28 +436,26 @@ export function AdvancedFiltersModal({
                   <button
                     key={a.key}
                     type="button"
+                    title={a.label}
+                    aria-pressed={active}
                     onClick={() => handleAmenityToggle(a.key as any)}
-                    className={`flex items-center justify-between p-2.5 rounded-xl border text-xs font-bold transition-all ${
-                      active
-                        ? "bg-brand-light border-brand-primary text-brand-primary"
-                        : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
-                    }`}
+                    className={`${TOGGLE_BASE} ${active ? TOGGLE_ON : TOGGLE_OFF}`}
                   >
-                    <span>{a.label}</span>
-                    {active && <Check className="h-3.5 w-3.5 text-brand-primary" />}
+                    <span className="truncate">{a.label}</span>
+                    {active && <Check className="h-3.5 w-3.5 shrink-0 text-brand-primary" />}
                   </button>
                 );
               })}
             </div>
-          </div>
+          </section>
         </div>
 
-        {/* Footer Actions */}
-        <div className="flex items-center justify-between gap-3 px-6 py-4 bg-gray-50/80 border-t border-gray-100 shrink-0">
+        {/* Footer Actions: always visible, outside the scroll area */}
+        <div className="flex items-center justify-between gap-3 px-4 sm:px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-gray-50/90 border-t border-gray-100 shrink-0">
           <button
             type="button"
             onClick={onReset}
-            className="flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-gray-800 transition-colors"
+            className="flex shrink-0 items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-gray-800 transition-colors"
           >
             <RotateCcw className="h-3.5 w-3.5" />
             <span>{locale === "uz" ? "Barchasini tozalash" : "Сбросить все"}</span>
@@ -414,7 +464,7 @@ export function AdvancedFiltersModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-2.5 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-extrabold shadow-card transition-all active:scale-95"
+            className="min-w-0 truncate px-5 sm:px-6 h-10 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-extrabold shadow-card transition-all active:scale-95"
           >
             {locale === "uz"
               ? `Natijalarni ko‘rish (${totalFilteredCount} ta)`
@@ -422,6 +472,7 @@ export function AdvancedFiltersModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
