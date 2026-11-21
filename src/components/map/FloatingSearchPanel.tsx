@@ -167,7 +167,7 @@ export function FloatingSearchPanel({
     <div
       className={`pointer-events-auto w-fit max-w-full rounded-2xl lg-glass p-1.5 sm:p-2 transition-all ${className}`}
     >
-      <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 xl:gap-2">
+      <div className="flex min-w-0 flex-col sm:flex-row sm:flex-wrap sm:items-center gap-1.5 xl:gap-2">
         {/* Transaction Pill Switcher: [ Barchasi | Sotuv | Ijara ] */}
         <div className="flex items-center h-9 rounded-xl bg-gray-100/90 p-1 shrink-0 border border-gray-200/60">
           <button
@@ -210,7 +210,7 @@ export function FloatingSearchPanel({
 
         {/* Text Search Input */}
         {onSearchQueryChange && (
-          <div className="relative flex-1 min-w-[85px] sm:min-w-[100px] xl:min-w-[120px] 2xl:min-w-[140px] max-w-[160px]">
+          <div className="relative flex-1 min-w-[85px] sm:min-w-[96px] xl:min-w-[100px] 2xl:min-w-[120px] max-w-[160px]">
             <div className="flex h-9 w-full items-center gap-1.5 rounded-xl border border-gray-200/80 bg-white/90 px-2.5 xl:px-3 text-xs font-semibold text-gray-800 focus-within:border-[#167d4f] focus-within:ring-2 focus-within:ring-[#167d4f]/20 transition-all">
               <Search className="h-3.5 w-3.5 text-[#167d4f] shrink-0" />
               <input
@@ -234,7 +234,7 @@ export function FloatingSearchPanel({
         )}
 
         {/* Dropdown 1: District */}
-        <div className="hidden xl:block relative flex-1 min-w-[80px] sm:min-w-[90px] xl:min-w-[105px] 2xl:min-w-[125px] max-w-[140px]">
+        <div className="hidden xl:block relative flex-1 min-w-[80px] sm:min-w-[90px] xl:min-w-[92px] 2xl:min-w-[110px] max-w-[140px]">
           <button
             onClick={() => {
               setDistrictOpen(!districtOpen);
@@ -280,7 +280,7 @@ export function FloatingSearchPanel({
         </div>
 
         {/* Dropdown 2: Property Type */}
-        <div className="hidden xl:block relative flex-1 min-w-[80px] sm:min-w-[90px] xl:min-w-[105px] 2xl:min-w-[125px] max-w-[140px]">
+        <div className="hidden xl:block relative flex-1 min-w-[80px] sm:min-w-[90px] xl:min-w-[92px] 2xl:min-w-[110px] max-w-[140px]">
           <button
             onClick={() => {
               setTypeOpen(!typeOpen);
@@ -326,7 +326,7 @@ export function FloatingSearchPanel({
         </div>
 
         {/* Dropdown 3: Price */}
-        <div className="hidden xl:block relative flex-1 min-w-[75px] sm:min-w-[85px] xl:min-w-[95px] 2xl:min-w-[115px] max-w-[130px]">
+        <div className="hidden xl:block relative flex-1 min-w-[75px] sm:min-w-[85px] xl:min-w-[88px] 2xl:min-w-[105px] max-w-[130px]">
           <button
             onClick={() => {
               setPriceOpen(!priceOpen);
@@ -424,7 +424,7 @@ export function FloatingSearchPanel({
         {/* Action / Reset Button & Live Count Badge */}
         <div className="flex items-center justify-between sm:justify-start gap-1.5 xl:gap-2 shrink-0 pt-1 sm:pt-0">
           {/* Redundant on laptop screens since catalog switcher shows totalCount */}
-          <div className="flex sm:hidden 2xl:flex items-center gap-1.5 rounded-xl bg-[#eaf5f0] px-3 h-9 text-xs font-bold text-[#167d4f]">
+          <div className="flex sm:hidden min-[1720px]:flex shrink-0 whitespace-nowrap items-center gap-1.5 rounded-xl bg-[#eaf5f0] px-3 h-9 text-xs font-bold text-[#167d4f]">
             <span className="h-2 w-2 rounded-full bg-[#167d4f] animate-pulse" />
             <span>{totalCount} {locale === "uz" ? "obyekt" : "объектов"}</span>
           </div>
@@ -433,7 +433,7 @@ export function FloatingSearchPanel({
             <button
               onClick={() => setIsAdvancedModalOpen(true)}
               title={locale === "uz" ? "Kengaytirilgan filtrlar" : "Расширенные фильтры"}
-              className={`relative flex items-center gap-1 xl:gap-1.5 h-9 px-2.5 rounded-xl border transition-colors shadow-sm text-xs font-bold ${
+              className={`relative flex shrink-0 whitespace-nowrap items-center gap-1 xl:gap-1.5 h-9 px-2.5 rounded-xl border transition-colors shadow-sm text-xs font-bold ${
                 (advancedFilters.rooms !== "all" ||
                   advancedFilters.minArea !== "" ||
                   advancedFilters.maxArea !== "" ||
@@ -479,11 +479,11 @@ export function FloatingSearchPanel({
             data-testid="desktop-add-listing-button"
             onClick={() => window.dispatchEvent(new CustomEvent("angren_open_listing_modal"))}
             title={locale === "uz" ? "Obyektingizni joylashtiring" : "Разместить объявление"}
-            className="flex h-9 px-3 items-center gap-1.5 rounded-xl bg-[#167d4f] hover:bg-[#145d3c] active:bg-[#0f4f31] active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#167d4f] focus-visible:ring-offset-2 text-white shadow-sm text-xs font-bold tracking-tight transition-all shrink-0"
+            className="flex h-9 px-3 items-center gap-1.5 rounded-xl bg-[#167d4f] hover:bg-[#145d3c] active:bg-[#0f4f31] active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#167d4f] focus-visible:ring-offset-2 text-white shadow-sm text-xs font-bold tracking-tight whitespace-nowrap transition-all shrink-0"
           >
             <Plus className="h-3.5 w-3.5 stroke-[2.5] text-white shrink-0" />
-            <span className="hidden sm:inline">{locale === "uz" ? "E'lon qoldirish" : "Подать объявление"}</span>
-            <span className="sm:hidden">{locale === "uz" ? "E'lon" : "Объявление"}</span>
+            <span className="hidden 2xl:inline">{locale === "uz" ? "E'lon qoldirish" : "Подать объявление"}</span>
+            <span className="2xl:hidden">{locale === "uz" ? "E'lon" : "Объявление"}</span>
           </button>
 
           <button
@@ -491,15 +491,17 @@ export function FloatingSearchPanel({
             onClick={handleSaveCurrentSearch}
             disabled={isSavingSearch}
             title={locale === "uz" ? "Qidiruvni saqlash" : "Сохранить поиск"}
-            className="flex h-9 px-2.5 items-center gap-1 xl:gap-1.5 rounded-xl border border-gray-200/80 bg-white/90 text-gray-700 hover:text-[#167d4f] hover:border-[#167d4f]/40 hover:bg-white transition-colors shadow-sm text-xs font-bold"
+            aria-label={locale === "uz" ? "Qidiruvni saqlash" : "Сохранить поиск"}
+            className="flex shrink-0 whitespace-nowrap h-9 px-2.5 items-center gap-1 xl:gap-1.5 rounded-xl border border-gray-200/80 bg-white/90 text-gray-700 hover:text-[#167d4f] hover:border-[#167d4f]/40 hover:bg-white transition-colors shadow-sm text-xs font-bold"
           >
             <Bookmark className="h-3.5 w-3.5 text-[#167d4f] shrink-0" />
-            <span className="hidden 2xl:inline">{locale === "uz" ? "Saqlash" : "Сохранить"}</span>
+            <span className="hidden min-[1720px]:inline">{locale === "uz" ? "Saqlash" : "Сохранить"}</span>
           </button>
 
           <button
             onClick={onReset}
             title={t.filters.reset}
+            aria-label={t.filters.reset}
             className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200/80 bg-white/90 text-gray-600 hover:text-[#167d4f] hover:border-[#167d4f]/40 hover:bg-white transition-colors shadow-sm shrink-0"
           >
             <RotateCcw className="h-3.5 w-3.5" />

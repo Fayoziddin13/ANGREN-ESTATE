@@ -13,7 +13,6 @@ import {
   RotateCcw,
   Sparkles,
   MapPin,
-  KeyRound,
   AlertTriangle,
   Globe,
   Sliders,
@@ -26,6 +25,7 @@ import {
 import { useLanguage } from "@/context/LanguageContext";
 import { useSiteSettings, defaultSiteSettings } from "@/lib/siteSettingsStore";
 import { SiteSettingsData } from "@/lib/types";
+import { AdminPasswordCard } from "@/components/admin/AdminPasswordCard";
 
 export default function AdminSettingsPage() {
   const { locale } = useLanguage();
@@ -470,20 +470,8 @@ export default function AdminSettingsPage() {
             </div>
           </div>
 
-          {/* Admin Password Info Card */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-            <div>
-              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <KeyRound className="w-5 h-5 text-[#167d4f]" />
-                {locale === "uz" ? "Admin paroli" : "Пароль администратора"}
-              </h2>
-              <p className="text-xs text-slate-600 font-medium mt-1">
-                {locale === "uz"
-                  ? "Parol server sozlamalarida (Vercel → Environment Variables → ADMIN_PASSWORD) saqlanadi. Uni bu sahifadan o‘zgartirib bo‘lmaydi: yangi qiymatni Vercel’da kiriting va qayta deploy qiling."
-                  : "Пароль хранится в настройках сервера (Vercel → Environment Variables → ADMIN_PASSWORD). Изменить его с этой страницы нельзя: задайте новое значение в Vercel и выполните повторный деплой."}
-              </p>
-            </div>
-          </div>
+          {/* Admin password change (stored hashed server-side) */}
+          <AdminPasswordCard locale={locale} />
 
           {/* Telegram Webhook Card */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  authenticateAdmin,
   createAdminSessionToken,
   checkRateLimit,
   recordFailedAttempt,
@@ -9,6 +8,7 @@ import {
 } from "@/lib/admin-auth";
 import { supabaseAdmin, isSupabaseConfigured } from "@/lib/supabaseServer";
 import { getTrustedClientIp, hashForRateLimit } from "@/lib/requestIdentity";
+import { authenticateAdminWithStore } from "@/lib/adminCredentials";
 
 export async function POST(request: NextRequest) {
   try {
@@ -67,9 +67,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Authenticate
-    const authResult = authenticateAdmin(identifier, password);
+    // 2. Authenticate (panel-set password if one exists, otherwise ADMIN_PASSWORD)
+    const auth = await authenticateAdminWithStore(String(identifier), String(password));
 
+    if (auth.status === "unavailable") {
+      // Fail closed: never fall back to ADMIN_PASSWORD when the credential store
+      // cannot be read. Not counted as a failed attempt.
+      return NextResponse.json(
+        { error: "Authentication service is temporarily unavailable. Please try again." },
+        { status: 503 }
+      );
+    }
+
+    const authResult = auth.status === "ok" ? auth : null;
     if (!authResult) {
       const failInfo = recordFailedAttempt(ip);
       return NextResponse.json(
