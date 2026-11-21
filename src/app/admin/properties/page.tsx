@@ -286,7 +286,7 @@ export default function AdminPropertiesPage() {
   };
 
   return (
-    <div className="p-4 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
+    <div className="p-4 sm:p-6 2xl:p-8 max-w-[1600px] mx-auto w-full space-y-6">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-[#167d4f] text-white px-5 py-3 rounded-2xl shadow-xl border border-[#2db477]/40 flex items-center gap-2.5 animate-bounce text-xs font-bold">
@@ -401,14 +401,14 @@ export default function AdminPropertiesPage() {
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="py-3.5 px-4">{locale === "uz" ? "Obyekt" : "Объект"}</th>
-                <th className="py-3.5 px-4">{locale === "uz" ? "Turi & Bitim" : "Тип и сделка"}</th>
-                <th className="py-3.5 px-4">{locale === "uz" ? "Narxi" : "Цена"}</th>
-                <th className="py-3.5 px-4">{locale === "uz" ? "Holati" : "Статус"}</th>
-                <th className="py-3.5 px-4 text-center">{locale === "uz" ? "Ko‘rishlar" : "Просмотры"}</th>
-                <th className="py-3.5 px-4 text-center">{locale === "uz" ? "Aloqalar" : "Контакты"}</th>
-                <th className="py-3.5 px-4">{locale === "uz" ? "Sana" : "Дата"}</th>
-                <th className="py-3.5 px-4 text-right sticky right-0 z-10 bg-slate-50 shadow-[-10px_0_14px_-12px_rgba(15,23,42,0.25)]">{locale === "uz" ? "Amallar" : "Действия"}</th>
+                <th className="py-3.5 px-3">{locale === "uz" ? "Obyekt" : "Объект"}</th>
+                <th className="py-3.5 px-3">{locale === "uz" ? "Turi & Bitim" : "Тип и сделка"}</th>
+                <th className="py-3.5 px-3">{locale === "uz" ? "Narxi" : "Цена"}</th>
+                <th className="py-3.5 px-3">{locale === "uz" ? "Holati" : "Статус"}</th>
+                <th className="py-3.5 px-3 text-center">{locale === "uz" ? "Ko‘rish" : "Просм."}</th>
+                <th className="py-3.5 px-3 text-center">{locale === "uz" ? "Aloqa" : "Контакты"}</th>
+                <th className="py-3.5 px-3">{locale === "uz" ? "Sana" : "Дата"}</th>
+                <th className="py-3.5 px-3 text-right sticky right-0 z-10 bg-slate-50 shadow-[-10px_0_14px_-12px_rgba(15,23,42,0.25)]">{locale === "uz" ? "Amallar" : "Действия"}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -422,7 +422,7 @@ export default function AdminPropertiesPage() {
                 filtered.map((prop) => (
                   <tr key={prop.id} className="group/row hover:bg-slate-50/60 transition-colors">
                     {/* Object Details & Photo */}
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-3">
                       <div className="flex items-center gap-3">
                         <div className="relative h-12 w-12 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200">
                           {prop.images[0] ? (
@@ -436,7 +436,7 @@ export default function AdminPropertiesPage() {
                             <Building2 className="h-5 w-5 text-slate-400 m-auto mt-3.5" />
                           )}
                         </div>
-                        <div className="min-w-0 max-w-xs">
+                        <div className="min-w-0 max-w-[240px] xl:max-w-[280px] 2xl:max-w-xs">
                           <h4 className="font-bold text-slate-900 truncate">
                             {locale === "uz" ? prop.title_uz : (prop.title_ru || prop.title_uz)}
                           </h4>
@@ -478,7 +478,7 @@ export default function AdminPropertiesPage() {
                     </td>
 
                     {/* Type & Tx */}
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-3">
                       <div className="space-y-1">
                         <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">
                           {getPropertyTypeLabel(prop.property_type, locale)}
@@ -494,7 +494,7 @@ export default function AdminPropertiesPage() {
                     </td>
 
                     {/* Price */}
-                    <td className="py-3.5 px-4 font-black text-slate-900 whitespace-nowrap">
+                    <td className="py-3.5 px-3 font-black text-slate-900 whitespace-nowrap">
                       {prop.price_usd ? (
                         <>
                           <div>${prop.price_usd.toLocaleString()}</div>
@@ -508,7 +508,7 @@ export default function AdminPropertiesPage() {
                     </td>
 
                     {/* Interactive Quick Status Selector */}
-                    <td className="py-3.5 px-4 whitespace-nowrap">
+                    <td className="py-3.5 px-3 whitespace-nowrap">
                       <div className="relative inline-flex items-center">
                         {updatingStatusId === prop.id ? (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-slate-100 text-slate-600 animate-pulse">
@@ -542,7 +542,7 @@ export default function AdminPropertiesPage() {
                                 setUpdatingStatusId(null);
                               }
                             }}
-                            className={`cursor-pointer appearance-none pl-6 pr-6 py-1 rounded-full text-[11px] font-extrabold border shadow-xs transition-all outline-none focus:ring-2 focus:ring-[#167d4f] ${
+                            className={`cursor-pointer appearance-none pl-6 pr-3 py-1 rounded-full text-[11px] font-extrabold border shadow-xs transition-all outline-none focus:ring-2 focus:ring-[#167d4f] ${
                               prop.status === "published"
                                 ? "bg-[#eaf5f0]/60 text-[#167d4f] border-[#2db477]/40 hover:bg-[#eaf5f0]"
                                 : prop.status === "draft"
@@ -590,23 +590,23 @@ export default function AdminPropertiesPage() {
                     </td>
 
                     {/* Views & Favs */}
-                    <td className="py-3.5 px-4 text-center font-bold text-slate-700">
+                    <td className="py-3.5 px-3 text-center font-bold text-slate-700">
                       {prop.views_count || 0}
                     </td>
 
                     {/* Contact Clicks */}
-                    <td className="py-3.5 px-4 text-center font-bold text-[#167d4f]">
+                    <td className="py-3.5 px-3 text-center font-bold text-[#167d4f]">
                       {prop.contacts_count || 0}
                     </td>
 
                     {/* Date */}
-                    <td className="py-3.5 px-4 text-[11px] text-slate-600 font-medium whitespace-nowrap">
+                    <td className="py-3.5 px-3 text-[11px] text-slate-600 font-medium whitespace-nowrap">
                       {new Date(prop.created_at).toLocaleDateString()}
                     </td>
 
                     {/* Actions Menu — sticky so actions stay visible on narrower screens */}
-                    <td className="py-3.5 px-4 text-right sticky right-0 z-[1] bg-white group-hover/row:bg-slate-50 transition-colors shadow-[-10px_0_14px_-12px_rgba(15,23,42,0.25)]">
-                      <div className="flex items-center justify-end gap-1.5">
+                    <td className="py-3.5 px-3 text-right sticky right-0 z-[1] bg-white group-hover/row:bg-slate-50 transition-colors shadow-[-10px_0_14px_-12px_rgba(15,23,42,0.25)]">
+                      <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => handleOpenTelegramModal(prop)}
                           title={locale === "uz" ? "Telegram Bot obunachilariga xabar" : "Сообщение подписчикам бота"}
