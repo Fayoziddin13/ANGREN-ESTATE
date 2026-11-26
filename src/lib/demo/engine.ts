@@ -18,9 +18,14 @@
  *  - Rejecting something that was paid opens a refund request for the admin.
  *  - Prices always come from admin settings at the moment the order is made;
  *    an active promotion and then a promo code reduce the amount.
+ *  - Payment is a MANUAL CARD TRANSFER: the user sees the card the admin set,
+ *    transfers the amount in a bank app and uploads the receipt; only the
+ *    admin can mark the order paid after checking the bank. The user can never
+ *    change the payment status beyond "receipt sent" or "cancel my order".
+ *    In this demo the card is fake and no money moves.
  */
 
-export const DEMO_STATE_VERSION = 1;
+export const DEMO_STATE_VERSION = 2;
 export const DEMO_STORAGE_KEY = "angren_demo_v1";
 
 export type Locale = "uz" | "ru";
@@ -32,7 +37,20 @@ export const STATUS_TYPES: StatusType[] = ["top", "tez_sotiladi", "yaxshi_taklif
 export const STATUS_DAYS: StatusDays[] = [3, 7, 30];
 
 export type Moderation = "not_submitted" | "pending" | "approved" | "rejected" | "revision";
-export type PaymentStatus = "pending" | "paid" | "failed" | "cancelled";
+export type PaymentStatus =
+  | "awaiting_payment"
+  | "receipt_submitted"
+  | "under_review"
+  | "paid"
+  | "rejected"
+  | "cancelled"
+  | "refund_requested"
+  | "refunded";
+/** Money was received (refund states keep the original payment). */
+export const PAID_LIKE: PaymentStatus[] = ["paid", "refund_requested", "refunded"];
+export const isPaidLike = (s: PaymentStatus) => PAID_LIKE.includes(s);
+/** The user may (re)send a receipt or cancel only in these states. */
+export const USER_PAYABLE: PaymentStatus[] = ["awaiting_payment", "rejected"];
 export type RefundStatus = "none" | "requested" | "refunded" | "declined";
 export type StatusOrderState = "awaiting_payment" | "pending_approval" | "active" | "rejected" | "cancelled";
 export type PromoTarget = "all" | "listing" | "status";
@@ -62,6 +80,35 @@ export interface Settings {
   statusPrices: Record<StatusType, Record<StatusDays, number>>;
   /** Demo-only clock shift so expiry can be tested without waiting days. */
   clockOffsetMs: number;
+  paymentCard: PaymentCard;
+}
+
+export interface PaymentCard {
+  enabled: boolean;
+  cardNumber: string; // 16 digits, stored without spaces
+  holder: string;
+  bank: string;
+  instructions: string;
+}
+
+export interface Receipt {
+  id: string;
+  /** SHA-256 of the original file bytes: the same receipt cannot be used twice. */
+  hash: string;
+  fileName: string;
+  mime: "image/jpeg" | "image/png" | "application/pdf";
+  size: number;
+  /** File content (images are shrunk). Shown only in the admin panel. */
+  dataUrl: string;
+  note: string;
+  submittedAt: string;
+}
+
+export interface Review {
+  at: string;
+  adminId: string;
+  decision: "approved" | "rejected" | "info_requested";
+  note: string | null;
 }
 
 export interface PromoCode {
@@ -101,12 +148,18 @@ export interface Order {
   promoDiscount: number;
   amount: number;
   paymentStatus: PaymentStatus;
+  receipts: Receipt[];
+  reviews: Review[];
+  /** Last admin rejection reason or info request, shown to the user. */
+  adminNote: string | null;
+  submittedAt: string | null;
+  /** Refund is stored apart from the payment: request reason and result. */
   refundStatus: RefundStatus;
   refundNote: string | null;
-  attempts: { at: string; outcome: "success" | "failed" | "cancelled" }[];
+  refundedAt: string | null;
+  events: { at: string; actor: string; text: string }[];
   createdAt: string;
   paidAt: string | null;
-  refundedAt: string | null;
 }
 
 export interface Listing {
@@ -212,6 +265,15 @@ export function formatSum(value: number, locale: Locale = "uz"): string {
 
 // ---------------------------------------------------------------- seed
 
+/** A deliberately fake card: the demo never shows a real card number. */
+export const DEMO_CARD: PaymentCard = {
+  enabled: true,
+  cardNumber: "0000111122223333",
+  holder: "DEMO KARTA EGASI",
+  bank: "Demo bank",
+  instructions: "Bank ilovasida summani aniq o‘tkazing, izohga buyurtma ID ni yozing, so‘ng chekni shu sahifaga yuklang.",
+};
+
 export const DEMO_CREDENTIALS = {
   user: { login: "demo", password: "demo123" },
   admin: { login: "admin", password: "admin123" },
@@ -268,6 +330,7 @@ export function createSeedState(real: number = Date.now()): DemoState {
         yaxshi_taklif: { 3: 8000, 7: 16000, 30: 45000 },
       },
       clockOffsetMs: 0,
+      paymentCard: { ...DEMO_CARD },
     },
     listings: [
       seedListing("l-seed-1", "3 xonali kvartira, 5-mavze", { price: 38000, rooms: 3, area: 72, location: "Angren, 5-mavze", description: "Demo namuna: ta’mirlangan, 3-qavat." }),
@@ -303,7 +366,7 @@ export function normalizeState(raw: unknown, real: number = Date.now()): DemoSta
     ...seed,
     ...s,
     sessions: { user: s.sessions?.user ?? null, admin: s.sessions?.admin ?? null },
-    settings: { ...seed.settings, ...s.settings },
+    settings: { ...seed.settings, ...s.settings, paymentCard: { ...seed.settings.paymentCard, ...(s.settings?.paymentCard ?? {}) } },
     listings: s.listings ?? [],
     orders: s.orders ?? [],
     statusOrders: s.statusOrders ?? [],
@@ -452,13 +515,17 @@ function makeOrder(s: DemoState, userId: string, kind: Order["kind"], targetId: 
     promoCode: q.promo?.code ?? null,
     promoDiscount: q.promoDiscount,
     amount: q.total,
-    paymentStatus: "pending",
+    paymentStatus: "awaiting_payment",
+    receipts: [],
+    reviews: [],
+    adminNote: null,
+    submittedAt: null,
     refundStatus: "none",
     refundNote: null,
-    attempts: [],
+    refundedAt: null,
+    events: [{ at: nowIso(s), actor: "Tizim", text: `Buyurtma yaratildi: ${formatSum(q.total)}` }],
     createdAt: nowIso(s),
     paidAt: null,
-    refundedAt: null,
   };
 }
 
@@ -527,7 +594,7 @@ export function createListing(state: DemoState, userId: string, input: ListingIn
     return { state: s, ok: true, message: "Chegirma 100%: e’lon to‘lovsiz moderatsiyaga yuborildi", listingId: listing.id, orderId: order.id };
   }
   addLog(s, user.name, `Pullik e’lon uchun buyurtma: ${formatSum(order.amount)}`);
-  return { state: s, ok: true, message: `Buyurtma yaratildi: ${formatSum(order.amount)}. Demo to‘lov sahifasiga o‘ting`, listingId: listing.id, orderId: order.id };
+  return { state: s, ok: true, message: `Buyurtma yaratildi: ${formatSum(order.amount)}. Kartaga o‘tkazing va chekni yuklang`, listingId: listing.id, orderId: order.id };
 }
 
 /** After "revision requested": the owner edits the listing and sends it back; no new payment. */
@@ -547,40 +614,205 @@ export function resubmitListing(state: DemoState, userId: string, listingId: str
   return { state: s, ok: true, message: "E’lon tuzatildi va qayta moderatsiyaga yuborildi", listingId };
 }
 
-// ---------------------------------------------------------------- payment (demo only)
+/// ---------------------------------------------------------------- manual card payment
 
-export function payOrder(state: DemoState, orderId: string, outcome: "success" | "failed" | "cancelled", actorUserId: string): ActionResult {
+export const RECEIPT_LIMITS = {
+  /** Original image size accepted before it is shrunk in the browser. */
+  maxImageBytes: 10 * 1024 * 1024,
+  /** PDFs are stored as they are, so they must stay small (localStorage). */
+  maxPdfBytes: 1.5 * 1024 * 1024,
+};
+
+/** Detects the real file type from its first bytes (never from the name). */
+export function sniffReceipt(bytes: Uint8Array): Receipt["mime"] | null {
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
+  if (bytes.length >= 8 && [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every((b, i) => bytes[i] === b)) return "image/png";
+  if (bytes.length >= 5 && [0x25, 0x50, 0x44, 0x46, 0x2d].every((b, i) => bytes[i] === b)) return "application/pdf";
+  return null;
+}
+
+/** Checks a file before it is stored: the real type must be JPG/PNG/PDF, match the declared type and fit the size limit. */
+export function validateReceiptFile(
+  file: { name: string; type: string; size: number },
+  head: Uint8Array
+): { ok: true; mime: Receipt["mime"] } | { ok: false; reason: string } {
+  const mime = sniffReceipt(head);
+  if (!mime) return { ok: false, reason: "Faqat JPG, PNG yoki PDF chek qabul qilinadi (fayl ichi tekshirildi)" };
+  const declared = file.type === "image/jpg" ? "image/jpeg" : file.type;
+  if (declared && declared !== mime) return { ok: false, reason: "Fayl turi uning ichidagi ma’lumotga mos emas" };
+  if (file.size <= 0) return { ok: false, reason: "Fayl bo‘sh" };
+  const limit = mime === "application/pdf" ? RECEIPT_LIMITS.maxPdfBytes : RECEIPT_LIMITS.maxImageBytes;
+  if (file.size > limit) return { ok: false, reason: mime === "application/pdf" ? "PDF chek 1.5 MB dan oshmasin" : "Rasm 10 MB dan oshmasin" };
+  return { ok: true, mime };
+}
+
+function orderEvent(o: Order, s: DemoState, actor: string, text: string) {
+  o.events.push({ at: nowIso(s), actor, text });
+}
+
+export type ReceiptInput = Omit<Receipt, "id" | "submittedAt">;
+
+/** The user sends a transfer receipt. This is the only payment step the user can take. */
+export function submitReceipt(state: DemoState, userId: string, orderId: string, input: ReceiptInput): ActionResult {
   const o = state.orders.find((x) => x.id === orderId);
   if (!o) return fail(state, "Buyurtma topilmadi");
-  if (o.userId !== actorUserId) return fail(state, "Bu buyurtma boshqa foydalanuvchiga tegishli");
-  if (o.paymentStatus === "paid") return fail(state, "Bu buyurtma allaqachon to‘langan (ikki marta to‘lab bo‘lmaydi)");
+  if (o.userId !== userId) return fail(state, "Bu buyurtma boshqa foydalanuvchiga tegishli");
+  if (!state.settings.paymentCard.enabled) return fail(state, "Kartaga to‘lov qabul qilish vaqtincha o‘chirilgan");
   if (o.amount <= 0) return fail(state, "Bu buyurtma uchun to‘lov talab qilinmaydi");
-  const s = clone(state);
-  const order = s.orders.find((x) => x.id === orderId)!;
-  order.attempts.push({ at: nowIso(s), outcome });
-  if (outcome === "success") {
-    // Re-check the promo limit at payment time (another payment may have used it).
-    if (order.promoCode) {
-      const p = s.promoCodes.find((x) => x.code === order.promoCode);
-      if (p && p.usageLimit > 0 && p.used >= p.usageLimit) {
-        order.attempts[order.attempts.length - 1].outcome = "failed";
-        order.paymentStatus = "failed";
-        return { state: s, ok: false, message: "Promokod limiti tugagan: buyurtmani qaytadan yarating", orderId };
-      }
-    }
-    settlePaid(s, order, "Demo to‘lov muvaffaqiyatli");
-    addLog(s, "Demo to‘lov", `To‘landi: ${order.title} — ${formatSum(order.amount)}`);
-    const next = order.kind === "listing" ? "E’lon moderatsiyaga yuborildi" : "Status admin tasdig‘ini kutmoqda";
-    return { state: s, ok: true, message: `To‘lov muvaffaqiyatli (DEMO). ${next}`, orderId };
+  if (isPaidLike(o.paymentStatus)) return fail(state, "Bu buyurtma allaqachon to‘langan");
+  if (!USER_PAYABLE.includes(o.paymentStatus)) {
+    return fail(state, o.paymentStatus === "cancelled" ? "Buyurtma bekor qilingan" : "Chek allaqachon yuborilgan, admin tekshirmoqda");
   }
-  order.paymentStatus = outcome;
-  addLog(s, "Demo to‘lov", `${outcome === "failed" ? "To‘lov o‘tmadi" : "To‘lov bekor qilindi"}: ${order.title}`);
+  if (!["image/jpeg", "image/png", "application/pdf"].includes(input.mime)) return fail(state, "Faqat JPG, PNG yoki PDF");
+  if (!/^[a-f0-9]{64}$/.test(input.hash)) return fail(state, "Chekni o‘qib bo‘lmadi");
+  const prefix = input.mime === "application/pdf" ? "data:application/pdf" : "data:image/";
+  if (!input.dataUrl.startsWith(prefix)) return fail(state, "Chek fayli buzilgan");
+  const used = state.orders.find((x) => x.receipts.some((r) => r.hash === input.hash));
+  if (used) {
+    return fail(state, used.id === orderId ? "Bu chek shu buyurtmaga allaqachon yuborilgan" : "Bu chek boshqa buyurtmada ishlatilgan — qayta ishlatib bo‘lmaydi");
+  }
+  const s = clone(state);
+  const m = s.orders.find((x) => x.id === orderId)!;
+  m.receipts.push({
+    ...input,
+    note: input.note.trim().slice(0, 500),
+    fileName: input.fileName.slice(0, 120),
+    id: newId("r"),
+    submittedAt: nowIso(s),
+  });
+  m.paymentStatus = "receipt_submitted";
+  m.submittedAt = nowIso(s);
+  m.adminNote = null;
+  orderEvent(m, s, "Foydalanuvchi", `Chek yuborildi: ${input.fileName}`);
+  addLog(s, "Foydalanuvchi", `Chek yuborildi: ${m.title}`);
+  return { state: s, ok: true, message: "Chek yuborildi. Admin bank tushumini tekshirgach, to‘lov tasdiqlanadi", orderId };
+}
+
+/** The user cancels an unpaid order (before paying or after a rejected receipt). */
+export function cancelOrder(state: DemoState, userId: string, orderId: string): ActionResult {
+  const o = state.orders.find((x) => x.id === orderId);
+  if (!o || o.userId !== userId) return fail(state, "Buyurtma topilmadi");
+  if (!USER_PAYABLE.includes(o.paymentStatus)) return fail(state, "Bu holatda buyurtmani bekor qilib bo‘lmaydi");
+  const s = clone(state);
+  const m = s.orders.find((x) => x.id === orderId)!;
+  m.paymentStatus = "cancelled";
+  orderEvent(m, s, "Foydalanuvchi", "Buyurtma bekor qilindi");
+  if (m.kind === "status") {
+    const so = s.statusOrders.find((x) => x.id === m.targetId);
+    if (so && so.state === "awaiting_payment") so.state = "cancelled";
+  } else {
+    const l = s.listings.find((x) => x.id === m.targetId);
+    l?.history.push({ at: nowIso(s), text: "To‘lov buyurtmasi bekor qilindi" });
+  }
+  addLog(s, "Foydalanuvchi", `Buyurtma bekor qilindi: ${m.title}`);
+  return { state: s, ok: true, message: "Buyurtma bekor qilindi. E’lon moderatsiyaga yuborilmadi", orderId };
+}
+
+/** A paid listing whose order was cancelled gets a fresh order at today's price. */
+export function renewListingOrder(state: DemoState, userId: string, listingId: string): ActionResult {
+  const l = state.listings.find((x) => x.id === listingId && x.userId === userId);
+  if (!l || l.billing !== "paid" || l.moderation !== "not_submitted") return fail(state, "Bu e’lon uchun yangi buyurtma kerak emas");
+  const old = state.orders.find((x) => x.id === l.orderId);
+  if (old && old.paymentStatus !== "cancelled") return fail(state, "Avvalgi buyurtma hali faol");
+  const s = clone(state);
+  const m = s.listings.find((x) => x.id === listingId)!;
+  const q = quote(s, s.settings.plans[m.plan].price, "listing");
+  const order = makeOrder(s, userId, "listing", m.id, `E’lon: ${m.title} (${s.settings.plans[m.plan].nameUz})`, q);
+  m.orderId = order.id;
+  s.orders.unshift(order);
+  if (order.amount === 0) settlePaid(s, order, "Chegirma 100%");
+  return { state: s, ok: true, message: `Yangi buyurtma yaratildi: ${formatSum(order.amount)}`, orderId: order.id };
+}
+
+function requireReviewable(state: DemoState, adminId: string, orderId: string): { admin: DemoUser; order: Order } | string {
+  const admin = state.users.find((u) => u.id === adminId && u.role === "admin");
+  if (!admin) return "Faqat admin to‘lovni tekshira oladi";
+  const order = state.orders.find((x) => x.id === orderId);
+  if (!order) return "Buyurtma topilmadi";
+  if (isPaidLike(order.paymentStatus)) return "Bu buyurtma allaqachon tasdiqlangan — ikkinchi marta tasdiqlab bo‘lmaydi";
+  if (order.paymentStatus !== "receipt_submitted" && order.paymentStatus !== "under_review") return "Tekshirish uchun yuborilgan chek yo‘q";
+  return { admin, order };
+}
+
+/** Admin takes a receipt for checking. */
+export function startPaymentReview(state: DemoState, adminId: string, orderId: string): ActionResult {
+  const r = requireReviewable(state, adminId, orderId);
+  if (typeof r === "string") return fail(state, r);
+  if (r.order.paymentStatus === "under_review") return { state, ok: true, message: "Chek tekshirilmoqda" };
+  const s = clone(state);
+  const m = s.orders.find((x) => x.id === orderId)!;
+  m.paymentStatus = "under_review";
+  orderEvent(m, s, r.admin.name, "Tekshiruvga olindi");
+  addLog(s, r.admin.name, `Chekni tekshirishni boshladi: ${m.title}`);
+  return { state: s, ok: true, message: "Chek tekshiruvga olindi. Bank tushumini alohida tekshiring" };
+}
+
+/** Admin confirms the money arrived. A listing then goes to MODERATION, not straight to the site. */
+export function approvePayment(state: DemoState, adminId: string, orderId: string): ActionResult {
+  const r = requireReviewable(state, adminId, orderId);
+  if (typeof r === "string") return fail(state, r);
+  const s = clone(state);
+  const m = s.orders.find((x) => x.id === orderId)!;
+  m.reviews.push({ at: nowIso(s), adminId, decision: "approved", note: null });
+  m.adminNote = null;
+  settlePaid(s, m, "To‘lov admin tomonidan tasdiqlandi");
+  orderEvent(m, s, r.admin.name, "To‘lov tasdiqlandi");
+  addLog(s, r.admin.name, `To‘lovni tasdiqladi: ${m.title} — ${formatSum(m.amount)}`);
   return {
     state: s,
     ok: true,
-    message: outcome === "failed" ? "To‘lov amalga oshmadi (DEMO). Qayta urinib ko‘rishingiz mumkin" : "To‘lov bekor qilindi (DEMO). E’lon moderatsiyaga yuborilmadi",
-    orderId,
+    message: m.kind === "listing" ? "To‘lov tasdiqlandi. E’lon moderatsiyaga o‘tdi (hali saytda emas)" : "To‘lov tasdiqlandi. Status admin tasdig‘ini kutmoqda",
   };
+}
+
+export function rejectPayment(state: DemoState, adminId: string, orderId: string, reason: string): ActionResult {
+  if (!reason.trim()) return fail(state, "Rad etish sababini yozing");
+  const r = requireReviewable(state, adminId, orderId);
+  if (typeof r === "string") return fail(state, r);
+  const s = clone(state);
+  const m = s.orders.find((x) => x.id === orderId)!;
+  m.paymentStatus = "rejected";
+  m.adminNote = reason.trim();
+  m.reviews.push({ at: nowIso(s), adminId, decision: "rejected", note: reason.trim() });
+  orderEvent(m, s, r.admin.name, `To‘lov rad etildi: ${reason.trim()}`);
+  addLog(s, r.admin.name, `To‘lovni rad etdi: ${m.title} (${reason.trim()})`);
+  return { state: s, ok: true, message: "To‘lov rad etildi. Foydalanuvchi sababni ko‘radi va yangi chek yuborishi mumkin" };
+}
+
+export function requestPaymentInfo(state: DemoState, adminId: string, orderId: string, note: string): ActionResult {
+  if (!note.trim()) return fail(state, "Qanday ma’lumot kerakligini yozing");
+  const r = requireReviewable(state, adminId, orderId);
+  if (typeof r === "string") return fail(state, r);
+  const s = clone(state);
+  const m = s.orders.find((x) => x.id === orderId)!;
+  m.paymentStatus = "awaiting_payment";
+  m.adminNote = note.trim();
+  m.reviews.push({ at: nowIso(s), adminId, decision: "info_requested", note: note.trim() });
+  orderEvent(m, s, r.admin.name, `Qo‘shimcha ma’lumot so‘raldi: ${note.trim()}`);
+  addLog(s, r.admin.name, `Qo‘shimcha chek/ma’lumot so‘radi: ${m.title}`);
+  return { state: s, ok: true, message: "Foydalanuvchidan qo‘shimcha chek yoki ma’lumot so‘raldi" };
+}
+
+export function updatePaymentCard(state: DemoState, adminId: string, card: PaymentCard): ActionResult {
+  const admin = state.users.find((u) => u.id === adminId && u.role === "admin");
+  if (!admin) return fail(state, "Kartani faqat admin o‘zgartira oladi");
+  const digits = card.cardNumber.replace(/\D/g, "");
+  if (digits.length !== 16) return fail(state, "Karta raqami 16 ta raqam bo‘lsin");
+  if (card.holder.trim().length < 3) return fail(state, "Karta egasining ismini yozing");
+  const s = clone(state);
+  s.settings.paymentCard = {
+    enabled: Boolean(card.enabled),
+    cardNumber: digits,
+    holder: card.holder.trim().slice(0, 80),
+    bank: card.bank.trim().slice(0, 80),
+    instructions: card.instructions.trim().slice(0, 600),
+  };
+  addLog(s, admin.name, `To‘lov kartasi o‘zgartirildi (•••• ${digits.slice(-4)}, qabul: ${card.enabled ? "yoqilgan" : "o‘chirilgan"})`);
+  return { state: s, ok: true, message: "To‘lov kartasi saqlandi" };
+}
+
+export function formatCard(digits: string): string {
+  return digits.replace(/\D/g, "").replace(/(\d{4})(?=\d)/g, "$1 ");
 }
 
 // ---------------------------------------------------------------- status purchase
@@ -641,8 +873,10 @@ function openRefund(s: DemoState, orderId: string | null, why: string) {
   if (!orderId) return false;
   const o = s.orders.find((x) => x.id === orderId);
   if (!o || o.paymentStatus !== "paid" || o.amount <= 0 || o.refundStatus !== "none") return false;
+  o.paymentStatus = "refund_requested";
   o.refundStatus = "requested";
   o.refundNote = why;
+  o.events.push({ at: nowIso(s), actor: "Tizim", text: `Pul qaytarish so‘rovi: ${why}` });
   return true;
 }
 
@@ -761,7 +995,10 @@ export function decideRefund(state: DemoState, adminId: string, orderId: string,
   const s = clone(state);
   const m = s.orders.find((x) => x.id === orderId)!;
   m.refundStatus = decision;
+  // The payment record follows the refund result; the refund itself stays in refundStatus/refundNote/refundedAt.
+  m.paymentStatus = decision === "refunded" ? "refunded" : "paid";
   if (decision === "refunded") m.refundedAt = nowIso(s);
+  m.events.push({ at: nowIso(s), actor: admin.name, text: decision === "refunded" ? "Pul qaytarilgani qayd etildi" : "Qaytarish rad etildi" });
   addLog(s, admin.name, `${decision === "refunded" ? "Pul qaytarildi (DEMO)" : "Qaytarish rad etildi"}: ${m.title}`);
   return { state: s, ok: true, message: decision === "refunded" ? "Qaytarish bajarildi deb belgilandi (DEMO, haqiqiy pul o‘tkazilmadi)" : "Qaytarish rad etildi" };
 }
@@ -898,9 +1135,10 @@ export function publicListings(state: DemoState): PublicListing[] {
 }
 
 export function stats(state: DemoState) {
-  const paid = state.orders.filter((o) => o.paymentStatus === "paid");
+  const paid = state.orders.filter((o) => isPaidLike(o.paymentStatus));
   const refunded = state.orders.filter((o) => o.refundStatus === "refunded");
   return {
+    paymentReviews: state.orders.filter((o) => o.paymentStatus === "receipt_submitted" || o.paymentStatus === "under_review").length,
     pendingModeration: state.listings.filter((l) => l.moderation === "pending").length,
     pendingStatuses: state.statusOrders.filter((x) => x.state === "pending_approval").length,
     refundRequests: state.orders.filter((o) => o.refundStatus === "requested").length,

@@ -3,13 +3,15 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  LayoutDashboard, ShieldCheck, Sparkles, Tag, Megaphone, Receipt, ScrollText, LogIn, Check, X, Pencil, RotateCcw, Clock, Power, Save, Trash2,
+  LayoutDashboard, ShieldCheck, Sparkles, Tag, Megaphone, Receipt, ScrollText, LogIn, Check, X, Pencil, RotateCcw, Clock, Power, Save, Trash2, Eye, MessageSquare,
 } from "lucide-react";
-import { resetDemoState, useDemo, useTicker } from "@/lib/demo/store";
+import { dataUrlToObjectUrl, resetDemoState, useDemo, useTicker } from "@/lib/demo/store";
 import {
   STATUS_DAYS, STATUS_NAMES, STATUS_TYPES, approveListing, approveStatus, currentUser, decideRefund, formatSum, nowIso, promotionPhase,
   rejectListing, rejectStatus, requestRevision, savePromo, savePromotion, shiftClock, stats, statusPhase, togglePromo, togglePromotion, updateSettings,
+  approvePayment, formatCard, rejectPayment, requestPaymentInfo, startPaymentReview, updatePaymentCard,
   type DemoState, type Listing, type Moderation, type PromoCode, type PromoInput, type Promotion, type PromotionInput, type StatusDays, type StatusType,
+  type Order, type PaymentCard, type Receipt as DemoReceipt, type Review,
 } from "@/lib/demo/engine";
 import {
   Card, Loading, MODERATION_UI, PAYMENT_UI, Pill, REFUND_UI, ResultBanner, STATUS_PHASE_UI, SectionTitle, Toggle, btnDanger, btnPrimary, btnSecondary,
@@ -57,7 +59,7 @@ export default function DemoAdmin() {
     );
   }
   const st = stats(state);
-  const badge: Partial<Record<TabId, number>> = { moderatsiya: st.pendingModeration, statuslar: st.pendingStatuses, tolovlar: st.refundRequests };
+  const badge: Partial<Record<TabId, number>> = { moderatsiya: st.pendingModeration, statuslar: st.pendingStatuses, tolovlar: st.paymentReviews + st.refundRequests };
 
   const choose = (id: TabId) => {
     setTab(id);
@@ -74,9 +76,10 @@ export default function DemoAdmin() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         <Stat label="Moderatsiyada" value={st.pendingModeration} />
         <Stat label="Status kutmoqda" value={st.pendingStatuses} />
+        <Stat label="To‘lov tekshiruvi" value={st.paymentReviews} />
         <Stat label="Qaytarish so‘rovi" value={st.refundRequests} />
         <Stat label="Demo tushum" value={formatSum(st.revenue)} />
       </div>
@@ -124,6 +127,51 @@ function MoneyInput({ id, value, onChange }: { id: string; value: number; onChan
       <input id={id} inputMode="numeric" className={`${inputCls} pr-12`} value={String(value)} onChange={(e) => onChange(Number(e.target.value.replace(/\D/g, "")) || 0)} />
       <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-brand-subtle">so‘m</span>
     </div>
+  );
+}
+
+// ------------------------------------------------------------------ payment card
+
+function PaymentCardSettings({ state, adminId, run }: { state: DemoState; adminId: string; run: Run }) {
+  const saved = state.settings.paymentCard;
+  const [card, setCard] = useState<PaymentCard>({ ...saved, cardNumber: formatCard(saved.cardNumber) });
+  useEffect(() => {
+    setCard({ ...state.settings.paymentCard, cardNumber: formatCard(state.settings.paymentCard.cardNumber) });
+  }, [state.settings.paymentCard]);
+  const set = <K extends keyof PaymentCard>(k: K, v: PaymentCard[K]) => setCard({ ...card, [k]: v });
+  return (
+    <Card className="lg:col-span-2">
+      <SectionTitle hint="Foydalanuvchi to‘lov sahifasida shu karta va summani ko‘radi. Faqat admin o‘zgartira oladi. DEMO: haqiqiy karta kiritmang">
+        To‘lov kartasi
+      </SectionTitle>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label className={labelCls} htmlFor="pc-number">Karta raqami</label>
+          <input id="pc-number" inputMode="numeric" className={`${inputCls} tracking-wider`} value={card.cardNumber}
+            onChange={(e) => set("cardNumber", formatCard(e.target.value.replace(/\D/g, "").slice(0, 16)))} />
+        </div>
+        <div>
+          <label className={labelCls} htmlFor="pc-holder">Karta egasining ismi</label>
+          <input id="pc-holder" className={inputCls} value={card.holder} onChange={(e) => set("holder", e.target.value)} />
+        </div>
+        <div>
+          <label className={labelCls} htmlFor="pc-bank">Bank nomi (ixtiyoriy)</label>
+          <input id="pc-bank" className={inputCls} value={card.bank} onChange={(e) => set("bank", e.target.value)} />
+        </div>
+        <div className="flex items-end">
+          <div className="w-full">
+            <Toggle label="To‘lov qabul qilish" hint="O‘chirilsa, foydalanuvchi chek yubora olmaydi" checked={card.enabled} onChange={(v) => set("enabled", v)} />
+          </div>
+        </div>
+        <div className="sm:col-span-2">
+          <label className={labelCls} htmlFor="pc-instr">To‘lov bo‘yicha yo‘riqnoma</label>
+          <textarea id="pc-instr" rows={2} className={inputCls} value={card.instructions} onChange={(e) => set("instructions", e.target.value)} />
+        </div>
+      </div>
+      <button type="button" className={`${btnPrimary} mt-3`} onClick={() => run((x) => updatePaymentCard(x, adminId, card))}>
+        <Save className="h-4 w-4" /> Kartani saqlash
+      </button>
+    </Card>
   );
 }
 
@@ -205,6 +253,8 @@ function SettingsTab({ state, adminId, run, onReset }: { state: DemoState; admin
           <Save className="h-4 w-4" /> Status narxlarini saqlash
         </button>
       </Card>
+
+      <PaymentCardSettings state={state} adminId={adminId} run={run} />
 
       <Card>
         <SectionTitle hint="Faqat demo uchun: statuslar muddati tugashini kutmasdan tekshirish">Demo soati</SectionTitle>
@@ -562,73 +612,171 @@ function PromotionsTab({ state, adminId, run }: { state: DemoState; adminId: str
   );
 }
 
-// ------------------------------------------------------------------ orders & refunds
+// ------------------------------------------------------------------ payments, receipts & refunds
+
+function ReceiptViewer({ receipt }: { receipt: DemoReceipt }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    const u = dataUrlToObjectUrl(receipt.dataUrl);
+    setUrl(u);
+    return () => {
+      if (u) URL.revokeObjectURL(u);
+    };
+  }, [receipt.dataUrl]);
+  return (
+    <div className="space-y-2 rounded-xl border border-brand-border bg-brand-canvas p-2.5">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-brand-muted">
+        <span className="font-bold text-brand-text">{receipt.fileName}</span>
+        <span>{receipt.mime === "application/pdf" ? "PDF" : receipt.mime === "image/png" ? "PNG" : "JPG"} · {(receipt.size / 1024).toFixed(0)} KB</span>
+        <span>{fmtDate(receipt.submittedAt)}</span>
+        <span title={receipt.hash}>SHA-256: {receipt.hash.slice(0, 12)}…</span>
+        {url && <a href={url} download={receipt.fileName} className="font-bold text-brand-primary hover:underline">Yuklab olish</a>}
+      </div>
+      {receipt.note && <p className="text-xs text-brand-text">Foydalanuvchi izohi: {receipt.note}</p>}
+      {receipt.mime === "application/pdf" ? (
+        url ? <iframe title={`Chek ${receipt.fileName}`} src={url} className="h-96 w-full rounded-lg border border-brand-border bg-white" /> : null
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={receipt.dataUrl} alt={`Chek ${receipt.fileName}`} className="max-h-96 w-auto rounded-lg border border-brand-border bg-white" />
+      )}
+    </div>
+  );
+}
+
+const DECISION_LABEL: Record<Review["decision"], string> = {
+  approved: "Tasdiqlandi",
+  rejected: "Rad etildi",
+  info_requested: "Qo‘shimcha ma’lumot so‘raldi",
+};
+
+function PaymentRequestCard({ state, order: o, adminId, run }: { state: DemoState; order: Order; adminId: string; run: Run }) {
+  const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<null | "reject" | "info">(null);
+  const [text, setText] = useState("");
+  const user = state.users.find((u) => u.id === o.userId);
+  const last = o.receipts[o.receipts.length - 1];
+  const lastReview = o.reviews[o.reviews.length - 1];
+  const reviewable = o.paymentStatus === "receipt_submitted" || o.paymentStatus === "under_review";
+  const pay = PAYMENT_UI[o.paymentStatus];
+
+  const viewReceipt = () => {
+    const next = !open;
+    setOpen(next);
+    if (next && o.paymentStatus === "receipt_submitted") run((x) => startPaymentReview(x, adminId, o.id));
+  };
+  const submit = () => {
+    const r = run((x) => (mode === "reject" ? rejectPayment(x, adminId, o.id, text) : requestPaymentInfo(x, adminId, o.id, text)));
+    if (r.ok) { setMode(null); setText(""); }
+  };
+
+  return (
+    <Card className="space-y-3">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="font-black text-brand-text">{o.title}</p>
+          <p className="text-[11px] text-brand-muted">ID: {o.id}</p>
+        </div>
+        <Pill tone={pay.tone}>{pay.label}</Pill>
+      </div>
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs sm:grid-cols-4">
+        <div><dt className="font-bold text-brand-muted">Foydalanuvchi</dt><dd className="text-brand-text">{user?.name}</dd></div>
+        <div><dt className="font-bold text-brand-muted">Tarif / status</dt><dd className="text-brand-text">{o.kind === "listing" ? "E’lon tarifi" : "Status"}</dd></div>
+        <div><dt className="font-bold text-brand-muted">Yakuniy summa</dt><dd className="font-black text-brand-text">{formatSum(o.amount)}</dd></div>
+        <div><dt className="font-bold text-brand-muted">Chek yuborilgan</dt><dd className="text-brand-text">{fmtDate(o.submittedAt)}</dd></div>
+        <div><dt className="font-bold text-brand-muted">Chek fayli</dt><dd className="text-brand-text">{last ? `${last.fileName} (${o.receipts.length} ta)` : "—"}</dd></div>
+        <div><dt className="font-bold text-brand-muted">Admin qarori</dt><dd className="text-brand-text">{lastReview ? `${DECISION_LABEL[lastReview.decision]} · ${fmtDate(lastReview.at)}` : "—"}</dd></div>
+        <div className="col-span-2"><dt className="font-bold text-brand-muted">Rad etish sababi / so‘rov</dt><dd className="text-brand-text">{o.adminNote ?? [...o.reviews].reverse().find((r) => r.note)?.note ?? "—"}</dd></div>
+      </dl>
+      {o.refundStatus !== "none" && (
+        <p className="rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-xs text-orange-800">
+          <b>Qaytarish:</b> {REFUND_UI[o.refundStatus as Exclude<typeof o.refundStatus, "none">].label} · {o.refundNote}{o.refundedAt ? ` · ${fmtDate(o.refundedAt)}` : ""}
+        </p>
+      )}
+      {last && (
+        <button type="button" className={`${btnSecondary} !py-1.5 text-xs`} onClick={viewReceipt}>
+          <Eye className="h-3.5 w-3.5" /> {open ? "Chekni yopish" : "Chekni ko‘rish"}
+        </button>
+      )}
+      {open && last && (
+        <div className="space-y-2">
+          <ReceiptViewer receipt={last} />
+          {o.receipts.length > 1 && (
+            <p className="text-[11px] text-brand-muted">Oldingi cheklar: {o.receipts.slice(0, -1).map((r) => `${r.fileName} (${fmtDate(r.submittedAt)})`).join(", ")}</p>
+          )}
+        </div>
+      )}
+      {reviewable && (
+        mode ? (
+          <div className="space-y-2 rounded-xl border border-brand-border bg-brand-canvas p-3">
+            <label className={labelCls} htmlFor={`pay-txt-${o.id}`}>{mode === "reject" ? "Rad etish sababi" : "Qanday chek yoki ma’lumot kerak"}</label>
+            <textarea id={`pay-txt-${o.id}`} rows={2} className={inputCls} value={text} onChange={(e) => setText(e.target.value)}
+              placeholder={mode === "reject" ? "Masalan: bank hisobiga bu summa tushmagan" : "Masalan: chekning to‘liq skrinshotini yuboring"} />
+            <div className="flex gap-2">
+              <button type="button" className={mode === "reject" ? btnDanger : btnPrimary} onClick={submit}>{mode === "reject" ? "Rad etish" : "So‘rov yuborish"}</button>
+              <button type="button" className={btnSecondary} onClick={() => { setMode(null); setText(""); }}>Bekor</button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-center gap-2">
+            <button type="button" className={`${btnPrimary} !py-1.5 text-xs`} onClick={() => run((x) => approvePayment(x, adminId, o.id))}>
+              <Check className="h-3.5 w-3.5" /> Tasdiqlash (pul tushdi)
+            </button>
+            <button type="button" className={`${btnDanger} !py-1.5 text-xs`} onClick={() => setMode("reject")}><X className="h-3.5 w-3.5" /> Rad etish</button>
+            <button type="button" className={`${btnSecondary} !py-1.5 text-xs`} onClick={() => setMode("info")}><MessageSquare className="h-3.5 w-3.5" /> Qo‘shimcha chek/ma’lumot so‘rash</button>
+            <span className="text-[11px] text-brand-muted">Tasdiqlashdan oldin bank ilovasida tushumni o‘zingiz tekshiring.</span>
+          </div>
+        )
+      )}
+      {o.refundStatus === "requested" && (
+        <div className="flex flex-wrap gap-2">
+          <button type="button" className={`${btnPrimary} !py-1.5 text-xs`} onClick={() => run((x) => decideRefund(x, adminId, o.id, "refunded"))}><Check className="h-3.5 w-3.5" /> Pul qaytarildi deb qayd etish</button>
+          <button type="button" className={`${btnDanger} !py-1.5 text-xs`} onClick={() => run((x) => decideRefund(x, adminId, o.id, "declined"))}><X className="h-3.5 w-3.5" /> Qaytarishni rad etish</button>
+        </div>
+      )}
+      <details className="text-xs text-brand-muted">
+        <summary className="cursor-pointer font-bold hover:text-brand-text">Buyurtma tarixi</summary>
+        <ul className="mt-1.5 space-y-0.5 pl-1">
+          {o.events.map((e, i) => <li key={i}>{fmtDate(e.at)} — {e.actor}: {e.text}</li>)}
+        </ul>
+      </details>
+    </Card>
+  );
+}
 
 function OrdersTab({ state, adminId, run }: { state: DemoState; adminId: string; run: Run }) {
-  const refunds = state.orders.filter((o) => o.refundStatus === "requested");
+  type F = "review" | "awaiting" | "paid" | "rejected" | "refund" | "all";
+  const [filter, setFilter] = useState<F>("review");
+  const match: Record<F, (o: Order) => boolean> = {
+    review: (o) => o.paymentStatus === "receipt_submitted" || o.paymentStatus === "under_review",
+    awaiting: (o) => o.paymentStatus === "awaiting_payment",
+    paid: (o) => o.paymentStatus === "paid",
+    rejected: (o) => o.paymentStatus === "rejected" || o.paymentStatus === "cancelled",
+    refund: (o) => o.paymentStatus === "refund_requested" || o.paymentStatus === "refunded",
+    all: () => true,
+  };
+  const labels: Record<F, string> = {
+    review: "Tekshirish kerak",
+    awaiting: "To‘lov kutilmoqda",
+    paid: "To‘langan",
+    rejected: "Rad etilgan / bekor",
+    refund: "Qaytarish",
+    all: "Hammasi",
+  };
+  const list = state.orders.filter(match[filter]);
   return (
-    <div className="space-y-5">
-      <section>
-        <SectionTitle hint="Rad etilgan pullik e’lon yoki status uchun avtomatik ochiladi. DEMO: haqiqiy pul o‘tkazilmaydi">Pul qaytarish so‘rovlari ({refunds.length})</SectionTitle>
-        {refunds.length === 0 ? <Card className="text-sm text-brand-muted">So‘rov yo‘q.</Card> : (
-          <div className="space-y-2">
-            {refunds.map((o) => (
-              <Card key={o.id} className="flex flex-wrap items-center gap-3 !py-3">
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-brand-text">{o.title}</p>
-                  <p className="text-xs text-brand-muted">{state.users.find((u) => u.id === o.userId)?.name} · {o.refundNote}</p>
-                </div>
-                <b>{formatSum(o.amount)}</b>
-                <button type="button" className={`${btnPrimary} !py-1.5 text-xs`} onClick={() => run((x) => decideRefund(x, adminId, o.id, "refunded"))}><Check className="h-3.5 w-3.5" /> Qaytarildi deb belgilash</button>
-                <button type="button" className={`${btnDanger} !py-1.5 text-xs`} onClick={() => run((x) => decideRefund(x, adminId, o.id, "declined"))}><X className="h-3.5 w-3.5" /> Rad etish</button>
-              </Card>
-            ))}
-          </div>
-        )}
-      </section>
-      <section>
-        <SectionTitle hint="Demo to‘lov tekshiruvi: har bir urinish va natija shu yerda">Buyurtmalar va to‘lovlar ({state.orders.length})</SectionTitle>
-        {state.orders.length === 0 ? <Card className="text-sm text-brand-muted">Buyurtmalar yo‘q.</Card> : (
-          <Card className="!p-0 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] text-sm">
-                <thead className="bg-brand-canvas text-left text-[11px] font-bold uppercase tracking-wide text-brand-muted">
-                  <tr>
-                    <th className="px-4 py-2">Buyurtma</th>
-                    <th className="px-2 py-2">Foydalanuvchi</th>
-                    <th className="px-2 py-2">Narx → summa</th>
-                    <th className="px-2 py-2">To‘lov</th>
-                    <th className="px-2 py-2">Urinishlar</th>
-                    <th className="px-2 py-2">Qaytarish</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-brand-border">
-                  {state.orders.map((o) => (
-                    <tr key={o.id} className="align-top">
-                      <td className="px-4 py-2.5">
-                        <p className="font-bold text-brand-text">{o.title}</p>
-                        <p className="text-[11px] text-brand-muted">{o.id} · {fmtDate(o.createdAt)}</p>
-                      </td>
-                      <td className="px-2 py-2.5 text-xs">{state.users.find((u) => u.id === o.userId)?.name}</td>
-                      <td className="px-2 py-2.5 text-xs">
-                        {formatSum(o.baseAmount)}
-                        {o.promotionDiscount ? <span className="block text-emerald-700">aksiya −{formatSum(o.promotionDiscount)}</span> : null}
-                        {o.promoCode ? <span className="block text-emerald-700">{o.promoCode} −{formatSum(o.promoDiscount)}</span> : null}
-                        <b className="block text-brand-text">= {formatSum(o.amount)}</b>
-                      </td>
-                      <td className="px-2 py-2.5"><Pill tone={PAYMENT_UI[o.paymentStatus].tone}>{PAYMENT_UI[o.paymentStatus].label}</Pill>{o.paidAt && <p className="mt-1 text-[11px] text-brand-muted">{fmtDate(o.paidAt)}</p>}</td>
-                      <td className="px-2 py-2.5 text-[11px] text-brand-muted">
-                        {o.attempts.length === 0 ? "—" : o.attempts.map((a, i) => <span key={i} className="block">{fmtDate(a.at)} {a.outcome === "success" ? "✓" : a.outcome === "failed" ? "✗ o‘tmadi" : "⨯ bekor"}</span>)}
-                      </td>
-                      <td className="px-2 py-2.5">{o.refundStatus === "none" ? <span className="text-xs text-brand-subtle">—</span> : <Pill tone={REFUND_UI[o.refundStatus].tone}>{REFUND_UI[o.refundStatus].label}</Pill>}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
-        )}
-      </section>
+    <div className="space-y-3">
+      <p className="rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2 text-xs text-amber-900">
+        Qo‘lda karta orqali to‘lov: chekni ko‘ring, bank tushumini mustaqil tekshiring, keyin tasdiqlang. Tasdiqlangan e’lon avtomatik chop etilmaydi — avval moderatsiyadan o‘tadi. DEMO: haqiqiy bank operatsiyasi yo‘q.
+      </p>
+      <div className="flex flex-wrap gap-1.5">
+        {(Object.keys(labels) as F[]).map((f) => (
+          <button key={f} type="button" onClick={() => setFilter(f)} aria-pressed={filter === f}
+            className={`rounded-full border px-3 py-1 text-xs font-bold ${filter === f ? "border-brand-primary bg-brand-light text-brand-primary" : "border-brand-border bg-white text-brand-muted"}`}>
+            {labels[f]} ({state.orders.filter(match[f]).length})
+          </button>
+        ))}
+      </div>
+      {list.length === 0 ? <Card className="text-sm text-brand-muted">Bu bo‘limda buyurtma yo‘q.</Card> : list.map((o) => <PaymentRequestCard key={o.id} state={state} order={o} adminId={adminId} run={run} />)}
     </div>
   );
 }

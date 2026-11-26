@@ -7,7 +7,7 @@ import { Plus, CreditCard, Pencil, Sparkles, Eye, Gift, Wallet, ClipboardList, X
 import { useDemo, useTicker } from "@/lib/demo/store";
 import {
   STATUS_DAYS, STATUS_NAMES, STATUS_TYPES, createListing, createStatusOrder, currentUser, formatSum, hasFreeRight, listingQuote,
-  nowMs, resubmitListing, statusPhase, statusQuote,
+  nowMs, resubmitListing, statusPhase, statusQuote, isPaidLike, renewListingOrder, USER_PAYABLE,
   type ActionResult, type DemoState, type Listing, type ListingInput, type ListingPlanId, type StatusDays, type StatusType,
 } from "@/lib/demo/engine";
 import {
@@ -54,7 +54,7 @@ export default function DemoKabinet() {
   const afterCreate = (r: ActionResult) => {
     setMode(null);
     const o = r.orderId ? r.state.orders.find((x) => x.id === r.orderId) : null;
-    if (o && o.paymentStatus === "pending" && o.amount > 0) router.push(`/demo/pay/${o.id}`);
+    if (o && o.paymentStatus === "awaiting_payment" && o.amount > 0) router.push(`/demo/pay/${o.id}`);
   };
 
   return (
@@ -100,7 +100,7 @@ export default function DemoKabinet() {
         ) : (
           <div className="space-y-3">
             {mine.map((l) => (
-              <ListingRow key={l.id} state={state} listing={l} onPay={(id) => router.push(`/demo/pay/${id}`)} onRevise={() => { clearResult(); setMode({ kind: "revise", id: l.id }); }} onStatus={() => { clearResult(); setMode({ kind: "status", id: l.id }); }} />
+              <ListingRow key={l.id} state={state} listing={l} onPay={(id) => router.push(`/demo/pay/${id}`)} onRevise={() => { clearResult(); setMode({ kind: "revise", id: l.id }); }} onStatus={() => { clearResult(); setMode({ kind: "status", id: l.id }); }} onRenew={() => { const r = run((s) => renewListingOrder(s, user.id, l.id)); if (r.ok) afterCreate(r); }} />
             ))}
           </div>
         )}
@@ -122,9 +122,9 @@ export default function DemoKabinet() {
                   <span className="font-black text-brand-text">{formatSum(o.amount)}</span>
                   <Pill tone={PAYMENT_UI[o.paymentStatus].tone}>{PAYMENT_UI[o.paymentStatus].label}</Pill>
                   {o.refundStatus !== "none" && <Pill tone={REFUND_UI[o.refundStatus].tone}>{REFUND_UI[o.refundStatus].label}</Pill>}
-                  {o.paymentStatus !== "paid" && o.amount > 0 && (
+                  {!isPaidLike(o.paymentStatus) && o.paymentStatus !== "cancelled" && o.amount > 0 && (
                     <Link href={`/demo/pay/${o.id}`} className={`${btnSecondary} !py-1.5 text-xs`}>
-                      <CreditCard className="h-3.5 w-3.5" /> To‘lash
+                      <CreditCard className="h-3.5 w-3.5" /> {USER_PAYABLE.includes(o.paymentStatus) ? "To‘lash" : "Holatni ko‘rish"}
                     </Link>
                   )}
                 </div>
@@ -297,14 +297,16 @@ function StatusPanel({ state, listing, onClose, onBuy }: {
   );
 }
 
-function ListingRow({ state, listing: l, onPay, onRevise, onStatus }: {
-  state: DemoState; listing: Listing; onPay: (orderId: string) => void; onRevise: () => void; onStatus: () => void;
+function ListingRow({ state, listing: l, onPay, onRevise, onStatus, onRenew }: {
+  state: DemoState; listing: Listing; onPay: (orderId: string) => void; onRevise: () => void; onStatus: () => void; onRenew: () => void;
 }) {
   const order = l.orderId ? state.orders.find((o) => o.id === l.orderId) : null;
   const pay = l.billing === "free" ? PAYMENT_UI.free : order ? PAYMENT_UI[order.paymentStatus] : null;
   const mod = MODERATION_UI[l.moderation];
   const statuses = state.statusOrders.filter((x) => x.listingId === l.id);
-  const canPay = order && order.paymentStatus !== "paid" && order.amount > 0 && l.moderation === "not_submitted";
+  const canPay = order && !isPaidLike(order.paymentStatus) && order.paymentStatus !== "cancelled" && order.amount > 0 && l.moderation === "not_submitted";
+  const canRenew = order && order.paymentStatus === "cancelled" && l.moderation === "not_submitted";
+  const payLabel = !order ? "" : order.paymentStatus === "awaiting_payment" ? "Kartaga to‘lash" : order.paymentStatus === "rejected" ? "Yangi chek yuborish" : "To‘lov holati";
 
   return (
     <Card className="!p-0 overflow-hidden">
@@ -337,6 +339,11 @@ function ListingRow({ state, listing: l, onPay, onRevise, onStatus }: {
               {l.billing === "paid" && order?.refundStatus === "requested" && <> · To‘langan summa qaytarilishi admin tomonidan ko‘rib chiqilmoqda.</>}
             </p>
           )}
+          {order && order.adminNote && (order.paymentStatus === "rejected" || order.paymentStatus === "awaiting_payment") && (
+            <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-800">
+              <b>{order.paymentStatus === "rejected" ? "To‘lov rad etildi:" : "Admin qo‘shimcha ma’lumot so‘radi:"}</b> {order.adminNote}
+            </p>
+          )}
           {l.moderation === "revision" && l.revisionNote && (
             <p className="rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-xs text-orange-800"><b>Tuzatish kerak:</b> {l.revisionNote}</p>
           )}
@@ -366,7 +373,12 @@ function ListingRow({ state, listing: l, onPay, onRevise, onStatus }: {
           <div className="flex flex-wrap gap-2 pt-1">
             {canPay && (
               <button type="button" className={`${btnPrimary} !py-1.5 text-xs`} onClick={() => onPay(order!.id)}>
-                <CreditCard className="h-3.5 w-3.5" /> {order!.paymentStatus === "pending" ? "To‘lash" : "Qayta to‘lash"} — {formatSum(order!.amount)}
+                <CreditCard className="h-3.5 w-3.5" /> {payLabel} — {formatSum(order!.amount)}
+              </button>
+            )}
+            {canRenew && (
+              <button type="button" className={`${btnPrimary} !py-1.5 text-xs`} onClick={onRenew}>
+                <CreditCard className="h-3.5 w-3.5" /> Yangi buyurtma yaratish
               </button>
             )}
             {l.moderation === "revision" && (

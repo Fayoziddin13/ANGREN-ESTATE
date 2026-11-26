@@ -1,9 +1,10 @@
 import { describe, it, expect } from "vitest";
 import {
   approveListing, approveStatus, createListing, createSeedState, createStatusOrder, currentUser, decideRefund, hasFreeRight, listingQuote,
-  login, logout, normalizeState, payOrder, publicListings, rejectListing, rejectStatus, requestRevision, resubmitListing, savePromo,
+  login, logout, normalizeState, publicListings, submitReceipt, approvePayment, rejectPayment, requestPaymentInfo, startPaymentReview,
+  cancelOrder, renewListingOrder, updatePaymentCard, validateReceiptFile, sniffReceipt, stats, rejectListing, rejectStatus, requestRevision, resubmitListing, savePromo,
   savePromotion, shiftClock, statusPhase, statusQuote, togglePromo, updateSettings, DEMO_CREDENTIALS,
-  type ActionResult, type DemoState, type ListingInput,
+  type ActionResult, type DemoState, type ListingInput, type ReceiptInput,
 } from "@/lib/demo/engine";
 import { demoModeAllowed } from "@/lib/demo/gate";
 
@@ -27,11 +28,30 @@ function setup() {
   return s;
 }
 
+let receiptNo = 0;
+/** A fake receipt with a unique SHA-256-shaped hash (or a given one to test reuse). */
+function receipt(hash?: string): ReceiptInput {
+  receiptNo += 1;
+  return {
+    hash: hash ?? receiptNo.toString(16).padStart(64, "0"),
+    fileName: `chek-${receiptNo}.png`,
+    mime: "image/png",
+    size: 1234,
+    dataUrl: "data:image/jpeg;base64,AAAA",
+    note: "",
+  };
+}
+
+/** Manual card payment: the user sends a receipt and the admin approves it. */
+function pay(s: DemoState, orderId: string): DemoState {
+  return ok(approvePayment(ok(submitReceipt(s, U, orderId, receipt())), A, orderId));
+}
+
 /** Creates a listing for U; pays it when it is paid; returns state and listing id. */
 function newListing(s: DemoState, title: string, plan: "standard" | "premium" = "standard", promo?: string) {
   const r = createListing(s, U, input(title), plan, promo);
   let st = ok(r);
-  if (r.orderId && st.orders.find((o) => o.id === r.orderId)!.paymentStatus === "pending") st = ok(payOrder(st, r.orderId, "success", U));
+  if (r.orderId && st.orders.find((o) => o.id === r.orderId)!.paymentStatus === "awaiting_payment") st = pay(st, r.orderId);
   return { s: st, id: r.listingId!, orderId: r.orderId };
 }
 
@@ -85,17 +105,18 @@ describe("listings and payment", () => {
     const o = () => s.orders.find((x) => x.id === r.orderId)!;
     expect(l().billing).toBe("paid");
     expect(l().moderation).toBe("not_submitted");
-    expect(o().paymentStatus).toBe("pending");
-    s = ok(payOrder(s, r.orderId!, "failed", U));
-    expect(o().paymentStatus).toBe("failed");
-    expect(l().moderation).toBe("not_submitted");
-    s = ok(payOrder(s, r.orderId!, "cancelled", U));
-    expect(o().paymentStatus).toBe("cancelled");
-    s = ok(payOrder(s, r.orderId!, "success", U));
+    expect(o().paymentStatus).toBe("awaiting_payment");
+    s = ok(submitReceipt(s, U, r.orderId!, receipt()));
+    expect(o().paymentStatus).toBe("receipt_submitted");
+    expect(l().moderation).toBe("not_submitted"); // a receipt alone is not a payment
+    s = ok(startPaymentReview(s, A, r.orderId!));
+    expect(o().paymentStatus).toBe("under_review");
+    s = ok(approvePayment(s, A, r.orderId!));
     expect(o().paymentStatus).toBe("paid");
-    expect(l().moderation).toBe("pending");
-    expect(payOrder(s, r.orderId!, "success", U).ok).toBe(false); // no double payment
-    expect(payOrder(s, r.orderId!, "success", "u-seller").ok).toBe(false); // not someone else's order
+    expect(l().moderation).toBe("pending"); // paid -> moderation, not published
+    expect(publicListings(s).some((p) => p.listing.id === r.listingId)).toBe(false);
+    expect(approvePayment(s, A, r.orderId!).ok).toBe(false); // no second approval
+    expect(submitReceipt(s, U, r.orderId!, receipt()).ok).toBe(false); // already paid
   });
 
   it("5) approval makes the listing public; 6) rejection changes the state and opens a refund", () => {
@@ -221,7 +242,7 @@ describe("statuses", () => {
     s = ok(r);
     const so = () => s.statusOrders.find((x) => x.orderId === r.orderId)!;
     expect(so().state).toBe("awaiting_payment");
-    s = ok(payOrder(s, r.orderId!, "success", U));
+    s = (pay(s, r.orderId!));
     expect(so().state).toBe("pending_approval");
     expect(publicListings(s).find((p) => p.listing.id === id)!.isTop).toBe(false);
     s = ok(shiftClock(s, A, 2)); // admin approves two days later
@@ -241,7 +262,7 @@ describe("statuses", () => {
   it("rejecting a paid status opens a refund; duplicates are refused", () => {
     let { s, id } = approvedListing();
     const r = createStatusOrder(s, U, id, "tez_sotiladi", 3);
-    s = ok(payOrder(ok(r), r.orderId!, "success", U));
+    s = (pay(ok(r), r.orderId!));
     expect(createStatusOrder(s, U, id, "tez_sotiladi", 7).ok).toBe(false);
     const soId = s.statusOrders.find((x) => x.orderId === r.orderId)!.id;
     s = ok(rejectStatus(s, A, soId, "Mos emas"));
@@ -273,5 +294,134 @@ describe("persistence shape and reset", () => {
     expect(normalizeState(null).listings).toHaveLength(2);
     expect(normalizeState({ version: 999 }).orders).toHaveLength(0);
     expect(normalizeState("garbage").sessions.user).toBeNull();
+  });
+});
+
+describe("manual card payment", () => {
+  function paidListingOrder() {
+    let s = setup();
+    s = ok(createListing(s, U, input("free"), "standard"));
+    const r = createListing(s, U, input("paid one"), "standard");
+    return { s: ok(r), orderId: r.orderId!, listingId: r.listingId! };
+  }
+
+  it("only the admin can approve, reject or ask for more; users cannot change payment status", () => {
+    let { s, orderId } = paidListingOrder();
+    s = ok(submitReceipt(s, U, orderId, receipt()));
+    expect(approvePayment(s, U, orderId).ok).toBe(false);
+    expect(rejectPayment(s, U, orderId, "x").ok).toBe(false);
+    expect(requestPaymentInfo(s, "u-seller", orderId, "x").ok).toBe(false);
+    expect(cancelOrder(s, U, orderId).ok).toBe(false); // cannot cancel while the admin checks
+    expect(submitReceipt(s, "u-seller", orderId, receipt()).ok).toBe(false); // not the owner
+  });
+
+  it("rejection keeps a reason; the user may send a new receipt", () => {
+    let { s, orderId } = paidListingOrder();
+    s = ok(submitReceipt(s, U, orderId, receipt()));
+    expect(rejectPayment(s, A, orderId, "").ok).toBe(false); // reason required
+    s = ok(rejectPayment(s, A, orderId, "Summa tushmagan"));
+    const o = () => s.orders.find((x) => x.id === orderId)!;
+    expect(o().paymentStatus).toBe("rejected");
+    expect(o().adminNote).toBe("Summa tushmagan");
+    expect(o().reviews.at(-1)?.decision).toBe("rejected");
+    s = ok(submitReceipt(s, U, orderId, receipt()));
+    expect(o().paymentStatus).toBe("receipt_submitted");
+    expect(o().receipts).toHaveLength(2);
+  });
+
+  it("asking for more information sends the order back to awaiting payment", () => {
+    let { s, orderId } = paidListingOrder();
+    s = ok(submitReceipt(s, U, orderId, receipt()));
+    s = ok(requestPaymentInfo(s, A, orderId, "To‘liq skrinshot yuboring"));
+    const o = s.orders.find((x) => x.id === orderId)!;
+    expect(o.paymentStatus).toBe("awaiting_payment");
+    expect(o.adminNote).toMatch(/skrinshot/);
+  });
+
+  it("the same receipt cannot be used twice", () => {
+    let { s, orderId } = paidListingOrder();
+    const h = "ab".repeat(32);
+    s = ok(submitReceipt(s, U, orderId, receipt(h)));
+    s = ok(rejectPayment(s, A, orderId, "noto‘g‘ri"));
+    expect(submitReceipt(s, U, orderId, receipt(h)).message).toMatch(/allaqachon/);
+    const other = createListing(s, U, input("third one"), "standard");
+    s = ok(other);
+    expect(submitReceipt(s, U, other.orderId!, receipt(h)).message).toMatch(/boshqa buyurtmada/);
+  });
+
+  it("payment acceptance can be switched off; only the admin edits the card", () => {
+    let { s, orderId } = paidListingOrder();
+    const card = { ...s.settings.paymentCard, enabled: false };
+    expect(updatePaymentCard(s, U, card).ok).toBe(false);
+    expect(updatePaymentCard(s, A, { ...card, cardNumber: "1234" }).ok).toBe(false);
+    s = ok(updatePaymentCard(s, A, { ...card, cardNumber: "1111 2222 3333 4444" }));
+    expect(s.settings.paymentCard.cardNumber).toBe("1111222233334444");
+    expect(submitReceipt(s, U, orderId, receipt()).message).toMatch(/o‘chirilgan/);
+  });
+
+  it("cancel and renew a listing order", () => {
+    let { s, orderId, listingId } = paidListingOrder();
+    s = ok(cancelOrder(s, U, orderId));
+    expect(s.orders.find((x) => x.id === orderId)!.paymentStatus).toBe("cancelled");
+    expect(submitReceipt(s, U, orderId, receipt()).ok).toBe(false);
+    const r = renewListingOrder(s, U, listingId);
+    s = ok(r);
+    expect(s.listings.find((x) => x.id === listingId)!.orderId).toBe(r.orderId);
+    expect(s.orders.find((x) => x.id === r.orderId)!.paymentStatus).toBe("awaiting_payment");
+  });
+
+  it("refund request and result are kept apart from the payment", () => {
+    let { s, orderId, listingId } = paidListingOrder();
+    s = pay(s, orderId);
+    s = ok(rejectListing(s, A, listingId, "Hujjat yo‘q"));
+    let o = s.orders.find((x) => x.id === orderId)!;
+    expect(o.paymentStatus).toBe("refund_requested");
+    expect(o.refundStatus).toBe("requested");
+    expect(o.refundNote).toMatch(/Hujjat/);
+    expect(stats(s).refundRequests).toBe(1);
+    s = ok(decideRefund(s, A, orderId, "refunded"));
+    o = s.orders.find((x) => x.id === orderId)!;
+    expect(o.paymentStatus).toBe("refunded");
+    expect(o.refundStatus).toBe("refunded");
+    expect(o.refundedAt).toBeTruthy();
+    expect(o.paidAt).toBeTruthy(); // the original payment is still recorded
+  });
+
+  it("receipt files: real type from content, size limits", () => {
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    const jpg = new Uint8Array([0xff, 0xd8, 0xff, 0xe0]);
+    const pdf = new TextEncoder().encode("%PDF-1.7");
+    expect(sniffReceipt(png)).toBe("image/png");
+    expect(sniffReceipt(jpg)).toBe("image/jpeg");
+    expect(sniffReceipt(pdf)).toBe("application/pdf");
+    expect(sniffReceipt(new TextEncoder().encode("<svg onload=alert(1)>"))).toBeNull();
+    expect(validateReceiptFile({ name: "a.png", type: "image/png", size: 1000 }, png).ok).toBe(true);
+    expect(validateReceiptFile({ name: "a.pdf", type: "application/pdf", size: 1000 }, png).ok).toBe(false); // renamed file
+    expect(validateReceiptFile({ name: "a.exe", type: "", size: 1000 }, new Uint8Array([0x4d, 0x5a])).ok).toBe(false);
+    expect(validateReceiptFile({ name: "a.pdf", type: "application/pdf", size: 2 * 1024 * 1024 }, pdf).ok).toBe(false);
+    expect(validateReceiptFile({ name: "a.jpg", type: "image/jpeg", size: 11 * 1024 * 1024 }, jpg).ok).toBe(false);
+    expect(validateReceiptFile({ name: "a.jpg", type: "image/jpeg", size: 0 }, jpg).ok).toBe(false);
+  });
+
+  it("a status order is paid by receipt and still waits for status approval", () => {
+    let s = setup();
+    const l = createListing(s, U, input(), "standard");
+    s = ok(approveListing(ok(l), A, l.listingId!));
+    const r = createStatusOrder(s, U, l.listingId!, "top", 3);
+    s = ok(r);
+    s = pay(s, r.orderId!);
+    const so = s.statusOrders.find((x) => x.orderId === r.orderId)!;
+    expect(so.state).toBe("pending_approval");
+    expect(so.startsAt).toBeNull();
+  });
+
+  it("all admin payment actions are written to the log", () => {
+    let { s, orderId } = paidListingOrder();
+    s = ok(submitReceipt(s, U, orderId, receipt()));
+    s = ok(startPaymentReview(s, A, orderId));
+    s = ok(approvePayment(s, A, orderId));
+    const texts = s.log.map((e) => e.text).join("\n");
+    expect(texts).toMatch(/tekshirishni boshladi/);
+    expect(texts).toMatch(/To‘lovni tasdiqladi/);
   });
 });

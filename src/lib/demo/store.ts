@@ -7,7 +7,9 @@
  */
 
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
-import { DEMO_STORAGE_KEY, createSeedState, normalizeState, type ActionResult, type DemoState } from "./engine";
+import {
+  DEMO_STORAGE_KEY, createSeedState, normalizeState, validateReceiptFile, type ActionResult, type DemoState, type ReceiptInput,
+} from "./engine";
 
 let cache: DemoState | null = null;
 const listeners = new Set<() => void>();
@@ -126,6 +128,60 @@ export function useTicker(ms = 15000) {
     const t = window.setInterval(() => setTick((x) => x + 1), ms);
     return () => window.clearInterval(t);
   }, [ms]);
+}
+
+/**
+ * Reads a payment receipt: checks the real file type and size, hashes the
+ * original bytes (so the same receipt cannot be reused) and stores images
+ * shrunk / PDFs as they are.
+ */
+export async function readReceiptFile(file: File, note: string): Promise<{ ok: true; input: ReceiptInput } | { ok: false; reason: string }> {
+  let buf: ArrayBuffer;
+  try {
+    buf = await file.arrayBuffer();
+  } catch {
+    return { ok: false, reason: "Faylni o‘qib bo‘lmadi" };
+  }
+  const bytes = new Uint8Array(buf);
+  const check = validateReceiptFile({ name: file.name, type: file.type, size: file.size }, bytes.slice(0, 16));
+  if (!check.ok) return check;
+  let hash: string;
+  try {
+    const digest = await crypto.subtle.digest("SHA-256", buf);
+    hash = Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  } catch {
+    return { ok: false, reason: "Chekni tekshirib bo‘lmadi (brauzer xavfsiz rejimda emas)" };
+  }
+  const typed = new File([buf], file.name, { type: check.mime });
+  let dataUrl: string;
+  try {
+    dataUrl =
+      check.mime === "application/pdf"
+        ? await new Promise<string>((resolve, reject) => {
+            const r = new FileReader();
+            r.onload = () => resolve(String(r.result));
+            r.onerror = () => reject(new Error("read"));
+            r.readAsDataURL(typed);
+          })
+        : await fileToSmallDataUrl(typed, 1400, 0.8);
+  } catch {
+    return { ok: false, reason: "Chek faylini o‘qib bo‘lmadi" };
+  }
+  return { ok: true, input: { hash, fileName: file.name || "chek", mime: check.mime, size: file.size, dataUrl, note } };
+}
+
+/** Turns a stored data URL into a blob: URL (Chrome will not show PDFs from data: URLs in a frame). */
+export function dataUrlToObjectUrl(dataUrl: string): string | null {
+  try {
+    const [head, body] = dataUrl.split(",", 2);
+    const mime = /^data:([^;]+)/.exec(head)?.[1] ?? "application/octet-stream";
+    const bin = atob(body);
+    const arr = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return URL.createObjectURL(new Blob([arr], { type: mime }));
+  } catch {
+    return null;
+  }
 }
 
 /** Reads an image file and shrinks it to a small JPEG data URL so it fits localStorage. */

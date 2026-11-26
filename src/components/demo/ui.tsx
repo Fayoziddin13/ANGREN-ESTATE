@@ -35,10 +35,14 @@ export const MODERATION_UI: Record<Moderation, { label: string; tone: Tone }> = 
 
 export const PAYMENT_UI: Record<PaymentStatus | "free", { label: string; tone: Tone }> = {
   free: { label: "Bepul", tone: "emerald" },
-  pending: { label: "To‘lanmagan", tone: "amber" },
-  paid: { label: "To‘langan (DEMO)", tone: "emerald" },
-  failed: { label: "To‘lov o‘tmadi", tone: "rose" },
-  cancelled: { label: "To‘lov bekor qilingan", tone: "slate" },
+  awaiting_payment: { label: "To‘lov kutilmoqda", tone: "amber" },
+  receipt_submitted: { label: "Chek yuborildi", tone: "sky" },
+  under_review: { label: "Admin tekshirmoqda", tone: "indigo" },
+  paid: { label: "To‘langan (admin tasdiqladi)", tone: "emerald" },
+  rejected: { label: "To‘lov rad etildi", tone: "rose" },
+  cancelled: { label: "Buyurtma bekor qilingan", tone: "slate" },
+  refund_requested: { label: "Pul qaytarish so‘raldi", tone: "orange" },
+  refunded: { label: "Pul qaytarilgani qayd etildi", tone: "violet" },
 };
 
 export const REFUND_UI: Record<Exclude<RefundStatus, "none">, { label: string; tone: Tone }> = {
