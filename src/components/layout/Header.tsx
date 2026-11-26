@@ -21,6 +21,7 @@ import {
   Scale,
   Bookmark,
   Bell,
+  ClipboardList,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCurrency } from "@/context/CurrencyContext";
@@ -451,6 +452,14 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                       <p className="text-white/70 truncate">{user.email}</p>
                     </div>
                     <Link
+                      href="/kabinet"
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-white/90 hover:bg-white/10 hover:text-white transition-colors mt-1"
+                    >
+                      <ClipboardList className="h-3.5 w-3.5" />
+                      <span>{locale === "uz" ? "Mening e'lonlarim" : "Мои объявления"}</span>
+                    </Link>
+                    <Link
                       href="/favorites"
                       onClick={() => setUserDropdownOpen(false)}
                       className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-medium text-white/90 hover:bg-white/10 hover:text-white transition-colors mt-1"
@@ -639,6 +648,14 @@ export function Header({ activeTransactionType, onTransactionTypeChange }: Heade
                       {t.navigation.signOut}
                     </button>
                   </div>
+                  <Link
+                    href="/kabinet"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium text-white/90 transition-colors"
+                  >
+                    <ClipboardList className="h-3.5 w-3.5" />
+                    <span>{locale === "uz" ? "Mening e'lonlarim" : "Мои объявления"}</span>
+                  </Link>
                   <Link
                     href="/favorites"
                     onClick={() => setMobileMenuOpen(false)}

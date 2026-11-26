@@ -151,13 +151,13 @@ export function mapRowToProperty(row: any): Property {
       telegram_channel_status: row.telegram_channel_status || amens?.telegram_channel_status || "not_published",
       telegram_channel_post_id: row.telegram_channel_post_id || amens?.telegram_channel_post_id || undefined,
       hudud_id: row.hudud_id || amens?.hudud_id || row.district || undefined,
-      is_top: Boolean(row.is_top ?? amens?.is_top ?? (row.id === "prop-1" || row.id === "prop-4")),
-      is_fast_sale: Boolean(row.is_fast_sale ?? amens?.is_fast_sale ?? (row.id === "prop-2")),
-      is_good_deal: Boolean(row.is_good_deal ?? amens?.is_good_deal ?? (row.id === "prop-5")),
+      is_top: Boolean(row.is_top ?? amens?.is_top ?? false),
+      is_fast_sale: Boolean(row.is_fast_sale ?? amens?.is_fast_sale ?? false),
+      is_good_deal: Boolean(row.is_good_deal ?? amens?.is_good_deal ?? false),
       badges: (() => {
-        const isTop = Boolean(row.is_top ?? amens?.is_top ?? (row.id === "prop-1" || row.id === "prop-4"));
-        const isFast = Boolean(row.is_fast_sale ?? amens?.is_fast_sale ?? (row.id === "prop-2"));
-        const isGood = Boolean(row.is_good_deal ?? amens?.is_good_deal ?? (row.id === "prop-5"));
+        const isTop = Boolean(row.is_top ?? amens?.is_top ?? false);
+        const isFast = Boolean(row.is_fast_sale ?? amens?.is_fast_sale ?? false);
+        const isGood = Boolean(row.is_good_deal ?? amens?.is_good_deal ?? false);
         const pubTime = row.published_at ? new Date(row.published_at).getTime() : new Date(row.created_at || 0).getTime();
         const isNew = (row.status === "published") && (Date.now() - pubTime < 3 * 24 * 60 * 60 * 1000);
         
@@ -360,6 +360,32 @@ export function sanitizePublicProperty(property: Property): Property {
 }
 
 /**
+ * Add paid stickers that are running right now to the public badges, without
+ * touching is_top / amenities (the admin editor keeps saving only its own manual
+ * stickers, so a paid sticker can never become permanent). Optionally lists TOP
+ * listings (manual or paid) first, keeping the newest-first order inside groups.
+ * Expiry is checked at read time: a finished sticker simply stops appearing.
+ */
+export async function applyRunningStickers(list: Property[], opts: { sortTopFirst?: boolean } = {}): Promise<Property[]> {
+  if (!isSupabaseConfigured || list.length === 0) return list;
+  const { getRunningStickers } = await import("./monetization/boosts");
+  const running = await getRunningStickers(list.map((p) => p.id)).catch(() => new Map());
+  const out = list.map((p) => {
+    const paid = running.get(p.id) as Set<string> | undefined;
+    if (!paid || paid.size === 0) return p;
+    const badges = new Set<string>((p.badges as string[] | undefined) || []);
+    paid.forEach((b) => badges.add(b));
+    return { ...p, badges: Array.from(badges) as Property["badges"], paid_badges: Array.from(paid) } as Property;
+  });
+  if (!opts.sortTopFirst) return out;
+  const isTop = (p: Property) => Boolean((p.badges as string[] | undefined)?.includes("top"));
+  return out
+    .map((p, i) => ({ p, i }))
+    .sort((a, b) => Number(isTop(b.p)) - Number(isTop(a.p)) || a.i - b.i)
+    .map((x) => x.p);
+}
+
+/**
  * Fetch all published properties.
  * Public rule: ONLY status === 'published' is returned.
  * Draft and archived properties are filtered out by Supabase RLS and query filters.
@@ -416,7 +442,7 @@ export async function getPublishedProperties(filters?: PropertyFilterParams): Pr
 
       const { data, error } = await query.order("created_at", { ascending: false });
       if (!error && data) {
-        return data
+        const list = data
           .map((row: any) => {
             // Keep the previous public behaviour: inactive realtors were hidden by RLS.
             const r = Array.isArray(row.realtors) ? row.realtors[0] : row.realtors;
@@ -424,6 +450,7 @@ export async function getPublishedProperties(filters?: PropertyFilterParams): Pr
           })
           .map(mapRowToProperty)
           .map(sanitizePublicProperty);
+        return applyRunningStickers(list, { sortTopFirst: true });
       }
       console.warn("[Supabase] getPublishedProperties error:", error?.message);
     } catch (err) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPropertyById, sanitizePublicProperty } from "@/lib/properties";
+import { applyRunningStickers, getPropertyById, sanitizePublicProperty } from "@/lib/properties";
 
 export const dynamic = "force-dynamic";
 
@@ -27,9 +27,10 @@ export async function GET(
       );
     }
 
+    const [withStickers] = await applyRunningStickers([sanitizePublicProperty(property)]);
     return NextResponse.json({
       success: true,
-      property: sanitizePublicProperty(property),
+      property: withStickers,
     });
   } catch (error) {
     console.error(`Error in /api/properties/${params?.id} GET:`, error);
