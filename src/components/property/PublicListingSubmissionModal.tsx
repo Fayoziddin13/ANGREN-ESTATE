@@ -283,6 +283,20 @@ export function PublicListingSubmissionModal({ isOpen, onClose }: PublicListingS
 
         {/* Body */}
         <div className="overflow-y-auto px-5 sm:px-6 py-4 space-y-4">
+          {process.env.NODE_ENV !== "production" && (
+            <a
+              href="/demo/kabinet"
+              className="flex items-center justify-between gap-3 rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50 px-4 py-3 text-amber-900 hover:bg-amber-100 transition-colors"
+            >
+              <span className="text-xs leading-snug">
+                <b className="block text-sm">{locale === "uz" ? "Lokal DEMO: monetizatsiyani sinash" : "Локальное DEMO: монетизация"}</b>
+                {locale === "uz"
+                  ? "Bepul birinchi e’lon, tarif, promokod, demo to‘lov, moderatsiya va statuslar. Faqat shu kompyuterda ko‘rinadi."
+                  : "Бесплатное первое объявление, тарифы, промокод, демо-оплата, модерация и статусы. Видно только локально."}
+              </span>
+              <span className="shrink-0 rounded-xl bg-amber-500 px-3 py-1.5 text-xs font-black text-white">DEMO →</span>
+            </a>
+          )}
           {monConfig?.enabled ? (
             <MonetizedListingForm locale={locale === "ru" ? "ru" : "uz"} devTools={Boolean(monConfig.dev_tools)} onDone={onClose} />
           ) : (<>
