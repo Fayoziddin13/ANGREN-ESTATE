@@ -66,6 +66,21 @@ export function assertTestDb(context: string, env: Env = process.env): void {
 }
 
 /**
+ * Local developer tools (test login, mock checkout page) run only on a developer
+ * machine against an allow-listed test project: never on Vercel, never in a
+ * production build, never against production.
+ */
+export function devToolsAllowed(env: Env = process.env): { allowed: boolean; reason?: string } {
+  if (env.VERCEL || env.VERCEL_ENV) return { allowed: false, reason: "running on Vercel" };
+  if (env.NODE_ENV !== "development" && env.NODE_ENV !== "test") {
+    return { allowed: false, reason: `NODE_ENV is ${env.NODE_ENV || "unset"}` };
+  }
+  if (pointsAtProductionDb(env)) return { allowed: false, reason: "database is production" };
+  if (!isAllowedTestDb(env)) return { allowed: false, reason: "database is not an allow-listed test project" };
+  return { allowed: true };
+}
+
+/**
  * The Mock payment provider may only run on a developer machine against the test
  * project. It is refused on Vercel (production and preview), in production builds,
  * without the explicit MOCK_PAYMENTS=1 opt-in, and for any database that is not an
