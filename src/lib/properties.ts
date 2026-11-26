@@ -571,37 +571,27 @@ export async function createProperty(
   dbPayload.created_at = now;
   dbPayload.published_at = isPublishing ? now : null;
 
-  let createdResult: Property | null = null;
-
   if (isSupabaseConfigured) {
-    try {
-      const { data: inserted, error } = await supabaseAdmin
-        .from("properties")
-        .insert(dbPayload)
-        .select("*, realtors(*)")
-        .single();
+    // When Supabase is configured it is the only data store. A failed insert is an
+    // error: it is never "saved" to data/properties.json instead (read-only on Vercel,
+    // git-tracked locally), so a lost write can no longer look like a success.
+    const { data: inserted, error } = await supabaseAdmin
+      .from("properties")
+      .insert(dbPayload)
+      .select("*, realtors(*)")
+      .single();
 
-      if (!error && inserted) {
-        const result = mapRowToProperty(inserted);
-        // Also mirror to local file for offline resilience
-        const all = await readCanonicalLocal();
-        await writeCanonicalLocal([result, ...all.filter((p) => p.id !== id)]);
-        createdResult = result;
-      } else {
-        console.warn("[Supabase] createProperty error:", error?.message);
-      }
-    } catch (err) {
-      console.warn("[Supabase] createProperty exception:", err);
+    if (error || !inserted) {
+      console.warn("[Supabase] createProperty error:", error?.message);
+      throw new Error(`createProperty failed: ${error?.message || "no row returned"}`);
     }
+    return mapRowToProperty(inserted);
   }
 
-  if (!createdResult) {
-    // Local fallback
-    createdResult = mapRowToProperty(dbPayload);
-    const all = await readCanonicalLocal();
-    await writeCanonicalLocal([createdResult, ...all.filter((p) => p.id !== id)]);
-  }
-
+  // Local mode (Supabase not configured): the JSON file is the data store.
+  const createdResult = mapRowToProperty(dbPayload);
+  const all = await readCanonicalLocal();
+  await writeCanonicalLocal([createdResult, ...all.filter((p) => p.id !== id)]);
   return createdResult;
 }
 
@@ -643,9 +633,9 @@ export async function updateProperty(
   const dbUpdates = mapPropertyToDb(mergedData);
   delete dbUpdates.id; // Do not overwrite primary key
 
-  let updatedResult: Property | null = null;
-
   if (isSupabaseConfigured) {
+    // Same rule as createProperty: a failed database update returns null (callers
+    // report the failure) instead of being written to the local JSON file.
     try {
       const { data: updated, error } = await supabaseAdmin
         .from("properties")
@@ -654,31 +644,22 @@ export async function updateProperty(
         .select("*, realtors(*)")
         .single();
 
-      if (!error && updated) {
-        const result = mapRowToProperty(updated);
-        const all = await readCanonicalLocal();
-        await writeCanonicalLocal(all.map((p) => (p.id === id ? result : p)));
-        updatedResult = result;
-      } else {
-        console.warn(`[Supabase] updateProperty error for ${id}:`, error?.message);
-      }
+      if (!error && updated) return mapRowToProperty(updated);
+      console.warn(`[Supabase] updateProperty error for ${id}:`, error?.message);
     } catch (err) {
       console.warn(`[Supabase] updateProperty exception for ${id}:`, err);
     }
+    return null;
   }
 
-  if (!updatedResult) {
-    // Local fallback
-    const all = await readCanonicalLocal();
-    const idx = all.findIndex((p) => p.id === id);
-    if (idx === -1) return null;
+  // Local mode (Supabase not configured): the JSON file is the data store.
+  const all = await readCanonicalLocal();
+  const idx = all.findIndex((p) => p.id === id);
+  if (idx === -1) return null;
 
-    all[idx] = mergedData;
-    await writeCanonicalLocal(all);
-    updatedResult = mergedData;
-  }
-
-  return updatedResult;
+  all[idx] = mergedData;
+  await writeCanonicalLocal(all);
+  return mergedData;
 }
 
 /**
