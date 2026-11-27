@@ -29,6 +29,7 @@ export function PriceBreakdown({ q, compact = false }: { q: Quote; compact?: boo
           tone="text-emerald-700"
         />
       )}
+      {q.promoNotApplied && <p className="text-xs font-semibold text-amber-700">Promokod qo‘llanmadi: aksiya chegirmasi kattaroq. Chegirmalar qo‘shilmaydi — eng kattasi ishlaydi.</p>}
       <div className="flex items-center justify-between border-t border-brand-border pt-1.5 text-base font-black text-brand-text">
         <span>To‘lov summasi</span>
         <span>{formatSum(q.total)}</span>

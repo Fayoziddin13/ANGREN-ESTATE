@@ -20,6 +20,7 @@ function orderQuote(o: Order, promotionName: string | null, promotionPercent: nu
     promo: o.promoCode ? promo ?? { id: "", code: o.promoCode, kind: "fixed", value: o.promoDiscount, target: "all", validFrom: "", validTo: "", usageLimit: 0, used: 0, active: true } : null,
     promoDiscount: o.promoDiscount,
     promoError: null,
+    promoNotApplied: false,
     total: o.amount,
     free: false,
   };
@@ -246,8 +247,9 @@ export default function DemoPayPage() {
           <p className="mt-2 text-base font-black text-brand-text">To‘lov admin tomonidan tasdiqlangan — {formatSum(order.amount)}</p>
           <p className="mt-1 text-sm text-brand-muted">
             {order.kind === "listing" ? "E’lon moderatsiyadan o‘tgach saytda ko‘rinadi." : "Status muddati admin tasdiqlagan paytdan hisoblanadi."}
-            {order.refundStatus === "requested" && " Pul qaytarish so‘rovi ko‘rib chiqilmoqda."}
-            {order.refundStatus === "refunded" && " Pul qaytarilgani qayd etilgan."}
+            {order.refund?.status === "requested" && " Pul qaytarish so‘rovi ko‘rib chiqilmoqda."}
+            {order.refund?.status === "refunded" && " Pul qaytarilgani qayd etilgan."}
+            {order.refund?.status === "declined" && " Pul qaytarish rad etilgan."}
           </p>
           <Link href="/demo/kabinet" className={`${btnPrimary} mt-4`}>Mening e’lonlarimga o‘tish</Link>
         </Card>

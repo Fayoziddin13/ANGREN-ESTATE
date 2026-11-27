@@ -181,14 +181,16 @@ function SettingsTab({ state, adminId, run, onReset }: { state: DemoState; admin
   const s = state.settings;
   const [std, setStd] = useState(s.plans.standard.price);
   const [prem, setPrem] = useState(s.plans.premium.price);
-  const [bonus, setBonus] = useState(s.plans.premium.bonusTopDays);
+  const [premFeatures, setPremFeatures] = useState(s.plans.premium.features.join("\n"));
+  const [stdFeatures, setStdFeatures] = useState(s.plans.standard.features.join("\n"));
   const [sp, setSp] = useState(s.statusPrices);
   const [confirmReset, setConfirmReset] = useState(false);
 
   useEffect(() => {
     setStd(state.settings.plans.standard.price);
     setPrem(state.settings.plans.premium.price);
-    setBonus(state.settings.plans.premium.bonusTopDays);
+    setPremFeatures(state.settings.plans.premium.features.join("\n"));
+    setStdFeatures(state.settings.plans.standard.features.join("\n"));
     setSp(state.settings.statusPrices);
   }, [state.settings]);
 
@@ -205,8 +207,8 @@ function SettingsTab({ state, adminId, run, onReset }: { state: DemoState; admin
       </Card>
 
       <Card>
-        <SectionTitle hint="Ikkinchi va keyingi e’lonlar uchun tariflar">E’lon narxlari</SectionTitle>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <SectionTitle hint="Ikkinchi va keyingi e’lonlar uchun tariflar. TOP hech qaysi tarifga kirmaydi — u alohida sotib olinadi">E’lon tariflari</SectionTitle>
+        <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <label className={labelCls} htmlFor="p-std">Standart</label>
             <MoneyInput id="p-std" value={std} onChange={setStd} />
@@ -216,11 +218,15 @@ function SettingsTab({ state, adminId, run, onReset }: { state: DemoState; admin
             <MoneyInput id="p-prem" value={prem} onChange={setPrem} />
           </div>
           <div>
-            <label className={labelCls} htmlFor="p-bonus">Premium: TOP kun</label>
-            <input id="p-bonus" inputMode="numeric" className={inputCls} value={String(bonus)} onChange={(e) => setBonus(Number(e.target.value.replace(/\D/g, "")) || 0)} />
+            <label className={labelCls} htmlFor="p-std-f">Standart imkoniyatlari (har qatorda bittasi)</label>
+            <textarea id="p-std-f" rows={3} className={inputCls} value={stdFeatures} onChange={(e) => setStdFeatures(e.target.value)} />
+          </div>
+          <div>
+            <label className={labelCls} htmlFor="p-prem-f">Premium imkoniyatlari (har qatorda bittasi)</label>
+            <textarea id="p-prem-f" rows={3} className={inputCls} value={premFeatures} onChange={(e) => setPremFeatures(e.target.value)} />
           </div>
         </div>
-        <button type="button" className={`${btnPrimary} mt-3`} onClick={() => run((x) => updateSettings(x, adminId, { planPrices: { standard: std, premium: prem }, premiumBonusDays: bonus }))}>
+        <button type="button" className={`${btnPrimary} mt-3`} onClick={() => run((x) => updateSettings(x, adminId, { planPrices: { standard: std, premium: prem }, premiumFeatures: premFeatures.split("\n"), standardFeatures: stdFeatures.split("\n") }))}>
           <Save className="h-4 w-4" /> E’lon narxlarini saqlash
         </button>
       </Card>
@@ -350,7 +356,8 @@ function ModerationCard({ state, listing: l, adminId, run }: { state: DemoState;
             {order && order.amount > 0 && <span className="text-[11px] font-bold">{formatSum(order.amount)}</span>}
             <span className="ml-1 text-[11px] font-bold text-brand-muted">Moderatsiya:</span>
             <Pill tone={MODERATION_UI[l.moderation].tone}>{MODERATION_UI[l.moderation].label}</Pill>
-            {order && order.refundStatus !== "none" && <Pill tone={REFUND_UI[order.refundStatus].tone}>{REFUND_UI[order.refundStatus].label}</Pill>}
+            {order?.refund && <Pill tone={REFUND_UI[order.refund.status].tone}>{REFUND_UI[order.refund.status].label}</Pill>}
+            {l.plan === "premium" && <Pill tone="violet">Premium</Pill>}
           </div>
           {l.rejectReason && l.moderation === "rejected" && <p className="text-xs text-rose-700">Sabab: {l.rejectReason}</p>}
           {l.revisionNote && l.moderation === "revision" && <p className="text-xs text-orange-700">So‘ralgan tuzatish: {l.revisionNote}</p>}
@@ -416,7 +423,6 @@ function StatusesTab({ state, adminId, run }: { state: DemoState; adminId: strin
                           <Pill tone="indigo">{STATUS_NAMES[so.type].uz}</Pill>
                           <b className="text-brand-text">{so.days} kun</b>
                           <Pill tone={STATUS_PHASE_UI[ph].tone}>{STATUS_PHASE_UI[ph].label}</Pill>
-                          {so.source === "premium_bonus" && <Pill tone="violet">Premium bonus</Pill>}
                           <span className="min-w-0 truncate text-brand-muted">{l?.title} · {owner?.name}</span>
                           {order && <span className="text-xs font-bold text-brand-text">{formatSum(order.amount)} · {PAYMENT_UI[order.paymentStatus].label}</span>}
                         </div>
@@ -644,6 +650,7 @@ function ReceiptViewer({ receipt }: { receipt: DemoReceipt }) {
 }
 
 const DECISION_LABEL: Record<Review["decision"], string> = {
+  started: "Tekshiruvga olindi",
   approved: "Tasdiqlandi",
   rejected: "Rad etildi",
   info_requested: "Qo‘shimcha ma’lumot so‘raldi",
@@ -687,9 +694,10 @@ function PaymentRequestCard({ state, order: o, adminId, run }: { state: DemoStat
         <div><dt className="font-bold text-brand-muted">Admin qarori</dt><dd className="text-brand-text">{lastReview ? `${DECISION_LABEL[lastReview.decision]} · ${fmtDate(lastReview.at)}` : "—"}</dd></div>
         <div className="col-span-2"><dt className="font-bold text-brand-muted">Rad etish sababi / so‘rov</dt><dd className="text-brand-text">{o.adminNote ?? [...o.reviews].reverse().find((r) => r.note)?.note ?? "—"}</dd></div>
       </dl>
-      {o.refundStatus !== "none" && (
+      {o.refund && (
         <p className="rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-xs text-orange-800">
-          <b>Qaytarish:</b> {REFUND_UI[o.refundStatus as Exclude<typeof o.refundStatus, "none">].label} · {o.refundNote}{o.refundedAt ? ` · ${fmtDate(o.refundedAt)}` : ""}
+          <b>Qaytarish (to‘lovdan alohida):</b> {REFUND_UI[o.refund.status].label} · {formatSum(o.refund.amount)} · {o.refund.reason} · so‘raldi {fmtDate(o.refund.requestedAt)}
+          {o.refund.decidedAt ? ` · qaror: ${o.refund.decidedBy}, ${fmtDate(o.refund.decidedAt)}` : ""}
         </p>
       )}
       {last && (
@@ -727,7 +735,7 @@ function PaymentRequestCard({ state, order: o, adminId, run }: { state: DemoStat
           </div>
         )
       )}
-      {o.refundStatus === "requested" && (
+      {o.refund?.status === "requested" && (
         <div className="flex flex-wrap gap-2">
           <button type="button" className={`${btnPrimary} !py-1.5 text-xs`} onClick={() => run((x) => decideRefund(x, adminId, o.id, "refunded"))}><Check className="h-3.5 w-3.5" /> Pul qaytarildi deb qayd etish</button>
           <button type="button" className={`${btnDanger} !py-1.5 text-xs`} onClick={() => run((x) => decideRefund(x, adminId, o.id, "declined"))}><X className="h-3.5 w-3.5" /> Qaytarishni rad etish</button>
@@ -748,10 +756,10 @@ function OrdersTab({ state, adminId, run }: { state: DemoState; adminId: string;
   const [filter, setFilter] = useState<F>("review");
   const match: Record<F, (o: Order) => boolean> = {
     review: (o) => o.paymentStatus === "receipt_submitted" || o.paymentStatus === "under_review",
-    awaiting: (o) => o.paymentStatus === "awaiting_payment",
+    awaiting: (o) => o.paymentStatus === "awaiting_payment" || o.paymentStatus === "info_requested",
     paid: (o) => o.paymentStatus === "paid",
     rejected: (o) => o.paymentStatus === "rejected" || o.paymentStatus === "cancelled",
-    refund: (o) => o.paymentStatus === "refund_requested" || o.paymentStatus === "refunded",
+    refund: (o) => o.refund !== null,
     all: () => true,
   };
   const labels: Record<F, string> = {

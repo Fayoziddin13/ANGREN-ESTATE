@@ -38,6 +38,7 @@ function receipt(hash?: string): ReceiptInput {
     mime: "image/png",
     size: 1234,
     dataUrl: "data:image/jpeg;base64,AAAA",
+    storedMime: "image/jpeg",
     note: "",
   };
 }
@@ -133,9 +134,11 @@ describe("listings and payment", () => {
     expect(l.rejectReason).toBe("Rasmlar noto‘g‘ri");
     expect(publicListings(s).some((p) => p.listing.id === paid.id)).toBe(false);
     const o = s.orders.find((x) => x.id === paid.orderId)!;
-    expect(o.refundStatus).toBe("requested");
+    expect(o.refund?.status).toBe("requested");
+    expect(o.paymentStatus).toBe("paid"); // the refund never changes the payment status
     s = ok(decideRefund(s, A, o.id, "refunded"));
-    expect(s.orders.find((x) => x.id === o.id)!.refundStatus).toBe("refunded");
+    expect(s.orders.find((x) => x.id === o.id)!.refund?.status).toBe("refunded");
+    expect(s.orders.find((x) => x.id === o.id)!.paymentStatus).toBe("paid");
     expect(rejectListing(s, A, paid.id, "").ok).toBe(false); // a reason is required
   });
 
@@ -172,7 +175,12 @@ describe("pricing", () => {
     expect(listingQuote(s, U, "standard", "ESKI50").promoError).toMatch(/muddati/);
     expect(listingQuote(s, U, "standard", "NOPE").promoError).toBeTruthy();
     expect(statusQuote(s, "top", 7, "MINUS20K").promoError).toMatch(/faqat e’lon/);
-    // limit 1: after one paid use the code is exhausted
+    // limit 1: an unpaid order already holds the use, a second order cannot take it
+    const held = createListing(s, U, input("holds promo"), "standard", "MINUS20K");
+    expect(listingQuote(ok(held), U, "standard", "MINUS20K").promoError).toMatch(/limit/);
+    // cancelling the order gives the use back
+    expect(listingQuote(ok(cancelOrder(ok(held), U, held.orderId!)), U, "standard", "MINUS20K").promoError).toBeNull();
+    // after one paid use the code is exhausted
     const p = newListing(s, "with promo", "standard", "MINUS20K");
     expect(p.s.orders.find((o) => o.id === p.orderId)!.amount).toBe(30000);
     expect(listingQuote(p.s, U, "standard", "MINUS20K").promoError).toMatch(/limit/);
@@ -181,16 +189,29 @@ describe("pricing", () => {
     expect(listingQuote(off, U, "standard", "DEMO10").promoError).toMatch(/o‘chirilgan/);
   });
 
-  it("active promotion discounts before the promo code", () => {
+  it("promotion and promo code are not combined: the bigger discount wins (same rule as the server)", () => {
     let s = setup();
     s = ok(createListing(s, U, input("free"), "standard"));
     const now = Date.now();
     s = ok(savePromotion(s, A, { name: "Test", description: "", percent: 20, target: "listing", startsAt: new Date(now - DAY).toISOString(), endsAt: new Date(now + DAY).toISOString(), active: true }));
     const q = listingQuote(s, U, "standard", "DEMO10");
-    expect(q.promotionDiscount).toBe(10000); // 20% of 50 000
-    expect(q.promoDiscount).toBe(4000); // 10% of 40 000
-    expect(q.total).toBe(36000);
+    expect(q.promotionDiscount).toBe(10000); // 20% of 50 000 beats 10%
+    expect(q.promoDiscount).toBe(0);
+    expect(q.promoNotApplied).toBe(true);
+    expect(q.total).toBe(40000);
+    const q2 = listingQuote(s, U, "standard", "MINUS20K"); // 20 000 beats 10 000
+    expect(q2.promoDiscount).toBe(20000);
+    expect(q2.promotionDiscount).toBe(0);
+    expect(q2.total).toBe(30000);
     expect(statusQuote(s, "top", 7).promotion).toBeNull(); // listing-only promotion
+  });
+
+  it("at least 1 so‘m always stays payable", () => {
+    let s = setup();
+    s = ok(createListing(s, U, input("free"), "standard"));
+    const big = { code: "ALL", kind: "fixed" as const, value: 999999, target: "all" as const, validFrom: new Date(Date.now() - DAY).toISOString(), validTo: new Date(Date.now() + DAY).toISOString(), usageLimit: 0, active: true };
+    s = ok(savePromo(s, A, big));
+    expect(listingQuote(s, U, "standard", "ALL").total).toBe(1);
   });
 
   it("9) admin price changes reach the user's quote immediately", () => {
@@ -266,19 +287,62 @@ describe("statuses", () => {
     expect(createStatusOrder(s, U, id, "tez_sotiladi", 7).ok).toBe(false);
     const soId = s.statusOrders.find((x) => x.orderId === r.orderId)!.id;
     s = ok(rejectStatus(s, A, soId, "Mos emas"));
-    expect(s.orders.find((o) => o.id === r.orderId)!.refundStatus).toBe("requested");
+    expect(s.orders.find((o) => o.id === r.orderId)!.refund?.status).toBe("requested");
     expect(createStatusOrder(s, U, id, "tez_sotiladi", 7).ok).toBe(true);
   });
 
-  it("premium plan gives TOP from the approval moment", () => {
+  it("Premium costs 120 000, carries the Premium badge and NEVER includes TOP", () => {
     let s = setup();
     s = ok(createListing(s, U, input("free"), "standard"));
-    const p = newListing(s, "premium", "premium");
+    expect(listingQuote(s, U, "standard").total).toBe(50000);
+    const p = newListing(s, "premium one", "premium");
     expect(p.s.orders.find((o) => o.id === p.orderId)!.amount).toBe(120000);
     s = ok(approveListing(p.s, A, p.id));
-    const bonus = s.statusOrders.find((x) => x.listingId === p.id && x.source === "premium_bonus")!;
-    expect(bonus.state).toBe("active");
-    expect(Date.parse(bonus.endsAt!) - Date.parse(bonus.startsAt!)).toBe(7 * DAY);
+    expect(s.statusOrders.filter((x) => x.listingId === p.id)).toHaveLength(0);
+    const pub = publicListings(s).find((x) => x.listing.id === p.id)!;
+    expect(pub.isPremium).toBe(true);
+    expect(pub.isTop).toBe(false);
+    // TOP is bought separately
+    expect(createStatusOrder(s, U, p.id, "top", 7).ok).toBe(true);
+    // the admin cannot sneak TOP into a plan's feature list
+    expect(updateSettings(s, A, { premiumFeatures: ["TOP 7 kun"] }).ok).toBe(false);
+    expect(updateSettings(s, A, { premiumFeatures: ["Premium belgisi", "Ko‘proq rasm"] }).ok).toBe(true);
+  });
+
+  it("a status order paid after its listing was rejected gets a refund automatically", () => {
+    let { s, id } = approvedListing();
+    const r = createStatusOrder(s, U, id, "top", 7);
+    s = ok(submitReceipt(ok(r), U, r.orderId!, receipt()));
+    s = ok(rejectListing(s, A, id, "rad"));
+    const a = approvePayment(s, A, r.orderId!);
+    s = ok(a);
+    expect(a.message).toMatch(/avtomatik/);
+    const o = s.orders.find((x) => x.id === r.orderId)!;
+    expect(o.paymentStatus).toBe("paid");
+    expect(o.refund?.status).toBe("requested");
+    expect(s.statusOrders.find((x) => x.orderId === r.orderId)!.state).toBe("cancelled");
+  });
+
+  it("rejecting an approved listing requests a refund for its active paid status and cancels unpaid ones", () => {
+    let { s, id } = approvedListing();
+    const a = createStatusOrder(s, U, id, "top", 30);
+    s = pay(ok(a), a.orderId!);
+    s = ok(approveStatus(s, A, s.statusOrders.find((x) => x.orderId === a.orderId)!.id));
+    const b = createStatusOrder(s, U, id, "yaxshi_taklif", 3);
+    s = ok(b);
+    s = ok(rejectListing(s, A, id, "olib tashlash"));
+    expect(s.orders.find((x) => x.id === a.orderId)!.refund?.status).toBe("requested");
+    expect(s.orders.find((x) => x.id === b.orderId)!.paymentStatus).toBe("cancelled");
+  });
+
+  it("a status approved in the future (demo clock) is scheduled, not active", () => {
+    let { s, id } = approvedListing();
+    const r = createStatusOrder(s, U, id, "top", 3);
+    s = pay(ok(r), r.orderId!);
+    s = ok(shiftClock(s, A, 2));
+    s = ok(approveStatus(s, A, s.statusOrders.find((x) => x.orderId === r.orderId)!.id));
+    s = ok(shiftClock(s, A, "reset"));
+    expect(statusPhase(s, s.statusOrders.find((x) => x.orderId === r.orderId)!)).toBe("scheduled");
   });
 });
 
@@ -334,8 +398,9 @@ describe("manual card payment", () => {
     s = ok(submitReceipt(s, U, orderId, receipt()));
     s = ok(requestPaymentInfo(s, A, orderId, "To‘liq skrinshot yuboring"));
     const o = s.orders.find((x) => x.id === orderId)!;
-    expect(o.paymentStatus).toBe("awaiting_payment");
+    expect(o.paymentStatus).toBe("info_requested");
     expect(o.adminNote).toMatch(/skrinshot/);
+    expect(o.reviews.at(-1)?.decision).toBe("info_requested");
   });
 
   it("the same receipt cannot be used twice", () => {
@@ -375,16 +440,19 @@ describe("manual card payment", () => {
     s = pay(s, orderId);
     s = ok(rejectListing(s, A, listingId, "Hujjat yo‘q"));
     let o = s.orders.find((x) => x.id === orderId)!;
-    expect(o.paymentStatus).toBe("refund_requested");
-    expect(o.refundStatus).toBe("requested");
-    expect(o.refundNote).toMatch(/Hujjat/);
+    expect(o.paymentStatus).toBe("paid");
+    expect(o.refund?.status).toBe("requested");
+    expect(o.refund?.reason).toMatch(/Hujjat/);
+    expect(o.refund?.amount).toBe(o.amount);
     expect(stats(s).refundRequests).toBe(1);
+    expect(decideRefund(s, U, orderId, "refunded").ok).toBe(false); // admin only
     s = ok(decideRefund(s, A, orderId, "refunded"));
     o = s.orders.find((x) => x.id === orderId)!;
-    expect(o.paymentStatus).toBe("refunded");
-    expect(o.refundStatus).toBe("refunded");
-    expect(o.refundedAt).toBeTruthy();
-    expect(o.paidAt).toBeTruthy(); // the original payment is still recorded
+    expect(o.paymentStatus).toBe("paid"); // payment record unchanged
+    expect(o.refund?.status).toBe("refunded");
+    expect(o.refund?.decidedAt).toBeTruthy();
+    expect(o.paidAt).toBeTruthy();
+    expect(decideRefund(s, A, orderId, "declined").ok).toBe(false); // decided once
   });
 
   it("receipt files: real type from content, size limits", () => {
@@ -401,6 +469,12 @@ describe("manual card payment", () => {
     expect(validateReceiptFile({ name: "a.pdf", type: "application/pdf", size: 2 * 1024 * 1024 }, pdf).ok).toBe(false);
     expect(validateReceiptFile({ name: "a.jpg", type: "image/jpeg", size: 11 * 1024 * 1024 }, jpg).ok).toBe(false);
     expect(validateReceiptFile({ name: "a.jpg", type: "image/jpeg", size: 0 }, jpg).ok).toBe(false);
+  });
+
+  it("the engine itself refuses oversized or mislabelled receipts", () => {
+    let { s, orderId } = paidListingOrder();
+    expect(submitReceipt(s, U, orderId, { ...receipt(), size: 999_999_999 }).ok).toBe(false);
+    expect(submitReceipt(s, U, orderId, { ...receipt(), storedMime: "application/pdf" }).ok).toBe(false);
   });
 
   it("a status order is paid by receipt and still waits for status approval", () => {
@@ -420,8 +494,15 @@ describe("manual card payment", () => {
     s = ok(submitReceipt(s, U, orderId, receipt()));
     s = ok(startPaymentReview(s, A, orderId));
     s = ok(approvePayment(s, A, orderId));
+    s = ok(togglePromo(s, A, s.promoCodes[0].id));
+    s = ok(shiftClock(s, A, 1));
     const texts = s.log.map((e) => e.text).join("\n");
     expect(texts).toMatch(/tekshirishni boshladi/);
     expect(texts).toMatch(/To‘lovni tasdiqladi/);
+    expect(texts).toMatch(/Promokod/);
+    expect(texts).toMatch(/Demo soati/);
+    const o = s.orders.find((x) => x.id === orderId)!;
+    expect(o.reviews.map((r) => r.decision)).toEqual(["started", "approved"]);
+    expect(o.receipts[0].card?.last4).toBe("3333"); // the card shown is remembered
   });
 });

@@ -67,7 +67,10 @@ export function resetDemoState(keepAdminId?: string | null): DemoState {
     /* ignore */
   }
   const fresh = createSeedState();
-  if (keepAdminId && fresh.users.some((u) => u.id === keepAdminId && u.role === "admin")) fresh.sessions.admin = keepAdminId;
+  if (keepAdminId && fresh.users.some((u) => u.id === keepAdminId && u.role === "admin")) {
+    fresh.sessions.admin = keepAdminId;
+    fresh.log.unshift({ at: new Date().toISOString(), actor: "Demo Admin", text: "Reset Demo: demo ma’lumotlari tozalandi (faqat shu brauzerdagi demo kaliti)" });
+  }
   saveDemoState(fresh);
   return fresh;
 }
@@ -102,6 +105,8 @@ export function useDemo() {
   const [result, setResult] = useState<UiResult | null>(null);
 
   const run = useCallback((fn: (s: DemoState) => ActionResult): ActionResult => {
+    // Re-read storage first: another tab may have changed the demo a moment ago (avoids overwriting it).
+    cache = null;
     const current = getDemoState();
     const r = fn(current);
     if (r.ok && r.state !== current) {
@@ -167,7 +172,8 @@ export async function readReceiptFile(file: File, note: string): Promise<{ ok: t
   } catch {
     return { ok: false, reason: "Chek faylini o‘qib bo‘lmadi" };
   }
-  return { ok: true, input: { hash, fileName: file.name || "chek", mime: check.mime, size: file.size, dataUrl, note } };
+  const storedMime = check.mime === "application/pdf" ? "application/pdf" : "image/jpeg";
+  return { ok: true, input: { hash, fileName: file.name || "chek", mime: check.mime, storedMime, size: file.size, dataUrl, note } };
 }
 
 /** Turns a stored data URL into a blob: URL (Chrome will not show PDFs from data: URLs in a frame). */

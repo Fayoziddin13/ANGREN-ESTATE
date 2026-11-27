@@ -121,7 +121,7 @@ export default function DemoKabinet() {
                   </div>
                   <span className="font-black text-brand-text">{formatSum(o.amount)}</span>
                   <Pill tone={PAYMENT_UI[o.paymentStatus].tone}>{PAYMENT_UI[o.paymentStatus].label}</Pill>
-                  {o.refundStatus !== "none" && <Pill tone={REFUND_UI[o.refundStatus].tone}>{REFUND_UI[o.refundStatus].label}</Pill>}
+                  {o.refund && <Pill tone={REFUND_UI[o.refund.status].tone}>{REFUND_UI[o.refund.status].label}</Pill>}
                   {!isPaidLike(o.paymentStatus) && o.paymentStatus !== "cancelled" && o.amount > 0 && (
                     <Link href={`/demo/pay/${o.id}`} className={`${btnSecondary} !py-1.5 text-xs`}>
                       <CreditCard className="h-3.5 w-3.5" /> {USER_PAYABLE.includes(o.paymentStatus) ? "To‘lash" : "Holatni ko‘rish"}
@@ -197,16 +197,16 @@ function NewListingPanel({ state, userId, onClose, run, onCreated }: {
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-sm font-black text-brand-text">{p.nameUz}</span>
-                    {id === "premium" && <Pill tone="indigo"><Sparkles className="h-3 w-3" /> TOP {p.bonusTopDays} kun</Pill>}
+                    {id === "premium" && <Pill tone="violet"><Sparkles className="h-3 w-3" /> Premium</Pill>}
                   </div>
                   <p className="mt-1 text-lg font-black text-brand-primary">
                     {isFree ? <>Bepul <span className="text-xs font-bold text-brand-muted line-through">{formatSum(p.price)}</span></> : formatSum(p.price)}
                   </p>
-                  <p className="text-xs text-brand-muted">
-                    {id === "standard"
-                      ? isFree ? "Birinchi e’lon — bepul" : "Oddiy e’lon, moderatsiyadan keyin saytda"
-                      : `E’lon + TOP status ${p.bonusTopDays} kun (tasdiqlangan paytdan)`}
-                  </p>
+                  {isFree && <p className="text-xs font-bold text-emerald-700">Birinchi e’lon — bepul</p>}
+                  <ul className="mt-1 space-y-0.5 text-xs text-brand-muted">
+                    {p.features.map((f) => <li key={f}>• {f}</li>)}
+                  </ul>
+                  {id === "premium" && <p className="mt-1 text-[11px] text-brand-subtle">TOP tarifga kirmaydi — alohida sotib olinadi.</p>}
                 </button>
               );
             })}
@@ -330,16 +330,16 @@ function ListingRow({ state, listing: l, onPay, onRevise, onStatus, onRenew }: {
             {order && order.amount > 0 && <span className="text-[11px] font-bold text-brand-text">{formatSum(order.amount)}</span>}
             <span className="ml-1 text-[11px] font-bold text-brand-muted">Moderatsiya:</span>
             <Pill tone={mod.tone}>{mod.label}</Pill>
-            {order && order.refundStatus !== "none" && <Pill tone={REFUND_UI[order.refundStatus].tone}>{REFUND_UI[order.refundStatus].label}</Pill>}
+            {order?.refund && <Pill tone={REFUND_UI[order.refund.status].tone}>{REFUND_UI[order.refund.status].label}</Pill>}
           </div>
           {l.moderation === "rejected" && l.rejectReason && (
             <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-800">
               <b>Rad etish sababi:</b> {l.rejectReason}
               {l.billing === "free" && <> · Bepul e’lon huquqingiz qaytarildi.</>}
-              {l.billing === "paid" && order?.refundStatus === "requested" && <> · To‘langan summa qaytarilishi admin tomonidan ko‘rib chiqilmoqda.</>}
+              {l.billing === "paid" && order?.refund?.status === "requested" && <> · To‘langan summa qaytarilishi admin tomonidan ko‘rib chiqilmoqda.</>}
             </p>
           )}
-          {order && order.adminNote && (order.paymentStatus === "rejected" || order.paymentStatus === "awaiting_payment") && (
+          {order && order.adminNote && (order.paymentStatus === "rejected" || order.paymentStatus === "info_requested") && (
             <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-800">
               <b>{order.paymentStatus === "rejected" ? "To‘lov rad etildi:" : "Admin qo‘shimcha ma’lumot so‘radi:"}</b> {order.adminNote}
             </p>
@@ -355,7 +355,7 @@ function ListingRow({ state, listing: l, onPay, onRevise, onStatus, onRenew }: {
                 return (
                   <div key={so.id} className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
                     <Pill tone="indigo">{STATUS_NAMES[so.type].uz}</Pill>
-                    <span className="font-bold text-brand-text">{so.days} kun{so.source === "premium_bonus" ? " (Premium bonus)" : ""}</span>
+                    <span className="font-bold text-brand-text">{so.days} kun</span>
                     <Pill tone={ui.tone}>{ui.label}</Pill>
                     {so.startsAt ? (
                       <span className="text-brand-muted">

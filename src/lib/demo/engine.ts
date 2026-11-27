@@ -25,7 +25,7 @@
  *    In this demo the card is fake and no money moves.
  */
 
-export const DEMO_STATE_VERSION = 2;
+export const DEMO_STATE_VERSION = 3;
 export const DEMO_STORAGE_KEY = "angren_demo_v1";
 
 export type Locale = "uz" | "ru";
@@ -37,21 +37,34 @@ export const STATUS_TYPES: StatusType[] = ["top", "tez_sotiladi", "yaxshi_taklif
 export const STATUS_DAYS: StatusDays[] = [3, 7, 30];
 
 export type Moderation = "not_submitted" | "pending" | "approved" | "rejected" | "revision";
+/**
+ * Payment status describes ONLY the payment. A refund never changes it: once an
+ * order is `paid` it stays `paid`, and the refund lives in `order.refund`.
+ */
 export type PaymentStatus =
   | "awaiting_payment"
   | "receipt_submitted"
   | "under_review"
+  | "info_requested"
   | "paid"
   | "rejected"
-  | "cancelled"
-  | "refund_requested"
-  | "refunded";
-/** Money was received (refund states keep the original payment). */
-export const PAID_LIKE: PaymentStatus[] = ["paid", "refund_requested", "refunded"];
-export const isPaidLike = (s: PaymentStatus) => PAID_LIKE.includes(s);
+  | "cancelled";
+export const isPaidLike = (s: PaymentStatus) => s === "paid";
 /** The user may (re)send a receipt or cancel only in these states. */
-export const USER_PAYABLE: PaymentStatus[] = ["awaiting_payment", "rejected"];
-export type RefundStatus = "none" | "requested" | "refunded" | "declined";
+export const USER_PAYABLE: PaymentStatus[] = ["awaiting_payment", "info_requested", "rejected"];
+/** Orders in these states hold (reserve) their promo code use. */
+export const PROMO_HOLDING: PaymentStatus[] = ["awaiting_payment", "receipt_submitted", "under_review", "info_requested", "rejected"];
+export type RefundStatus = "requested" | "refunded" | "declined";
+export interface Refund {
+  status: RefundStatus;
+  amount: number;
+  reason: string;
+  requestedAt: string;
+  requestedBy: string;
+  decidedAt: string | null;
+  decidedBy: string | null;
+  note: string | null;
+}
 export type StatusOrderState = "awaiting_payment" | "pending_approval" | "active" | "rejected" | "cancelled";
 export type PromoTarget = "all" | "listing" | "status";
 
@@ -69,8 +82,11 @@ export interface ListingPlan {
   nameUz: string;
   nameRu: string;
   price: number;
-  /** Premium: a TOP status for this many days, started at approval. 0 = none. */
-  bonusTopDays: number;
+  /**
+   * What the plan gives, set by the admin (shown to the user when choosing).
+   * Premium never includes TOP: TOP is always bought separately.
+   */
+  features: string[];
 }
 
 export interface Settings {
@@ -96,18 +112,23 @@ export interface Receipt {
   /** SHA-256 of the original file bytes: the same receipt cannot be used twice. */
   hash: string;
   fileName: string;
+  /** Type of the ORIGINAL file (detected from its bytes). */
   mime: "image/jpeg" | "image/png" | "application/pdf";
   size: number;
   /** File content (images are shrunk). Shown only in the admin panel. */
   dataUrl: string;
+  /** Type of what is stored in dataUrl (images are re-encoded as JPEG). */
+  storedMime: "image/jpeg" | "application/pdf";
   note: string;
   submittedAt: string;
+  /** The card the user was shown when sending this receipt. */
+  card: { last4: string; holder: string; bank: string } | null;
 }
 
 export interface Review {
   at: string;
   adminId: string;
-  decision: "approved" | "rejected" | "info_requested";
+  decision: "started" | "approved" | "rejected" | "info_requested";
   note: string | null;
 }
 
@@ -153,10 +174,8 @@ export interface Order {
   /** Last admin rejection reason or info request, shown to the user. */
   adminNote: string | null;
   submittedAt: string | null;
-  /** Refund is stored apart from the payment: request reason and result. */
-  refundStatus: RefundStatus;
-  refundNote: string | null;
-  refundedAt: string | null;
+  /** Refund is stored apart from the payment (null = no refund). */
+  refund: Refund | null;
   events: { at: string; actor: string; text: string }[];
   createdAt: string;
   paidAt: string | null;
@@ -196,7 +215,7 @@ export interface StatusOrder {
   days: number;
   orderId: string | null;
   state: StatusOrderState;
-  source: "purchase" | "premium_bonus";
+  source: "purchase";
   rejectReason: string | null;
   createdAt: string;
   approvedAt: string | null;
@@ -253,9 +272,11 @@ function fail(state: DemoState, message: string): ActionResult {
   return { state, ok: false, message };
 }
 
+export const LOG_LIMIT = 2000;
+
 function addLog(s: DemoState, actor: string, text: string) {
   s.log.unshift({ at: nowIso(s), actor, text });
-  if (s.log.length > 200) s.log.length = 200;
+  if (s.log.length > LOG_LIMIT) s.log.length = LOG_LIMIT;
 }
 
 export function formatSum(value: number, locale: Locale = "uz"): string {
@@ -321,8 +342,14 @@ export function createSeedState(real: number = Date.now()): DemoState {
       monetizationEnabled: true,
       freeFirstEnabled: true,
       plans: {
-        standard: { id: "standard", nameUz: "Standart", nameRu: "Стандарт", price: 50000, bonusTopDays: 0 },
-        premium: { id: "premium", nameUz: "Premium (TOP 7 kun bilan)", nameRu: "Премиум (с ТОП 7 дней)", price: 120000, bonusTopDays: 7 },
+        standard: { id: "standard", nameUz: "Standart", nameRu: "Стандарт", price: 50000, features: ["Oddiy e’lon", "Moderatsiyadan keyin saytda chiqadi"] },
+        premium: {
+          id: "premium",
+          nameUz: "Premium",
+          nameRu: "Премиум",
+          price: 120000,
+          features: ["Premium belgisi e’lon kartasida", "Moderatsiyadan keyin saytda chiqadi"],
+        },
       },
       statusPrices: {
         top: { 3: 15000, 7: 30000, 30: 90000 },
@@ -427,11 +454,19 @@ export function checkPromo(state: DemoState, code: string, target: "listing" | "
   const now = nowMs(state);
   if (now < Date.parse(promo.validFrom)) return { ok: false, reason: "Promokod hali boshlanmagan" };
   if (now > Date.parse(promo.validTo)) return { ok: false, reason: "Promokod muddati tugagan" };
-  if (promo.usageLimit > 0 && promo.used >= promo.usageLimit) return { ok: false, reason: "Promokoddan foydalanish limiti tugagan" };
+  // Uses already paid + uses held by unpaid orders (reserved when the order is created).
+  if (promo.usageLimit > 0 && promo.used + promoHeld(state, promo.code) >= promo.usageLimit) {
+    return { ok: false, reason: "Promokoddan foydalanish limiti tugagan" };
+  }
   if (promo.target !== "all" && promo.target !== target) {
     return { ok: false, reason: promo.target === "listing" ? "Bu promokod faqat e’lon uchun" : "Bu promokod faqat status uchun" };
   }
   return { ok: true, promo };
+}
+
+/** How many unpaid orders currently hold this promo code. */
+export function promoHeld(state: DemoState, code: string, exceptOrderId?: string): number {
+  return state.orders.filter((o) => o.promoCode === code && o.id !== exceptOrderId && PROMO_HOLDING.includes(o.paymentStatus)).length;
 }
 
 export interface Quote {
@@ -441,29 +476,49 @@ export interface Quote {
   promo: PromoCode | null;
   promoDiscount: number;
   promoError: string | null;
+  /** A valid promo code that was not used because the running promotion gives more. */
+  promoNotApplied: boolean;
   total: number;
   free: boolean;
 }
 
+/**
+ * Price with the best single discount (same rule as the server, mon_quote):
+ * a promotion and a promo code are never combined — the bigger one wins —
+ * and at least 1 so‘m always stays payable.
+ */
 export function quote(state: DemoState, base: number, target: "listing" | "status", promoCode?: string, free = false): Quote {
   if (free) {
-    return { base: 0, promotion: null, promotionDiscount: 0, promo: null, promoDiscount: 0, promoError: null, total: 0, free: true };
+    return { base: 0, promotion: null, promotionDiscount: 0, promo: null, promoDiscount: 0, promoError: null, promoNotApplied: false, total: 0, free: true };
   }
-  const promotion = activePromotion(state, target);
-  const promotionDiscount = promotion ? Math.round((base * promotion.percent) / 100) : 0;
-  let rest = base - promotionDiscount;
-  let promo: PromoCode | null = null;
-  let promoDiscount = 0;
+  const cap = Math.max(0, base - 1);
+  const running = activePromotion(state, target);
+  const byPromotion = running ? Math.min(cap, Math.round((base * running.percent) / 100)) : 0;
+  let code: PromoCode | null = null;
+  let byCode = 0;
   let promoError: string | null = null;
   if (promoCode && promoCode.trim()) {
     const chk = checkPromo(state, promoCode, target);
     if (chk.ok) {
-      promo = chk.promo;
-      promoDiscount = promo.kind === "percent" ? Math.round((rest * promo.value) / 100) : Math.min(promo.value, rest);
-      rest -= promoDiscount;
+      code = chk.promo;
+      byCode = Math.min(cap, code.kind === "percent" ? Math.round((base * code.value) / 100) : code.value);
     } else promoError = chk.reason;
   }
-  return { base, promotion, promotionDiscount, promo, promoDiscount, promoError, total: Math.max(0, rest), free: false };
+  const useCode = code !== null && byCode >= byPromotion && byCode > 0;
+  const promotion = !useCode && byPromotion > 0 ? running : null;
+  const promotionDiscount = promotion ? byPromotion : 0;
+  const promoDiscount = useCode ? byCode : 0;
+  return {
+    base,
+    promotion,
+    promotionDiscount,
+    promo: useCode ? code : null,
+    promoDiscount,
+    promoError,
+    promoNotApplied: code !== null && !useCode,
+    total: base - promotionDiscount - promoDiscount,
+    free: false,
+  };
 }
 
 export function listingQuote(state: DemoState, userId: string, plan: ListingPlanId, promoCode?: string): Quote {
@@ -520,17 +575,20 @@ function makeOrder(s: DemoState, userId: string, kind: Order["kind"], targetId: 
     reviews: [],
     adminNote: null,
     submittedAt: null,
-    refundStatus: "none",
-    refundNote: null,
-    refundedAt: null,
+    refund: null,
     events: [{ at: nowIso(s), actor: "Tizim", text: `Buyurtma yaratildi: ${formatSum(q.total)}` }],
     createdAt: nowIso(s),
     paidAt: null,
   };
 }
 
-/** Marks an order paid and pushes its target forward (moderation / admin approval). */
-function settlePaid(s: DemoState, order: Order, how: string) {
+/**
+ * Marks an order paid and pushes its target forward (listing -> moderation,
+ * status -> admin approval). Returns false when the target can no longer be
+ * served (e.g. the listing was rejected while the receipt was being checked);
+ * the caller then opens a refund, because the money was received.
+ */
+function settlePaid(s: DemoState, order: Order, how: string): boolean {
   order.paymentStatus = "paid";
   order.paidAt = nowIso(s);
   if (order.promoCode) {
@@ -543,11 +601,18 @@ function settlePaid(s: DemoState, order: Order, how: string) {
       l.moderation = "pending";
       l.submittedAt = nowIso(s);
       l.history.push({ at: nowIso(s), text: `${how}; moderatsiyaga yuborildi` });
+      return true;
     }
-  } else {
-    const so = s.statusOrders.find((x) => x.id === order.targetId);
-    if (so && so.state === "awaiting_payment") so.state = "pending_approval";
+    return false;
   }
+  const so = s.statusOrders.find((x) => x.id === order.targetId);
+  const listing = so ? s.listings.find((x) => x.id === so.listingId) : null;
+  if (so && so.state === "awaiting_payment" && listing?.moderation === "approved") {
+    so.state = "pending_approval";
+    return true;
+  }
+  if (so && so.state === "awaiting_payment") so.state = "cancelled";
+  return false;
 }
 
 export function createListing(state: DemoState, userId: string, input: ListingInput, plan: ListingPlanId, promoCode?: string): ActionResult {
@@ -621,6 +686,8 @@ export const RECEIPT_LIMITS = {
   maxImageBytes: 10 * 1024 * 1024,
   /** PDFs are stored as they are, so they must stay small (localStorage). */
   maxPdfBytes: 1.5 * 1024 * 1024,
+  /** What the demo stores after shrinking (base64 text of the file). */
+  maxStoredChars: 2.2 * 1024 * 1024,
 };
 
 /** Detects the real file type from its first bytes (never from the name). */
@@ -650,7 +717,7 @@ function orderEvent(o: Order, s: DemoState, actor: string, text: string) {
   o.events.push({ at: nowIso(s), actor, text });
 }
 
-export type ReceiptInput = Omit<Receipt, "id" | "submittedAt">;
+export type ReceiptInput = Omit<Receipt, "id" | "submittedAt" | "card">;
 
 /** The user sends a transfer receipt. This is the only payment step the user can take. */
 export function submitReceipt(state: DemoState, userId: string, orderId: string, input: ReceiptInput): ActionResult {
@@ -665,8 +732,10 @@ export function submitReceipt(state: DemoState, userId: string, orderId: string,
   }
   if (!["image/jpeg", "image/png", "application/pdf"].includes(input.mime)) return fail(state, "Faqat JPG, PNG yoki PDF");
   if (!/^[a-f0-9]{64}$/.test(input.hash)) return fail(state, "Chekni o‘qib bo‘lmadi");
-  const prefix = input.mime === "application/pdf" ? "data:application/pdf" : "data:image/";
-  if (!input.dataUrl.startsWith(prefix)) return fail(state, "Chek fayli buzilgan");
+  const expectedStored = input.mime === "application/pdf" ? "application/pdf" : "image/jpeg";
+  if (input.storedMime !== expectedStored || !input.dataUrl.startsWith(`data:${expectedStored}`)) return fail(state, "Chek fayli buzilgan");
+  const limit = input.mime === "application/pdf" ? RECEIPT_LIMITS.maxPdfBytes : RECEIPT_LIMITS.maxImageBytes;
+  if (!(input.size > 0) || input.size > limit || input.dataUrl.length > RECEIPT_LIMITS.maxStoredChars) return fail(state, "Chek fayli juda katta");
   const used = state.orders.find((x) => x.receipts.some((r) => r.hash === input.hash));
   if (used) {
     return fail(state, used.id === orderId ? "Bu chek shu buyurtmaga allaqachon yuborilgan" : "Bu chek boshqa buyurtmada ishlatilgan — qayta ishlatib bo‘lmaydi");
@@ -679,6 +748,7 @@ export function submitReceipt(state: DemoState, userId: string, orderId: string,
     fileName: input.fileName.slice(0, 120),
     id: newId("r"),
     submittedAt: nowIso(s),
+    card: { last4: s.settings.paymentCard.cardNumber.slice(-4), holder: s.settings.paymentCard.holder, bank: s.settings.paymentCard.bank },
   });
   m.paymentStatus = "receipt_submitted";
   m.submittedAt = nowIso(s);
@@ -742,6 +812,7 @@ export function startPaymentReview(state: DemoState, adminId: string, orderId: s
   const s = clone(state);
   const m = s.orders.find((x) => x.id === orderId)!;
   m.paymentStatus = "under_review";
+  m.reviews.push({ at: nowIso(s), adminId, decision: "started", note: null });
   orderEvent(m, s, r.admin.name, "Tekshiruvga olindi");
   addLog(s, r.admin.name, `Chekni tekshirishni boshladi: ${m.title}`);
   return { state: s, ok: true, message: "Chek tekshiruvga olindi. Bank tushumini alohida tekshiring" };
@@ -755,9 +826,14 @@ export function approvePayment(state: DemoState, adminId: string, orderId: strin
   const m = s.orders.find((x) => x.id === orderId)!;
   m.reviews.push({ at: nowIso(s), adminId, decision: "approved", note: null });
   m.adminNote = null;
-  settlePaid(s, m, "To‘lov admin tomonidan tasdiqlandi");
+  const served = settlePaid(s, m, "To‘lov admin tomonidan tasdiqlandi");
   orderEvent(m, s, r.admin.name, "To‘lov tasdiqlandi");
   addLog(s, r.admin.name, `To‘lovni tasdiqladi: ${m.title} — ${formatSum(m.amount)}`);
+  if (!served) {
+    openRefund(s, m.id, "Tasdiqlash paytida xizmat bekor qilingan edi (e’lon rad etilgan yoki status bekor qilingan)");
+    addLog(s, r.admin.name, `Avtomatik qaytarish so‘rovi: ${m.title}`);
+    return { state: s, ok: true, message: "To‘lov tasdiqlandi, lekin xizmat bekor qilingan edi — pul qaytarish so‘rovi avtomatik ochildi" };
+  }
   return {
     state: s,
     ok: true,
@@ -785,7 +861,7 @@ export function requestPaymentInfo(state: DemoState, adminId: string, orderId: s
   if (typeof r === "string") return fail(state, r);
   const s = clone(state);
   const m = s.orders.find((x) => x.id === orderId)!;
-  m.paymentStatus = "awaiting_payment";
+  m.paymentStatus = "info_requested";
   m.adminNote = note.trim();
   m.reviews.push({ at: nowIso(s), adminId, decision: "info_requested", note: note.trim() });
   orderEvent(m, s, r.admin.name, `Qo‘shimcha ma’lumot so‘raldi: ${note.trim()}`);
@@ -851,11 +927,12 @@ export const STATUS_NAMES: Record<StatusType, { uz: string; ru: string }> = {
   yaxshi_taklif: { uz: "Yaxshi taklif", ru: "Выгодно" },
 };
 
-export type StatusPhase = StatusOrderState | "expired";
+export type StatusPhase = StatusOrderState | "expired" | "scheduled";
 
 /** The real phase of a status at "now" (an active status whose end passed is expired). */
 export function statusPhase(state: DemoState, so: StatusOrder): StatusPhase {
   if (so.state === "active" && so.endsAt && Date.parse(so.endsAt) <= nowMs(state)) return "expired";
+  if (so.state === "active" && so.startsAt && Date.parse(so.startsAt) > nowMs(state)) return "scheduled";
   return so.state;
 }
 
@@ -869,14 +946,12 @@ function requireAdmin(state: DemoState, adminId: string): DemoUser | null {
   return state.users.find((u) => u.id === adminId && u.role === "admin") ?? null;
 }
 
-function openRefund(s: DemoState, orderId: string | null, why: string) {
+function openRefund(s: DemoState, orderId: string | null, why: string, by = "Tizim") {
   if (!orderId) return false;
   const o = s.orders.find((x) => x.id === orderId);
-  if (!o || o.paymentStatus !== "paid" || o.amount <= 0 || o.refundStatus !== "none") return false;
-  o.paymentStatus = "refund_requested";
-  o.refundStatus = "requested";
-  o.refundNote = why;
-  o.events.push({ at: nowIso(s), actor: "Tizim", text: `Pul qaytarish so‘rovi: ${why}` });
+  if (!o || o.paymentStatus !== "paid" || o.amount <= 0 || o.refund) return false;
+  o.refund = { status: "requested", amount: o.amount, reason: why, requestedAt: nowIso(s), requestedBy: by, decidedAt: null, decidedBy: null, note: null };
+  o.events.push({ at: nowIso(s), actor: by, text: `Pul qaytarish so‘rovi: ${why}` });
   return true;
 }
 
@@ -893,18 +968,8 @@ export function approveListing(state: DemoState, adminId: string, listingId: str
   m.rejectReason = null;
   m.revisionNote = null;
   m.history.push({ at: nowIso(s), text: "Admin tasdiqladi — e’lon ommaga chiqdi" });
-  let extra = "";
-  const bonusDays = s.settings.plans[m.plan]?.bonusTopDays ?? 0;
-  if (m.plan === "premium" && m.billing === "paid" && bonusDays > 0 && !s.statusOrders.some((x) => x.listingId === m.id && x.source === "premium_bonus")) {
-    const start = nowMs(s);
-    s.statusOrders.unshift({
-      id: newId("s"), userId: m.userId, listingId: m.id, type: "top", days: bonusDays, orderId: m.orderId, state: "active", source: "premium_bonus",
-      rejectReason: null, createdAt: nowIso(s), approvedAt: nowIso(s), startsAt: new Date(start).toISOString(), endsAt: new Date(start + bonusDays * DAY).toISOString(),
-    });
-    extra = ` Premium: TOP ${bonusDays} kun shu daqiqadan boshlandi.`;
-  }
   addLog(s, admin.name, `Tasdiqladi: ${m.title}`);
-  return { state: s, ok: true, message: `E’lon tasdiqlandi va saytda ko‘rinadi.${extra}` };
+  return { state: s, ok: true, message: `E’lon tasdiqlandi va saytda ko‘rinadi.${m.plan === "premium" ? " Premium belgisi bilan (TOP alohida sotib olinadi)." : ""}` };
 }
 
 export function rejectListing(state: DemoState, adminId: string, listingId: string, reason: string): ActionResult {
@@ -920,11 +985,20 @@ export function rejectListing(state: DemoState, adminId: string, listingId: stri
   m.rejectReason = reason.trim();
   m.decidedAt = nowIso(s);
   m.history.push({ at: nowIso(s), text: `Rad etildi: ${reason.trim()}` });
-  // Stop its statuses.
+  // Stop its statuses. Paid ones get a refund request (the admin decides, also for an active one);
+  // unpaid ones are cancelled, and an order whose receipt is still being checked gets a refund on approval.
   s.statusOrders.forEach((x) => {
-    if (x.listingId === m.id && (x.state === "active" || x.state === "pending_approval")) {
-      if (x.state === "pending_approval") openRefund(s, x.orderId, "E’lon rad etildi, status bekor qilindi");
+    if (x.listingId !== m.id) return;
+    if (x.state === "active" || x.state === "pending_approval") {
+      openRefund(s, x.orderId, x.state === "active" ? "E’lon rad etildi, faol status to‘xtatildi" : "E’lon rad etildi, status bekor qilindi");
       x.state = "cancelled";
+    } else if (x.state === "awaiting_payment") {
+      x.state = "cancelled";
+      const o = s.orders.find((q) => q.id === x.orderId);
+      if (o && USER_PAYABLE.includes(o.paymentStatus)) {
+        o.paymentStatus = "cancelled";
+        o.events.push({ at: nowIso(s), actor: "Tizim", text: "E’lon rad etildi — buyurtma bekor qilindi" });
+      }
     }
   });
   let msg = "E’lon rad etildi.";
@@ -991,13 +1065,11 @@ export function decideRefund(state: DemoState, adminId: string, orderId: string,
   const admin = requireAdmin(state, adminId);
   if (!admin) return fail(state, "Faqat admin");
   const o = state.orders.find((x) => x.id === orderId);
-  if (!o || o.refundStatus !== "requested") return fail(state, "Qaytarish so‘rovi yo‘q");
+  if (!o || o.refund?.status !== "requested") return fail(state, "Qaytarish so‘rovi yo‘q");
   const s = clone(state);
   const m = s.orders.find((x) => x.id === orderId)!;
-  m.refundStatus = decision;
-  // The payment record follows the refund result; the refund itself stays in refundStatus/refundNote/refundedAt.
-  m.paymentStatus = decision === "refunded" ? "refunded" : "paid";
-  if (decision === "refunded") m.refundedAt = nowIso(s);
+  // The payment stays "paid"; only the refund record gets the result.
+  m.refund = { ...m.refund!, status: decision, decidedAt: nowIso(s), decidedBy: admin.name };
   m.events.push({ at: nowIso(s), actor: admin.name, text: decision === "refunded" ? "Pul qaytarilgani qayd etildi" : "Qaytarish rad etildi" });
   addLog(s, admin.name, `${decision === "refunded" ? "Pul qaytarildi (DEMO)" : "Qaytarish rad etildi"}: ${m.title}`);
   return { state: s, ok: true, message: decision === "refunded" ? "Qaytarish bajarildi deb belgilandi (DEMO, haqiqiy pul o‘tkazilmadi)" : "Qaytarish rad etildi" };
@@ -1007,7 +1079,8 @@ export function decideRefund(state: DemoState, adminId: string, orderId: string,
 
 export function updateSettings(state: DemoState, adminId: string, patch: Partial<Pick<Settings, "monetizationEnabled" | "freeFirstEnabled">> & {
   planPrices?: Partial<Record<ListingPlanId, number>>;
-  premiumBonusDays?: number;
+  premiumFeatures?: string[];
+  standardFeatures?: string[];
   statusPrices?: Partial<Record<StatusType, Partial<Record<StatusDays, number>>>>;
 }): ActionResult {
   const admin = requireAdmin(state, adminId);
@@ -1020,9 +1093,12 @@ export function updateSettings(state: DemoState, adminId: string, patch: Partial
     if (!okMoney(v)) return fail(state, "Narx 0 dan katta butun son bo‘lsin");
     s.settings.plans[k as ListingPlanId].price = Math.round(v as number);
   }
-  if (patch.premiumBonusDays !== undefined) {
-    if (!Number.isInteger(patch.premiumBonusDays) || patch.premiumBonusDays < 0 || patch.premiumBonusDays > 60) return fail(state, "Bonus kunlari 0–60");
-    s.settings.plans.premium.bonusTopDays = patch.premiumBonusDays;
+  for (const [plan, list] of [["premium", patch.premiumFeatures], ["standard", patch.standardFeatures]] as const) {
+    if (list === undefined) continue;
+    const clean = list.map((x) => String(x).trim()).filter(Boolean).slice(0, 12);
+    if (clean.some((x) => x.length > 120)) return fail(state, "Imkoniyat matni 120 belgidan oshmasin");
+    if (clean.some((x) => /\btop\b/i.test(x))) return fail(state, "TOP tarifga kirmaydi — u alohida sotib olinadi");
+    s.settings.plans[plan].features = clean;
   }
   for (const [type, byDays] of Object.entries(patch.statusPrices ?? {})) {
     for (const [d, v] of Object.entries(byDays ?? {})) {
@@ -1038,6 +1114,7 @@ export function shiftClock(state: DemoState, adminId: string, days: number | "re
   if (!requireAdmin(state, adminId)) return fail(state, "Faqat admin");
   const s = clone(state);
   s.settings.clockOffsetMs = days === "reset" ? 0 : s.settings.clockOffsetMs + days * DAY;
+  addLog(s, requireAdmin(state, adminId)!.name, days === "reset" ? "Demo soati haqiqiy vaqtga qaytarildi" : `Demo soati ${days} kun surildi`);
   return { state: s, ok: true, message: days === "reset" ? "Demo soati haqiqiy vaqtga qaytarildi" : `Demo soati ${days} kun oldinga surildi` };
 }
 
@@ -1076,6 +1153,7 @@ export function togglePromo(state: DemoState, adminId: string, id: string): Acti
   const p = s.promoCodes.find((x) => x.id === id);
   if (!p) return fail(state, "Promokod topilmadi");
   p.active = !p.active;
+  addLog(s, requireAdmin(state, adminId)!.name, `Promokod ${p.code}: ${p.active ? "yoqildi" : "o‘chirildi"}`);
   return { state: s, ok: true, message: `${p.code}: ${p.active ? "yoqildi" : "o‘chirildi"}` };
 }
 
@@ -1104,6 +1182,7 @@ export function togglePromotion(state: DemoState, adminId: string, id: string): 
   const p = s.promotions.find((x) => x.id === id);
   if (!p) return fail(state, "Aksiya topilmadi");
   p.active = !p.active;
+  addLog(s, requireAdmin(state, adminId)!.name, `Aksiya ${p.name}: ${p.active ? "faollashtirildi" : "to‘xtatildi"}`);
   return { state: s, ok: true, message: `${p.name}: ${p.active ? "faollashtirildi" : "to‘xtatildi"}` };
 }
 
@@ -1121,6 +1200,7 @@ export interface PublicListing {
   listing: Listing;
   statuses: StatusOrder[];
   isTop: boolean;
+  isPremium: boolean;
 }
 
 /** Approved listings only, with running statuses; TOP first, then newest. */
@@ -1129,19 +1209,20 @@ export function publicListings(state: DemoState): PublicListing[] {
     .filter((l) => l.moderation === "approved")
     .map((listing) => {
       const statuses = activeStatusesFor(state, listing.id);
-      return { listing, statuses, isTop: statuses.some((x) => x.type === "top") };
+      return { listing, statuses, isTop: statuses.some((x) => x.type === "top"), isPremium: listing.plan === "premium" };
     })
     .sort((a, b) => Number(b.isTop) - Number(a.isTop) || Date.parse(b.listing.decidedAt || b.listing.createdAt) - Date.parse(a.listing.decidedAt || a.listing.createdAt));
 }
 
 export function stats(state: DemoState) {
   const paid = state.orders.filter((o) => isPaidLike(o.paymentStatus));
-  const refunded = state.orders.filter((o) => o.refundStatus === "refunded");
+  const refunded = state.orders.filter((o) => o.refund?.status === "refunded");
   return {
     paymentReviews: state.orders.filter((o) => o.paymentStatus === "receipt_submitted" || o.paymentStatus === "under_review").length,
+    premiumListings: state.listings.filter((l) => l.plan === "premium" && l.moderation === "approved").length,
     pendingModeration: state.listings.filter((l) => l.moderation === "pending").length,
     pendingStatuses: state.statusOrders.filter((x) => x.state === "pending_approval").length,
-    refundRequests: state.orders.filter((o) => o.refundStatus === "requested").length,
+    refundRequests: state.orders.filter((o) => o.refund?.status === "requested").length,
     approved: state.listings.filter((l) => l.moderation === "approved").length,
     revenue: paid.reduce((a, o) => a + o.amount, 0) - refunded.reduce((a, o) => a + o.amount, 0),
     paidCount: paid.length,
