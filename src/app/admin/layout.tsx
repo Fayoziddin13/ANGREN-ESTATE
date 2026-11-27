@@ -24,6 +24,9 @@ import {
   Shield,
   ChevronRight,
   Share2,
+  ShieldCheck,
+  Coins,
+  CreditCard,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -73,6 +76,24 @@ export default function AdminLayout({
       label: locale === "uz" ? "Arizalar" : "Заявки",
       icon: ClipboardList,
       active: pathname.startsWith("/admin/arizalar"),
+    },
+    {
+      href: "/admin/moderatsiya",
+      label: locale === "uz" ? "Moderatsiya" : "Модерация",
+      icon: ShieldCheck,
+      active: pathname.startsWith("/admin/moderatsiya"),
+    },
+    {
+      href: "/admin/tolovlar",
+      label: locale === "uz" ? "To‘lovlar" : "Платежи",
+      icon: CreditCard,
+      active: pathname.startsWith("/admin/tolovlar"),
+    },
+    {
+      href: "/admin/monetizatsiya",
+      label: locale === "uz" ? "Monetizatsiya" : "Монетизация",
+      icon: Coins,
+      active: pathname.startsWith("/admin/monetizatsiya"),
     },
     {
       href: "/admin/realtors",

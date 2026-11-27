@@ -123,6 +123,16 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
           )}
           {property.badges &&
             property.badges.filter((b) => b !== "new").slice(0, 2).map((b) => {
+              if (b === "premium") {
+                return (
+                  <span
+                    key={b}
+                    className="rounded-lg bg-violet-600 px-2 py-0.5 text-[10px] sm:text-[11px] font-bold tracking-wide text-white shadow-xs"
+                  >
+                    Premium
+                  </span>
+                );
+              }
               if (b === "top") {
                 return (
                   <span

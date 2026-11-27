@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getPropertyById, sanitizePublicProperty } from "@/lib/properties";
+import { applyRunningStickers, getPropertyById, sanitizePublicProperty } from "@/lib/properties";
 import { buildPageMetadata } from "@/lib/seo";
 import { absoluteUrl } from "@/lib/siteUrl";
 import { Property } from "@/lib/types";
@@ -44,7 +44,7 @@ export default async function PropertyPage({ params }: PageProps) {
 
   // The property is read with the service role; strip private fields (hidden
   // owner phone) before it is serialized into the client component's payload.
-  const publicProperty = sanitizePublicProperty(property);
+  const [publicProperty] = await applyRunningStickers([sanitizePublicProperty(property)]);
 
   return (
     <>

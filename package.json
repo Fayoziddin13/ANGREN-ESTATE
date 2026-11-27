@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "telegram:setup": "node scripts/setup-telegram-bot.mjs"
+    "telegram:setup": "node scripts/setup-telegram-bot.mjs",
+    "test": "vitest run"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.0",
@@ -35,6 +36,7 @@
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.14",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vitest": "2.1.9"
   }
 }
