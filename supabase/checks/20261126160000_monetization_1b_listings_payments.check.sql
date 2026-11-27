@@ -139,8 +139,9 @@ BEGIN
       v_ref IS NOT NULL AND v_txt = 'PAID' AND v_n = 1, 'd', v_txt);
     PERFORM public.mon_settle_refund(v_ref, 'PROCESSING', NULL, NULL, 'system', NULL);
     PERFORM public.mon_settle_refund(v_ref, 'SUCCEEDED', 'mock-ref-1', NULL, 'provider', 'mock');
-    SELECT status INTO v_txt FROM public.payment_orders WHERE id = v_o1;
-    r := r || jsonb_build_object('n', 'a succeeded refund marks the order REFUNDED', 'ok', v_txt = 'REFUNDED', 'd', v_txt);
+    SELECT o.status || '/' || r2.status INTO v_txt FROM public.payment_orders o JOIN public.refunds r2 ON r2.order_id = o.id WHERE o.id = v_o1;
+    -- Since 1c the payment stays PAID; the refund result lives only in public.refunds.
+    r := r || jsonb_build_object('n', 'a succeeded refund is recorded in refunds; the payment stays PAID (1c)', 'ok', v_txt = 'PAID/SUCCEEDED', 'd', v_txt);
     BEGIN
       PERFORM public.mon_settle_refund(v_ref, 'FAILED', NULL, NULL, 'system', NULL);
       v_res := 'accepted';
