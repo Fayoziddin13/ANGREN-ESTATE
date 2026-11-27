@@ -24,7 +24,7 @@ export async function listSubmissions(status?: string | null) {
   let query = supabaseAdmin
     .from("listing_submissions")
     .select(
-      "id, account_id, channel, contact_name, contact_phone, phone_verified, preferred_channel, payload, photos, billing, free_reason, moderation_status, revision_count, admin_note, flags, property_id, created_at, submitted_at, reviewed_at, customer_accounts(status, display_name), customer_identities(provider, email, telegram_username)"
+      "id, account_id, channel, contact_name, contact_phone, phone_verified, preferred_channel, payload, photos, billing, free_reason, listing_tier, moderation_status, revision_count, admin_note, flags, property_id, created_at, submitted_at, reviewed_at, customer_accounts(status, display_name), customer_identities(provider, email, telegram_username)"
     )
     .order("submitted_at", { ascending: false, nullsFirst: false })
     .limit(300);

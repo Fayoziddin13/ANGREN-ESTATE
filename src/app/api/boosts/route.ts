@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { enforceRateLimit, resolveCustomer } from "@/lib/monetization/customer";
 import { requestBoost, validateBoostInput } from "@/lib/monetization/boosts";
 import { startCheckout } from "@/lib/monetization/orders";
-import { getPaymentProvider } from "@/lib/monetization/payments";
 import { errorResponse } from "@/lib/monetization/errors";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +14,7 @@ export async function POST(req: NextRequest) {
     const input = validateBoostInput(await req.json().catch(() => null));
     const result = await requestBoost(customer, input);
     let checkout = null;
-    if (result.billing === "paid" && result.status === "AWAITING_PAYMENT" && getPaymentProvider()) {
+    if (result.billing === "paid" && result.status === "AWAITING_PAYMENT") {
       checkout = await startCheckout(customer, { type: "boost", id: result.boost_id });
     }
     return NextResponse.json({ success: true, boost: result, checkout });

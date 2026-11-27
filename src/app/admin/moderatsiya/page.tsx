@@ -144,7 +144,7 @@ export default function ModerationPage() {
             {rows.map((r) => (
               <button key={r.id} data-testid="mod-row" onClick={() => openDetail(r.id)} className="w-full text-left px-4 py-3 border-b border-slate-100 hover:bg-slate-50 flex flex-wrap items-center gap-3">
                 <StatusPill label={MODERATION_LABELS[r.moderation_status]} locale={locale} />
-                <span className="text-[11px] font-bold text-slate-500">{r.billing === "free" ? t("Bepul", "Бесплатно") : t("Pullik", "Платно")}</span>
+                <span className="text-[11px] font-bold text-slate-500">{r.billing === "free" ? t("Bepul", "Бесплатно") : t("Pullik", "Платно")}</span>{r.listing_tier === "premium" && <span className="rounded-full bg-violet-600 px-2 py-0.5 text-[10px] font-black text-white">Premium</span>}
                 {r.orders?.[0] && <StatusPill label={ORDER_LABELS[r.orders[0].status]} locale={locale} />}
                 {r.flags?.phone_conflict && (
                   <span className="inline-flex items-center gap-1 text-[11px] font-bold text-orange-700"><AlertTriangle className="h-3.5 w-3.5" />{t("Telefon takrorlangan", "Повтор телефона")}</span>
@@ -216,7 +216,7 @@ function SubmissionDrawer({ locale, detail, onClose, onDecide, onSave }: {
           <div>
             <div className="flex flex-wrap gap-2 items-center">
               <StatusPill label={MODERATION_LABELS[s.moderation_status]} locale={locale} />
-              <span className="text-xs font-bold text-slate-500">{s.billing === "free" ? t("Bepul (birinchi e'lon)", "Бесплатно (первое)") : t("Pullik", "Платно")}</span>
+              <span className="text-xs font-bold text-slate-500">{s.billing === "free" ? t("Bepul (birinchi e'lon)", "Бесплатно (первое)") : t("Pullik", "Платно")}</span>{s.listing_tier === "premium" && <span className="rounded-full bg-violet-600 px-2 py-0.5 text-[10px] font-black text-white">Premium</span>}
               {s.flags?.phone_conflict && <span className="text-xs font-bold text-orange-700">{t("Bu telefon boshqa hisobda bepul ishlatilgan", "Телефон уже использован другим аккаунтом")}</span>}
             </div>
             <h2 className="text-lg font-black mt-1">{PROPERTY_TYPE_LABELS[s.payload?.property_type]?.[locale]} · {s.payload?.location}</h2>

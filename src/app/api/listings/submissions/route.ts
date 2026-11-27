@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { enforceRateLimit, requestIpHash, resolveCustomer } from "@/lib/monetization/customer";
 import { createSubmission, getCustomerDashboard, validateSubmissionInput } from "@/lib/monetization/submissions";
 import { startCheckout } from "@/lib/monetization/orders";
-import { getPaymentProvider } from "@/lib/monetization/payments";
 import { errorResponse } from "@/lib/monetization/errors";
 
 export const dynamic = "force-dynamic";
@@ -32,7 +31,7 @@ export async function POST(req: NextRequest) {
     const result = await createSubmission(customer, input, channel, requestIpHash(req));
 
     let checkout = null;
-    if (result.billing === "paid" && result.moderation_status === "AWAITING_PAYMENT" && getPaymentProvider()) {
+    if (result.billing === "paid" && result.moderation_status === "AWAITING_PAYMENT") {
       checkout = await startCheckout(customer, { type: "submission", id: result.submission_id });
     }
     return NextResponse.json({ success: true, submission: result, checkout });

@@ -83,11 +83,62 @@ describe.skipIf(!enabled)("monetization API flow (local dev server + test DB)", 
     expect(r.status).toBe(400);
   });
 
-  it("a mock payment with a forged signature is refused", async () => {
+  it("a mock payment with a forged signature is refused (or the Mock is switched off: 404)", async () => {
     const r = await call("/api/payments/mock", null, {
       method: "POST",
       body: JSON.stringify({ order_id: "00000000-0000-4000-8000-000000000000", amount: 1, sig: "00".repeat(32), outcome: "success" }),
     });
-    expect(r.status).toBe(400);
+    expect([400, 404]).toContain(r.status);
   });
+
+  // ---- manual card payment (1c)
+  const png = () => {
+    const b = new Uint8Array(64);
+    b.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    crypto.getRandomValues(b.subarray(8));
+    return b;
+  };
+  const sendReceipt = async (token: string, orderId: string, bytes: Uint8Array, type = "image/png") => {
+    const fd = new FormData();
+    fd.append("file", new Blob([bytes as unknown as BlobPart], { type }), "chek.png");
+    const res = await fetch(`${BASE}/api/payments/orders/${orderId}/receipt`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd });
+    return { status: res.status, json: await res.json().catch(() => ({})) };
+  };
+  const paidListing = async (token: string, tier: "standard" | "premium") => {
+    const r = await call("/api/listings/submissions", token, {
+      method: "POST",
+      body: JSON.stringify({
+        deal_type: "sale", property_type: "apartment", location: "API test", description: "API test listing",
+        contact_name: "API Test", contact_phone: "+998901110009", photos: [], listing_tier: tier,
+      }),
+    });
+    return r.json?.checkout?.redirect_url ? String(r.json.checkout.redirect_url).split("/").pop()! : null;
+  };
+
+  it("manual card: receipts are checked, owned and used once; customers cannot approve", async () => {
+    const order1 = await paidListing(token1, "premium");
+    expect(order1).toBeTruthy();
+    const page = await call(`/api/payments/orders/${order1}`, token1);
+    expect(page.status).toBe(200);
+    expect(page.json.data.order.final_amount_uzs).toBe(120000);
+    expect(page.json.data.order.plan_snapshot.listing_tier).toBe("premium");
+
+    expect((await call(`/api/payments/orders/${order1}`, token2)).status).toBe(404); // another customer
+    expect((await sendReceipt(token1, order1!, new TextEncoder().encode("<html>"))).status).toBe(400); // not a receipt
+    const bytes = png();
+    expect((await sendReceipt(token2, order1!, bytes)).status).toBe(404); // not their order
+    expect((await sendReceipt(token1, order1!, bytes)).status).toBe(200);
+    expect((await sendReceipt(token1, order1!, png())).json.error).toBe("receipt_under_review");
+
+    // the customer cannot approve through the admin API
+    expect((await call(`/api/admin/monetization/payments/${order1}/review`, token1, { method: "POST", body: JSON.stringify({ action: "approve" }) })).status).toBe(401);
+
+    // the same receipt on another order is refused
+    await paidListing(token2, "standard"); // free first listing (right) or paid
+    const order2 = await paidListing(token2, "standard");
+    expect(order2).toBeTruthy();
+    const reuse = await sendReceipt(token2, order2!, bytes);
+    expect(reuse.status).toBe(409);
+    expect(reuse.json.error).toBe("receipt_reused");
+  }, 120000);
 });
