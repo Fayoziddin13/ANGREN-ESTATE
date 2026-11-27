@@ -4,6 +4,7 @@ import { requestIpHash } from "@/lib/monetization/customer";
 import { errorResponse, MonetizationError } from "@/lib/monetization/errors";
 import { getMonetizationSettings, updateMonetizationSettings, validateSettingsPatch } from "@/lib/monetization/settings";
 import * as admin from "@/lib/monetization/admin";
+import * as manual from "@/lib/monetization/manualPayments";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +53,8 @@ export async function GET(req: NextRequest, { params }: Ctx) {
       case "promotions": data = await admin.listPromotions(); break;
       case "accounts": data = await admin.listAccounts(); break;
       case "audit": data = await admin.listAudit(q.get("entity"), q.get("entity_id")); break;
+      case "payments": data = sub ? await manual.getPaymentOrderDetail(id(sub)) : await manual.listPaymentOrders(q.get("filter")); break;
+      case "payment-method": data = await manual.getActivePaymentMethod(); break;
       default: throw new MonetizationError("not_found");
     }
     return NextResponse.json({ success: true, data });
@@ -84,6 +87,11 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       data = await admin.retryRefund(id(sub), who);
     } else if (resource === "orders" && action === "refund") {
       data = await admin.requestAdminRefund(id(sub), note(body, true)!, who);
+    } else if (resource === "payments" && action === "review") {
+      const act = typeof body?.action === "string" ? body.action : "";
+      data = await manual.reviewPayment(id(sub), act, note(body, act === "reject" || act === "request_info"), who);
+    } else if (resource === "payment-method" && !sub) {
+      data = await manual.setPaymentMethod(body, who);
     } else if (resource === "prices" && !sub) {
       data = await admin.setPrice(body, who);
     } else if (resource === "prices" && action === "deactivate") {

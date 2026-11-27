@@ -143,6 +143,8 @@ export async function approveSubmission(id: string, actorId: string, note: strin
     contact_phone: sub.contact_phone,
     owner_phone: sub.contact_phone,
     owner_phone_visible: false,
+    // Premium = the Premium badge. It never adds TOP (TOP is bought separately).
+    badges: sub.listing_tier === "premium" ? ["premium"] : [],
   } as any);
 
   return monRpc<Record<string, any>>("mon_moderate_submission", {
@@ -270,24 +272,32 @@ export async function retryRefund(refundId: string, actorId: string) {
 
 export async function getStats() {
   const orders = unwrap(
-    await supabaseAdmin.from("payment_orders").select("service, status, final_amount_uzs, paid_at, refunded_at").limit(10000)
-  ) as Array<{ service: string; status: string; final_amount_uzs: number; paid_at: string | null; refunded_at: string | null }>;
+    await supabaseAdmin.from("payment_orders").select("id, service, status, final_amount_uzs, paid_at").limit(10000)
+  ) as Array<{ id: string; service: string; status: string; final_amount_uzs: number; paid_at: string | null }>;
+  // Refunds are kept apart from payments (1c): money returned = completed refunds.
+  const doneRefunds = unwrap(
+    await supabaseAdmin.from("refunds").select("order_id, amount_uzs, status, completed_at").in("status", ["SUCCEEDED", "MANUAL_CONFIRMED"]).limit(10000)
+  ) as Array<{ order_id: string; amount_uzs: number; status: string; completed_at: string | null }>;
   const now = Date.now();
   const day = 86_400_000;
   const sumPaid = (since: number) =>
     orders
-      .filter((o) => (o.status === "PAID" || o.status === "REFUNDED") && o.paid_at && Date.parse(o.paid_at) >= since)
+      .filter((o) => o.status === "PAID" && o.paid_at && Date.parse(o.paid_at) >= since)
       .reduce((s, o) => s + Number(o.final_amount_uzs), 0);
   const sumRefunded = (since: number) =>
-    orders
-      .filter((o) => o.status === "REFUNDED" && o.refunded_at && Date.parse(o.refunded_at) >= since)
-      .reduce((s, o) => s + Number(o.final_amount_uzs), 0);
+    doneRefunds
+      .filter((r) => r.completed_at && Date.parse(r.completed_at) >= since)
+      .reduce((s, r) => s + Number(r.amount_uzs), 0);
   const period = (since: number) => ({ gross: sumPaid(since), refunded: sumRefunded(since), net: sumPaid(since) - sumRefunded(since) });
 
   const count = async (table: string, column: string, value: string) => {
     const { count: c } = await supabaseAdmin.from(table).select("id", { count: "exact", head: true }).eq(column, value);
     return c || 0;
   };
+  const { count: paymentsToReview } = await supabaseAdmin
+    .from("payment_orders")
+    .select("id", { count: "exact", head: true })
+    .in("status", ["RECEIPT_SUBMITTED", "UNDER_REVIEW"]);
   const [pendingReview, awaitingPayment, revision, boostsPending, refundsOpen, refundsManual] = await Promise.all([
     count("listing_submissions", "moderation_status", "PENDING_REVIEW"),
     count("listing_submissions", "moderation_status", "AWAITING_PAYMENT"),
@@ -324,7 +334,8 @@ export async function getStats() {
       refunds_open: refundsOpen,
       refunds_manual: refundsManual,
       orders_paid: orders.filter((o) => o.status === "PAID").length,
-      orders_refunded: orders.filter((o) => o.status === "REFUNDED").length,
+      orders_refunded: new Set(doneRefunds.map((r) => r.order_id)).size,
+      payments_to_review: paymentsToReview || 0,
     },
   };
 }
@@ -360,6 +371,7 @@ export async function setPrice(body: any, actorId: string) {
   if (!service || !Number.isInteger(price) || price < 1 || price > 1_000_000_000) throw new MonetizationError("validation");
   let sticker: string | null = null;
   let days: number | null = null;
+  const tier = service === "listing" ? (body?.listing_tier === "premium" ? "premium" : "standard") : null;
   if (service === "sticker") {
     sticker = STICKER_TYPES.includes(body?.sticker_type) ? body.sticker_type : null;
     days = Number(body?.duration_days);
@@ -371,6 +383,7 @@ export async function setPrice(body: any, actorId: string) {
     p_duration_days: days,
     p_price_uzs: price,
     p_actor_id: actorId,
+    p_listing_tier: tier,
   });
 }
 

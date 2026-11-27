@@ -7,6 +7,8 @@ import { processRefund } from "./orders";
 
 export const DEAL_TYPES = ["sale", "rent"] as const;
 export const PROPERTY_TYPES = ["apartment", "house", "commercial", "land", "other"] as const;
+export const LISTING_TIERS = ["standard", "premium"] as const;
+export type ListingTier = (typeof LISTING_TIERS)[number];
 
 export interface ListingPayload {
   deal_type: (typeof DEAL_TYPES)[number];
@@ -27,6 +29,8 @@ export interface SubmissionInput {
   photos: string[];
   promoCode: string | null;
   idempotencyKey: string | null;
+  /** Standard or Premium (Premium never includes TOP; the price comes from the server). */
+  listingTier: ListingTier;
 }
 
 function text(value: unknown, min: number, max: number, field: string): string {
@@ -89,16 +93,18 @@ export function validateSubmissionInput(body: any, accountId: string): Submissio
     photos: Array.from(new Set(photos)),
     promoCode: promo || null,
     idempotencyKey: /^[A-Za-z0-9_-]{8,64}$/.test(key) ? key : null,
+    listingTier: body.listing_tier === "premium" ? "premium" : "standard",
   };
 }
 
 /** What a new listing costs this customer now (free first listing, price, discount). */
-export async function getListingTerms(customer: Customer, phone: string | null, promoCode: string | null) {
+export async function getListingTerms(customer: Customer, phone: string | null, promoCode: string | null, tier: ListingTier = "standard") {
   return monRpc<Record<string, any>>("mon_listing_terms", {
     p_account_id: customer.accountId,
     p_contact_phone: phone ?? customer.verifiedPhone,
     p_promo_code: promoCode,
     p_lock: false,
+    p_listing_tier: tier,
   });
 }
 
@@ -123,6 +129,7 @@ export async function createSubmission(
     p_promo_code: input.promoCode,
     p_idempotency_key: input.idempotencyKey,
     p_ip_hash: ipHash,
+    p_listing_tier: input.listingTier,
   });
 }
 
@@ -152,7 +159,7 @@ export async function getCustomerDashboard(customer: Customer) {
     await supabaseAdmin
       .from("listing_submissions")
       .select(
-        "id, payload, photos, billing, free_reason, moderation_status, revision_count, admin_note, flags, property_id, contact_name, contact_phone, preferred_channel, created_at, submitted_at, reviewed_at"
+        "id, payload, photos, billing, free_reason, listing_tier, moderation_status, revision_count, admin_note, flags, property_id, contact_name, contact_phone, preferred_channel, created_at, submitted_at, reviewed_at"
       )
       .eq("account_id", customer.accountId)
       .order("created_at", { ascending: false })
@@ -171,7 +178,7 @@ export async function getCustomerDashboard(customer: Customer) {
   const orders = unwrap(
     await supabaseAdmin
       .from("payment_orders")
-      .select("id, service, submission_id, boost_id, base_amount_uzs, discount_uzs, final_amount_uzs, discount_source, status, status_reason, expires_at, paid_at, created_at")
+      .select("id, service, submission_id, boost_id, base_amount_uzs, discount_uzs, final_amount_uzs, discount_source, status, status_reason, expires_at, paid_at, reviewed_at, created_at")
       .eq("account_id", customer.accountId)
       .order("created_at", { ascending: false })
       .limit(200)

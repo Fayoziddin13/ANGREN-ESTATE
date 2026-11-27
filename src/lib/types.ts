@@ -129,6 +129,7 @@ export interface Property {
 }
 
 export type PropertyBadge =
+  | "premium"
   | "top"
   | "arzon"
   | "tez_sotiladi"

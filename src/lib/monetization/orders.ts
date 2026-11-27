@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseServer";
 import { mockPaymentsAllowed } from "@/lib/env/safety";
 import { monRpc, unwrap } from "./db";
 import { MonetizationError } from "./errors";
-import { getPaymentProvider, getProviderByName, mockProvider, verifyMockSignature } from "./payments";
+import { getProviderByName, mockProvider, verifyMockSignature } from "./payments";
 import type { Customer } from "./customer";
 
 export type CheckoutTarget = { type: "submission" | "boost"; id: string };
@@ -17,10 +17,12 @@ interface EnsuredOrder {
   promo_error: string | null;
 }
 
-/** Open (or reuse) the order of an item awaiting payment and return the payment page URL. */
+/**
+ * Open (or reuse) the order of an item awaiting payment and return the payment
+ * page URL. Payment is a manual card transfer checked by an admin, so the page is
+ * our own: /kabinet/tolov/<order>. No payment provider is involved.
+ */
 export async function startCheckout(customer: Customer, target: CheckoutTarget, promoCode?: string | null) {
-  const provider = getPaymentProvider();
-  if (!provider) throw new MonetizationError("payment_unavailable");
 
   const ensured = await monRpc<EnsuredOrder>(
     target.type === "submission" ? "mon_ensure_listing_order" : "mon_ensure_boost_order",
@@ -38,8 +40,7 @@ export async function startCheckout(customer: Customer, target: CheckoutTarget, 
   ) as { id: string; final_amount_uzs: number; service: "listing" | "sticker"; status: string; account_id: string };
   if (order.account_id !== customer.accountId) throw new MonetizationError("not_found");
 
-  const { redirectUrl } = await provider.createCheckout(order);
-  return { ...ensured, provider: provider.name, redirect_url: redirectUrl };
+  return { ...ensured, provider: "manual_card", redirect_url: `/kabinet/tolov/${order.id}` };
 }
 
 /** Cancel an unpaid order of this customer (frees a reserved promo code). */
@@ -122,9 +123,10 @@ interface RefundRow {
 }
 
 /**
- * Carry out a refund through the provider that took the payment. The order is
- * marked REFUNDED only when the provider confirms; if the provider cannot do it,
- * the refund waits for an admin (MANUAL_REQUIRED) and is never shown as done.
+ * Carry out a refund through the provider that took the payment. The refund is
+ * done only when the provider confirms; if the provider cannot do it (manual card
+ * payments), the refund waits for an admin (MANUAL_REQUIRED), who transfers the
+ * money back and confirms with the bank reference. The payment itself stays PAID.
  */
 export async function processRefund(refundId: string, actor: { type: "system" | "admin"; id: string | null }) {
   const refund = unwrap(

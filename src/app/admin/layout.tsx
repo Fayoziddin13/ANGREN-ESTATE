@@ -26,6 +26,7 @@ import {
   Share2,
   ShieldCheck,
   Coins,
+  CreditCard,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -81,6 +82,12 @@ export default function AdminLayout({
       label: locale === "uz" ? "Moderatsiya" : "Модерация",
       icon: ShieldCheck,
       active: pathname.startsWith("/admin/moderatsiya"),
+    },
+    {
+      href: "/admin/tolovlar",
+      label: locale === "uz" ? "To‘lovlar" : "Платежи",
+      icon: CreditCard,
+      active: pathname.startsWith("/admin/tolovlar"),
     },
     {
       href: "/admin/monetizatsiya",

@@ -53,6 +53,8 @@ export function MonetizedListingForm({ locale, devTools, initial, onDone }: Prop
   const [channel, setChannel] = useState<"phone" | "telegram">(initial?.preferred_channel || "phone");
   const [photos, setPhotos] = useState<Photo[]>((initial?.photos || []).map((path) => ({ path, preview: null })));
   const [promo, setPromo] = useState("");
+  const [tier, setTier] = useState<"standard" | "premium">("standard");
+  const [plans, setPlans] = useState<{ standard: number | null; premium: number | null; features: string[] }>({ standard: null, premium: null, features: [] });
   const [terms, setTerms] = useState<any>(null);
   const [termsError, setTermsError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -70,13 +72,22 @@ export function MonetizedListingForm({ locale, devTools, initial, onDone }: Prop
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  // Tariff prices and Premium features (set by the admin).
+  useEffect(() => {
+    if (isEdit) return;
+    fetch("/api/monetization/config", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((c) => setPlans({ standard: c?.prices?.listing ?? null, premium: c?.prices?.premium ?? null, features: Array.isArray(c?.premium_features) ? c.premium_features : [] }))
+      .catch(() => undefined);
+  }, [isEdit]);
+
   // Price preview from the server (free first listing / price / discount).
   useEffect(() => {
     if (!canUse || isEdit) return;
     const handle = setTimeout(async () => {
       const r = await monApi("/api/monetization/terms", {
         method: "POST",
-        body: JSON.stringify({ contact_phone: phone, promo_code: promo }),
+        body: JSON.stringify({ contact_phone: phone, promo_code: promo, listing_tier: tier }),
       }, locale);
       if (r.ok) {
         setTerms(r.data.terms);
@@ -87,7 +98,7 @@ export function MonetizedListingForm({ locale, devTools, initial, onDone }: Prop
       }
     }, 450);
     return () => clearTimeout(handle);
-  }, [phone, promo, canUse, isEdit, locale]);
+  }, [phone, promo, tier, canUse, isEdit, locale]);
 
   const quote = terms?.billing === "paid" ? terms?.quote : null;
   const promoErrorText = useMemo(() => {
@@ -150,6 +161,7 @@ export function MonetizedListingForm({ locale, devTools, initial, onDone }: Prop
       photos: photos.map((ph) => ph.path),
       promo_code: promo || undefined,
       idempotency_key: keyRef.current,
+      listing_tier: tier,
     };
     const r = isEdit
       ? await monApi(`/api/listings/submissions/${initial!.id}`, { method: "PATCH", body: JSON.stringify(body) }, locale)
@@ -308,6 +320,26 @@ export function MonetizedListingForm({ locale, devTools, initial, onDone }: Prop
         ))}
       </div>
 
+      {!isEdit && plans.premium !== null && (
+        <div className="grid grid-cols-2 gap-2" data-testid="listing-tier">
+          {(["standard", "premium"] as const).map((id) => (
+            <button key={id} type="button" onClick={() => setTier(id)} aria-pressed={tier === id}
+              className={`rounded-2xl border-2 p-3 text-left transition ${tier === id ? "border-[#167d4f] bg-[#eaf5f0]" : "border-slate-200 bg-white"}`}>
+              <span className="block text-sm font-black text-slate-900">{id === "standard" ? "Standart" : "Premium"}</span>
+              <span className="block text-xs font-bold text-[#167d4f]">{formatSum(id === "standard" ? plans.standard : plans.premium, locale)}</span>
+              {id === "standard" ? (
+                <span className="block text-[11px] text-slate-500">{t("Birinchi e'lon bepul", "Первое объявление бесплатно")}</span>
+              ) : (
+                <span className="block text-[11px] text-slate-500">
+                  {(plans.features.length ? plans.features : [t("Premium belgisi", "Значок Premium")]).join(" · ")}
+                  <span className="block text-slate-400">{t("TOP alohida sotib olinadi", "TOP покупается отдельно")}</span>
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
       {!isEdit && (
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 space-y-2.5" data-testid="listing-terms">
           {termsError && <p className="text-xs text-rose-600">{termsError}</p>}
@@ -329,9 +361,11 @@ export function MonetizedListingForm({ locale, devTools, initial, onDone }: Prop
                 <CreditCard className="h-5 w-5 text-slate-700 shrink-0" />
                 <div className="text-xs text-slate-600 space-y-0.5">
                   <p className="font-bold text-slate-800">
-                    {terms.phone_conflict
-                      ? t("Bu telefon raqami bilan bepul e'lon allaqachon berilgan", "С этим номером уже было бесплатное объявление")
-                      : t("Bepul e'lon huquqi ishlatilgan — e'lon pullik", "Бесплатное объявление уже использовано — размещение платное")}
+                    {terms.listing_tier === "premium"
+                      ? t("Premium tarif — pullik (TOP kirmaydi)", "Тариф Premium — платный (TOP не входит)")
+                      : terms.phone_conflict
+                        ? t("Bu telefon raqami bilan bepul e'lon allaqachon berilgan", "С этим номером уже было бесплатное объявление")
+                        : t("Bepul e'lon huquqi ishlatilgan — e'lon pullik", "Бесплатное объявление уже использовано — размещение платное")}
                   </p>
                   {quote?.ok ? (
                     <>
@@ -342,6 +376,10 @@ export function MonetizedListingForm({ locale, devTools, initial, onDone }: Prop
                         </p>
                       )}
                       <p className="text-sm text-slate-900">{t("To‘lov", "К оплате")}: <b data-testid="final-amount">{formatSum(quote.final, locale)}</b></p>
+                      {quote.promo_not_applied && (
+                        <p className="text-amber-700">{t("Promokod qo‘llanmadi: aksiya chegirmasi kattaroq (chegirmalar qo‘shilmaydi)", "Промокод не применён: скидка акции больше (скидки не суммируются)")}</p>
+                      )}
+                      <p className="text-[11px] text-slate-500">{t("To‘lov kartadan kartaga o‘tkaziladi, chekni yuklaysiz — admin tekshiradi.", "Оплата переводом с карты на карту, вы загружаете чек — администратор проверяет.")}</p>
                     </>
                   ) : (
                     <p className="text-rose-600">{t("Narx hali belgilanmagan", "Цена ещё не установлена")}</p>

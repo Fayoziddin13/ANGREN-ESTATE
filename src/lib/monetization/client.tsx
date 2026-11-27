@@ -71,8 +71,12 @@ export const MODERATION_LABELS: Record<string, Label> = {
 };
 
 export const ORDER_LABELS: Record<string, Label> = {
-  PENDING: { uz: "To‘lanmagan", ru: "Не оплачен", tone: "bg-amber-50 text-amber-700 border-amber-200" },
-  PAID: { uz: "To‘langan", ru: "Оплачен", tone: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  PENDING: { uz: "To‘lov kutilmoqda", ru: "Ожидает оплаты", tone: "bg-amber-50 text-amber-700 border-amber-200" },
+  RECEIPT_SUBMITTED: { uz: "Chek yuborildi", ru: "Чек отправлен", tone: "bg-sky-50 text-sky-700 border-sky-200" },
+  UNDER_REVIEW: { uz: "Admin tekshirmoqda", ru: "Проверяется", tone: "bg-indigo-50 text-indigo-700 border-indigo-200" },
+  INFO_REQUESTED: { uz: "Qo‘shimcha ma’lumot so‘raldi", ru: "Запрошены данные", tone: "bg-orange-50 text-orange-700 border-orange-200" },
+  REJECTED: { uz: "To‘lov rad etildi", ru: "Оплата отклонена", tone: "bg-rose-50 text-rose-700 border-rose-200" },
+  PAID: { uz: "To‘langan (tasdiqlangan)", ru: "Оплачен (подтверждён)", tone: "bg-emerald-50 text-emerald-700 border-emerald-200" },
   FAILED: { uz: "To‘lov o‘tmadi", ru: "Оплата не прошла", tone: "bg-rose-50 text-rose-700 border-rose-200" },
   CANCELLED: { uz: "Bekor qilingan", ru: "Отменён", tone: "bg-slate-100 text-slate-600 border-slate-200" },
   REFUNDED: { uz: "Pul qaytarildi", ru: "Возвращён", tone: "bg-violet-50 text-violet-700 border-violet-200" },

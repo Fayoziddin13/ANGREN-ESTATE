@@ -12,7 +12,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     const phone = normalizeE164(body?.contact_phone);
     const promo = typeof body?.promo_code === "string" && body.promo_code.trim() ? body.promo_code.trim().toUpperCase() : null;
-    const terms = await getListingTerms(customer, phone, promo);
+    const tier = body?.listing_tier === "premium" ? "premium" : "standard";
+    const terms = await getListingTerms(customer, phone, promo, tier);
     return NextResponse.json({ success: true, terms, account_status: customer.status });
   } catch (err) {
     return errorResponse(err);

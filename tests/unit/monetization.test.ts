@@ -107,3 +107,34 @@ describe("database errors", () => {
     expect(fromDbError({ message: "relation does not exist" }).code).toBe("internal");
   });
 });
+
+describe("manual card payment (server)", () => {
+  it("receipt type comes from the bytes, not the name", async () => {
+    const { sniffReceipt, formatCardNumber } = await import("@/lib/monetization/manualPayments");
+    expect(sniffReceipt(new Uint8Array([0xff, 0xd8, 0xff, 0xe0]))?.mime).toBe("image/jpeg");
+    expect(sniffReceipt(new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))?.ext).toBe("png");
+    expect(sniffReceipt(new TextEncoder().encode("%PDF-1.4"))?.mime).toBe("application/pdf");
+    expect(sniffReceipt(new TextEncoder().encode("<html><script>"))).toBeNull();
+    expect(sniffReceipt(new TextEncoder().encode("RIFF1234WEBPVP8 "))).toBeNull(); // webp is not a receipt type
+    expect(formatCardNumber("0000111122223333")).toBe("0000 1111 2222 3333");
+  });
+
+  it("the admin cannot put TOP into the Premium features", () => {
+    expect(validateSettingsPatch({ premium_features: ["Premium belgisi", "Ko‘proq rasm"] })).toEqual({
+      premium_features: ["Premium belgisi", "Ko‘proq rasm"],
+    });
+    expect(() => validateSettingsPatch({ premium_features: ["TOP 7 kun"] })).toThrow(MonetizationError);
+    expect(() => validateSettingsPatch({ premium_features: "Premium" })).toThrow(MonetizationError);
+    expect(validateSettingsPatch({ order_ttl_minutes: 2880 })).toEqual({ order_ttl_minutes: 2880 });
+  });
+
+  it("the listing tier is read from the browser, but never a price", () => {
+    const base = {
+      deal_type: "sale", property_type: "apartment", location: "Angren 5", description: "3 xonali",
+      contact_name: "Ali", contact_phone: "+998901234567", photos: [],
+    };
+    expect(validateSubmissionInput({ ...base, listing_tier: "premium" }, ACC).listingTier).toBe("premium");
+    expect(validateSubmissionInput({ ...base, listing_tier: "vip" }, ACC).listingTier).toBe("standard");
+    expect(validateSubmissionInput(base, ACC).listingTier).toBe("standard");
+  });
+});

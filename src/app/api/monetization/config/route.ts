@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getMonetizationSettings } from "@/lib/monetization/settings";
 import { getPublicPriceList } from "@/lib/monetization/boosts";
-import { getPaymentProvider } from "@/lib/monetization/payments";
+import { getActivePaymentMethod } from "@/lib/monetization/manualPayments";
 import { devToolsAllowed } from "@/lib/env/safety";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +14,8 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const settings = await getMonetizationSettings();
-    const prices = settings.enabled ? await getPublicPriceList() : { listing: null, stickers: [] };
+    const prices = settings.enabled ? await getPublicPriceList() : { listing: null, premium: null, stickers: [] };
+    const method = settings.enabled ? await getActivePaymentMethod().catch(() => null) : null;
     return NextResponse.json({
       success: true,
       enabled: settings.enabled,
@@ -23,10 +24,12 @@ export async function GET() {
       free_first_listing_enabled: settings.free_first_listing_enabled,
       free_listing_limit: settings.free_listing_limit,
       prices,
-      payments_available: Boolean(getPaymentProvider()),
+      premium_features: settings.premium_features ?? [],
+      payment_method: "manual_card",
+      payments_available: Boolean(method?.accepting),
       dev_tools: devToolsAllowed().allowed,
     });
   } catch {
-    return NextResponse.json({ success: true, enabled: false, prices: { listing: null, stickers: [] }, payments_available: false, dev_tools: false });
+    return NextResponse.json({ success: true, enabled: false, prices: { listing: null, premium: null, stickers: [] }, payments_available: false, dev_tools: false });
   }
 }

@@ -45,13 +45,14 @@ export async function getPublicPriceList() {
   const plans = unwrap(
     await supabaseAdmin
       .from("pricing_plans")
-      .select("id, service, sticker_type, duration_days, price_uzs")
+      .select("id, service, listing_tier, sticker_type, duration_days, price_uzs")
       .eq("is_active", true)
       .order("sort_order")
       .order("duration_days")
-  ) as Array<{ id: string; service: string; sticker_type: string | null; duration_days: number | null; price_uzs: number }>;
+  ) as Array<{ id: string; service: string; listing_tier: string | null; sticker_type: string | null; duration_days: number | null; price_uzs: number }>;
   return {
-    listing: plans.find((p) => p.service === "listing")?.price_uzs ?? null,
+    listing: plans.find((p) => p.service === "listing" && p.listing_tier === "standard")?.price_uzs ?? null,
+    premium: plans.find((p) => p.service === "listing" && p.listing_tier === "premium")?.price_uzs ?? null,
     stickers: plans.filter((p) => p.service === "sticker"),
   };
 }

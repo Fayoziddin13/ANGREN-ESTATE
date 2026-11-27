@@ -12,6 +12,8 @@ export interface MonetizationSettings {
   free_submissions_per_30_days: number;
   order_ttl_minutes: number;
   revision_attempts: number;
+  /** What Premium gives (shown to customers). Never TOP: TOP is bought separately. */
+  premium_features: string[];
 }
 
 export const SETTINGS_KEY = "monetization_settings";
@@ -26,7 +28,7 @@ const BOOLEAN_KEYS = [
 const NUMBER_LIMITS: Record<string, [number, number]> = {
   free_listing_limit: [0, 10],
   free_submissions_per_30_days: [1, 50],
-  order_ttl_minutes: [5, 1440],
+  order_ttl_minutes: [30, 10080],
   revision_attempts: [0, 10],
 };
 
@@ -52,6 +54,15 @@ export function validateSettingsPatch(input: unknown): Partial<MonetizationSetti
       if (!Number.isInteger(n) || n < min || n > max) throw new MonetizationError("validation", key);
       out[key] = n;
     }
+  }
+  if ("premium_features" in src) {
+    const list = src.premium_features;
+    if (!Array.isArray(list) || list.length > 12) throw new MonetizationError("validation", "premium_features");
+    const clean = list.map((x) => (typeof x === "string" ? x.trim() : "")).filter(Boolean);
+    if (clean.some((x) => x.length > 120) || clean.some((x) => /\btop\b|топ/i.test(x))) {
+      throw new MonetizationError("validation", "premium_features");
+    }
+    out.premium_features = clean;
   }
   if (Object.keys(out).length === 0) throw new MonetizationError("validation");
   return out as Partial<MonetizationSettings>;
