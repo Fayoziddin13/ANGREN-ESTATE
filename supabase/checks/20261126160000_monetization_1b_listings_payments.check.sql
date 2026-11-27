@@ -29,6 +29,9 @@ DECLARE
     'property_boosts', 'payment_orders', 'payment_transactions', 'payment_webhook_logs', 'refunds', 'promo_redemptions'];
 BEGIN
   BEGIN
+    -- Start from the default settings even on a test project where monetization was switched on
+    -- (rolled back with everything else).
+    DELETE FROM public.app_settings WHERE key = 'monetization_settings';
     EXECUTE 'SET LOCAL ROLE service_role';
 
     -- ------------------------------------------------------------- setup
